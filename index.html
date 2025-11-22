@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Cassa Bar - Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 400px;
+      width: 100%;
+    }
+    
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .logo h1 {
+      font-size: 2em;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    
+    .logo p {
+      color: #666;
+      font-size: 0.9em;
+    }
+    
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 30px;
+    }
+    
+    .btn {
+      padding: 15px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      text-align: center;
+      display: block;
+    }
+    
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-secondary {
+      background: #764ba2;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #653a8a;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #666;
+      font-weight: 600;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .modal-buttons button {
+      flex: 1;
+    }
+    
+    .btn-cancel {
+      background: #ddd;
+      color: #333;
+    }
+    
+    .btn-cancel:hover {
+      background: #ccc;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: white;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>🍺 Gestione Cassa</h1>
+      <p>Chiusure Bar - Vecchia Dogana</p>
+    </div>
+    
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="apriChiusura()">
+        📝 Inserisci Chiusura Cassa
+      </button>
+      
+      <button class="btn btn-secondary" onclick="mostraModalPIN()">
+        👔 Area Titolari
+      </button>
+    </div>
+  </div>
+  
+  <!-- Modal PIN Titolari -->
+  <div id="modalPIN" class="modal">
+    <div class="modal-content">
+      <h2>Inserisci PIN</h2>
+      <div class="form-group">
+        <label for="pinInput">PIN Titolari:</label>
+        <input type="password" id="pinInput" placeholder="****" maxlength="4">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="chiudiModalPIN()">Annulla</button>
+        <button class="btn btn-primary" onclick="verificaPIN()">Accedi</button>
+      </div>
+      <div id="errorePin" style="color: red; margin-top: 10px; display: none;">PIN errato!</div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <p>Sviluppato da Studio Smart</p>
+  </div>
+  
+  <script>
+    function apriChiusura() {
+      window.location.href = 'chiusura.html';
+    }
+    
+    function mostraModalPIN() {
+      document.getElementById('modalPIN').classList.add('active');
+      document.getElementById('pinInput').focus();
+    }
+    
+    function chiudiModalPIN() {
+      document.getElementById('modalPIN').classList.remove('active');
+      document.getElementById('pinInput').value = '';
+      document.getElementById('errorePin').style.display = 'none';
+    }
+    
+    function verificaPIN() {
+      const pin = document.getElementById('pinInput').value;
+      
+      if (!pin) {
+        alert('Inserisci il PIN');
+        return;
+      }
+      
+      // Chiamata API per verificare PIN
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result) {
+            sessionStorage.setItem('auth', 'titolare');
+            window.location.href = 'dashboard.html';
+          } else {
+            document.getElementById('errorePin').style.display = 'block';
+            setTimeout(() => {
+              document.getElementById('errorePin').style.display = 'none';
+            }, 3000);
+          }
+        })
+        .withFailureHandler(function(error) {
+          alert('Errore di connessione: ' + error);
+        })
+        .verificaPIN(pin);
+    }
+    
+    // Enter per inviare
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('pinInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          verificaPIN();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
