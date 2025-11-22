@@ -3,251 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎩 Dashboard Capitani - Vecchia Dogana</title>
+  <title>🎩 Dashboard Capitani</title>
   <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
     body {
       font-family: 'Georgia', serif;
-      background: linear-gradient(rgba(20, 40, 60, 0.7), rgba(20, 40, 60, 0.7)),
-                  url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23234" width="100" height="100"/></svg>');
-      min-height: 100vh;
-      padding: 20px;
+      background: linear-gradient(rgba(20,40,60,0.7), rgba(20,40,60,0.7));
+      min-height: 100vh; padding: 20px;
     }
-    
     .header {
       background: linear-gradient(145deg, #8b4513 0%, #654321 100%);
-      color: #f4e4c1;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      border: 3px solid #3d1f0f;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      color: #f4e4c1; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+      border: 3px solid #3d1f0f; display: flex; justify-content: space-between;
+      align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    
-    .header h1 {
-      font-family: 'Pirata One', cursive;
-      font-size: 2em;
-      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
-    }
-    
+    .header h1 { font-family: 'Pirata One'; font-size: 2em; text-shadow: 2px 2px 0 rgba(0,0,0,0.5); }
     .btn-home {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
-      color: #2c1810;
-      padding: 12px 25px;
-      border: 3px solid #3d1f0f;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      font-family: 'Rye', cursive;
-      box-shadow: 0 4px 0 #3d1f0f;
-      transition: all 0.2s;
+      color: #2c1810; padding: 12px 25px; border: 3px solid #3d1f0f;
+      border-radius: 8px; font-weight: 700; font-family: 'Rye'; text-decoration: none;
     }
-    
-    .btn-home:active {
-      transform: translateY(4px);
-      box-shadow: 0 0 0 #3d1f0f;
-    }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    
+    .container { max-width: 1200px; margin: 0 auto; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
     .tab {
-      flex: 1;
-      padding: 15px;
-      background: linear-gradient(145deg, #a67c52 0%, #8b6644 100%);
-      color: #f4e4c1;
-      border: 3px solid #6b4423;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 700;
-      font-family: 'Rye', cursive;
-      text-align: center;
-      transition: all 0.3s;
-      box-shadow: 0 4px 0 #3d1f0f;
+      flex: 1; padding: 15px; background: linear-gradient(145deg, #a67c52 0%, #8b6644 100%);
+      color: #f4e4c1; border: 3px solid #6b4423; border-radius: 10px; cursor: pointer;
+      font-weight: 700; font-family: 'Rye'; text-align: center; transition: all 0.3s;
     }
-    
-    .tab:hover {
-      background: linear-gradient(145deg, #b88c62 0%, #9c7654 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 0 #3d1f0f;
-    }
-    
-    .tab.active {
-      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
-      color: #2c1810;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 0 #3d1f0f;
-    }
-    
+    .tab.active { background: linear-gradient(145deg, #e8b873 0%, #c89858 100%); color: #2c1810; }
     .tab-content {
-      display: none;
-      background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
-      padding: 30px;
-      border-radius: 15px;
-      border: 4px solid #6b4423;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      display: none; background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
+      padding: 30px; border-radius: 15px; border: 4px solid #6b4423; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
     }
-    
-    .tab-content.active {
-      display: block;
-    }
-    
+    .tab-content.active { display: block; }
     .section {
-      background: rgba(244, 228, 193, 0.5);
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      border: 2px dashed #6b4423;
+      background: rgba(244,228,193,0.5); padding: 20px; border-radius: 10px;
+      margin-bottom: 20px; border: 2px dashed #6b4423;
     }
-    
     .section-title {
-      font-family: 'Rye', cursive;
-      font-size: 1.5em;
-      color: #2c1810;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 3px solid #8b4513;
+      font-family: 'Rye'; font-size: 1.5em; color: #2c1810; margin-bottom: 15px;
+      padding-bottom: 10px; border-bottom: 3px solid #8b4513;
     }
-    
     .form-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 15px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px; margin-bottom: 15px;
     }
-    
     .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 700;
-      color: #2c1810;
-      font-size: 1.1em;
+      display: block; margin-bottom: 5px; font-weight: 700; color: #2c1810; font-size: 1.1em;
     }
-    
     .form-group input, .form-group select {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #8b4513;
-      border-radius: 8px;
-      font-size: 1.1em;
-      background: white;
+      width: 100%; padding: 12px; border: 2px solid #8b4513;
+      border-radius: 8px; font-size: 1.1em; background: white;
     }
-    
     .btn {
-      padding: 15px 30px;
-      border: 3px solid #3d1f0f;
-      border-radius: 8px;
-      font-size: 1.1em;
-      font-weight: 700;
-      font-family: 'Rye', cursive;
-      cursor: pointer;
-      transition: all 0.3s;
-      box-shadow: 0 4px 0 #3d1f0f;
+      padding: 15px 30px; border: 3px solid #3d1f0f; border-radius: 8px;
+      font-size: 1.1em; font-weight: 700; font-family: 'Rye'; cursor: pointer;
+      transition: all 0.3s; box-shadow: 0 4px 0 #3d1f0f;
     }
-    
-    .btn:active {
-      transform: translateY(4px);
-      box-shadow: 0 0 0 #3d1f0f;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%);
-      color: white;
-    }
-    
-    .btn-secondary {
-      background: linear-gradient(145deg, #4682b4 0%, #1e5a8a 100%);
-      color: white;
-    }
-    
+    .btn-primary { background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); color: white; }
+    .btn-secondary { background: linear-gradient(145deg, #4682b4 0%, #1e5a8a 100%); color: white; }
     .dettaglio-box {
-      background: #f4e4c1;
-      padding: 20px;
-      border-radius: 10px;
-      border: 2px solid #6b4423;
-      margin-top: 20px;
+      background: #f4e4c1; padding: 20px; border-radius: 10px;
+      border: 2px solid #6b4423; margin-top: 20px;
     }
-    
     .dettaglio-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      margin-bottom: 5px;
-      background: rgba(255, 255, 255, 0.5);
-      border-radius: 5px;
+      display: flex; justify-content: space-between; padding: 10px;
+      margin-bottom: 5px; background: rgba(255,255,255,0.5); border-radius: 5px;
     }
-    
     .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px; margin-top: 20px;
     }
-    
     .stat-card {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
-      padding: 25px;
-      border-radius: 10px;
-      border: 3px solid #3d1f0f;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      padding: 25px; border-radius: 10px; border: 3px solid #3d1f0f;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
     }
-    
-    .stat-card h3 {
-      font-family: 'Pirata One', cursive;
-      font-size: 1.3em;
-      color: #2c1810;
-      margin-bottom: 10px;
-    }
-    
-    .stat-value {
-      font-size: 2em;
-      font-weight: 700;
-      color: #654321;
-    }
-    
+    .stat-card h3 { font-family: 'Pirata One'; font-size: 1.3em; color: #2c1810; margin-bottom: 10px; }
+    .stat-value { font-size: 2em; font-weight: 700; color: #654321; }
     .message {
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 15px;
-      font-weight: 700;
-      text-align: center;
+      padding: 15px; border-radius: 8px; margin-top: 15px;
+      font-weight: 700; text-align: center;
     }
-    
-    .message.success {
-      background: #90ee90;
-      color: #006400;
-      border: 2px solid #006400;
-    }
-    
-    .message.error {
-      background: #ff5252;
-      color: #b71c1c;
-      border: 2px solid #b71c1c;
-    }
-    
-    @media (max-width: 768px) {
-      .tabs { flex-direction: column; }
-      .header { flex-direction: column; gap: 15px; }
-    }
+    .message.success { background: #90ee90; color: #006400; border: 2px solid #006400; }
+    .message.error { background: #ff5252; color: #b71c1c; border: 2px solid #b71c1c; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🎩 Quartier Generale dei Capitani</h1>
-    <button class="btn-home" onclick="tornaHome()">🏴‍☠️ Torna al Porto</button>
+    <h1>🎩 Quartier Generale</h1>
+    <a href="index.html" class="btn-home">🏴‍☠️ Porto</a>
   </div>
   
   <div class="container">
@@ -257,7 +103,6 @@
       <div class="tab" onclick="mostraTab('statistiche')">📊 Statistiche</div>
     </div>
     
-    <!-- TAB CONSULTAZIONE -->
     <div id="consultazione" class="tab-content active">
       <div class="section">
         <div class="section-title">Cerca Chiusura</div>
@@ -266,38 +111,34 @@
             <label>Data:</label>
             <input type="date" id="dataRicerca">
           </div>
-          <div style="display: flex; align-items: flex-end;">
+          <div style="display:flex; align-items:flex-end;">
             <button class="btn btn-primary" onclick="cercaChiusura()">🔍 Cerca</button>
           </div>
         </div>
       </div>
-      
       <div id="risultatoConsultazione"></div>
     </div>
     
-    <!-- TAB VERSAMENTO -->
     <div id="versamento" class="tab-content">
       <div class="section">
         <div class="section-title">Prepara Versamento</div>
         <div class="form-row">
           <div class="form-group">
-            <label>Data Inizio:</label>
+            <label>Da:</label>
             <input type="date" id="versDaData">
           </div>
           <div class="form-group">
-            <label>Data Fine:</label>
+            <label>A:</label>
             <input type="date" id="versAData">
           </div>
-          <div style="display: flex; align-items: flex-end;">
+          <div style="display:flex; align-items:flex-end;">
             <button class="btn btn-secondary" onclick="calcolaVersamento()">💰 Calcola</button>
           </div>
         </div>
       </div>
-      
       <div id="risultatoVersamento"></div>
     </div>
     
-    <!-- TAB STATISTICHE -->
     <div id="statistiche" class="tab-content">
       <div class="section">
         <div class="section-title">Statistiche Mese</div>
@@ -305,36 +146,29 @@
           <div class="form-group">
             <label>Mese:</label>
             <select id="statMese">
-              <option value="1">Gennaio</option>
-              <option value="2">Febbraio</option>
-              <option value="3">Marzo</option>
-              <option value="4">Aprile</option>
-              <option value="5">Maggio</option>
-              <option value="6">Giugno</option>
-              <option value="7">Luglio</option>
-              <option value="8">Agosto</option>
-              <option value="9">Settembre</option>
-              <option value="10">Ottobre</option>
-              <option value="11">Novembre</option>
-              <option value="12">Dicembre</option>
+              <option value="1">Gennaio</option><option value="2">Febbraio</option>
+              <option value="3">Marzo</option><option value="4">Aprile</option>
+              <option value="5">Maggio</option><option value="6">Giugno</option>
+              <option value="7">Luglio</option><option value="8">Agosto</option>
+              <option value="9">Settembre</option><option value="10">Ottobre</option>
+              <option value="11">Novembre</option><option value="12">Dicembre</option>
             </select>
           </div>
           <div class="form-group">
             <label>Anno:</label>
             <input type="number" id="statAnno" value="2025" min="2020" max="2030">
           </div>
-          <div style="display: flex; align-items: flex-end;">
+          <div style="display:flex; align-items:flex-end;">
             <button class="btn btn-primary" onclick="visualizzaStatistiche()">📊 Visualizza</button>
           </div>
         </div>
       </div>
-      
       <div id="risultatoStatistiche"></div>
     </div>
   </div>
   
+  <script src="config.js"></script>
   <script>
-    // Inizializza date
     document.addEventListener('DOMContentLoaded', () => {
       const oggi = new Date();
       document.getElementById('dataRicerca').valueAsDate = oggi;
@@ -351,168 +185,127 @@
       document.getElementById(tabName).classList.add('active');
     }
     
-    function cercaChiusura() {
+    async function cercaChiusura() {
       const data = document.getElementById('dataRicerca').value;
       if (!data) { alert('⚠️ Seleziona una data!'); return; }
       
-      google.script.run
-        .withSuccessHandler(dati => {
-          if (dati.errore) {
-            document.getElementById('risultatoConsultazione').innerHTML = 
-              '<div class="message error">⚠️ ' + dati.errore + '</div>';
-            return;
-          }
-          
-          const html = `
-            <div class="dettaglio-box">
-              <h3 style="font-family: 'Pirata One'; color: #2c1810; margin-bottom: 15px;">
-                Dettaglio ${dati.giornoSettimana} ${dati.data}
-              </h3>
-              <div class="dettaglio-row"><span>Fondo Start:</span><span>${dati.fondoStart.toFixed(2)} €</span></div>
-              <div class="dettaglio-row"><span>Fondo End:</span><span>${dati.fondoEnd.toFixed(2)} €</span></div>
-              <div class="dettaglio-row"><span>POS:</span><span>${dati.pos.toFixed(2)} €</span></div>
-              <div class="dettaglio-row"><span>Satispay:</span><span>${dati.satispay.toFixed(2)} €</span></div>
-              <div class="dettaglio-row"><span>Tot. Prodotti:</span><span>${dati.totProdotti.toFixed(2)} €</span></div>
-              <div class="dettaglio-row"><span>Spese:</span><span>${dati.totaleSpese.toFixed(2)} €</span></div>
-              <div class="dettaglio-row" style="font-weight: 700; background: #e8b873;">
-                <span>Discrepanza:</span><span>${dati.discrepanza.toFixed(2)} €</span>
-              </div>
-              ${dati.note ? `<div style="margin-top: 15px; padding: 10px; background: white; border-radius: 5px;">
-                <strong>Note:</strong> ${dati.note}</div>` : ''}
-              ${dati.inseritoDa ? `<div style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                ${dati.inseritoDa}</div>` : ''}
+      try {
+        const dati = await callAPI('getDatiGiorno', { data: data });
+        if (dati.errore) {
+          document.getElementById('risultatoConsultazione').innerHTML = 
+            '<div class="message error">⚠️ ' + dati.errore + '</div>';
+          return;
+        }
+        
+        const html = `
+          <div class="dettaglio-box">
+            <h3 style="font-family:'Pirata One'; color:#2c1810; margin-bottom:15px;">
+              ${dati.giornoSettimana} ${dati.data}
+            </h3>
+            <div class="dettaglio-row"><span>Fondo Start:</span><span>${dati.fondoStart.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Fondo End:</span><span>${dati.fondoEnd.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>POS:</span><span>${dati.pos.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Satispay:</span><span>${dati.satispay.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Tot Prodotti:</span><span>${dati.totProdotti.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Spese:</span><span>${dati.totaleSpese.toFixed(2)} €</span></div>
+            <div class="dettaglio-row" style="font-weight:700; background:#e8b873;">
+              <span>Discrepanza:</span><span>${dati.discrepanza.toFixed(2)} €</span>
             </div>
-          `;
-          document.getElementById('risultatoConsultazione').innerHTML = html;
-        })
-        .withFailureHandler(err => alert('⚠️ Errore: ' + err))
-        .getDatiGiorno(data);
+            ${dati.note ? `<div style="margin-top:15px; padding:10px; background:white; border-radius:5px;">
+              <strong>Note:</strong> ${dati.note}</div>` : ''}
+          </div>
+        `;
+        document.getElementById('risultatoConsultazione').innerHTML = html;
+      } catch (error) {
+        alert('⚠️ Errore: ' + error.message);
+      }
     }
     
-    function calcolaVersamento() {
+    async function calcolaVersamento() {
       const da = document.getElementById('versDaData').value;
       const a = document.getElementById('versAData').value;
-      
       if (!da || !a) { alert('⚠️ Seleziona entrambe le date!'); return; }
-      if (da > a) { alert('⚠️ Data inizio deve essere prima della fine!'); return; }
+      if (da > a) { alert('⚠️ Data inizio deve essere prima!'); return; }
       
-      google.script.run
-        .withSuccessHandler(versamento => {
-          let tagliHtml = '<div class="grid">';
-          Object.entries(versamento.tagli).forEach(([taglio, qta]) => {
-            if (qta > 0) {
-              tagliHtml += `<div class="dettaglio-row"><span>${taglio}:</span><span>${qta} pz</span></div>`;
-            }
-          });
-          tagliHtml += '</div>';
-          
-          const html = `
-            <div class="dettaglio-box">
-              <h3 style="font-family: 'Pirata One'; color: #2c1810; margin-bottom: 15px;">
-                Versamento ${versamento.periodo}
-              </h3>
-              <div class="dettaglio-row"><span>Giorni aperti:</span><span>${versamento.giorni}</span></div>
-              <div class="dettaglio-row"><span>Totale Cash:</span><span>${versamento.totaleCash.toFixed(2)} €</span></div>
-              <div class="dettaglio-row"><span>Totale Spese:</span><span>${versamento.totaleSpese.toFixed(2)} €</span></div>
-              <div class="dettaglio-row" style="font-weight: 700; background: #90ee90;">
-                <span>Da Versare:</span><span>${versamento.daVersare.toFixed(2)} €</span>
-              </div>
-              <div style="margin-top: 20px;">
-                <h4 style="margin-bottom: 10px;">Suddivisione Tagli:</h4>
-                ${tagliHtml}
-              </div>
-              <button class="btn btn-primary" style="width: 100%; margin-top: 20px;"
-                      onclick="confermaVersamento('${da}', '${a}', ${versamento.daVersare})">
-                ✅ Conferma Versamento
-              </button>
+      try {
+        const versamento = await callAPI('calcolaDatiVersamento', { dataInizio: da, dataFine: a });
+        let tagliHtml = '<div style="margin-top:20px;"><h4 style="margin-bottom:10px;">Tagli:</h4>';
+        Object.entries(versamento.tagli).forEach(([taglio, qta]) => {
+          if (qta > 0) tagliHtml += `<div class="dettaglio-row"><span>${taglio}:</span><span>${qta} pz</span></div>`;
+        });
+        tagliHtml += '</div>';
+        
+        const html = `
+          <div class="dettaglio-box">
+            <h3 style="font-family:'Pirata One'; color:#2c1810; margin-bottom:15px;">
+              Versamento ${versamento.periodo}
+            </h3>
+            <div class="dettaglio-row"><span>Giorni:</span><span>${versamento.giorni}</span></div>
+            <div class="dettaglio-row"><span>Tot Cash:</span><span>${versamento.totaleCash.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Spese:</span><span>${versamento.totaleSpese.toFixed(2)} €</span></div>
+            <div class="dettaglio-row" style="font-weight:700; background:#90ee90;">
+              <span>Da Versare:</span><span>${versamento.daVersare.toFixed(2)} €</span>
             </div>
-          `;
-          document.getElementById('risultatoVersamento').innerHTML = html;
-        })
-        .withFailureHandler(err => alert('⚠️ Errore: ' + err))
-        .calcolaDatiVersamento(da, a);
+            ${tagliHtml}
+            <button class="btn btn-primary" style="width:100%; margin-top:20px;"
+                    onclick="confermaVersamento('${da}', '${a}', ${versamento.daVersare})">
+              ✅ Conferma Versamento
+            </button>
+          </div>
+        `;
+        document.getElementById('risultatoVersamento').innerHTML = html;
+      } catch (error) {
+        alert('⚠️ Errore: ' + error.message);
+      }
     }
     
-    function confermaVersamento(da, a, importo) {
-      const note = prompt('📝 Note versamento (opzionale):');
+    async function confermaVersamento(da, a, importo) {
+      const note = prompt('📝 Note (opzionale):');
       const utente = prompt('👤 Il tuo nome:');
       if (!utente) { alert('⚠️ Nome obbligatorio!'); return; }
       
-      const dati = {
-        dataInizio: da,
-        dataFine: a,
-        importo: importo,
-        discrepanza: 0,
-        note: note || '',
-        utente: utente
-      };
-      
-      google.script.run
-        .withSuccessHandler(result => {
-          if (result.successo) {
-            alert('✅ ' + result.messaggio);
-            document.getElementById('risultatoVersamento').innerHTML = 
-              '<div class="message success">✅ Versamento registrato con successo!</div>';
-          } else {
-            alert('⚠️ Errore: ' + result.errore);
+      try {
+        const result = await callAPI('salvaVersamento', {
+          dati: {
+            dataInizio: da, dataFine: a, importo: importo,
+            discrepanza: 0, note: note || '', utente: utente
           }
-        })
-        .withFailureHandler(err => alert('⚠️ Errore: ' + err))
-        .salvaVersamento(dati);
+        });
+        
+        if (result.successo) {
+          alert('✅ ' + result.messaggio);
+          document.getElementById('risultatoVersamento').innerHTML = 
+            '<div class="message success">✅ Versamento registrato!</div>';
+        } else {
+          alert('⚠️ Errore: ' + result.errore);
+        }
+      } catch (error) {
+        alert('⚠️ Errore: ' + error.message);
+      }
     }
     
-    function visualizzaStatistiche() {
+    async function visualizzaStatistiche() {
       const mese = parseInt(document.getElementById('statMese').value);
       const anno = parseInt(document.getElementById('statAnno').value);
       
-      google.script.run
-        .withSuccessHandler(stats => {
-          const html = `
-            <div class="stat-grid">
-              <div class="stat-card">
-                <h3>🗓️ Giorni Aperti</h3>
-                <div class="stat-value">${stats.giorniAperti}</div>
-              </div>
-              <div class="stat-card">
-                <h3>💰 Incasso Totale</h3>
-                <div class="stat-value">${stats.totaleIncasso.toFixed(2)} €</div>
-              </div>
-              <div class="stat-card">
-                <h3>📈 Media Giornaliera</h3>
-                <div class="stat-value">${stats.mediaGiornaliera.toFixed(2)} €</div>
-              </div>
-              <div class="stat-card">
-                <h3>💵 Cash</h3>
-                <div class="stat-value">${stats.totaleCash.toFixed(2)} €</div>
-              </div>
-              <div class="stat-card">
-                <h3>💳 POS</h3>
-                <div class="stat-value">${stats.totalePOS.toFixed(2)} €</div>
-              </div>
-              <div class="stat-card">
-                <h3>📱 Satispay</h3>
-                <div class="stat-value">${stats.totaleSatispay.toFixed(2)} €</div>
-              </div>
-              <div class="stat-card">
-                <h3>💸 Spese</h3>
-                <div class="stat-value">${stats.totaleSpese.toFixed(2)} €</div>
-              </div>
-              <div class="stat-card">
-                <h3>⚠️ Discrepanza Tot.</h3>
-                <div class="stat-value">${stats.discrepanzaTotale.toFixed(2)} €</div>
-              </div>
-            </div>
-          `;
-          document.getElementById('risultatoStatistiche').innerHTML = html;
-        })
-        .withFailureHandler(err => alert('⚠️ Errore: ' + err))
-        .getStatisticheMese(mese, anno);
-    }
-    
-    function tornaHome() {
-      sessionStorage.removeItem('auth');
-      const url = window.location.href.split('?')[0];
-      window.location.href = url;
+      try {
+        const stats = await callAPI('getStatisticheMese', { mese: mese, anno: anno });
+        const html = `
+          <div class="stat-grid">
+            <div class="stat-card"><h3>🗓️ Giorni</h3><div class="stat-value">${stats.giorniAperti}</div></div>
+            <div class="stat-card"><h3>💰 Incasso</h3><div class="stat-value">${stats.totaleIncasso.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>📈 Media</h3><div class="stat-value">${stats.mediaGiornaliera.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>💵 Cash</h3><div class="stat-value">${stats.totaleCash.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>💳 POS</h3><div class="stat-value">${stats.totalePOS.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>📱 Satispay</h3><div class="stat-value">${stats.totaleSatispay.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>💸 Spese</h3><div class="stat-value">${stats.totaleSpese.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>⚠️ Discrepanza</h3><div class="stat-value">${stats.discrepanzaTotale.toFixed(2)} €</div></div>
+          </div>
+        `;
+        document.getElementById('risultatoStatistiche').innerHTML = html;
+      } catch (error) {
+        alert('⚠️ Errore: ' + error.message);
+      }
     }
   </script>
 </body>
