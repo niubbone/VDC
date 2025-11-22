@@ -3,312 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📜 Chiusura Cassa - Vecchia Dogana</title>
+  <title>📜 Chiusura Cassa</title>
   <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
     body {
       font-family: 'Georgia', serif;
-      background: linear-gradient(rgba(20, 40, 60, 0.7), rgba(20, 40, 60, 0.7)),
-                  url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23234" width="100" height="100"/></svg>');
-      min-height: 100vh;
-      padding: 20px;
+      background: linear-gradient(rgba(20,40,60,0.7), rgba(20,40,60,0.7));
+      min-height: 100vh; padding: 20px;
     }
-    
     .header {
       background: linear-gradient(145deg, #8b4513 0%, #654321 100%);
-      color: #f4e4c1;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      border: 3px solid #3d1f0f;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      color: #f4e4c1; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+      border: 3px solid #3d1f0f; display: flex; justify-content: space-between;
+      align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    
     .header h1 {
-      font-family: 'Pirata One', cursive;
-      font-size: 2em;
-      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+      font-family: 'Pirata One', cursive; font-size: 2em; text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
     }
-    
     .btn-home {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
-      color: #2c1810;
-      padding: 12px 25px;
-      border: 3px solid #3d1f0f;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      font-family: 'Rye', cursive;
-      box-shadow: 0 4px 0 #3d1f0f;
-      transition: all 0.2s;
+      color: #2c1810; padding: 12px 25px; border: 3px solid #3d1f0f;
+      border-radius: 8px; cursor: pointer; font-weight: 700; font-family: 'Rye', cursive;
+      box-shadow: 0 4px 0 #3d1f0f; text-decoration: none;
     }
-    
-    .btn-home:active {
-      transform: translateY(4px);
-      box-shadow: 0 0 0 #3d1f0f;
-    }
-    
     .container {
-      max-width: 900px;
-      margin: 0 auto;
+      max-width: 900px; margin: 0 auto;
       background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
-      padding: 30px;
-      border-radius: 15px;
-      border: 4px solid #6b4423;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      padding: 30px; border-radius: 15px; border: 4px solid #6b4423;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
     }
-    
     .info-box {
-      background: rgba(139, 69, 19, 0.3);
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 25px;
-      border: 2px solid #6b4423;
+      background: rgba(139,69,19,0.3); padding: 20px; border-radius: 10px;
+      margin-bottom: 25px; border: 2px solid #6b4423;
     }
-    
-    .info-box h2 {
-      font-family: 'Pirata One', cursive;
-      color: #2c1810;
-      margin-bottom: 10px;
-      font-size: 1.8em;
-    }
-    
+    .info-box h2 { font-family: 'Pirata One'; color: #2c1810; margin-bottom: 10px; font-size: 1.8em; }
     .info-item {
-      display: inline-block;
-      margin-right: 30px;
-      font-size: 1.1em;
-      color: #2c1810;
+      display: inline-block; margin-right: 30px; font-size: 1.1em; color: #2c1810;
     }
-    
-    .info-item strong {
-      color: #654321;
-    }
-    
     .section {
-      background: rgba(244, 228, 193, 0.5);
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      border: 2px dashed #6b4423;
+      background: rgba(244,228,193,0.5); padding: 20px; border-radius: 10px;
+      margin-bottom: 20px; border: 2px dashed #6b4423;
     }
-    
     .section-title {
-      font-family: 'Rye', cursive;
-      font-size: 1.5em;
-      color: #2c1810;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 3px solid #8b4513;
+      font-family: 'Rye'; font-size: 1.5em; color: #2c1810; margin-bottom: 15px;
+      padding-bottom: 10px; border-bottom: 3px solid #8b4513;
     }
-    
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-    }
-    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
     .taglio-item {
-      background: #f4e4c1;
-      padding: 10px;
-      border-radius: 8px;
-      border: 2px solid #6b4423;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+      background: #f4e4c1; padding: 10px; border-radius: 8px;
+      border: 2px solid #6b4423; display: flex; flex-direction: column; gap: 5px;
     }
-    
-    .taglio-label {
-      font-weight: 700;
-      color: #2c1810;
-      font-size: 1.1em;
-    }
-    
+    .taglio-label { font-weight: 700; color: #2c1810; font-size: 1.1em; }
     .taglio-input {
-      width: 100%;
-      padding: 8px;
-      border: 2px solid #8b4513;
-      border-radius: 5px;
-      font-size: 1.1em;
-      text-align: center;
-      background: white;
+      width: 100%; padding: 8px; border: 2px solid #8b4513; border-radius: 5px;
+      font-size: 1.1em; text-align: center; background: white;
     }
-    
-    .taglio-total {
-      color: #654321;
-      font-weight: 700;
-      text-align: right;
-    }
-    
-    .form-group {
-      margin-bottom: 15px;
-    }
-    
+    .taglio-total { color: #654321; font-weight: 700; text-align: right; }
+    .form-group { margin-bottom: 15px; }
     .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 700;
-      color: #2c1810;
-      font-size: 1.1em;
+      display: block; margin-bottom: 5px; font-weight: 700;
+      color: #2c1810; font-size: 1.1em;
     }
-    
     .form-group input, .form-group textarea {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #8b4513;
-      border-radius: 8px;
-      font-size: 1.1em;
-      background: white;
+      width: 100%; padding: 12px; border: 2px solid #8b4513;
+      border-radius: 8px; font-size: 1.1em; background: white;
     }
-    
-    .form-group textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-    
-    .spesa-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-      align-items: center;
-    }
-    
-    .spesa-row input {
-      flex: 1;
-      padding: 10px;
-      border: 2px solid #8b4513;
-      border-radius: 5px;
-    }
-    
+    .spesa-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+    .spesa-row input { flex: 1; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; }
     .btn-remove {
-      background: #8b0000;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
+      background: #8b0000; color: white; border: none; padding: 10px 15px;
+      border-radius: 5px; cursor: pointer; font-weight: bold;
     }
-    
     .btn-add {
-      background: #2e8b57;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-top: 10px;
+      background: #2e8b57; color: white; border: none; padding: 10px 20px;
+      border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px;
     }
-    
     .riepilogo {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
-      padding: 20px;
-      border-radius: 10px;
-      border: 3px solid #3d1f0f;
-      margin-top: 20px;
+      padding: 20px; border-radius: 10px; border: 3px solid #3d1f0f; margin-top: 20px;
     }
-    
-    .riepilogo h3 {
-      font-family: 'Pirata One', cursive;
-      font-size: 1.8em;
-      color: #2c1810;
-      margin-bottom: 15px;
-    }
-    
+    .riepilogo h3 { font-family: 'Pirata One'; font-size: 1.8em; color: #2c1810; margin-bottom: 15px; }
     .riepilogo-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      margin-bottom: 5px;
-      background: rgba(255, 255, 255, 0.5);
-      border-radius: 5px;
-      font-size: 1.1em;
+      display: flex; justify-content: space-between; padding: 10px;
+      margin-bottom: 5px; background: rgba(255,255,255,0.5); border-radius: 5px; font-size: 1.1em;
     }
-    
     .discrepanza {
-      font-size: 1.5em;
-      font-weight: bold;
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 15px;
+      font-size: 1.5em; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 15px;
     }
-    
-    .discrepanza.ok {
-      background: #90ee90;
-      color: #006400;
-    }
-    
-    .discrepanza.warning {
-      background: #ffeb3b;
-      color: #f57f17;
-    }
-    
-    .discrepanza.error {
-      background: #ff5252;
-      color: #b71c1c;
-    }
-    
+    .discrepanza.ok { background: #90ee90; color: #006400; }
+    .discrepanza.warning { background: #ffeb3b; color: #f57f17; }
+    .discrepanza.error { background: #ff5252; color: #b71c1c; }
     .btn-salva {
-      width: 100%;
-      background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%);
-      color: white;
-      padding: 20px;
-      border: 3px solid #1e5631;
-      border-radius: 10px;
-      font-size: 1.5em;
-      font-weight: 700;
-      font-family: 'Pirata One', cursive;
-      cursor: pointer;
-      margin-top: 20px;
-      box-shadow: 0 6px 0 #1e5631;
-      transition: all 0.2s;
+      width: 100%; background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%);
+      color: white; padding: 20px; border: 3px solid #1e5631; border-radius: 10px;
+      font-size: 1.5em; font-weight: 700; font-family: 'Pirata One'; cursor: pointer;
+      margin-top: 20px; box-shadow: 0 6px 0 #1e5631;
     }
-    
-    .btn-salva:active {
-      transform: translateY(6px);
-      box-shadow: 0 0 0 #1e5631;
-    }
-    
-    #loading {
-      text-align: center;
-      padding: 50px;
-      font-size: 1.5em;
-      color: #f4e4c1;
-    }
-    
-    @media (max-width: 768px) {
-      .grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-      .header { flex-direction: column; gap: 15px; }
-      .header h1 { font-size: 1.5em; }
-    }
+    #loading { text-align: center; padding: 50px; font-size: 1.5em; color: #f4e4c1; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>📜 Registro di Bordo - Chiusura Cassa</h1>
-    <button class="btn-home" onclick="tornaHome()">🏴‍☠️ Torna al Porto</button>
+    <h1>📜 Registro di Bordo</h1>
+    <a href="index.html" class="btn-home">🏴‍☠️ Porto</a>
   </div>
   
-  <div id="loading">⏳ Caricamento dati dal quartier generale...</div>
+  <div id="loading">⏳ Caricamento...</div>
   
-  <div class="container" id="formChiusura" style="display: none;">
+  <div class="container" id="formChiusura" style="display:none;">
     <div class="info-box">
-      <h2>Informazioni Giornaliere</h2>
+      <h2>Info Giornaliere</h2>
       <div class="info-item"><strong>Data:</strong> <span id="dataOggi"></span></div>
       <div class="info-item"><strong>Giorno:</strong> <span id="giornoSettimana"></span></div>
-      <div class="info-item"><strong>Fondo Iniziale:</strong> <span id="fondoStart"></span> €</div>
+      <div class="info-item"><strong>Fondo:</strong> <span id="fondoStart"></span> €</div>
     </div>
     
     <div class="section">
-      <div class="section-title">💰 Conteggio Tagli</div>
+      <div class="section-title">💰 Tagli</div>
       <div class="grid" id="tagli"></div>
-      <div style="text-align: right; margin-top: 15px; font-size: 1.3em; font-weight: bold; color: #2c1810;">
-        Totale Contato: <span id="totaleContato">0,00</span> €
+      <div style="text-align:right; margin-top:15px; font-size:1.3em; font-weight:bold; color:#2c1810;">
+        Totale: <span id="totaleContato">0,00</span> €
       </div>
     </div>
     
@@ -316,7 +131,7 @@
       <div class="section-title">🔒 Fondo e Incassi</div>
       <div class="grid">
         <div class="form-group">
-          <label>Fondo End (lasciato):</label>
+          <label>Fondo End:</label>
           <input type="number" id="fondoEnd" step="0.01" oninput="ricalcola()">
         </div>
         <div class="form-group">
@@ -328,56 +143,44 @@
           <input type="number" id="satispay" step="0.01" value="0" oninput="ricalcola()">
         </div>
         <div class="form-group">
-          <label>Tot. Prodotti (Generale):</label>
+          <label>Tot. Prodotti:</label>
           <input type="number" id="totProdotti" step="0.01" oninput="ricalcola()">
         </div>
       </div>
     </div>
     
     <div class="section">
-      <div class="section-title">💸 Spese Giornaliere</div>
+      <div class="section-title">💸 Spese</div>
       <div id="speseContainer"></div>
-      <button class="btn-add" onclick="aggiungiSpesa()">➕ Aggiungi Spesa</button>
-      <div style="text-align: right; margin-top: 15px; font-size: 1.2em; font-weight: bold; color: #2c1810;">
-        Totale Spese: <span id="totaleSpese">0,00</span> €
+      <button class="btn-add" onclick="aggiungiSpesa()">➕ Aggiungi</button>
+      <div style="text-align:right; margin-top:15px; font-size:1.2em; font-weight:bold; color:#2c1810;">
+        Tot Spese: <span id="totaleSpese">0,00</span> €
       </div>
     </div>
     
     <div class="section">
       <div class="section-title">📝 Note</div>
-      <div class="form-group">
-        <textarea id="note" placeholder="Annotazioni particolari..."></textarea>
-      </div>
+      <textarea id="note" placeholder="Note..." style="width:100%; min-height:80px; padding:12px; border:2px solid #8b4513; border-radius:8px;"></textarea>
     </div>
     
     <div class="riepilogo">
       <h3>⚖️ Riepilogo</h3>
-      <div class="riepilogo-item">
-        <span>Diff. Fondo:</span>
-        <span id="riepDiffFondo">0,00 €</span>
-      </div>
-      <div class="riepilogo-item">
-        <span>Calcolato:</span>
-        <span id="riepCalcolato">0,00 €</span>
-      </div>
-      <div class="discrepanza" id="discrepanza">
-        Discrepanza: 0,00 €
-      </div>
+      <div class="riepilogo-item"><span>Diff. Fondo:</span><span id="riepDiffFondo">0,00 €</span></div>
+      <div class="riepilogo-item"><span>Calcolato:</span><span id="riepCalcolato">0,00 €</span></div>
+      <div class="discrepanza" id="discrepanza">Discrepanza: 0,00 €</div>
     </div>
     
-    <button class="btn-salva" onclick="salvaChiusura()">💾 Salva nel Registro</button>
+    <button class="btn-salva" onclick="salvaChiusura()">💾 Salva</button>
   </div>
   
+  <script src="config.js"></script>
   <script>
     const TAGLI = [
-      { valore: 0.01, label: '0,01€' }, { valore: 0.02, label: '0,02€' },
-      { valore: 0.05, label: '0,05€' }, { valore: 0.10, label: '0,10€' },
-      { valore: 0.20, label: '0,20€' }, { valore: 0.50, label: '0,50€' },
-      { valore: 1, label: '1€' }, { valore: 2, label: '2€' },
-      { valore: 5, label: '5€' }, { valore: 10, label: '10€' },
-      { valore: 20, label: '20€' }, { valore: 50, label: '50€' },
-      { valore: 100, label: '100€' }, { valore: 200, label: '200€' },
-      { valore: 500, label: '500€' }
+      {valore:0.01,label:'0,01€'},{valore:0.02,label:'0,02€'},{valore:0.05,label:'0,05€'},
+      {valore:0.10,label:'0,10€'},{valore:0.20,label:'0,20€'},{valore:0.50,label:'0,50€'},
+      {valore:1,label:'1€'},{valore:2,label:'2€'},{valore:5,label:'5€'},
+      {valore:10,label:'10€'},{valore:20,label:'20€'},{valore:50,label:'50€'},
+      {valore:100,label:'100€'},{valore:200,label:'200€'},{valore:500,label:'500€'}
     ];
     
     let datiGiorno = null;
@@ -385,18 +188,17 @@
     
     document.addEventListener('DOMContentLoaded', caricaDatiOggi);
     
-    function caricaDatiOggi() {
+    async function caricaDatiOggi() {
       const oggi = new Date();
-      const dataStr = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}-${String(oggi.getDate()).padStart(2, '0')}`;
+      const dataStr = `${oggi.getFullYear()}-${String(oggi.getMonth()+1).padStart(2,'0')}-${String(oggi.getDate()).padStart(2,'0')}`;
       
-      google.script.run
-        .withSuccessHandler(dati => {
-          if (dati.errore) { alert('⚠️ ' + dati.errore); return; }
-          datiGiorno = dati;
-          inizializzaForm();
-        })
-        .withFailureHandler(err => alert('⚠️ Errore: ' + err))
-        .getDatiGiorno(dataStr);
+      try {
+        datiGiorno = await callAPI('getDatiGiorno', { data: dataStr });
+        if (datiGiorno.errore) { alert('⚠️ ' + datiGiorno.errore); return; }
+        inizializzaForm();
+      } catch (error) {
+        alert('⚠️ Errore: ' + error.message);
+      }
     }
     
     function inizializzaForm() {
@@ -414,8 +216,7 @@
         div.innerHTML = `
           <span class="taglio-label">${taglio.label}</span>
           <input type="number" class="taglio-input" id="taglio_${taglio.label}" 
-                 value="${datiGiorno.tagli[taglio.label] || 0}" 
-                 min="0" step="1" oninput="ricalcolaTagli()">
+                 value="${datiGiorno.tagli[taglio.label]||0}" min="0" step="1" oninput="ricalcolaTagli()">
           <span class="taglio-total" id="total_${taglio.label}">0,00 €</span>
         `;
         tagliContainer.appendChild(div);
@@ -427,11 +228,7 @@
       if (datiGiorno.totProdotti) document.getElementById('totProdotti').value = datiGiorno.totProdotti;
       if (datiGiorno.note) document.getElementById('note').value = datiGiorno.note;
       
-      if (datiGiorno.spese && datiGiorno.spese.length > 0) {
-        spese = datiGiorno.spese;
-      } else {
-        spese = [{ descrizione: '', importo: 0 }];
-      }
+      spese = datiGiorno.spese && datiGiorno.spese.length > 0 ? datiGiorno.spese : [{ descrizione: '', importo: 0 }];
       aggiornaSpese();
       ricalcola();
     }
@@ -461,7 +258,6 @@
     function aggiornaSpese() {
       const container = document.getElementById('speseContainer');
       container.innerHTML = '';
-      
       spese.forEach((spesa, index) => {
         const div = document.createElement('div');
         div.className = 'spesa-row';
@@ -469,7 +265,7 @@
           <input type="text" placeholder="Descrizione" value="${spesa.descrizione}"
                  onchange="spese[${index}].descrizione = this.value">
           <input type="number" placeholder="0.00" step="0.01" value="${spesa.importo}"
-                 oninput="spese[${index}].importo = parseFloat(this.value) || 0; ricalcola()">
+                 oninput="spese[${index}].importo = parseFloat(this.value)||0; ricalcola()">
           <button class="btn-remove" onclick="rimuoviSpesa(${index})">🗑️</button>
         `;
         container.appendChild(div);
@@ -483,8 +279,8 @@
       const pos = parseFloat(document.getElementById('pos').value) || 0;
       const satispay = parseFloat(document.getElementById('satispay').value) || 0;
       const totProdotti = parseFloat(document.getElementById('totProdotti').value) || 0;
+      const totaleSpese = spese.reduce((sum, s) => sum + (s.importo||0), 0);
       
-      const totaleSpese = spese.reduce((sum, s) => sum + (s.importo || 0), 0);
       document.getElementById('totaleSpese').textContent = totaleSpese.toFixed(2);
       
       const diffFondo = fondoStart - fondoEnd;
@@ -497,18 +293,13 @@
       const discEl = document.getElementById('discrepanza');
       discEl.textContent = `Discrepanza: ${discrepanza.toFixed(2)} €`;
       discEl.className = 'discrepanza';
-      
-      if (Math.abs(discrepanza) < 0.5) {
-        discEl.classList.add('ok');
-      } else if (Math.abs(discrepanza) < 20) {
-        discEl.classList.add('warning');
-      } else {
-        discEl.classList.add('error');
-      }
+      if (Math.abs(discrepanza) < 0.5) discEl.classList.add('ok');
+      else if (Math.abs(discrepanza) < 20) discEl.classList.add('warning');
+      else discEl.classList.add('error');
     }
     
-    function salvaChiusura() {
-      const utente = prompt('👤 Inserisci il tuo nome:');
+    async function salvaChiusura() {
+      const utente = prompt('👤 Il tuo nome:');
       if (!utente) { alert('⚠️ Nome obbligatorio!'); return; }
       
       const tagli = {};
@@ -528,22 +319,17 @@
         utente: utente
       };
       
-      google.script.run
-        .withSuccessHandler(result => {
-          if (result.successo) {
-            alert('✅ ' + result.messaggio);
-            tornaHome();
-          } else {
-            alert('⚠️ Errore: ' + result.errore);
-          }
-        })
-        .withFailureHandler(err => alert('⚠️ Errore: ' + err))
-        .salvaChiusura(dati);
-    }
-    
-    function tornaHome() {
-      const url = window.location.href.split('?')[0];
-      window.location.href = url;
+      try {
+        const result = await callAPI('salvaChiusura', { dati: dati });
+        if (result.successo) {
+          alert('✅ ' + result.messaggio);
+          window.location.href = 'index.html';
+        } else {
+          alert('⚠️ Errore: ' + result.errore);
+        }
+      } catch (error) {
+        alert('⚠️ Errore: ' + error.message);
+      }
     }
   </script>
 </body>
