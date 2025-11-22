@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chiusura Cassa</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      font-size: 1.5em;
+    }
+    
+    .btn-home {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    
+    .btn-home:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    
+    .section-title {
+      font-size: 1.3em;
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #667eea;
+    }
+    
+    .info-box {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border-left: 4px solid #2196f3;
+    }
+    
+    .info-box strong {
+      color: #1976d2;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .taglio-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    .taglio-label {
+      min-width: 70px;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .taglio-input {
+      flex: 1;
+      padding: 8px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+      text-align: center;
+    }
+    
+    .taglio-total {
+      min-width: 90px;
+      text-align: right;
+      font-weight: 600;
+      color: #667eea;
+    }
+    
+    .spesa-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .spesa-desc {
+      flex: 2;
+    }
+    
+    .spesa-importo {
+      flex: 1;
+    }
+    
+    .btn-add-spesa {
+      background: #4caf50;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    
+    .btn-add-spesa:hover {
+      background: #45a049;
+    }
+    
+    .btn-remove {
+      background: #f44336;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .btn-remove:hover {
+      background: #da190b;
+    }
+    
+    .totale-box {
+      background: #667eea;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 1.2em;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .discrepanza-box {
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 1.3em;
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .discrepanza-ok {
+      background: #4caf50;
+      color: white;
+    }
+    
+    .discrepanza-warning {
+      background: #ff9800;
+      color: white;
+    }
+    
+    .discrepanza-error {
+      background: #f44336;
+      color: white;
+    }
+    
+    .btn-salva {
+      width: 100%;
+      padding: 18px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.3em;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    
+    .btn-salva:hover {
+      background: #45a049;
+    }
+    
+    .btn-salva:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2em;
+      color: #666;
+    }
+    
+    .riepilogo {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      border-left: 4px solid #ffc107;
+    }
+    
+    .riepilogo h3 {
+      color: #856404;
+      margin-bottom: 10px;
+    }
+    
+    .riepilogo-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .riepilogo-row:last-child {
+      border-bottom: none;
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 2px solid #ffc107;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📝 Chiusura Cassa</h1>
+    <button class="btn-home" onclick="window.location.href='index.html'">⬅ Home</button>
+  </div>
+  
+  <div class="container" id="mainContainer">
+    <div class="loading" id="loading">Caricamento dati...</div>
+    
+    <div id="formChiusura" style="display: none;">
+      <!-- Data e Info -->
+      <div class="info-box">
+        <div><strong>Data:</strong> <span id="dataOggi"></span> - <span id="giornoSettimana"></span></div>
+        <div><strong>Fondo Start:</strong> <span id="fondoStart">0,00</span> €</div>
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #90caf9; font-size: 0.9em;">
+          <strong>ℹ️ Nota giorni di chiusura:</strong> Il Fondo Start viene preso automaticamente dall'ultima chiusura (anche se sono passati più giorni). Se è 0,00€ significa che è il primo giorno del mese o non ci sono chiusure precedenti → inserisci manualmente il Fondo End.
+        </div>
+      </div>
+      
+      <!-- Totale Prodotti -->
+      <div class="section">
+        <div class="section-title">💰 Totale dalla Cassa</div>
+        <div class="form-group">
+          <label>Totale Prodotti / Totale Generale (dal display del registratore di cassa):</label>
+          <input type="number" id="totProdotti" step="0.01" placeholder="0.00" oninput="ricalcola()">
+        </div>
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; font-size: 0.95em; color: #1976d2; line-height: 1.6;">
+          <strong>ℹ️ Cosa inserire:</strong><br>
+          • Guarda il <strong>DISPLAY del registratore di cassa</strong><br>
+          • Cerca il <strong>"Totale Generale" o "Totale Prodotti"</strong><br>
+          • È il totale che INCLUDE tutto (contanti + POS + Satispay + tutto)<br>
+          • <strong>NON</strong> usare il "Totale Vendite" dalla stampa (è parziale)<br>
+          • <strong>NON</strong> usare il totale POS (va nel campo sotto)
+        </div>
+      </div>
+      
+      <!-- Conteggio Cassa -->
+      <div class="section">
+        <div class="section-title">💵 Conteggio Fisico Contanti</div>
+        <div style="background: #fff3cd; padding: 10px; border-radius: 5px; font-size: 0.9em; color: #856404; margin-bottom: 15px;">
+          <strong>ℹ️ Info:</strong> Conta i soldi fisicamente presenti in cassa e inserisci le quantità
+        </div>
+        <div id="tagli"></div>
+        <div class="totale-box">
+          Totale Contato (chiusura fisica): <span id="totaleContato">0,00</span> €
+        </div>
+        <div class="form-group">
+          <label>Fondo End (lasciato in cassa):</label>
+          <input type="number" id="fondoEnd" step="0.01" placeholder="0.00" oninput="ricalcola()">
+        </div>
+      </div>
+      
+      <!-- Incassi Elettronici -->
+      <div class="section">
+        <div class="section-title">💳 Incassi Elettronici</div>
+        <div style="background: #fff3cd; padding: 10px; border-radius: 5px; font-size: 0.9em; color: #856404; margin-bottom: 15px;">
+          <strong>📄 Stampe da consultare:</strong> Prendi i valori dalle stampe di chiusura del POS e Satispay
+        </div>
+        <div class="grid">
+          <div class="form-group">
+            <label>POS (dalla stampa chiusura POS):</label>
+            <input type="number" id="pos" step="0.01" placeholder="0.00" oninput="ricalcola()">
+          </div>
+          <div class="form-group">
+            <label>Satispay (dall'app o stampa):</label>
+            <input type="number" id="satispay" step="0.01" placeholder="0.00" oninput="ricalcola()">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Spese -->
+      <div class="section">
+        <div class="section-title">Spese Giornata</div>
+        <div id="speseContainer"></div>
+        <button class="btn-add-spesa" onclick="aggiungiSpesa()">+ Aggiungi Spesa</button>
+        <div class="totale-box" style="background: #f44336;">
+          Totale Spese: <span id="totaleSpese">0,00</span> €
+        </div>
+      </div>
+      
+      <!-- Riepilogo -->
+      <div class="riepilogo">
+        <h3>📊 Riepilogo Chiusura</h3>
+        <div class="riepilogo-row">
+          <span>Differenza Fondo:</span>
+          <span id="riepilogoDiffFondo">0,00 €</span>
+        </div>
+        <div class="riepilogo-row">
+          <span>POS:</span>
+          <span id="riepilogoPOS">0,00 €</span>
+        </div>
+        <div class="riepilogo-row">
+          <span>Satispay:</span>
+          <span id="riepilogoSatispay">0,00 €</span>
+        </div>
+        <div class="riepilogo-row">
+          <span>Spese:</span>
+          <span id="riepilogoSpese">0,00 €</span>
+        </div>
+        <div class="riepilogo-row">
+          <span>Calcolato:</span>
+          <span id="riepilogoCalcolato">0,00 €</span>
+        </div>
+      </div>
+      
+      <!-- Discrepanza -->
+      <div id="discrepanzaBox" class="discrepanza-box discrepanza-ok" style="display: none;">
+        <div>DISCREPANZA: <span id="discrepanza">0,00</span> €</div>
+      </div>
+      
+      <!-- Note -->
+      <div class="section">
+        <div class="form-group">
+          <label>Note (opzionale):</label>
+          <input type="text" id="note" placeholder="Eventuali annotazioni...">
+        </div>
+      </div>
+      
+      <!-- Salva -->
+      <button class="btn-salva" onclick="salvaChiusura()">💾 Salva Chiusura</button>
+    </div>
+  </div>
+  
+  <script>
+    const TAGLI = [
+      { valore: 0.01, label: '0,01€' },
+      { valore: 0.02, label: '0,02€' },
+      { valore: 0.05, label: '0,05€' },
+      { valore: 0.10, label: '0,10€' },
+      { valore: 0.20, label: '0,20€' },
+      { valore: 0.50, label: '0,50€' },
+      { valore: 1, label: '1€' },
+      { valore: 2, label: '2€' },
+      { valore: 5, label: '5€' },
+      { valore: 10, label: '10€' },
+      { valore: 20, label: '20€' },
+      { valore: 50, label: '50€' },
+      { valore: 100, label: '100€' },
+      { valore: 200, label: '200€' },
+      { valore: 500, label: '500€' }
+    ];
+    
+    let datiGiorno = null;
+    let spese = [];
+    
+    // Inizializzazione
+    document.addEventListener('DOMContentLoaded', function() {
+      caricaDatiOggi();
+    });
+    
+    function caricaDatiOggi() {
+      const oggi = new Date();
+      const dataStr = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}-${String(oggi.getDate()).padStart(2, '0')}`;
+      
+      google.script.run
+        .withSuccessHandler(function(dati) {
+          if (dati.errore) {
+            alert('Errore: ' + dati.errore);
+            return;
+          }
+          
+          datiGiorno = dati;
+          inizializzaForm();
+        })
+        .withFailureHandler(function(error) {
+          alert('Errore di connessione: ' + error);
+        })
+        .getDatiGiorno(dataStr);
+    }
+    
+    function inizializzaForm() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('formChiusura').style.display = 'block';
+      
+      // Info
+      document.getElementById('dataOggi').textContent = datiGiorno.data;
+      document.getElementById('giornoSettimana').textContent = datiGiorno.giornoSettimana;
+      document.getElementById('fondoStart').textContent = datiGiorno.fondoStart.toFixed(2);
+      
+      // Genera tagli
+      const tagliContainer = document.getElementById('tagli');
+      TAGLI.forEach(taglio => {
+        const div = document.createElement('div');
+        div.className = 'taglio-item';
+        div.innerHTML = `
+          <span class="taglio-label">${taglio.label}</span>
+          <input type="number" class="taglio-input" id="taglio_${taglio.label}" 
+                 value="${datiGiorno.tagli[taglio.label] || 0}" 
+                 min="0" step="1" oninput="ricalcolaTagli()">
+          <span class="taglio-total" id="total_${taglio.label}">0,00 €</span>
+        `;
+        tagliContainer.appendChild(div);
+      });
+      
+      // Carica dati esistenti se presenti
+      if (datiGiorno.fondoEnd) document.getElementById('fondoEnd').value = datiGiorno.fondoEnd;
+      if (datiGiorno.pos) document.getElementById('pos').value = datiGiorno.pos;
+      if (datiGiorno.satispay) document.getElementById('satispay').value = datiGiorno.satispay;
+      if (datiGiorno.totProdotti) document.getElementById('totProdotti').value = datiGiorno.totProdotti;
+      if (datiGiorno.note) document.getElementById('note').value = datiGiorno.note;
+      
+      // Carica spese
+      if (datiGiorno.spese && datiGiorno.spese.length > 0) {
+        spese = datiGiorno.spese;
+        aggiornaSpese();
+      } else {
+        aggiungiSpesa(); // Aggiungi prima riga vuota
+      }
+      
+      ricalcola();
+    }
+    
+    function ricalcolaTagli() {
+      let totale = 0;
+      
+      TAGLI.forEach(taglio => {
+        const qta = parseFloat(document.getElementById(`taglio_${taglio.label}`).value) || 0;
+        const valore = qta * taglio.valore;
+        totale += valore;
+        document.getElementById(`total_${taglio.label}`).textContent = valore.toFixed(2) + ' €';
+      });
+      
+      document.getElementById('totaleContato').textContent = totale.toFixed(2);
+      ricalcola();
+    }
+    
+    function aggiungiSpesa() {
+      spese.push({ descrizione: '', importo: 0 });
+      aggiornaSpese();
+    }
+    
+    function rimuoviSpesa(index) {
+      spese.splice(index, 1);
+      aggiornaSpese();
+      ricalcola();
+    }
+    
+    function aggiornaSpese() {
+      const container = document.getElementById('speseContainer');
+      container.innerHTML = '';
+      
+      spese.forEach((spesa, index) => {
+        const div = document.createElement('div');
+        div.className = 'spesa-row';
+        div.innerHTML = `
+          <input type="text" class="spesa-desc" 
+                 placeholder="Descrizione..." 
+                 value="${spesa.descrizione}"
+                 oninput="spese[${index}].descrizione = this.value">
+          <input type="number" class="spesa-importo" 
+                 step="0.01" 
+                 placeholder="0.00"
+                 value="${spesa.importo || ''}"
+                 oninput="spese[${index}].importo = parseFloat(this.value) || 0; ricalcola()">
+          <button class="btn-remove" onclick="rimuoviSpesa(${index})">✕</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+    
+    function ricalcola() {
+      // Totale spese
+      const totSpese = spese.reduce((sum, s) => sum + (s.importo || 0), 0);
+      document.getElementById('totaleSpese').textContent = totSpese.toFixed(2);
+      document.getElementById('riepilogoSpese').textContent = totSpese.toFixed(2) + ' €';
+      
+      // Valori
+      const fondoStart = datiGiorno.fondoStart;
+      const fondoEnd = parseFloat(document.getElementById('fondoEnd').value) || 0;
+      const pos = parseFloat(document.getElementById('pos').value) || 0;
+      const satispay = parseFloat(document.getElementById('satispay').value) || 0;
+      const totProdotti = parseFloat(document.getElementById('totProdotti').value) || 0;
+      
+      // Differenza fondo
+      const diffFondo = fondoStart - fondoEnd;
+      document.getElementById('riepilogoDiffFondo').textContent = diffFondo.toFixed(2) + ' €';
+      
+      // Riepilogo
+      document.getElementById('riepilogoPOS').textContent = pos.toFixed(2) + ' €';
+      document.getElementById('riepilogoSatispay').textContent = satispay.toFixed(2) + ' €';
+      
+      // Calcolato
+      const calcolato = diffFondo + pos + satispay + totSpese;
+      document.getElementById('riepilogoCalcolato').textContent = calcolato.toFixed(2) + ' €';
+      
+      // Discrepanza
+      const discrepanza = totProdotti - calcolato;
+      const boxDisc = document.getElementById('discrepanzaBox');
+      
+      if (totProdotti > 0) {
+        boxDisc.style.display = 'block';
+        document.getElementById('discrepanza').textContent = discrepanza.toFixed(2);
+        
+        // Colore in base alla discrepanza
+        boxDisc.className = 'discrepanza-box';
+        if (Math.abs(discrepanza) < 0.5) {
+          boxDisc.classList.add('discrepanza-ok');
+        } else if (Math.abs(discrepanza) < 5) {
+          boxDisc.classList.add('discrepanza-warning');
+        } else {
+          boxDisc.classList.add('discrepanza-error');
+        }
+      } else {
+        boxDisc.style.display = 'none';
+      }
+    }
+    
+    function salvaChiusura() {
+      // Validazione
+      const totProdotti = parseFloat(document.getElementById('totProdotti').value) || 0;
+      if (totProdotti === 0) {
+        alert('Inserisci il Totale Prodotti dalla cassa!');
+        return;
+      }
+      
+      const fondoEnd = parseFloat(document.getElementById('fondoEnd').value);
+      if (!fondoEnd && fondoEnd !== 0) {
+        alert('Inserisci il Fondo End!');
+        return;
+      }
+      
+      // Raccogli tagli
+      const tagli = {};
+      TAGLI.forEach(taglio => {
+        tagli[taglio.label] = parseFloat(document.getElementById(`taglio_${taglio.label}`).value) || 0;
+      });
+      
+      // Prepara dati
+      const oggi = new Date();
+      const dataStr = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}-${String(oggi.getDate()).padStart(2, '0')}`;
+      
+      const dati = {
+        data: dataStr,
+        tagli: tagli,
+        fondoEnd: fondoEnd,
+        pos: parseFloat(document.getElementById('pos').value) || 0,
+        satispay: parseFloat(document.getElementById('satispay').value) || 0,
+        totProdotti: totProdotti,
+        spese: spese.filter(s => s.descrizione || s.importo),
+        note: document.getElementById('note').value,
+        utente: prompt('Inserisci il tuo nome:') || 'Dipendente'
+      };
+      
+      if (confirm('Confermi il salvataggio della chiusura?')) {
+        google.script.run
+          .withSuccessHandler(function(result) {
+            if (result.successo) {
+              if (result.alert) {
+                alert(result.messaggio);
+              }
+              alert('✅ Chiusura salvata correttamente!');
+              window.location.reload();
+            } else {
+              alert('Errore: ' + result.errore);
+            }
+          })
+          .withFailureHandler(function(error) {
+            alert('Errore di connessione: ' + error);
+          })
+          .salvaChiusura(dati);
+      }
+    }
+  </script>
+</body>
+</html>
