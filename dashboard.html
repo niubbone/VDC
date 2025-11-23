@@ -170,27 +170,21 @@
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
     
-    function callAPI(action, data = {}) {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'jsonp_' + Date.now();
-        const payload = { action: action, ...data };
+    async function callAPI(action, data = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: action, ...data })
+        });
         
-        window[callbackName] = function(response) {
-          delete window[callbackName];
-          document.body.removeChild(script);
-          resolve(response);
-        };
-        
-        const script = document.createElement('script');
-        script.src = API_URL + '?callback=' + callbackName + '&data=' + encodeURIComponent(JSON.stringify(payload));
-        script.onerror = () => {
-          delete window[callbackName];
-          document.body.removeChild(script);
-          reject(new Error('Errore di rete'));
-        };
-        
-        document.body.appendChild(script);
-      });
+        const text = await response.text();
+        return JSON.parse(text);
+      } catch (error) {
+        console.error('Errore API:', error);
+        throw error;
+      }
     }
     
     document.addEventListener('DOMContentLoaded', () => {
