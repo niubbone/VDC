@@ -38,9 +38,7 @@
       margin-bottom: 25px; border: 2px solid #6b4423;
     }
     .info-box h2 { font-family: 'Pirata One'; color: #2c1810; margin-bottom: 10px; font-size: 1.8em; }
-    .info-item {
-      display: inline-block; margin-right: 30px; font-size: 1.1em; color: #2c1810;
-    }
+    .info-item { display: inline-block; margin-right: 30px; font-size: 1.1em; color: #2c1810; }
     .section {
       background: rgba(244,228,193,0.5); padding: 20px; border-radius: 10px;
       margin-bottom: 20px; border: 2px dashed #6b4423;
@@ -61,24 +59,15 @@
     }
     .taglio-total { color: #654321; font-weight: 700; text-align: right; }
     .form-group { margin-bottom: 15px; }
-    .form-group label {
-      display: block; margin-bottom: 5px; font-weight: 700;
-      color: #2c1810; font-size: 1.1em;
-    }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 700; color: #2c1810; font-size: 1.1em; }
     .form-group input, .form-group textarea {
       width: 100%; padding: 12px; border: 2px solid #8b4513;
       border-radius: 8px; font-size: 1.1em; background: white;
     }
     .spesa-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
     .spesa-row input { flex: 1; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; }
-    .btn-remove {
-      background: #8b0000; color: white; border: none; padding: 10px 15px;
-      border-radius: 5px; cursor: pointer; font-weight: bold;
-    }
-    .btn-add {
-      background: #2e8b57; color: white; border: none; padding: 10px 20px;
-      border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px;
-    }
+    .btn-remove { background: #8b0000; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .btn-add { background: #2e8b57; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .riepilogo {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
       padding: 20px; border-radius: 10px; border: 3px solid #3d1f0f; margin-top: 20px;
@@ -88,9 +77,7 @@
       display: flex; justify-content: space-between; padding: 10px;
       margin-bottom: 5px; background: rgba(255,255,255,0.5); border-radius: 5px; font-size: 1.1em;
     }
-    .discrepanza {
-      font-size: 1.5em; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 15px;
-    }
+    .discrepanza { font-size: 1.5em; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 15px; }
     .discrepanza.ok { background: #90ee90; color: #006400; }
     .discrepanza.warning { background: #ffeb3b; color: #f57f17; }
     .discrepanza.error { background: #ff5252; color: #b71c1c; }
@@ -173,8 +160,26 @@
     <button class="btn-salva" onclick="salvaChiusura()">💾 Salva</button>
   </div>
   
-  <script src="config.js"></script>
   <script>
+    // ⚠️ MODIFICA QUESTO URL CON IL TUO URL /exec
+    const API_URL = 'https://script.google.com/macros/s/TUO_ID_QUI/exec';
+    
+    async function callAPI(action, data = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: action, ...data })
+        });
+        if (!response.ok) throw new Error('Errore server');
+        return await response.json();
+      } catch (error) {
+        console.error('Errore API:', error);
+        throw error;
+      }
+    }
+    
     const TAGLI = [
       {valore:0.01,label:'0,01€'},{valore:0.02,label:'0,02€'},{valore:0.05,label:'0,05€'},
       {valore:0.10,label:'0,10€'},{valore:0.20,label:'0,20€'},{valore:0.50,label:'0,50€'},
