@@ -169,6 +169,14 @@
       </div>
       <div class="grid">
         <div class="form-group">
+          <label>Chiusura (da stampa):</label>
+          <input type="number" id="chiusura" step="0.01" value="0" style="background: #e6f3ff;" oninput="ricalcola()">
+        </div>
+        <div class="form-group">
+          <label>Cash (portato via):</label>
+          <input type="number" id="cash" step="0.01" value="0" oninput="ricalcola()">
+        </div>
+        <div class="form-group">
           <label>POS:</label>
           <input type="number" id="pos" step="0.01" value="0" oninput="ricalcola()">
         </div>
@@ -177,8 +185,8 @@
           <input type="number" id="satispay" step="0.01" value="0" oninput="ricalcola()">
         </div>
         <div class="form-group">
-          <label>Tot. Prodotti:</label>
-          <input type="number" id="totProdotti" step="0.01" oninput="ricalcola()">
+          <label>Report Prodotti:</label>
+          <input type="number" id="reportProdotti" step="0.01" oninput="ricalcola()">
         </div>
       </div>
     </div>
@@ -200,7 +208,8 @@
     <div class="riepilogo">
       <h3>⚖️ Riepilogo</h3>
       <div class="riepilogo-item"><span>Diff. Fondo:</span><span id="riepDiffFondo">0,00 €</span></div>
-      <div class="riepilogo-item"><span>Calcolato:</span><span id="riepCalcolato">0,00 €</span></div>
+      <div class="riepilogo-item"><span>Totale giorno:</span><span id="riepTotaleGiorno">0,00 €</span></div>
+      <div class="riepilogo-item"><span>Totale cassa:</span><span id="riepTotaleCassa">0,00 €</span></div>
       <div class="discrepanza" id="discrepanza">Discrepanza: 0,00 €</div>
     </div>
     
@@ -241,7 +250,7 @@
       {valore:0.10,label:'0,10€'},{valore:0.20,label:'0,20€'},{valore:0.50,label:'0,50€'},
       {valore:1,label:'1€'},{valore:2,label:'2€'},{valore:5,label:'5€'},
       {valore:10,label:'10€'},{valore:20,label:'20€'},{valore:50,label:'50€'},
-      {valore:100,label:'100€'},{valore:200,label:'200€'},{valore:500,label:'500€'}
+      {valore:100,label:'100€'}
     ];
     
     let datiGiorno = null;
@@ -259,7 +268,7 @@
         if (datiGiorno.errore) { alert('⚠️ ' + datiGiorno.errore); return; }
         
         // Controlla se esistono già dati compilati per oggi
-        if (datiGiorno.totProdotti && datiGiorno.totProdotti > 0) {
+        if (datiGiorno.reportProdotti && datiGiorno.reportProdotti > 0) {
           modalitaModifica = true;
           document.getElementById('alertModifica').style.display = 'block';
         }
@@ -292,9 +301,11 @@
       });
       
       // Fondo End è automatico, non si carica da datiGiorno
+      if (datiGiorno.chiusura) document.getElementById('chiusura').value = datiGiorno.chiusura;
+      if (datiGiorno.cash) document.getElementById('cash').value = datiGiorno.cash;
       if (datiGiorno.pos) document.getElementById('pos').value = datiGiorno.pos;
       if (datiGiorno.satispay) document.getElementById('satispay').value = datiGiorno.satispay;
-      if (datiGiorno.totProdotti) document.getElementById('totProdotti').value = datiGiorno.totProdotti;
+      if (datiGiorno.reportProdotti) document.getElementById('reportProdotti').value = datiGiorno.reportProdotti;
       if (datiGiorno.note) document.getElementById('note').value = datiGiorno.note;
       
       spese = datiGiorno.spese && datiGiorno.spese.length > 0 ? datiGiorno.spese : [{ descrizione: '', importo: 0 }];
@@ -348,19 +359,22 @@
       const fondoStart = parseFloat(document.getElementById('fondoStart').textContent) || 0;
       // Fondo End = Totale Contato (automatico)
       const fondoEnd = parseFloat(document.getElementById('totaleContato').textContent) || 0;
+      const cash = parseFloat(document.getElementById('cash').value) || 0;
       const pos = parseFloat(document.getElementById('pos').value) || 0;
       const satispay = parseFloat(document.getElementById('satispay').value) || 0;
-      const totProdotti = parseFloat(document.getElementById('totProdotti').value) || 0;
+      const reportProdotti = parseFloat(document.getElementById('reportProdotti').value) || 0;
       const totaleSpese = spese.reduce((sum, s) => sum + (s.importo||0), 0);
       
       document.getElementById('totaleSpese').textContent = totaleSpese.toFixed(2);
       
       const diffFondo = fondoStart - fondoEnd;
-      const calcolato = diffFondo + pos + satispay + totaleSpese;
-      const discrepanza = totProdotti - calcolato;
+      const totaleGiorno = cash + pos + satispay + totaleSpese;
+      const totaleCassa = diffFondo + pos + satispay + totaleSpese;
+      const discrepanza = reportProdotti - totaleCassa;
       
       document.getElementById('riepDiffFondo').textContent = diffFondo.toFixed(2) + ' €';
-      document.getElementById('riepCalcolato').textContent = calcolato.toFixed(2) + ' €';
+      document.getElementById('riepTotaleGiorno').textContent = totaleGiorno.toFixed(2) + ' €';
+      document.getElementById('riepTotaleCassa').textContent = totaleCassa.toFixed(2) + ' €';
       
       const discEl = document.getElementById('discrepanza');
       discEl.textContent = `Discrepanza: ${discrepanza.toFixed(2)} €`;
@@ -427,9 +441,11 @@
             <div class="section-title">📊 Riepilogo</div>
             <div class="dettaglio-row"><span>Fondo Start:</span><span>${dati.fondoStart.toFixed(2)} €</span></div>
             <div class="dettaglio-row"><span>Fondo End:</span><span>${dati.fondoEnd.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Chiusura:</span><span>${dati.chiusura.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Cash:</span><span>${dati.cash.toFixed(2)} €</span></div>
             <div class="dettaglio-row"><span>POS:</span><span>${dati.pos.toFixed(2)} €</span></div>
             <div class="dettaglio-row"><span>Satispay:</span><span>${dati.satispay.toFixed(2)} €</span></div>
-            <div class="dettaglio-row"><span>Tot Prodotti:</span><span>${dati.totProdotti.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Report Prodotti:</span><span>${dati.reportProdotti.toFixed(2)} €</span></div>
             <div class="dettaglio-row"><span>Tot Spese:</span><span>${dati.totaleSpese.toFixed(2)} €</span></div>
             <div class="dettaglio-row" style="font-weight:700; background:#e8b873;">
               <span>Discrepanza:</span><span>${dati.discrepanza.toFixed(2)} €</span>
@@ -467,9 +483,11 @@
         data: datiGiorno.data.split('/').reverse().join('-'),
         tagli: tagli,
         // fondoEnd è automatico, non va più inviato
+        chiusura: parseFloat(document.getElementById('chiusura').value) || 0,
+        cash: parseFloat(document.getElementById('cash').value) || 0,
         pos: parseFloat(document.getElementById('pos').value) || 0,
         satispay: parseFloat(document.getElementById('satispay').value) || 0,
-        totProdotti: parseFloat(document.getElementById('totProdotti').value) || 0,
+        reportProdotti: parseFloat(document.getElementById('reportProdotti').value) || 0,
         spese: spese.filter(s => s.descrizione || s.importo),
         note: document.getElementById('note').value,
         utente: utente
