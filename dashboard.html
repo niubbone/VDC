@@ -167,8 +167,26 @@
     </div>
   </div>
   
-  <script src="config.js"></script>
   <script>
+    // ⚠️ MODIFICA QUESTO URL CON IL TUO URL /exec
+    const API_URL = 'https://script.google.com/macros/s/TUO_ID_QUI/exec';
+    
+    async function callAPI(action, data = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: action, ...data })
+        });
+        if (!response.ok) throw new Error('Errore server');
+        return await response.json();
+      } catch (error) {
+        console.error('Errore API:', error);
+        throw error;
+      }
+    }
+    
     document.addEventListener('DOMContentLoaded', () => {
       const oggi = new Date();
       document.getElementById('dataRicerca').valueAsDate = oggi;
