@@ -11,7 +11,7 @@
       font-family: 'Georgia', serif;
       background: linear-gradient(rgba(20, 40, 60, 0.7), rgba(20, 40, 60, 0.7)),
                   url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23234" width="100" height="100"/></svg>');
-      min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
+      min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;
     }
     .container {
       background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
@@ -75,7 +75,7 @@
       margin-top: 15px; display: none; text-align: center; font-weight: bold; border: 2px solid #8b0000;
     }
     .footer {
-      text-align: center; margin-top: 40px; color: #d4a574; font-size: 0.95em;
+      text-align: center; margin-top: 30px; color: #d4a574; font-size: 0.95em;
       font-style: italic; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
     @media (max-width: 600px) {
@@ -93,15 +93,19 @@
     </div>
     <div class="btn-group">
       <a href="chiusura.html" class="btn btn-primary">📜 Registra Chiusura Cassa</a>
-      <button class="btn btn-secondary" onclick="mostraModalPIN()">🎩 Accesso Capitani</button>
+      <button class="btn btn-secondary" onclick="mostraModalPIN()">🎩 Accesso Capitano</button>
     </div>
+  </div>
+  
+  <div class="footer">
+    <p>⚓ Sviluppato da Studio Smart ⚓</p>
   </div>
   
   <div id="modalPIN" class="modal">
     <div class="modal-content">
       <h2>Codice Segreto</h2>
       <div class="form-group">
-        <label for="pinInput">PIN Capitani:</label>
+        <label for="pinInput">PIN Capitano:</label>
         <input type="password" id="pinInput" placeholder="••••" maxlength="4">
       </div>
       <div class="modal-buttons">
@@ -110,10 +114,6 @@
       </div>
       <div id="errorePin">⚠️ Codice errato! Riprova.</div>
     </div>
-  </div>
-  
-  <div class="footer">
-    <p>⚓ Sviluppato da Studio Smart ⚓</p>
   </div>
   
   <script>
