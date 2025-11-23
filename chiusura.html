@@ -158,11 +158,16 @@
     
     <div class="section">
       <div class="section-title">🔒 Fondo e Incassi</div>
-      <div class="grid">
-        <div class="form-group">
-          <label>Fondo End:</label>
-          <input type="number" id="fondoEnd" step="0.01" oninput="ricalcola()">
+      <div style="background: #d9ead3; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #6b4423;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 700; color: #2c1810; font-size: 1.1em;">Fondo End (automatico):</span>
+          <span id="fondoEndDisplay" style="font-size: 1.3em; font-weight: 700; color: #2c1810;">0,00 €</span>
         </div>
+        <div style="margin-top: 5px; font-size: 0.9em; color: #666; font-style: italic;">
+          ℹ️ Calcolato automaticamente dalla somma dei tagli
+        </div>
+      </div>
+      <div class="grid">
         <div class="form-group">
           <label>POS:</label>
           <input type="number" id="pos" step="0.01" value="0" oninput="ricalcola()">
@@ -254,7 +259,7 @@
         if (datiGiorno.errore) { alert('⚠️ ' + datiGiorno.errore); return; }
         
         // Controlla se esistono già dati compilati per oggi
-        if (datiGiorno.fondoEnd && datiGiorno.fondoEnd > 0) {
+        if (datiGiorno.totProdotti && datiGiorno.totProdotti > 0) {
           modalitaModifica = true;
           document.getElementById('alertModifica').style.display = 'block';
         }
@@ -286,7 +291,7 @@
         tagliContainer.appendChild(div);
       });
       
-      if (datiGiorno.fondoEnd) document.getElementById('fondoEnd').value = datiGiorno.fondoEnd;
+      // Fondo End è automatico, non si carica da datiGiorno
       if (datiGiorno.pos) document.getElementById('pos').value = datiGiorno.pos;
       if (datiGiorno.satispay) document.getElementById('satispay').value = datiGiorno.satispay;
       if (datiGiorno.totProdotti) document.getElementById('totProdotti').value = datiGiorno.totProdotti;
@@ -306,6 +311,8 @@
         document.getElementById(`total_${taglio.label}`).textContent = valore.toFixed(2) + ' €';
       });
       document.getElementById('totaleContato').textContent = totale.toFixed(2);
+      // Aggiorna Fondo End automatico
+      document.getElementById('fondoEndDisplay').textContent = totale.toFixed(2) + ' €';
       ricalcola();
     }
     
@@ -339,7 +346,8 @@
     
     function ricalcola() {
       const fondoStart = parseFloat(document.getElementById('fondoStart').textContent) || 0;
-      const fondoEnd = parseFloat(document.getElementById('fondoEnd').value) || 0;
+      // Fondo End = Totale Contato (automatico)
+      const fondoEnd = parseFloat(document.getElementById('totaleContato').textContent) || 0;
       const pos = parseFloat(document.getElementById('pos').value) || 0;
       const satispay = parseFloat(document.getElementById('satispay').value) || 0;
       const totProdotti = parseFloat(document.getElementById('totProdotti').value) || 0;
@@ -364,16 +372,28 @@
     
     async function mostraChiusuraPrecedente() {
       try {
-        // Calcola data precedente
+        // Cerca il primo giorno precedente con dati compilati (fino a 30 giorni indietro)
         const oggi = new Date();
-        const ieri = new Date(oggi);
-        ieri.setDate(ieri.getDate() - 1);
-        const dataStr = `${ieri.getFullYear()}-${String(ieri.getMonth()+1).padStart(2,'0')}-${String(ieri.getDate()).padStart(2,'0')}`;
+        let dati = null;
+        let giornoTrovato = false;
         
-        const dati = await callAPI('getDatiGiorno', { data: dataStr });
+        for (let i = 1; i <= 30; i++) {
+          const dataPrecedente = new Date(oggi);
+          dataPrecedente.setDate(dataPrecedente.getDate() - i);
+          const dataStr = `${dataPrecedente.getFullYear()}-${String(dataPrecedente.getMonth()+1).padStart(2,'0')}-${String(dataPrecedente.getDate()).padStart(2,'0')}`;
+          
+          const risultato = await callAPI('getDatiGiorno', { data: dataStr });
+          
+          // Controlla se ha dati compilati (fondoEnd > 0)
+          if (!risultato.errore && risultato.fondoEnd && risultato.fondoEnd > 0) {
+            dati = risultato;
+            giornoTrovato = true;
+            break;
+          }
+        }
         
-        if (dati.errore) {
-          alert('⚠️ ' + dati.errore);
+        if (!giornoTrovato || !dati) {
+          alert('⚠️ Nessuna chiusura precedente trovata negli ultimi 30 giorni');
           return;
         }
         
@@ -446,7 +466,7 @@
       const dati = {
         data: datiGiorno.data.split('/').reverse().join('-'),
         tagli: tagli,
-        fondoEnd: parseFloat(document.getElementById('fondoEnd').value) || 0,
+        // fondoEnd è automatico, non va più inviato
         pos: parseFloat(document.getElementById('pos').value) || 0,
         satispay: parseFloat(document.getElementById('satispay').value) || 0,
         totProdotti: parseFloat(document.getElementById('totProdotti').value) || 0,
