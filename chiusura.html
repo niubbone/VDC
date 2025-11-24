@@ -49,9 +49,9 @@
       margin-bottom: 20px; color: #856404; font-weight: 600;
     }
     .btn-precedente {
-      background: linear-gradient(145deg, #4682b4 0%, #1e5a8a 100%);
-      color: white; padding: 10px 20px; border: 2px solid #1e5a8a;
-      border-radius: 8px; cursor: pointer; font-weight: 700; font-family: 'Rye';
+      background: linear-gradient(145deg, #d9ead3 0%, #b6d7a8 100%);
+      color: #2c1810; padding: 10px 20px; border: 2px solid #6b4423;
+      border-radius: 8px; cursor: pointer; font-weight: 700; font-family: 'Pirata One';
       margin-top: 10px; display: inline-block;
     }
     .section {
@@ -92,10 +92,10 @@
       display: flex; justify-content: space-between; padding: 10px;
       margin-bottom: 5px; background: rgba(255,255,255,0.5); border-radius: 5px; font-size: 1.1em;
     }
-    .discrepanza { font-size: 1.5em; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 15px; }
-    .discrepanza.ok { background: #90ee90; color: #006400; }
-    .discrepanza.warning { background: #ffeb3b; color: #f57f17; }
-    .discrepanza.error { background: #ff5252; color: #b71c1c; }
+    .discrepanza { font-size: 1.5em; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 15px; color: #000000; }
+    .discrepanza.ok { background: #90ee90; }
+    .discrepanza.warning { background: #ffeb3b; }
+    .discrepanza.error { background: #ff5252; }
     .btn-salva {
       width: 100%; background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%);
       color: white; padding: 20px; border: 3px solid #1e5631; border-radius: 10px;
@@ -178,23 +178,23 @@
       <div class="grid">
         <div class="form-group">
           <label>Chiusura (da stampa):</label>
-          <input type="number" id="chiusura" step="0.01" value="0" style="background: #e6f3ff;" oninput="ricalcola()">
+          <input type="number" id="chiusura" step="0.01" value="0" style="background: #e6f3ff;" oninput="ricalcola()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>Cash (portato via):</label>
-          <input type="number" id="cash" step="0.01" value="0" oninput="ricalcola()">
+          <input type="number" id="cash" step="0.01" value="0" oninput="ricalcola()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>POS:</label>
-          <input type="number" id="pos" step="0.01" value="0" oninput="ricalcola()">
+          <input type="number" id="pos" step="0.01" value="0" oninput="ricalcola()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>Satispay:</label>
-          <input type="number" id="satispay" step="0.01" value="0" oninput="ricalcola()">
+          <input type="number" id="satispay" step="0.01" value="0" oninput="ricalcola()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>Report Prodotti:</label>
-          <input type="number" id="reportProdotti" step="0.01" oninput="ricalcola()">
+          <input type="number" id="reportProdotti" step="0.01" oninput="ricalcola()" onfocus="this.select()">
         </div>
       </div>
     </div>
@@ -202,7 +202,7 @@
     <div class="section">
       <div class="section-title">💸 Spese</div>
       <div id="speseContainer"></div>
-      <button class="btn-add" onclick="aggiungiSpesa()">➕ Aggiungi</button>
+      <button class="btn-add" onclick="aggiungiSpesa()">➕</button>
       <div style="text-align:right; margin-top:15px; font-size:1.2em; font-weight:bold; color:#2c1810;">
         Tot Spese: <span id="totaleSpese">0,00</span> €
       </div>
@@ -306,7 +306,7 @@
         div.innerHTML = `
           <span class="taglio-label">${taglio.label}</span>
           <input type="number" class="taglio-input" id="taglio_${taglio.label}" 
-                 value="${datiGiorno.tagli[taglio.label]||0}" min="0" step="1" oninput="ricalcolaTagli()">
+                 value="${datiGiorno.tagli[taglio.label]||0}" min="0" step="1" oninput="ricalcolaTagli()" onfocus="this.select()">
           <span class="taglio-total" id="total_${taglio.label}">0,00 €</span>
         `;
         tagliContainer.appendChild(div);
@@ -359,7 +359,7 @@
           <input type="text" placeholder="Descrizione" value="${spesa.descrizione}"
                  onchange="spese[${index}].descrizione = this.value">
           <input type="number" placeholder="0.00" step="0.01" value="${spesa.importo}"
-                 oninput="spese[${index}].importo = parseFloat(this.value)||0; ricalcola()">
+                 oninput="spese[${index}].importo = parseFloat(this.value)||0; ricalcola()" onfocus="this.select()">
           <button class="btn-remove" onclick="rimuoviSpesa(${index})">🗑️</button>
         `;
         container.appendChild(div);
@@ -496,9 +496,6 @@
     }
     
     async function salvaChiusura() {
-      const utente = prompt('👤 Il tuo nome:');
-      if (!utente) { alert('⚠️ Nome obbligatorio!'); return; }
-      
       const tagli = {};
       TAGLI.forEach(taglio => {
         const input = document.getElementById(`taglio_${taglio.label}`);
@@ -516,7 +513,7 @@
         reportProdotti: parseFloat(document.getElementById('reportProdotti').value) || 0,
         spese: spese.filter(s => s.descrizione || s.importo),
         note: document.getElementById('note').value,
-        utente: utente
+        utente: new Date().toLocaleString('it-IT')
       };
       
       try {
