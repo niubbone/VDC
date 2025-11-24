@@ -265,6 +265,7 @@
       
       try {
         datiGiorno = await callAPI('getDatiGiorno', { data: dataStr });
+        console.log('DEBUG - Risposta API:', datiGiorno);
         if (datiGiorno.errore) { alert('⚠️ ' + datiGiorno.errore); return; }
         
         // Controlla se esistono già dati compilati per oggi
@@ -369,7 +370,7 @@
       
       const diffFondo = fondoStart - fondoEnd;
       const totaleGiorno = cash + pos + satispay + totaleSpese;
-      const totaleCassa = diffFondo + pos + satispay + totaleSpese;
+      const totaleCassa = totaleGiorno + diffFondo;
       const discrepanza = reportProdotti - totaleCassa;
       
       document.getElementById('riepDiffFondo').textContent = diffFondo.toFixed(2) + ' €';
