@@ -93,6 +93,70 @@
       margin-top: 15px; display: none; text-align: center; font-weight: bold; border: 2px solid #8b0000;
     }
     
+    /* BOTTONE SPESE RAPIDE */
+    .btn-spese-rapide {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      font-size: 1.1em;
+      padding: 15px 30px;
+    }
+    .btn-spese-rapide:hover {
+      background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
+    }
+    
+    /* MODAL SPESE RAPIDE */
+    .spesa-item {
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 2px solid rgba(212, 165, 116, 0.3);
+    }
+    .spesa-item input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 2px solid #6b4423;
+      border-radius: 5px;
+      font-size: 1em;
+      background: #f4e4c1;
+      color: #2c1810;
+    }
+    .spesa-item input:last-child {
+      margin-bottom: 0;
+    }
+    .btn-add-spesa {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      width: 100%;
+      margin-top: 10px;
+    }
+    .btn-rimuovi-spesa {
+      background: linear-gradient(145deg, #d44 0%, #a22 100%);
+      color: white;
+      padding: 8px 15px;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+    #messaggioSpese {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+      text-align: center;
+      font-weight: bold;
+    }
+    #messaggioSpese.successo {
+      background: #90EE90;
+      color: #2c5f2d;
+      border: 2px solid #2c5f2d;
+    }
+    #messaggioSpese.errore {
+      background: #ffcccc;
+      color: #8b0000;
+      border: 2px solid #8b0000;
+    }
+    
+    
     /* PIRATA APPESO */
     .pirata-appeso {
       margin-top: 0;
@@ -113,7 +177,7 @@
       margin-top: 20px;
       margin-bottom: 30px;
       color: #d4a574; 
-      font-size: 0.95em;
+      font-size: 1.05em;
       font-style: italic; 
       text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
@@ -132,6 +196,7 @@
       <p>Gestione del Tesoro della Cassa</p>
     </div>
     <div class="btn-group">
+      <button class="btn btn-spese-rapide" onclick="mostraModalSpeseRapide()">💸 Inserisci Spesa Rapida</button>
       <a href="chiusura.html" class="btn btn-primary">📜 Registra Chiusura Cassa</a>
       <button class="btn btn-secondary" onclick="mostraModalPIN()">🎩 Accesso Capitano</button>
     </div>
@@ -159,6 +224,24 @@
         <button class="btn btn-primary" onclick="verificaPIN()">Entra</button>
       </div>
       <div id="errorePin">⚠️ Codice errato! Riprova.</div>
+    </div>
+  </div>
+  
+  <!-- MODAL SPESE RAPIDE -->
+  <div id="modalSpeseRapide" class="modal">
+    <div class="modal-content">
+      <h2>💸 Inserisci Spese</h2>
+      <p style="color: #a67c52; font-size: 0.9em; margin-bottom: 15px;">
+        Le spese saranno aggiunte alla chiusura di oggi
+      </p>
+      <div id="containerSpese">
+        <!-- Le spese vengono aggiunte dinamicamente -->
+      </div>
+      <button class="btn btn-add-spesa" onclick="aggiungiCampoSpesa()">➕ Aggiungi Altra Spesa</button>
+      <div id="messaggioSpese"></div>
+      <div class="modal-buttons" style="margin-top: 20px;">
+        <button class="btn btn-cancel" onclick="chiudiModalSpeseRapide()">✕ Chiudi</button>
+      </div>
     </div>
   </div>
   
@@ -214,6 +297,103 @@
     document.getElementById('pinInput').addEventListener('keypress', e => {
       if (e.key === 'Enter') verificaPIN();
     });
+    
+    // ===== GESTIONE SPESE RAPIDE =====
+    let speseRapide = [];
+    
+    function mostraModalSpeseRapide() {
+      speseRapide = []; // Reset spese
+      document.getElementById('containerSpese').innerHTML = '';
+      document.getElementById('messaggioSpese').style.display = 'none';
+      aggiungiCampoSpesa(); // Aggiungi prima spesa
+      document.getElementById('modalSpeseRapide').classList.add('active');
+    }
+    
+    function chiudiModalSpeseRapide() {
+      document.getElementById('modalSpeseRapide').classList.remove('active');
+    }
+    
+    function aggiungiCampoSpesa() {
+      const container = document.getElementById('containerSpese');
+      const index = speseRapide.length;
+      
+      const div = document.createElement('div');
+      div.className = 'spesa-item';
+      div.id = `spesa-${index}`;
+      div.innerHTML = `
+        <input type="text" id="desc-${index}" placeholder="Descrizione spesa (es: Fornitore X)" 
+               onchange="salvaSpesaAutomatica(${index})">
+        <input type="number" id="importo-${index}" placeholder="Importo (€)" step="0.01" min="0"
+               onchange="salvaSpesaAutomatica(${index})">
+        ${index > 0 ? `<button class="btn btn-rimuovi-spesa" onclick="rimuoviSpesa(${index})">🗑️ Rimuovi</button>` : ''}
+      `;
+      container.appendChild(div);
+      
+      speseRapide.push({ descrizione: '', importo: 0 });
+      
+      // Focus sul primo input
+      setTimeout(() => document.getElementById(`desc-${index}`).focus(), 100);
+    }
+    
+    function rimuoviSpesa(index) {
+      const elemento = document.getElementById(`spesa-${index}`);
+      if (elemento) {
+        elemento.remove();
+        speseRapide.splice(index, 1);
+      }
+    }
+    
+    async function salvaSpesaAutomatica(index) {
+      const desc = document.getElementById(`desc-${index}`).value.trim();
+      const importo = parseFloat(document.getElementById(`importo-${index}`).value) || 0;
+      
+      // Aggiorna array locale
+      speseRapide[index] = { descrizione: desc, importo: importo };
+      
+      // Se entrambi i campi sono compilati, salva
+      if (desc && importo > 0) {
+        await inviaSpeseRapide();
+      }
+    }
+    
+    async function inviaSpeseRapide() {
+      // Filtra solo spese valide
+      const speseValide = speseRapide.filter(s => s.descrizione && s.importo > 0);
+      
+      if (speseValide.length === 0) return;
+      
+      const oggi = new Date();
+      const dataStr = `${oggi.getFullYear()}-${String(oggi.getMonth()+1).padStart(2,'0')}-${String(oggi.getDate()).padStart(2,'0')}`;
+      
+      try {
+        const result = await callAPI('aggiungiSpeseRapide', {
+          data: dataStr,
+          spese: speseValide
+        });
+        
+        const msg = document.getElementById('messaggioSpese');
+        msg.style.display = 'block';
+        
+        if (result.successo) {
+          msg.className = 'successo';
+          msg.textContent = `✅ ${result.messaggio}`;
+          
+          // Chiudi automaticamente dopo 2 secondi
+          setTimeout(() => {
+            chiudiModalSpeseRapide();
+          }, 2000);
+        } else {
+          msg.className = 'errore';
+          msg.textContent = `⚠️ Errore: ${result.errore}`;
+        }
+      } catch (error) {
+        const msg = document.getElementById('messaggioSpese');
+        msg.style.display = 'block';
+        msg.className = 'errore';
+        msg.textContent = `⚠️ Errore di connessione: ${error.message}`;
+      }
+    }
+    // ===== FINE GESTIONE SPESE RAPIDE =====
     
     // Registrazione Service Worker per PWA
     if ('serviceWorker' in navigator) {
