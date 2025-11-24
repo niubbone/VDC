@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vecchia-dogana-v1.7';
+const CACHE_NAME = 'vecchia-dogana-v1.8';
 const urlsToCache = [
   './',
   './index.html',
