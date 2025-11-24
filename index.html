@@ -11,13 +11,14 @@
       font-family: 'Georgia', serif;
       background: linear-gradient(rgba(20, 40, 60, 0.7), rgba(20, 40, 60, 0.7)),
                   url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23234" width="100" height="100"/></svg>');
-      min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;
+      min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 20px;
     }
     .container {
       background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
       padding: 50px 40px; border-radius: 15px;
       box-shadow: 0 30px 80px rgba(0,0,0,0.6); max-width: 500px; width: 100%;
       border: 4px solid #6b4423; position: relative;
+      margin-top: 30px;
     }
     .logo { text-align: center; margin-bottom: 40px; }
     .logo h1 {
@@ -74,13 +75,35 @@
       color: #8b0000; background: #ffcccc; padding: 12px; border-radius: 8px;
       margin-top: 15px; display: none; text-align: center; font-weight: bold; border: 2px solid #8b0000;
     }
+    
+    /* PIRATA APPESO */
+    .pirata-appeso {
+      margin-top: 0;
+      text-align: center;
+      position: relative;
+    }
+    
+    .pirata-appeso img {
+      max-width: 280px;
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));
+    }
+    
+    /* FOOTER IN FONDO */
     .footer {
-      text-align: center; margin-top: 30px; color: #d4a574; font-size: 0.95em;
-      font-style: italic; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+      text-align: center; 
+      margin-top: 20px;
+      margin-bottom: 30px;
+      color: #d4a574; 
+      font-size: 0.95em;
+      font-style: italic; 
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
     @media (max-width: 600px) {
       .container { padding: 30px 20px; }
       .logo h1 { font-size: 2em; }
+      .pirata-appeso img { max-width: 200px; }
     }
   </style>
 </head>
@@ -97,6 +120,12 @@
     </div>
   </div>
   
+  <!-- PIRATA APPESO -->
+  <div class="pirata-appeso">
+    <img src="pirata_appeso.gif" alt="Pirata appeso con forziere">
+  </div>
+  
+  <!-- FOOTER IN FONDO -->
   <div class="footer">
     <p>⚓ Ver. 1.5 ⚓</p>
   </div>
