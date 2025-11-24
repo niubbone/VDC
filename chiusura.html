@@ -141,6 +141,9 @@
       <div class="info-item"><strong>Fondo:</strong> <span id="fondoStart"></span> €</div>
       <div>
         <button class="btn-precedente" onclick="mostraChiusuraPrecedente()">👁️ Vedi Chiusura Precedente</button>
+        <div id="loadingPrecedente" style="display:none; margin-top:10px; color:#d4af37; font-style:italic;">
+          🏴‍☠️ Rovistando nei registri del capitano...
+        </div>
       </div>
     </div>
     
@@ -253,6 +256,9 @@
       {valore:100,label:'100€'}
     ];
     
+    // Tagli visibili nel form (solo da 0,50€ in su)
+    const TAGLI_VISIBILI = TAGLI.filter(t => t.valore >= 0.50);
+    
     let datiGiorno = null;
     let spese = [];
     let modalitaModifica = false;
@@ -289,7 +295,7 @@
       document.getElementById('fondoStart').textContent = datiGiorno.fondoStart.toFixed(2);
       
       const tagliContainer = document.getElementById('tagli');
-      TAGLI.forEach(taglio => {
+      TAGLI_VISIBILI.forEach(taglio => {
         const div = document.createElement('div');
         div.className = 'taglio-item';
         div.innerHTML = `
@@ -316,7 +322,7 @@
     
     function ricalcolaTagli() {
       let totale = 0;
-      TAGLI.forEach(taglio => {
+      TAGLI_VISIBILI.forEach(taglio => {
         const qta = parseFloat(document.getElementById(`taglio_${taglio.label}`).value) || 0;
         const valore = qta * taglio.valore;
         totale += valore;
@@ -387,6 +393,8 @@
     
     async function mostraChiusuraPrecedente() {
       try {
+        document.getElementById('loadingPrecedente').style.display = 'block';
+        
         // Cerca il primo giorno precedente con dati compilati (fino a 30 giorni indietro)
         const oggi = new Date();
         let dati = null;
@@ -408,6 +416,7 @@
         }
         
         if (!giornoTrovato || !dati) {
+          document.getElementById('loadingPrecedente').style.display = 'none';
           alert('⚠️ Nessuna chiusura precedente trovata negli ultimi 30 giorni');
           return;
         }
@@ -423,14 +432,23 @@
         tagliHtml += haTagli ? '</div>' : '<div style="color:#666; font-style:italic;">Nessun taglio registrato</div></div>';
         
         let speseHtml = '<div class="section"><div class="section-title">💸 Spese</div>';
+        let hasDettaglioSpese = false;
         if (dati.spese && dati.spese.length > 0) {
           dati.spese.forEach(spesa => {
             if (spesa.descrizione || spesa.importo) {
+              hasDettaglioSpese = true;
               speseHtml += `<div class="dettaglio-row"><span>${spesa.descrizione || 'N/A'}:</span><span>${spesa.importo.toFixed(2)} €</span></div>`;
             }
           });
-        } else {
-          speseHtml += '<div style="color:#666; font-style:italic;">Nessuna spesa registrata</div>';
+        }
+        
+        // Aggiungi totale spese sempre in fondo
+        speseHtml += `<div class="dettaglio-row" style="font-weight:700; border-top:2px solid #333; margin-top:5px; padding-top:5px;">
+          <span>💸 Tot Spese:</span><span>${dati.totaleSpese.toFixed(2)} €</span>
+        </div>`;
+        
+        if (!hasDettaglioSpese) {
+          speseHtml = '<div class="section"><div class="section-title">💸 Spese</div><div style="color:#666; font-style:italic;">Nessun dettaglio spese</div>' + speseHtml.split('</div>').slice(-2).join('</div>');
         }
         speseHtml += '</div>';
         
@@ -447,9 +465,8 @@
             <div class="dettaglio-row"><span>POS:</span><span>${dati.pos.toFixed(2)} €</span></div>
             <div class="dettaglio-row"><span>Satispay:</span><span>${dati.satispay.toFixed(2)} €</span></div>
             <div class="dettaglio-row"><span>Report Prodotti:</span><span>${dati.reportProdotti.toFixed(2)} €</span></div>
-            <div class="dettaglio-row"><span>Tot Spese:</span><span>${dati.totaleSpese.toFixed(2)} €</span></div>
-            <div class="dettaglio-row" style="font-weight:700; background:#e8b873;">
-              <span>Discrepanza:</span><span>${dati.discrepanza.toFixed(2)} €</span>
+            <div class="dettaglio-row" style="font-weight:700; background:#ea9999;">
+              <span>⚠️ Discrepanza:</span><span>${dati.discrepanza.toFixed(2)} €</span>
             </div>
           </div>
           ${tagliHtml}
@@ -461,8 +478,10 @@
         `;
         
         document.getElementById('contenutoPrecedente').innerHTML = html;
+        document.getElementById('loadingPrecedente').style.display = 'none';
         document.getElementById('modalPrecedente').classList.add('active');
       } catch (error) {
+        document.getElementById('loadingPrecedente').style.display = 'none';
         alert('⚠️ Errore: ' + error.message);
       }
     }
@@ -477,7 +496,8 @@
       
       const tagli = {};
       TAGLI.forEach(taglio => {
-        tagli[taglio.label] = parseInt(document.getElementById(`taglio_${taglio.label}`).value) || 0;
+        const input = document.getElementById(`taglio_${taglio.label}`);
+        tagli[taglio.label] = input ? (parseInt(input.value) || 0) : 0;
       });
       
       const dati = {
