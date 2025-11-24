@@ -1,11 +1,11 @@
 const CACHE_NAME = 'vecchia-dogana-v1.5';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/chiusura.html',
-  '/dashboard.html',
-  '/pirata_appeso.gif',
-  '/manifest.json'
+  './',
+  './index.html',
+  './chiusura.html',
+  './dashboard.html',
+  './pirata_appeso.gif',
+  './manifest.json'
 ];
 
 // Installazione - caching dei file essenziali
