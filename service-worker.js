@@ -1,8 +1,9 @@
-const CACHE_NAME = 'vecchia-dogana-v1.9';
+const CACHE_NAME = 'vecchia-dogana-v2.0';
 const urlsToCache = [
   './',
   './index.html',
   './chiusura.html',
+  './prenotazioni.html',
   './dashboard.html',
   './pirata_appeso.gif',
   './manifest.json'
