@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚓ Prenotazioni - Vecchia Dogana</title>
+  
+  <!-- PWA -->
+  <meta name="description" content="Gestione prenotazioni Vecchia Dogana">
+  <meta name="theme-color" content="#14283c">
+  <link rel="manifest" href="./manifest.json">
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Rye', serif;
+      background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+      color: #f4e4c1;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    /* HEADER */
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: rgba(20, 40, 60, 0.8);
+      border: 3px solid #d4a574;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+    
+    .header h1 {
+      font-family: 'Pirata One';
+      font-size: 2.5em;
+      color: #d4a574;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #a67c52;
+      font-size: 1.1em;
+    }
+    
+    /* LAYOUT PRINCIPALE */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+    }
+    
+    @media (max-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* CALENDARIO */
+    .calendario-container {
+      background: rgba(244, 228, 193, 0.95);
+      border: 4px solid #6b4423;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6),
+                  inset 0 0 50px rgba(139, 69, 19, 0.1);
+      position: relative;
+    }
+    
+    /* Effetto pergamena */
+    .calendario-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(139, 69, 19, 0.03) 2px,
+          rgba(139, 69, 19, 0.03) 4px
+        );
+      pointer-events: none;
+      border-radius: 15px;
+    }
+    
+    .calendario-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid #8b4513;
+    }
+    
+    .calendario-header h2 {
+      font-family: 'Pirata One';
+      font-size: 1.8em;
+      color: #2c1810;
+      text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.3);
+    }
+    
+    .nav-mese {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .btn-nav {
+      background: linear-gradient(145deg, #6b4423 0%, #4a2f1a 100%);
+      color: #f4e4c1;
+      border: 2px solid #2c1810;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Pirata One';
+      font-size: 1.1em;
+      transition: all 0.3s;
+    }
+    
+    .btn-nav:hover {
+      background: linear-gradient(145deg, #8b5a3c 0%, #6b4423 100%);
+      transform: translateY(-2px);
+    }
+    
+    .calendario-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    
+    .giorno-settimana {
+      text-align: center;
+      font-weight: 700;
+      color: #2c1810;
+      padding: 10px;
+      background: rgba(139, 69, 19, 0.2);
+      border-radius: 8px;
+      font-size: 0.9em;
+    }
+    
+    .giorno {
+      aspect-ratio: 1;
+      background: #fff;
+      border: 2px solid #8b4513;
+      border-radius: 10px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .giorno:hover {
+      background: #fffaf0;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(139, 69, 19, 0.3);
+    }
+    
+    .giorno.oggi {
+      background: #ffd700;
+      border-color: #8b4513;
+      border-width: 3px;
+      font-weight: 700;
+    }
+    
+    .giorno.altro-mese {
+      opacity: 0.4;
+      cursor: default;
+      background: #e6d9c5;
+    }
+    
+    .giorno.altro-mese:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .giorno.selezionato {
+      background: #90ee90;
+      border-color: #2c5f2d;
+      border-width: 3px;
+    }
+    
+    .giorno-numero {
+      font-size: 1.2em;
+      color: #2c1810;
+      font-weight: 700;
+    }
+    
+    .giorno-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #e74c3c;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75em;
+      font-weight: 700;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    .giorno-icona {
+      text-align: center;
+      font-size: 1.5em;
+      margin-top: 5px;
+    }
+    
+    /* PANNELLO LATERALE */
+    .pannello-laterale {
+      background: rgba(20, 40, 60, 0.95);
+      border: 3px solid #d4a574;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      max-height: 800px;
+      overflow-y: auto;
+    }
+    
+    .pannello-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #d4a574;
+    }
+    
+    .pannello-header h3 {
+      font-family: 'Pirata One';
+      font-size: 1.5em;
+      color: #d4a574;
+    }
+    
+    .btn-nuova {
+      background: linear-gradient(145deg, #27ae60 0%, #1e8449 100%);
+      color: white;
+      border: 2px solid #1e5631;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Pirata One';
+      font-size: 1.1em;
+      transition: all 0.3s;
+    }
+    
+    .btn-nuova:hover {
+      background: linear-gradient(145deg, #2ecc71 0%, #27ae60 100%);
+      transform: translateY(-2px);
+    }
+    
+    /* CARD PRENOTAZIONE */
+    .prenotazione-card {
+      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
+      border: 3px solid #8b4513;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    
+    .prenotazione-card::before {
+      content: '⚓';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 2em;
+      opacity: 0.2;
+    }
+    
+    .prenotazione-ora {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: #2c1810;
+      margin-bottom: 8px;
+    }
+    
+    .prenotazione-cliente {
+      font-size: 1.1em;
+      color: #2c1810;
+      margin-bottom: 5px;
+    }
+    
+    .prenotazione-dettagli {
+      font-size: 0.9em;
+      color: #4a2f1a;
+      margin-bottom: 5px;
+    }
+    
+    .prenotazione-note {
+      font-size: 0.85em;
+      color: #6b4423;
+      font-style: italic;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #8b4513;
+    }
+    
+    .prenotazione-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 0.8em;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    
+    .badge-confermato { background: #90ee90; color: #2c5f2d; }
+    .badge-attesa { background: #ffeb3b; color: #f57f17; }
+    .badge-annullato { background: #ff5252; color: #b71c1c; }
+    
+    .prenotazione-azioni {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .btn-azione {
+      flex: 1;
+      padding: 8px;
+      border: 2px solid;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Rye';
+      font-size: 0.9em;
+      transition: all 0.3s;
+    }
+    
+    .btn-modifica {
+      background: #e8b873;
+      color: #2c1810;
+      border-color: #6b4423;
+    }
+    
+    .btn-modifica:hover {
+      background: #f0c890;
+    }
+    
+    .btn-elimina {
+      background: #e74c3c;
+      color: white;
+      border-color: #c0392b;
+    }
+    
+    .btn-elimina:hover {
+      background: #c0392b;
+    }
+    
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
+      border: 4px solid #6b4423;
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+    
+    .modal-header {
+      font-family: 'Pirata One';
+      font-size: 1.8em;
+      color: #2c1810;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      color: #2c1810;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #8b4513;
+      border-radius: 8px;
+      font-family: 'Rye';
+      font-size: 1em;
+      background: white;
+      color: #2c1810;
+    }
+    
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn-modal {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Pirata One';
+      font-size: 1.1em;
+      transition: all 0.3s;
+    }
+    
+    .btn-salva {
+      background: linear-gradient(145deg, #27ae60 0%, #1e8449 100%);
+      color: white;
+      border-color: #1e5631;
+    }
+    
+    .btn-salva:hover {
+      background: linear-gradient(145deg, #2ecc71 0%, #27ae60 100%);
+    }
+    
+    .btn-annulla {
+      background: linear-gradient(145deg, #95a5a6 0%, #7f8c8d 100%);
+      color: white;
+      border-color: #5a6a6b;
+    }
+    
+    .btn-annulla:hover {
+      background: linear-gradient(145deg, #a6b4b5 0%, #95a5a6 100%);
+    }
+    
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #a67c52;
+    }
+    
+    .empty-state-icon {
+      font-size: 4em;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+    
+    .empty-state-text {
+      font-size: 1.1em;
+    }
+    
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #d4a574;
+    }
+    
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .calendario-grid {
+        gap: 4px;
+      }
+      
+      .giorno {
+        padding: 4px;
+      }
+      
+      .giorno-numero {
+        font-size: 1em;
+      }
+      
+      .giorno-icona {
+        font-size: 1.2em;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .header h1 {
+        font-size: 2em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header">
+      <h1>⚓ Registro delle Prenotazioni</h1>
+    </div>
+    
+    <div class="main-layout">
+      <!-- CALENDARIO -->
+      <div class="calendario-container">
+        <div class="calendario-header">
+          <h2 id="meseAnnoTitolo">Novembre 2024</h2>
+          <div class="nav-mese">
+            <button class="btn-nav" onclick="cambiaMese(-1)">◄</button>
+            <button class="btn-nav" onclick="vaiOggi()">Oggi</button>
+            <button class="btn-nav" onclick="cambiaMese(1)">►</button>
+          </div>
+        </div>
+        
+        <div class="calendario-grid">
+          <!-- Giorni settimana -->
+          <div class="giorno-settimana">LUN</div>
+          <div class="giorno-settimana">MAR</div>
+          <div class="giorno-settimana">MER</div>
+          <div class="giorno-settimana">GIO</div>
+          <div class="giorno-settimana">VEN</div>
+          <div class="giorno-settimana">SAB</div>
+          <div class="giorno-settimana">DOM</div>
+        </div>
+        
+        <div class="calendario-grid" id="giorniContainer">
+          <!-- Giorni generati dinamicamente -->
+        </div>
+      </div>
+      
+      <!-- PANNELLO LATERALE -->
+      <div class="pannello-laterale">
+        <div class="pannello-header">
+          <h3 id="pannelloTitolo">Seleziona un giorno</h3>
+          <button class="btn-nuova" onclick="mostraModalNuova()" id="btnNuova" style="display:none;">➕</button>
+        </div>
+        
+        <div id="prenotazioniContainer">
+          <div class="empty-state">
+            <div class="empty-state-icon">🗺️</div>
+            <div class="empty-state-text">
+              Clicca su un giorno per vedere le prenotazioni
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- MODAL NUOVA/MODIFICA PRENOTAZIONE -->
+  <div id="modalPrenotazione" class="modal">
+    <div class="modal-content">
+      <div class="modal-header" id="modalTitolo">📝 Nuova Prenotazione</div>
+      
+      <div class="form-group">
+        <label>Data *</label>
+        <input type="date" id="inputData" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Ora</label>
+        <input type="time" id="inputOra" value="19:00">
+      </div>
+      
+      <div class="form-group">
+        <label>Cliente *</label>
+        <input type="text" id="inputCliente" placeholder="Nome cliente o gruppo" required>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Telefono</label>
+          <input type="tel" id="inputTelefono" placeholder="123456789">
+        </div>
+        
+        <div class="form-group">
+          <label>Persone</label>
+          <input type="number" id="inputPersone" min="1" value="2">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Note / Preferenze</label>
+        <textarea id="inputNote" placeholder="Allergie, richieste speciali, ecc..."></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Stato</label>
+        <select id="inputStato">
+          <option value="confermato">✅ Confermato</option>
+          <option value="attesa">⏳ In attesa</option>
+          <option value="annullato">❌ Annullato</option>
+        </select>
+      </div>
+      
+      <div class="modal-buttons">
+        <button class="btn-modal btn-annulla" onclick="chiudiModal()">✕ Annulla</button>
+        <button class="btn-modal btn-salva" onclick="salvaPrenotazione()">💾 Salva</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
+    
+    let meseCorrente = new Date().getMonth();
+    let annoCorrente = new Date().getFullYear();
+    let giornoSelezionato = null;
+    let prenotazioni = [];
+    let modalitaModifica = false;
+    let idPrenotazioneModifica = null;
+    
+    const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+    
+    // Inizializzazione
+    document.addEventListener('DOMContentLoaded', () => {
+      generaCalendario();
+      caricaPrenotazioni();
+    });
+    
+    async function callAPI(action, data = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, ...data })
+        });
+        return await response.json();
+      } catch (error) {
+        console.error('Errore API:', error);
+        return { errore: error.message };
+      }
+    }
+    
+    function generaCalendario() {
+      const container = document.getElementById('giorniContainer');
+      container.innerHTML = '';
+      
+      const titolo = document.getElementById('meseAnnoTitolo');
+      titolo.textContent = `${MESI[meseCorrente]} ${annoCorrente}`;
+      
+      // Primo giorno del mese
+      const primoGiorno = new Date(annoCorrente, meseCorrente, 1);
+      let giornoSettimana = primoGiorno.getDay();
+      giornoSettimana = giornoSettimana === 0 ? 6 : giornoSettimana - 1; // Lunedì = 0
+      
+      // Ultimo giorno del mese
+      const ultimoGiorno = new Date(annoCorrente, meseCorrente + 1, 0).getDate();
+      
+      // Giorni del mese precedente
+      const ultimoGiornoMesePrecedente = new Date(annoCorrente, meseCorrente, 0).getDate();
+      for (let i = giornoSettimana - 1; i >= 0; i--) {
+        const giorno = ultimoGiornoMesePrecedente - i;
+        container.innerHTML += `
+          <div class="giorno altro-mese">
+            <div class="giorno-numero">${giorno}</div>
+          </div>
+        `;
+      }
+      
+      // Giorni del mese corrente
+      const oggi = new Date();
+      const oggiStr = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}-${String(oggi.getDate()).padStart(2, '0')}`;
+      
+      for (let giorno = 1; giorno <= ultimoGiorno; giorno++) {
+        const dataStr = `${annoCorrente}-${String(meseCorrente + 1).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`;
+        const isOggi = dataStr === oggiStr;
+        const isSelezionato = giornoSelezionato === dataStr;
+        
+        const prenotazioniGiorno = prenotazioni.filter(p => p.data === dataStr);
+        const numPrenotazioni = prenotazioniGiorno.length;
+        
+        let classi = 'giorno';
+        if (isOggi) classi += ' oggi';
+        if (isSelezionato) classi += ' selezionato';
+        
+        container.innerHTML += `
+          <div class="${classi}" onclick="selezionaGiorno('${dataStr}')">
+            <div class="giorno-numero">${giorno}</div>
+            ${numPrenotazioni > 0 ? `
+              <div class="giorno-badge">${numPrenotazioni}</div>
+              <div class="giorno-icona">⚓</div>
+            ` : ''}
+          </div>
+        `;
+      }
+      
+      // Giorni del mese successivo
+      const giorniRimanenti = 42 - (giornoSettimana + ultimoGiorno);
+      for (let giorno = 1; giorno <= giorniRimanenti; giorno++) {
+        container.innerHTML += `
+          <div class="giorno altro-mese">
+            <div class="giorno-numero">${giorno}</div>
+          </div>
+        `;
+      }
+    }
+    
+    async function caricaPrenotazioni() {
+      const result = await callAPI('getPrenotazioni', {
+        anno: annoCorrente,
+        mese: meseCorrente + 1
+      });
+      
+      if (result.prenotazioni) {
+        prenotazioni = result.prenotazioni;
+        generaCalendario();
+        
+        if (giornoSelezionato) {
+          mostraPrenotazioniGiorno(giornoSelezionato);
+        }
+      }
+    }
+    
+    function selezionaGiorno(dataStr) {
+      giornoSelezionato = dataStr;
+      generaCalendario();
+      mostraPrenotazioniGiorno(dataStr);
+    }
+    
+    function mostraPrenotazioniGiorno(dataStr) {
+      const prenotazioniGiorno = prenotazioni.filter(p => p.data === dataStr);
+      
+      const [anno, mese, giorno] = dataStr.split('-');
+      const data = new Date(anno, mese - 1, giorno);
+      const nomeGiorno = data.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+      
+      document.getElementById('pannelloTitolo').textContent = nomeGiorno.charAt(0).toUpperCase() + nomeGiorno.slice(1);
+      document.getElementById('btnNuova').style.display = 'block';
+      
+      const container = document.getElementById('prenotazioniContainer');
+      
+      if (prenotazioniGiorno.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <div class="empty-state-text">
+              Nessuna prenotazione per questo giorno
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = '';
+      prenotazioniGiorno.forEach(pren => {
+        const badgeClass = `badge-${pren.stato}`;
+        container.innerHTML += `
+          <div class="prenotazione-card">
+            <div class="prenotazione-ora">🕐 ${pren.ora || 'Orario da definire'}</div>
+            <div class="prenotazione-cliente">👤 ${pren.cliente}</div>
+            ${pren.telefono ? `<div class="prenotazione-dettagli">📞 ${pren.telefono}</div>` : ''}
+            ${pren.persone ? `<div class="prenotazione-dettagli">👥 ${pren.persone} ${pren.persone === 1 ? 'persona' : 'persone'}</div>` : ''}
+            ${pren.note ? `<div class="prenotazione-note">📝 ${pren.note}</div>` : ''}
+            <span class="prenotazione-badge ${badgeClass}">
+              ${pren.stato === 'confermato' ? '✅ Confermato' : pren.stato === 'attesa' ? '⏳ In attesa' : '❌ Annullato'}
+            </span>
+            <div class="prenotazione-azioni">
+              <button class="btn-azione btn-modifica" onclick="modificaPrenotazione('${pren.id}')">✏️ Modifica</button>
+              <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')">🗑️ Elimina</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+    
+    function cambiaMese(delta) {
+      meseCorrente += delta;
+      if (meseCorrente > 11) {
+        meseCorrente = 0;
+        annoCorrente++;
+      } else if (meseCorrente < 0) {
+        meseCorrente = 11;
+        annoCorrente--;
+      }
+      giornoSelezionato = null;
+      caricaPrenotazioni();
+    }
+    
+    function vaiOggi() {
+      const oggi = new Date();
+      meseCorrente = oggi.getMonth();
+      annoCorrente = oggi.getFullYear();
+      const oggiStr = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}-${String(oggi.getDate()).padStart(2, '0')}`;
+      giornoSelezionato = oggiStr;
+      caricaPrenotazioni();
+    }
+    
+    function mostraModalNuova() {
+      modalitaModifica = false;
+      document.getElementById('modalTitolo').textContent = '📝 Nuova Prenotazione';
+      document.getElementById('inputData').value = giornoSelezionato;
+      document.getElementById('inputOra').value = '19:00';
+      document.getElementById('inputCliente').value = '';
+      document.getElementById('inputTelefono').value = '';
+      document.getElementById('inputPersone').value = '2';
+      document.getElementById('inputNote').value = '';
+      document.getElementById('inputStato').value = 'confermato';
+      document.getElementById('modalPrenotazione').classList.add('active');
+    }
+    
+    function modificaPrenotazione(id) {
+      const pren = prenotazioni.find(p => p.id === id);
+      if (!pren) return;
+      
+      modalitaModifica = true;
+      idPrenotazioneModifica = id;
+      
+      document.getElementById('modalTitolo').textContent = '✏️ Modifica Prenotazione';
+      document.getElementById('inputData').value = pren.data;
+      document.getElementById('inputOra').value = pren.ora || '19:00';
+      document.getElementById('inputCliente').value = pren.cliente;
+      document.getElementById('inputTelefono').value = pren.telefono || '';
+      document.getElementById('inputPersone').value = pren.persone || 2;
+      document.getElementById('inputNote').value = pren.note || '';
+      document.getElementById('inputStato').value = pren.stato;
+      document.getElementById('modalPrenotazione').classList.add('active');
+    }
+    
+    async function salvaPrenotazione() {
+      const prenotazione = {
+        data: document.getElementById('inputData').value,
+        ora: document.getElementById('inputOra').value,
+        cliente: document.getElementById('inputCliente').value,
+        telefono: document.getElementById('inputTelefono').value,
+        persone: parseInt(document.getElementById('inputPersone').value) || 0,
+        note: document.getElementById('inputNote').value,
+        stato: document.getElementById('inputStato').value
+      };
+      
+      if (!prenotazione.data || !prenotazione.cliente) {
+        alert('⚠️ Data e Cliente sono obbligatori!');
+        return;
+      }
+      
+      let result;
+      if (modalitaModifica) {
+        result = await callAPI('modificaPrenotazione', {
+          id: idPrenotazioneModifica,
+          prenotazione: prenotazione
+        });
+      } else {
+        result = await callAPI('salvaPrenotazione', {
+          prenotazione: prenotazione
+        });
+      }
+      
+      if (result.successo) {
+        chiudiModal();
+        await caricaPrenotazioni();
+        if (giornoSelezionato) {
+          mostraPrenotazioniGiorno(giornoSelezionato);
+        }
+        alert(`✅ ${result.messaggio}`);
+      } else {
+        alert(`⚠️ Errore: ${result.errore}`);
+      }
+    }
+    
+    async function eliminaPrenotazione(id) {
+      if (!confirm('🗑️ Sei sicuro di voler eliminare questa prenotazione?')) {
+        return;
+      }
+      
+      const result = await callAPI('eliminaPrenotazione', { id: id });
+      
+      if (result.successo) {
+        await caricaPrenotazioni();
+        if (giornoSelezionato) {
+          mostraPrenotazioniGiorno(giornoSelezionato);
+        }
+        alert(`✅ ${result.messaggio}`);
+      } else {
+        alert(`⚠️ Errore: ${result.errore}`);
+      }
+    }
+    
+    function chiudiModal() {
+      document.getElementById('modalPrenotazione').classList.remove('active');
+    }
+    
+    // Service Worker per PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js');
+    }
+  </script>
+</body>
+</html>
