@@ -252,9 +252,9 @@
     }
     
     .btn-nuova {
-      background: linear-gradient(145deg, #27ae60 0%, #1e8449 100%);
-      color: white;
-      border: 2px solid #1e5631;
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      border: 2px solid #6b4423;
       padding: 10px 20px;
       border-radius: 8px;
       cursor: pointer;
@@ -264,7 +264,7 @@
     }
     
     .btn-nuova:hover {
-      background: linear-gradient(145deg, #2ecc71 0%, #27ae60 100%);
+      background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
       transform: translateY(-2px);
     }
     
@@ -733,18 +733,28 @@
     }
     
     async function caricaPrenotazioni() {
-      const result = await callAPI('getPrenotazioni', {
-        anno: annoCorrente,
-        mese: meseCorrente + 1
-      });
-      
-      if (result.prenotazioni) {
-        prenotazioni = result.prenotazioni;
-        generaCalendario();
+      try {
+        const result = await callAPI('getPrenotazioni', {
+          anno: annoCorrente,
+          mese: meseCorrente + 1
+        });
         
-        if (giornoSelezionato) {
-          mostraPrenotazioniGiorno(giornoSelezionato);
+        if (result.prenotazioni) {
+          prenotazioni = result.prenotazioni;
+        } else if (result.errore) {
+          console.error('Errore API:', result.errore);
+          prenotazioni = []; // Array vuoto se errore
         }
+      } catch (error) {
+        console.error('Errore caricamento prenotazioni:', error);
+        prenotazioni = []; // Array vuoto se errore
+      }
+      
+      // Genera calendario comunque (anche se vuoto)
+      generaCalendario();
+      
+      if (giornoSelezionato) {
+        mostraPrenotazioniGiorno(giornoSelezionato);
       }
     }
     
@@ -889,7 +899,20 @@
         }
         alert(`✅ ${result.messaggio}`);
       } else {
-        alert(`⚠️ Errore: ${result.errore}`);
+        let messaggioErrore = `⚠️ Errore: ${result.errore}`;
+        
+        // Se l'errore è "Connessione non disponibile", aggiungi suggerimento
+        if (result.errore && result.errore.includes('Connessione non disponibile')) {
+          messaggioErrore += '\n\n💡 VERIFICA:\n' +
+            '1. Hai aggiunto i 6 case nel doPost() di API.gs?\n' +
+            '2. Hai fatto il deploy della nuova versione API?\n' +
+            '3. L\'URL API è corretto in questo file?\n\n' +
+            'Vedi console (F12) per dettagli tecnici.';
+          console.error('⚠️ API NON CONFIGURATA!');
+          console.error('Segui STEP 1 e STEP 2 della guida PROSSIMI_STEP_PRENOTAZIONI.txt');
+        }
+        
+        alert(messaggioErrore);
       }
     }
     
