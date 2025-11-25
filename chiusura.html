@@ -79,8 +79,15 @@
       width: 100%; padding: 12px; border: 2px solid #8b4513;
       border-radius: 8px; font-size: 1.1em; background: white;
     }
-    .spesa-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-    .spesa-row input { flex: 1; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; }
+    .spesa-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .spesa-row .spesa-desc { 
+      flex: 1; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; 
+      min-width: 0; /* Permette al flex di ridursi */
+    }
+    .spesa-row .spesa-importo { 
+      width: 100px; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; 
+      flex-shrink: 0; /* Non si riduce */
+    }
     .btn-remove { background: #8b0000; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     .btn-add { background: #2e8b57; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .riepilogo {
@@ -356,9 +363,9 @@
         const div = document.createElement('div');
         div.className = 'spesa-row';
         div.innerHTML = `
-          <input type="text" placeholder="Descrizione" value="${spesa.descrizione}"
+          <input type="text" class="spesa-desc" placeholder="Descrizione" value="${spesa.descrizione}"
                  onchange="spese[${index}].descrizione = this.value">
-          <input type="number" placeholder="0.00" step="0.01" value="${spesa.importo}"
+          <input type="number" class="spesa-importo" placeholder="0.00" step="0.01" value="${spesa.importo}"
                  oninput="spese[${index}].importo = parseFloat(this.value)||0; ricalcola()" onfocus="this.select()">
           <button class="btn-remove" onclick="rimuoviSpesa(${index})">🗑️</button>
         `;
