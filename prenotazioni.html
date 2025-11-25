@@ -10,6 +10,11 @@
   <meta name="theme-color" content="#14283c">
   <link rel="manifest" href="./manifest.json">
   
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="./icon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./icon-16x16.png">
+  <link rel="apple-touch-icon" href="./icon-152x152.png">
+  
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
   
@@ -31,9 +36,11 @@
     
     /* HEADER */
     .header {
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 30px;
-      padding: 20px;
+      padding: 20px 30px;
       background: rgba(20, 40, 60, 0.8);
       border: 3px solid #d4a574;
       border-radius: 15px;
@@ -45,12 +52,43 @@
       font-size: 2.5em;
       color: #d4a574;
       text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
-      margin-bottom: 10px;
+      margin: 0;
     }
     
-    .header p {
-      color: #a67c52;
-      font-size: 1.1em;
+    .btn-home {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      padding: 12px 25px;
+      border: 3px solid #3d1f0f;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: 'Rye', cursive;
+      font-size: 1em;
+      box-shadow: 0 4px 0 #3d1f0f;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    
+    .btn-home:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #3d1f0f;
+    }
+    
+    .btn-home:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 0 #3d1f0f;
+    }
+    
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+      .header h1 {
+        font-size: 1.8em;
+      }
     }
     
     /* LAYOUT PRINCIPALE */
@@ -367,6 +405,62 @@
     }
     
     /* MODAL */
+    
+    /* LOADING SPINNER */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .loading-overlay.active {
+      display: flex;
+    }
+    
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid #d4a574;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      color: #d4a574;
+      font-family: 'Pirata One';
+      font-size: 1.5em;
+      margin-top: 20px;
+      text-align: center;
+    }
+    
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    /* FEEDBACK OTTIMISTICO */
+    .prenotazione-item.deleting {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    
+    .prenotazione-item.saving {
+      opacity: 0.7;
+    }
+    
     .modal {
       display: none;
       position: fixed;
@@ -529,10 +623,19 @@
   </style>
 </head>
 <body>
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">Caricamento...</div>
+    </div>
+  </div>
+  
   <div class="container">
     <!-- HEADER -->
     <div class="header">
       <h1>⚓ Registro delle Prenotazioni</h1>
+      <a href="index.html" class="btn-home">🏴‍☠️ Porto</a>
     </div>
     
     <div class="main-layout">
@@ -647,6 +750,19 @@
     
     const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                   'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+    
+    // Funzioni loading
+    function showLoading(message = 'Caricamento...') {
+      const overlay = document.getElementById('loadingOverlay');
+      const text = document.getElementById('loadingText');
+      text.textContent = message;
+      overlay.classList.add('active');
+    }
+    
+    function hideLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.remove('active');
+    }
     
     // Inizializzazione
     document.addEventListener('DOMContentLoaded', () => {
@@ -882,26 +998,31 @@
         return;
       }
       
-      let result;
-      if (modalitaModifica) {
-        result = await callAPI('modificaPrenotazione', {
-          id: idPrenotazioneModifica,
-          prenotazione: prenotazione
-        });
-      } else {
-        result = await callAPI('salvaPrenotazione', {
-          prenotazione: prenotazione
-        });
-      }
+      // Mostra loading
+      showLoading(modalitaModifica ? 'Aggiornamento...' : 'Salvataggio...');
       
-      if (result.successo) {
-        chiudiModal();
-        await caricaPrenotazioni();
-        if (giornoSelezionato) {
-          mostraPrenotazioniGiorno(giornoSelezionato);
+      let result;
+      try {
+        if (modalitaModifica) {
+          result = await callAPI('modificaPrenotazione', {
+            id: idPrenotazioneModifica,
+            prenotazione: prenotazione
+          });
+        } else {
+          result = await callAPI('salvaPrenotazione', {
+            prenotazione: prenotazione
+          });
         }
-        alert(`✅ ${result.messaggio}`);
-      } else {
+        
+        if (result.successo) {
+          chiudiModal();
+          await caricaPrenotazioni();
+          if (giornoSelezionato) {
+            mostraPrenotazioniGiorno(giornoSelezionato);
+          }
+          hideLoading();
+          alert(`✅ ${result.messaggio}`);
+        } else {
         let messaggioErrore = `⚠️ Errore: ${result.errore}`;
         
         // Se l'errore è "Connessione non disponibile", aggiungi suggerimento
@@ -915,7 +1036,12 @@
           console.error('Segui STEP 1 e STEP 2 della guida PROSSIMI_STEP_PRENOTAZIONI.txt');
         }
         
+        hideLoading();
         alert(messaggioErrore);
+      }
+      } catch (error) {
+        hideLoading();
+        alert('❌ Errore: ' + error.message);
       }
     }
     
@@ -924,16 +1050,25 @@
         return;
       }
       
-      const result = await callAPI('eliminaPrenotazione', { id: id });
+      showLoading('Eliminazione...');
       
-      if (result.successo) {
-        await caricaPrenotazioni();
-        if (giornoSelezionato) {
-          mostraPrenotazioniGiorno(giornoSelezionato);
+      try {
+        const result = await callAPI('eliminaPrenotazione', { id: id });
+        
+        if (result.successo) {
+          await caricaPrenotazioni();
+          if (giornoSelezionato) {
+            mostraPrenotazioniGiorno(giornoSelezionato);
+          }
+          hideLoading();
+          alert(`✅ ${result.messaggio}`);
+        } else {
+          hideLoading();
+          alert(`⚠️ Errore: ${result.errore}`);
         }
-        alert(`✅ ${result.messaggio}`);
-      } else {
-        alert(`⚠️ Errore: ${result.errore}`);
+      } catch (error) {
+        hideLoading();
+        alert('❌ Errore: ' + error.message);
       }
     }
     
