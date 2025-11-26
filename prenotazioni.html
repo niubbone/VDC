@@ -490,7 +490,7 @@
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.8);
-      z-index: 1000;
+      z-index: 3000;
       align-items: center;
       justify-content: center;
     }
@@ -694,13 +694,14 @@
     }
     
     /* PANNELLO GESTIONE EVENTO */
+    /* PANNELLO GESTIONE EVENTO - OPZIONE PIRATA ELEGANTE */
     .pannello-evento-gestione {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.85);
+      background: rgba(107, 68, 35, 0.6);
       z-index: 2000;
       display: none;
       align-items: center;
@@ -713,20 +714,20 @@
     }
     
     .pannello-evento-content {
-      background: rgba(20, 40, 60, 0.98);
-      border: 4px solid #d4a574;
+      background: linear-gradient(145deg, #f9f3e8 0%, #f4e4c1 100%);
+      border: 5px solid #c89858;
       border-radius: 15px;
       max-width: 900px;
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      box-shadow: 0 10px 40px rgba(107, 68, 35, 0.7);
     }
     
     .pannello-evento-header {
-      background: linear-gradient(145deg, rgba(212, 165, 116, 0.2) 0%, rgba(212, 165, 116, 0.05) 100%);
+      background: linear-gradient(145deg, #c89858 0%, #b8884a 100%);
       padding: 25px 30px;
-      border-bottom: 3px solid #d4a574;
+      border-bottom: 4px solid #6b4423;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -735,19 +736,19 @@
     .pannello-evento-titolo h2 {
       font-family: 'Pirata One';
       font-size: 2em;
-      color: #ffd700;
+      color: #2c1810;
       margin: 0 0 5px 0;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
     }
     
     .pannello-evento-titolo p {
-      color: #e8b873;
+      color: #3d1f0f;
       font-size: 1.1em;
       margin: 0;
     }
     
     .btn-chiudi-pannello {
-      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
       color: #2c1810;
       padding: 12px 25px;
       border: 3px solid #3d1f0f;
@@ -763,6 +764,7 @@
     .btn-chiudi-pannello:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 0 #3d1f0f;
+      background: linear-gradient(145deg, #fff 0%, #f4e4c1 100%);
     }
     
     .btn-chiudi-pannello:active {
@@ -771,9 +773,9 @@
     }
     
     .btn-modifica-evento {
-      background: linear-gradient(145deg, rgba(232, 184, 115, 0.4) 0%, rgba(200, 152, 88, 0.4) 100%);
-      color: #ffd700;
-      border: 2px solid #d4a574;
+      background: linear-gradient(145deg, rgba(200, 152, 88, 0.4) 0%, rgba(184, 136, 74, 0.4) 100%);
+      color: #2c1810;
+      border: 2px solid #6b4423;
       padding: 10px 20px;
       border-radius: 8px;
       cursor: pointer;
@@ -781,13 +783,13 @@
       font-size: 0.95em;
       font-weight: 600;
       transition: all 0.3s;
-      box-shadow: 0 3px 8px rgba(212, 165, 116, 0.3);
+      box-shadow: 0 3px 8px rgba(107, 68, 35, 0.3);
     }
     
     .btn-modifica-evento:hover {
-      background: linear-gradient(145deg, rgba(255, 215, 0, 0.5) 0%, rgba(232, 184, 115, 0.5) 100%);
+      background: linear-gradient(145deg, #c89858 0%, #b8884a 100%);
       transform: translateY(-2px);
-      box-shadow: 0 5px 12px rgba(212, 165, 116, 0.5);
+      box-shadow: 0 5px 12px rgba(107, 68, 35, 0.5);
     }
     
     .pannello-evento-body {
@@ -795,13 +797,13 @@
     }
     
     .contatore-evento-grande {
-      background: linear-gradient(145deg, #ffd700 0%, #ffed4e 100%);
-      border: 3px solid #8b4513;
+      background: linear-gradient(145deg, #c89858 0%, #b8884a 100%);
+      border: 4px solid #6b4423;
       border-radius: 12px;
       padding: 25px;
       margin-bottom: 30px;
       text-align: center;
-      box-shadow: 0 5px 15px rgba(139, 69, 19, 0.4);
+      box-shadow: 0 5px 15px rgba(107, 68, 35, 0.5);
     }
     
     .contatore-evento-numero {
@@ -809,7 +811,7 @@
       font-size: 3.5em;
       color: #2c1810;
       font-weight: 700;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.4);
     }
     
     .contatore-evento-label {
@@ -824,19 +826,21 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid rgba(107, 68, 35, 0.2);
     }
     
     .prenotazioni-evento-header h3 {
       font-family: 'Pirata One';
       font-size: 1.5em;
-      color: #d4a574;
+      color: #6b4423;
       margin: 0;
     }
     
-    /* CARD PRENOTAZIONE EVENTO (con orario arrivo + note) */
+    /* CARD PRENOTAZIONE EVENTO */
     .prenotazione-evento-card {
-      background: rgba(212, 165, 116, 0.1);
-      border: 2px solid #d4a574;
+      background: rgba(200, 152, 88, 0.12);
+      border: 2px solid #c89858;
       border-radius: 10px;
       padding: 20px;
       margin-bottom: 15px;
@@ -844,8 +848,9 @@
     }
     
     .prenotazione-evento-card:hover {
-      background: rgba(212, 165, 116, 0.2);
+      background: rgba(200, 152, 88, 0.2);
       transform: translateX(5px);
+      box-shadow: 0 4px 12px rgba(107, 68, 35, 0.3);
     }
     
     .prenotazione-evento-top {
@@ -858,11 +863,11 @@
     .prenotazione-evento-cliente {
       font-size: 1.3em;
       font-weight: 700;
-      color: #ffd700;
+      color: #2c1810;
     }
     
     .prenotazione-evento-persone {
-      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      background: linear-gradient(145deg, #c89858 0%, #b8884a 100%);
       color: #2c1810;
       padding: 8px 15px;
       border-radius: 20px;
@@ -872,7 +877,7 @@
     }
     
     .prenotazione-evento-dettagli {
-      color: #e8b873;
+      color: #6b4423;
       font-size: 1em;
       margin-bottom: 8px;
       display: flex;
@@ -888,11 +893,11 @@
     }
     
     .prenotazione-evento-note {
-      background: rgba(212, 165, 116, 0.1);
-      border-left: 3px solid #d4a574;
+      background: rgba(200, 152, 88, 0.15);
+      border-left: 3px solid #c89858;
       padding: 10px 15px;
       margin: 10px 0;
-      color: #d4a574;
+      color: #6b4423;
       font-size: 0.95em;
       border-radius: 5px;
     }
