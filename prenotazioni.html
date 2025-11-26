@@ -23,7 +23,10 @@
     
     body {
       font-family: 'Rye', serif;
-      background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+      background: linear-gradient(rgba(20, 40, 60, 0.40), rgba(20, 40, 60, 0.40)), url('./SfondoVD.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
       color: #f4e4c1;
       min-height: 100vh;
       padding: 20px;
@@ -261,6 +264,24 @@
       text-align: center;
       font-size: 1.5em;
       margin-top: 5px;
+    }
+    
+    .giorno-tipo-badge {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2em;
+      display: flex;
+      gap: 2px;
+    }
+    
+    .badge-prenotazione {
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    }
+    
+    .badge-evento {
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
     }
     
     /* PANNELLO LATERALE */
@@ -570,6 +591,18 @@
       background: linear-gradient(145deg, #a6b4b5 0%, #95a5a6 100%);
     }
     
+    .btn-modal.btn-elimina {
+      background: linear-gradient(145deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      border-color: #a93226;
+      flex: 0 0 auto;
+      min-width: 180px;
+    }
+    
+    .btn-modal.btn-elimina:hover {
+      background: linear-gradient(145deg, #ec7063 0%, #e74c3c 100%);
+    }
+    
     /* EMPTY STATE */
     .empty-state {
       text-align: center;
@@ -592,6 +625,311 @@
       text-align: center;
       padding: 20px;
       color: #d4a574;
+    }
+    
+    /* CARD EVENTO NEL PANNELLO LATERALE */
+    .evento-giorno-card {
+      background: linear-gradient(145deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+      border: 3px solid #ffd700;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);
+    }
+    
+    .evento-giorno-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+      border-color: #ffed4e;
+    }
+    
+    .evento-giorno-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .evento-giorno-nome {
+      font-family: 'Pirata One';
+      font-size: 1.5em;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .evento-giorno-contatore {
+      background: linear-gradient(145deg, #ffd700 0%, #ffed4e 100%);
+      border: 2px solid #8b4513;
+      border-radius: 8px;
+      padding: 8px 15px;
+      color: #2c1810;
+      font-weight: 700;
+      font-size: 1.2em;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    .evento-giorno-descrizione {
+      color: #e8b873;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+    }
+    
+    .evento-giorno-cta {
+      color: #ffd700;
+      font-size: 0.9em;
+      font-weight: 600;
+      text-align: right;
+    }
+    
+    /* SEZIONE HEADER */
+    .sezione-header {
+      font-family: 'Pirata One';
+      font-size: 1.3em;
+      color: #d4a574;
+      margin: 25px 0 15px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(212, 165, 116, 0.3);
+    }
+    
+    /* PANNELLO GESTIONE EVENTO */
+    .pannello-evento-gestione {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .pannello-evento-gestione.active {
+      display: flex;
+    }
+    
+    .pannello-evento-content {
+      background: rgba(20, 40, 60, 0.98);
+      border: 4px solid #d4a574;
+      border-radius: 15px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    }
+    
+    .pannello-evento-header {
+      background: linear-gradient(145deg, rgba(212, 165, 116, 0.2) 0%, rgba(212, 165, 116, 0.05) 100%);
+      padding: 25px 30px;
+      border-bottom: 3px solid #d4a574;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .pannello-evento-titolo h2 {
+      font-family: 'Pirata One';
+      font-size: 2em;
+      color: #ffd700;
+      margin: 0 0 5px 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    }
+    
+    .pannello-evento-titolo p {
+      color: #e8b873;
+      font-size: 1.1em;
+      margin: 0;
+    }
+    
+    .btn-chiudi-pannello {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      padding: 12px 25px;
+      border: 3px solid #3d1f0f;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: 'Rye', cursive;
+      font-size: 1em;
+      box-shadow: 0 4px 0 #3d1f0f;
+      transition: all 0.2s;
+    }
+    
+    .btn-chiudi-pannello:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #3d1f0f;
+    }
+    
+    .btn-chiudi-pannello:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 0 #3d1f0f;
+    }
+    
+    .btn-modifica-evento {
+      background: linear-gradient(145deg, rgba(232, 184, 115, 0.4) 0%, rgba(200, 152, 88, 0.4) 100%);
+      color: #ffd700;
+      border: 2px solid #d4a574;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Rye', cursive;
+      font-size: 0.95em;
+      font-weight: 600;
+      transition: all 0.3s;
+      box-shadow: 0 3px 8px rgba(212, 165, 116, 0.3);
+    }
+    
+    .btn-modifica-evento:hover {
+      background: linear-gradient(145deg, rgba(255, 215, 0, 0.5) 0%, rgba(232, 184, 115, 0.5) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 12px rgba(212, 165, 116, 0.5);
+    }
+    
+    .pannello-evento-body {
+      padding: 30px;
+    }
+    
+    .contatore-evento-grande {
+      background: linear-gradient(145deg, #ffd700 0%, #ffed4e 100%);
+      border: 3px solid #8b4513;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 30px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(139, 69, 19, 0.4);
+    }
+    
+    .contatore-evento-numero {
+      font-family: 'Pirata One';
+      font-size: 3.5em;
+      color: #2c1810;
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .contatore-evento-label {
+      font-size: 1.3em;
+      color: #2c1810;
+      margin-top: 5px;
+      font-weight: 600;
+    }
+    
+    .prenotazioni-evento-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .prenotazioni-evento-header h3 {
+      font-family: 'Pirata One';
+      font-size: 1.5em;
+      color: #d4a574;
+      margin: 0;
+    }
+    
+    /* CARD PRENOTAZIONE EVENTO (con orario arrivo + note) */
+    .prenotazione-evento-card {
+      background: rgba(212, 165, 116, 0.1);
+      border: 2px solid #d4a574;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 15px;
+      transition: all 0.3s;
+    }
+    
+    .prenotazione-evento-card:hover {
+      background: rgba(212, 165, 116, 0.2);
+      transform: translateX(5px);
+    }
+    
+    .prenotazione-evento-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .prenotazione-evento-cliente {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: #ffd700;
+    }
+    
+    .prenotazione-evento-persone {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 1.1em;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .prenotazione-evento-dettagli {
+      color: #e8b873;
+      font-size: 1em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .prenotazione-evento-dettagli span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .prenotazione-evento-note {
+      background: rgba(212, 165, 116, 0.1);
+      border-left: 3px solid #d4a574;
+      padding: 10px 15px;
+      margin: 10px 0;
+      color: #d4a574;
+      font-size: 0.95em;
+      border-radius: 5px;
+    }
+    
+    /* TOGGLE TIPO NEL FORM */
+    .form-tipo-toggle {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+      background: rgba(212, 165, 116, 0.1);
+      padding: 5px;
+      border-radius: 10px;
+      border: 2px solid #d4a574;
+    }
+    
+    .toggle-btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Rye', cursive;
+      font-size: 1em;
+      font-weight: 600;
+      transition: all 0.3s;
+      background: transparent;
+      color: #d4a574;
+    }
+    
+    .toggle-btn.active {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .toggle-btn:hover:not(.active) {
+      background: rgba(212, 165, 116, 0.2);
     }
     
     /* RESPONSIVE */
@@ -685,55 +1023,139 @@
     </div>
   </div>
   
-  <!-- MODAL NUOVA/MODIFICA PRENOTAZIONE -->
+  <!-- MODAL NUOVA/MODIFICA PRENOTAZIONE/EVENTO -->
   <div id="modalPrenotazione" class="modal">
     <div class="modal-content">
       <div class="modal-header" id="modalTitolo">📝 Nuova Prenotazione</div>
       
-      <div class="form-group">
-        <label>Data *</label>
-        <input type="date" id="inputData" required>
+      <!-- TOGGLE TIPO (solo in modalità cre azione) -->
+      <div class="form-tipo-toggle" id="tipoToggle" style="display:none;">
+        <button type="button" class="toggle-btn active" id="btnTipoPrenotazione" onclick="cambioTipo('prenotazione')">📝 Prenotazione</button>
+        <button type="button" class="toggle-btn" id="btnTipoEvento" onclick="cambioTipo('evento')">🍷 Evento</button>
       </div>
       
-      <div class="form-group">
-        <label>Ora</label>
-        <input type="time" id="inputOra" value="19:00">
-      </div>
-      
-      <div class="form-group">
-        <label>Cliente *</label>
-        <input type="text" id="inputCliente" placeholder="Nome cliente o gruppo" required>
-      </div>
-      
-      <div class="form-row">
+      <!-- CAMPI EVENTO (nascosti di default) -->
+      <div id="campiEvento" style="display:none;">
         <div class="form-group">
-          <label>Telefono</label>
-          <input type="tel" id="inputTelefono" placeholder="123456789">
+          <label>Nome Evento *</label>
+          <input type="text" id="inputNomeEvento" placeholder="es: Degustazione Vini del Territorio">
         </div>
         
         <div class="form-group">
-          <label>Persone</label>
-          <input type="number" id="inputPersone" min="1" value="2">
+          <label>Descrizione Evento</label>
+          <textarea id="inputDescrizioneEvento" placeholder="Dettagli evento, orari, info..." rows="3"></textarea>
         </div>
       </div>
       
-      <div class="form-group">
-        <label>Note / Preferenze</label>
-        <textarea id="inputNote" placeholder="Allergie, richieste speciali, ecc..."></textarea>
-      </div>
-      
-      <div class="form-group">
-        <label>Stato</label>
-        <select id="inputStato">
-          <option value="confermato">✅ Confermato</option>
-          <option value="attesa">⏳ In attesa</option>
-          <option value="annullato">❌ Annullato</option>
-        </select>
+      <!-- CAMPI PRENOTAZIONE (visibili di default) -->
+      <div id="campiPrenotazione">
+        <div class="form-group">
+          <label>Data *</label>
+          <input type="date" id="inputData" required>
+        </div>
+        
+        <div class="form-group" id="campoOra">
+          <label>Ora</label>
+          <input type="time" id="inputOra" value="19:00">
+        </div>
+        
+        <!-- CAMPO ORARIO ARRIVO (solo per prenotazioni evento) -->
+        <div class="form-group" id="campoOrarioArrivo" style="display:none;">
+          <label>Orario Arrivo (opzionale)</label>
+          <input type="time" id="inputOrarioArrivo" placeholder="es: 19:30">
+        </div>
+        
+        <div class="form-group" id="campoCliente">
+          <label id="labelCliente">Cliente *</label>
+          <input type="text" id="inputCliente" placeholder="Nome cliente o gruppo" required>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Telefono</label>
+            <input type="tel" id="inputTelefono" placeholder="123456789">
+          </div>
+          
+          <div class="form-group">
+            <label>Persone</label>
+            <input type="number" id="inputPersone" min="1" value="2">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Note / Preferenze</label>
+          <textarea id="inputNote" placeholder="Allergie, richieste speciali, ecc..."></textarea>
+        </div>
+        
+        <div class="form-group" id="campoStato">
+          <label>Stato</label>
+          <select id="inputStato">
+            <option value="confermato">✅ Confermato</option>
+            <option value="attesa">⏳ In attesa</option>
+            <option value="annullato">❌ Annullato</option>
+          </select>
+        </div>
       </div>
       
       <div class="modal-buttons">
         <button class="btn-modal btn-annulla" onclick="chiudiModal()">✕ Annulla</button>
-        <button class="btn-modal btn-salva" onclick="salvaPrenotazione()">💾 Salva</button>
+        <button class="btn-modal btn-salva" onclick="salvaPrenotazioneEvento()" id="btnSalva">💾 Salva</button>
+      </div>
+      
+      <!-- Pulsante Crea Evento -->
+      <div id="linkCreaEvento" style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(107, 68, 35, 0.3);">
+        <button onclick="switchToEventoForm()" style="
+          background: linear-gradient(145deg, rgba(232, 184, 115, 0.3) 0%, rgba(200, 152, 88, 0.3) 100%);
+          color: #ffd700;
+          border: 2px solid #d4a574;
+          padding: 12px 25px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-family: 'Rye', cursive;
+          font-size: 1em;
+          font-weight: 600;
+          transition: all 0.3s;
+          box-shadow: 0 3px 8px rgba(212, 165, 116, 0.3);
+          width: 100%;
+        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 12px rgba(212, 165, 116, 0.5)'"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 8px rgba(212, 165, 116, 0.3)'">
+          🍷 Crea Evento/Degustazione
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- PANNELLO GESTIONE EVENTO -->
+  <div id="pannelloEventoGestione" class="pannello-evento-gestione">
+    <div class="pannello-evento-content">
+      <div class="pannello-evento-header">
+        <div class="pannello-evento-titolo">
+          <h2 id="eventoGestioneNome">Nome Evento</h2>
+          <p id="eventoGestioneData">Data</p>
+          <p id="eventoGestioneDescrizione" style="color: #d4a574; margin-top: 10px;"></p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn-modifica-evento" onclick="apriModalModificaEvento()" title="Modifica Evento">
+            ✏️ Modifica Evento
+          </button>
+          <button class="btn-chiudi-pannello" onclick="chiudiPannelloEvento()">◄ Torna al Giorno</button>
+        </div>
+      </div>
+      
+      <div class="pannello-evento-body">
+        <div class="contatore-evento-grande">
+          <div class="contatore-evento-numero" id="eventoContatoreNumero">0</div>
+          <div class="contatore-evento-label">👥 Persone Confermate</div>
+        </div>
+        
+        <div class="prenotazioni-evento-header">
+          <h3>Prenotazioni Evento</h3>
+          <button class="btn-nuova" onclick="mostraModalPrenotazioneEvento()">➕ Aggiungi</button>
+        </div>
+        
+        <div id="prenotazioniEventoContainer">
+          <!-- Prenotazioni generate dinamicamente -->
+        </div>
       </div>
     </div>
   </div>
@@ -747,6 +1169,11 @@
     let prenotazioni = [];
     let modalitaModifica = false;
     let idPrenotazioneModifica = null;
+    
+    // Gestione Eventi Integrati
+    let eventi = [];
+    let eventoCorrente = null;
+    let tipoCorrente = 'prenotazione'; // 'prenotazione' o 'evento'
     
     const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                   'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
@@ -822,20 +1249,37 @@
         const isOggi = dataStr === oggiStr;
         const isSelezionato = giornoSelezionato === dataStr;
         
-        const prenotazioniGiorno = prenotazioni.filter(p => p.data === dataStr);
-        const numPrenotazioni = prenotazioniGiorno.length;
+        // Prenotazioni normali (senza evento_id)
+        const prenotazioniNormali = prenotazioni.filter(p => p.data === dataStr && !p.evento_id);
+        const numPrenotazioni = prenotazioniNormali.length;
+        
+        // Eventi in questo giorno
+        const eventiGiorno = eventi.filter(e => e.data === dataStr);
+        const hasEvento = eventiGiorno.length > 0;
         
         let classi = 'giorno';
         if (isOggi) classi += ' oggi';
         if (isSelezionato) classi += ' selezionato';
         
+        // Badge tipo (prenotazioni e/o eventi)
+        let badgeTipo = '';
+        if (hasEvento && numPrenotazioni > 0) {
+          badgeTipo = '<div class="giorno-tipo-badge"><span class="badge-prenotazione">⚓</span><span class="badge-evento">🍷</span></div>';
+        } else if (hasEvento) {
+          badgeTipo = '<div class="giorno-tipo-badge"><span class="badge-evento">🍷</span></div>';
+        } else if (numPrenotazioni > 0) {
+          badgeTipo = '<div class="giorno-tipo-badge"><span class="badge-prenotazione">⚓</span></div>';
+        }
+        
+        // Badge numero prenotazioni
+        const totaleGiorno = numPrenotazioni + (hasEvento ? 1 : 0);
+        const badgeNumero = totaleGiorno > 0 ? `<div class="giorno-badge">${totaleGiorno}</div>` : '';
+        
         container.innerHTML += `
           <div class="${classi}" onclick="selezionaGiorno('${dataStr}')">
             <div class="giorno-numero">${giorno}</div>
-            ${numPrenotazioni > 0 ? `
-              <div class="giorno-badge">${numPrenotazioni}</div>
-              <div class="giorno-icona">⚓</div>
-            ` : ''}
+            ${badgeNumero}
+            ${badgeTipo}
           </div>
         `;
       }
@@ -853,20 +1297,31 @@
     
     async function caricaPrenotazioni() {
       try {
-        const result = await callAPI('getPrenotazioni', {
+        // Carica prenotazioni
+        const resultPren = await callAPI('getPrenotazioni', {
           anno: annoCorrente,
           mese: meseCorrente + 1
         });
         
-        if (result.prenotazioni) {
-          prenotazioni = result.prenotazioni;
-        } else if (result.errore) {
-          console.error('Errore API:', result.errore);
-          prenotazioni = []; // Array vuoto se errore
+        if (resultPren.prenotazioni) {
+          prenotazioni = resultPren.prenotazioni;
+        } else if (resultPren.errore) {
+          console.error('Errore API prenotazioni:', resultPren.errore);
+          prenotazioni = [];
+        }
+        
+        // Carica eventi
+        const resultEventi = await callAPI('getEventi');
+        if (resultEventi.eventi) {
+          eventi = resultEventi.eventi;
+        } else if (resultEventi.errore) {
+          console.error('Errore API eventi:', resultEventi.errore);
+          eventi = [];
         }
       } catch (error) {
-        console.error('Errore caricamento prenotazioni:', error);
-        prenotazioni = []; // Array vuoto se errore
+        console.error('Errore caricamento:', error);
+        prenotazioni = [];
+        eventi = [];
       }
       
       // Genera calendario comunque (anche se vuoto)
@@ -884,7 +1339,9 @@
     }
     
     function mostraPrenotazioniGiorno(dataStr) {
-      const prenotazioniGiorno = prenotazioni.filter(p => p.data === dataStr);
+      // Filtra prenotazioni normali (senza evento_id) e eventi del giorno
+      const prenotazioniNormali = prenotazioni.filter(p => p.data === dataStr && !p.evento_id);
+      const eventiGiorno = eventi.filter(e => e.data === dataStr);
       
       const [anno, mese, giorno] = dataStr.split('-');
       const data = new Date(anno, mese - 1, giorno);
@@ -895,10 +1352,11 @@
       
       const container = document.getElementById('prenotazioniContainer');
       
-      if (prenotazioniGiorno.length === 0) {
+      // Se non ci sono né eventi né prenotazioni
+      if (eventiGiorno.length === 0 && prenotazioniNormali.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
-            <div class="empty-state-icon">📭</div>
+            <div class="empty-state-icon">🏝️</div>
             <div class="empty-state-text">
               Nessuna prenotazione per questo giorno
             </div>
@@ -908,25 +1366,53 @@
       }
       
       container.innerHTML = '';
-      prenotazioniGiorno.forEach(pren => {
-        const badgeClass = `badge-${pren.stato}`;
-        container.innerHTML += `
-          <div class="prenotazione-card">
-            <div class="prenotazione-ora">🕐 ${pren.ora || 'Orario da definire'}</div>
-            <div class="prenotazione-cliente">👤 ${pren.cliente}</div>
-            ${pren.telefono ? `<div class="prenotazione-dettagli">📞 ${pren.telefono}</div>` : ''}
-            ${pren.persone ? `<div class="prenotazione-dettagli">👥 ${pren.persone} ${pren.persone === 1 ? 'persona' : 'persone'}</div>` : ''}
-            ${pren.note ? `<div class="prenotazione-note">📝 ${pren.note}</div>` : ''}
-            <span class="prenotazione-badge ${badgeClass}">
-              ${pren.stato === 'confermato' ? '✅ Confermato' : pren.stato === 'attesa' ? '⏳ In attesa' : '❌ Annullato'}
-            </span>
-            <div class="prenotazione-azioni">
-              <button class="btn-azione btn-modifica" onclick="modificaPrenotazione('${pren.id}')">✏️ Modifica</button>
-              <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')">🗑️ Elimina</button>
+      
+      // MOSTRA EVENTI (se presenti)
+      if (eventiGiorno.length > 0) {
+        eventiGiorno.forEach(evento => {
+          // Conta prenotazioni per questo evento
+          const prenotazioniEvento = prenotazioni.filter(p => p.evento_id === evento.id && p.stato !== 'annullato');
+          const totalePersone = prenotazioniEvento.reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
+          
+          container.innerHTML += `
+            <div class="evento-giorno-card" onclick="apriGestioneEvento('${evento.id}')">
+              <div class="evento-giorno-header">
+                <div class="evento-giorno-nome">🍷 ${evento.nome}</div>
+                <div class="evento-giorno-contatore">${totalePersone} 👥</div>
+              </div>
+              ${evento.descrizione ? `<div class="evento-giorno-descrizione">${evento.descrizione}</div>` : ''}
+              <div class="evento-giorno-cta">Click per gestire →</div>
             </div>
-          </div>
-        `;
-      });
+          `;
+        });
+      }
+      
+      // MOSTRA PRENOTAZIONI NORMALI (se presenti)
+      if (prenotazioniNormali.length > 0) {
+        if (eventiGiorno.length > 0) {
+          container.innerHTML += '<div class="sezione-header">⚓ Prenotazioni</div>';
+        }
+        
+        prenotazioniNormali.forEach(pren => {
+          const badgeClass = `badge-${pren.stato}`;
+          container.innerHTML += `
+            <div class="prenotazione-card">
+              <div class="prenotazione-ora">🕐 ${pren.ora || 'Orario da definire'}</div>
+              <div class="prenotazione-cliente">👤 ${pren.cliente}</div>
+              ${pren.telefono ? `<div class="prenotazione-dettagli">📞 ${pren.telefono}</div>` : ''}
+              ${pren.persone ? `<div class="prenotazione-dettagli">👥 ${pren.persone} ${pren.persone === 1 ? 'persona' : 'persone'}</div>` : ''}
+              ${pren.note ? `<div class="prenotazione-note">📝 ${pren.note}</div>` : ''}
+              <span class="prenotazione-badge ${badgeClass}">
+                ${pren.stato === 'confermato' ? '✅ Confermato' : pren.stato === 'attesa' ? '⏳ In attesa' : '❌ Annullato'}
+              </span>
+              <div class="prenotazione-azioni">
+                <button class="btn-azione btn-modifica" onclick="modificaPrenotazione('${pren.id}')">✏️ Modifica</button>
+                <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')">🗑️ Elimina</button>
+              </div>
+            </div>
+          `;
+        });
+      }
     }
     
     function cambiaMese(delta) {
@@ -953,6 +1439,8 @@
     
     function mostraModalNuova() {
       modalitaModifica = false;
+      tipoCorrente = 'prenotazione';
+      
       document.getElementById('modalTitolo').textContent = '📝 Nuova Prenotazione';
       document.getElementById('inputData').value = giornoSelezionato;
       document.getElementById('inputOra').value = '19:00';
@@ -961,6 +1449,18 @@
       document.getElementById('inputPersone').value = '2';
       document.getElementById('inputNote').value = '';
       document.getElementById('inputStato').value = 'confermato';
+      
+      // Reset campi evento
+      document.getElementById('inputNomeEvento').value = '';
+      document.getElementById('inputDescrizioneEvento').value = '';
+      
+      // Mostra prenotazione, nascondi evento
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'block';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva';
+      
       document.getElementById('modalPrenotazione').classList.add('active');
     }
     
@@ -970,6 +1470,7 @@
       
       modalitaModifica = true;
       idPrenotazioneModifica = id;
+      tipoCorrente = 'prenotazione';
       
       document.getElementById('modalTitolo').textContent = '✏️ Modifica Prenotazione';
       document.getElementById('inputData').value = pren.data;
@@ -979,71 +1480,17 @@
       document.getElementById('inputPersone').value = pren.persone || 2;
       document.getElementById('inputNote').value = pren.note || '';
       document.getElementById('inputStato').value = pren.stato;
+      
+      // Nascondi link evento e mostra solo campi prenotazione
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva';
+      
       document.getElementById('modalPrenotazione').classList.add('active');
     }
     
-    async function salvaPrenotazione() {
-      const prenotazione = {
-        data: document.getElementById('inputData').value,
-        ora: document.getElementById('inputOra').value,
-        cliente: document.getElementById('inputCliente').value,
-        telefono: document.getElementById('inputTelefono').value,
-        persone: parseInt(document.getElementById('inputPersone').value) || 0,
-        note: document.getElementById('inputNote').value,
-        stato: document.getElementById('inputStato').value
-      };
-      
-      if (!prenotazione.data || !prenotazione.cliente) {
-        alert('⚠️ Data e Cliente sono obbligatori!');
-        return;
-      }
-      
-      // Mostra loading
-      showLoading(modalitaModifica ? 'Aggiornamento...' : 'Salvataggio...');
-      
-      let result;
-      try {
-        if (modalitaModifica) {
-          result = await callAPI('modificaPrenotazione', {
-            id: idPrenotazioneModifica,
-            prenotazione: prenotazione
-          });
-        } else {
-          result = await callAPI('salvaPrenotazione', {
-            prenotazione: prenotazione
-          });
-        }
-        
-        if (result.successo) {
-          chiudiModal();
-          await caricaPrenotazioni();
-          if (giornoSelezionato) {
-            mostraPrenotazioniGiorno(giornoSelezionato);
-          }
-          hideLoading();
-          alert(`✅ ${result.messaggio}`);
-        } else {
-        let messaggioErrore = `⚠️ Errore: ${result.errore}`;
-        
-        // Se l'errore è "Connessione non disponibile", aggiungi suggerimento
-        if (result.errore && result.errore.includes('Connessione non disponibile')) {
-          messaggioErrore += '\n\n💡 VERIFICA:\n' +
-            '1. Hai aggiunto i 6 case nel doPost() di API.gs?\n' +
-            '2. Hai fatto il deploy della nuova versione API?\n' +
-            '3. L\'URL API è corretto in questo file?\n\n' +
-            'Vedi console (F12) per dettagli tecnici.';
-          console.error('⚠️ API NON CONFIGURATA!');
-          console.error('Segui STEP 1 e STEP 2 della guida PROSSIMI_STEP_PRENOTAZIONI.txt');
-        }
-        
-        hideLoading();
-        alert(messaggioErrore);
-      }
-      } catch (error) {
-        hideLoading();
-        alert('❌ Errore: ' + error.message);
-      }
-    }
     
     async function eliminaPrenotazione(id) {
       if (!confirm('🗑️ Sei sicuro di voler eliminare questa prenotazione?')) {
@@ -1057,9 +1504,14 @@
         
         if (result.successo) {
           await caricaPrenotazioni();
-          if (giornoSelezionato) {
+          
+          // Se siamo in gestione evento, riapri evento
+          if (eventoCorrente) {
+            await apriGestioneEvento(eventoCorrente.id);
+          } else if (giornoSelezionato) {
             mostraPrenotazioniGiorno(giornoSelezionato);
           }
+          
           hideLoading();
           alert(`✅ ${result.messaggio}`);
         } else {
@@ -1074,6 +1526,396 @@
     
     function chiudiModal() {
       document.getElementById('modalPrenotazione').classList.remove('active');
+      // Reset modal a stato prenotazione
+      tipoCorrente = 'prenotazione';
+      modalitaModifica = false;
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'block';
+      document.getElementById('tipoToggle').style.display = 'none';
+      
+      // Nascondi pulsante elimina evento se esiste
+      const btnElimina = document.getElementById('btnEliminaEvento');
+      if (btnElimina) {
+        btnElimina.style.display = 'none';
+      }
+    }
+    
+    // ========== GESTIONE TIPO NEL MODAL ==========
+    function switchToEvento() {
+      tipoCorrente = 'evento';
+      document.getElementById('modalTitolo').textContent = '🍷 Nuovo Evento';
+      document.getElementById('campiEvento').style.display = 'block';
+      document.getElementById('campiPrenotazione').style.display = 'none';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Crea Evento';
+      
+      // Mantieni data selezionata
+      document.getElementById('inputData').value = giornoSelezionato;
+    }
+    
+    function cambioTipo(tipo) {
+      tipoCorrente = tipo;
+      
+      if (tipo === 'evento') {
+        document.getElementById('btnTipoEvento').classList.add('active');
+        document.getElementById('btnTipoPrenotazione').classList.remove('active');
+        document.getElementById('modalTitolo').textContent = '🍷 Nuovo Evento';
+        document.getElementById('campiEvento').style.display = 'block';
+        document.getElementById('campoOra').style.display = 'none';
+        document.getElementById('campoOrarioArrivo').style.display = 'none';
+        document.getElementById('campoCliente').style.display = 'none';
+        document.getElementById('campoStato').style.display = 'none';
+        document.getElementById('btnSalva').textContent = '💾 Crea Evento';
+      } else {
+        document.getElementById('btnTipoPrenotazione').classList.add('active');
+        document.getElementById('btnTipoEvento').classList.remove('active');
+        document.getElementById('modalTitolo').textContent = '📝 Nuova Prenotazione';
+        document.getElementById('campiEvento').style.display = 'none';
+        document.getElementById('campoOra').style.display = 'block';
+        document.getElementById('campoOrarioArrivo').style.display = 'none';
+        document.getElementById('campoCliente').style.display = 'block';
+        document.getElementById('campoStato').style.display = 'block';
+        document.getElementById('btnSalva').textContent = '💾 Salva';
+      }
+    }
+    
+    // ========== GESTIONE EVENTI ==========
+    async function apriGestioneEvento(id) {
+      eventoCorrente = eventi.find(e => e.id === id);
+      if (!eventoCorrente) return;
+      
+      // Aggiorna header pannello
+      const dataObj = new Date(eventoCorrente.data + 'T00:00:00');
+      const dataFormattata = dataObj.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      
+      document.getElementById('eventoGestioneNome').textContent = eventoCorrente.nome;
+      document.getElementById('eventoGestioneData').textContent = '📅 ' + dataFormattata;
+      document.getElementById('eventoGestioneDescrizione').textContent = eventoCorrente.descrizione || '';
+      document.getElementById('eventoGestioneDescrizione').style.display = eventoCorrente.descrizione ? 'block' : 'none';
+      
+      // Carica prenotazioni evento
+      const prenotazioniEvento = prenotazioni.filter(p => p.evento_id === id);
+      const totalePersone = prenotazioniEvento.filter(p => p.stato !== 'annullato').reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
+      
+      document.getElementById('eventoContatoreNumero').textContent = totalePersone;
+      
+      mostraPrenotazioniEvento(prenotazioniEvento);
+      
+      // Mostra pannello
+      document.getElementById('pannelloEventoGestione').classList.add('active');
+    }
+    
+    function mostraPrenotazioniEvento(prenotazioniEvento) {
+      const container = document.getElementById('prenotazioniEventoContainer');
+      
+      if (prenotazioniEvento.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🏝️</div>
+            <div class="empty-state-text">
+              Nessuna prenotazione per questo evento
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = '';
+      prenotazioniEvento.forEach(pren => {
+        const badgeClass = `badge-${pren.stato}`;
+        const persone = parseInt(pren.persone) || 0;
+        
+        let dettagliHtml = '<div class="prenotazione-evento-dettagli">';
+        if (pren.ora) {
+          dettagliHtml += `<span>🕐 ${pren.ora}</span>`;
+        }
+        if (pren.telefono) {
+          dettagliHtml += `<span>📞 ${pren.telefono}</span>`;
+        }
+        dettagliHtml += `<span class="${badgeClass}">${pren.stato === 'confermato' ? '✅ Confermato' : pren.stato === 'attesa' ? '⏳ In attesa' : '❌ Annullato'}</span>`;
+        dettagliHtml += '</div>';
+        
+        container.innerHTML += `
+          <div class="prenotazione-evento-card">
+            <div class="prenotazione-evento-top">
+              <div class="prenotazione-evento-cliente">👤 ${pren.cliente}</div>
+              <div class="prenotazione-evento-persone">${persone} 👥</div>
+            </div>
+            ${dettagliHtml}
+            ${pren.note ? `<div class="prenotazione-evento-note">📝 ${pren.note}</div>` : ''}
+            <div class="prenotazione-azioni" style="margin-top: 12px;">
+              <button class="btn-azione btn-modifica" onclick="modificaPrenotazioneEvento('${pren.id}')">✏️ Modifica</button>
+              <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')">🗑️ Elimina</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+    
+    function chiudiPannelloEvento() {
+      document.getElementById('pannelloEventoGestione').classList.remove('active');
+      eventoCorrente = null;
+      caricaPrenotazioni(); // Ricarica per aggiornare contatori nel pannello laterale
+    }
+    
+    function mostraModalPrenotazioneEvento() {
+      modalitaModifica = false;
+      tipoCorrente = 'prenotazione';
+      
+      document.getElementById('modalTitolo').textContent = '➕ Nuova Prenotazione Evento';
+      document.getElementById('inputData').value = eventoCorrente.data;
+      document.getElementById('inputOra').value = '';
+      document.getElementById('inputCliente').value = '';
+      document.getElementById('inputTelefono').value = '';
+      document.getElementById('inputPersone').value = '2';
+      document.getElementById('inputNote').value = '';
+      document.getElementById('inputStato').value = 'confermato';
+      
+      // Mostra solo campi prenotazione (no evento)
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva';
+      
+      document.getElementById('modalPrenotazione').classList.add('active');
+    }
+    
+    function modificaPrenotazioneEvento(id) {
+      const pren = prenotazioni.find(p => p.id === id);
+      if (!pren) return;
+      
+      modalitaModifica = true;
+      idPrenotazioneModifica = id;
+      tipoCorrente = 'prenotazione';
+      
+      document.getElementById('modalTitolo').textContent = '✏️ Modifica Prenotazione';
+      document.getElementById('inputData').value = pren.data;
+      document.getElementById('inputOra').value = pren.ora || '';
+      document.getElementById('inputCliente').value = pren.cliente;
+      document.getElementById('inputTelefono').value = pren.telefono || '';
+      document.getElementById('inputPersone').value = pren.persone || '2';
+      document.getElementById('inputNote').value = pren.note || '';
+      document.getElementById('inputStato').value = pren.stato;
+      
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva';
+      
+      document.getElementById('modalPrenotazione').classList.add('active');
+    }
+    
+    async function salvaPrenotazioneEvento() {
+      if (tipoCorrente === 'evento') {
+        // Salva o modifica evento
+        const nome = document.getElementById('inputNomeEvento').value.trim();
+        const data = document.getElementById('inputData').value;
+        const descrizione = document.getElementById('inputDescrizioneEvento').value.trim();
+        
+        if (!nome || !data) {
+          alert('⚠️ Nome e data evento sono obbligatori!');
+          return;
+        }
+        
+        if (modalitaModifica && eventoCorrente) {
+          // Modifica evento esistente
+          await modificaEvento();
+        } else {
+          // Crea nuovo evento
+          showLoading('Creazione evento...');
+          
+          const result = await callAPI('creaEvento', {
+            nome: nome,
+            data: data,
+            descrizione: descrizione
+          });
+          
+          hideLoading();
+          
+          if (result.errore) {
+            alert('Errore: ' + result.errore);
+            return;
+          }
+          
+          chiudiModal();
+          await caricaPrenotazioni();
+          alert('✅ Evento creato!');
+        }
+        
+      } else {
+        // Salva prenotazione
+        const prenotazione = {
+          data: document.getElementById('inputData').value,
+          ora: document.getElementById('inputOra').value,
+          cliente: document.getElementById('inputCliente').value,
+          telefono: document.getElementById('inputTelefono').value,
+          persone: parseInt(document.getElementById('inputPersone').value) || 0,
+          note: document.getElementById('inputNote').value,
+          stato: document.getElementById('inputStato').value
+        };
+        
+        // Aggiungi evento_id se siamo in gestione evento
+        if (eventoCorrente) {
+          prenotazione.evento_id = eventoCorrente.id;
+        }
+        
+        if (!prenotazione.data || !prenotazione.cliente) {
+          alert('⚠️ Data e Cliente sono obbligatori!');
+          return;
+        }
+        
+        showLoading(modalitaModifica ? 'Aggiornamento...' : 'Salvataggio...');
+        
+        let result;
+        if (modalitaModifica) {
+          result = await callAPI('modificaPrenotazione', {
+            id: idPrenotazioneModifica,
+            prenotazione: prenotazione
+          });
+        } else {
+          result = await callAPI('salvaPrenotazione', {
+            prenotazione: prenotazione
+          });
+        }
+        
+        hideLoading();
+        
+        if (result.errore) {
+          alert('Errore: ' + result.errore);
+          return;
+        }
+        
+        chiudiModal();
+        
+        // Se siamo in gestione evento, riapri evento
+        if (eventoCorrente) {
+          await caricaPrenotazioni();
+          await apriGestioneEvento(eventoCorrente.id);
+        } else {
+          await caricaPrenotazioni();
+          if (giornoSelezionato) {
+            mostraPrenotazioniGiorno(giornoSelezionato);
+          }
+        }
+        
+        alert(`✅ ${result.messaggio || 'Salvato!'}`);
+      }
+    }
+    
+    // ========== MODIFICA EVENTO ==========
+    function apriModalModificaEvento() {
+      if (!eventoCorrente) return;
+      
+      modalitaModifica = true;
+      tipoCorrente = 'evento';
+      
+      document.getElementById('modalTitolo').textContent = '✏️ Modifica Evento';
+      document.getElementById('inputNomeEvento').value = eventoCorrente.nome;
+      document.getElementById('inputData').value = eventoCorrente.data;
+      document.getElementById('inputDescrizioneEvento').value = eventoCorrente.descrizione || '';
+      
+      // Mostra campi evento
+      document.getElementById('campiEvento').style.display = 'block';
+      document.getElementById('campiPrenotazione').style.display = 'none';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva Modifiche';
+      
+      // Aggiungi pulsante elimina se non esiste
+      let btnElimina = document.getElementById('btnEliminaEvento');
+      if (!btnElimina) {
+        btnElimina = document.createElement('button');
+        btnElimina.id = 'btnEliminaEvento';
+        btnElimina.className = 'btn-modal btn-elimina';
+        btnElimina.textContent = '🗑️ Elimina Evento';
+        btnElimina.onclick = confermaEliminaEvento;
+        btnElimina.style.marginRight = 'auto';
+        document.querySelector('.modal-buttons').insertBefore(btnElimina, document.querySelector('.modal-buttons').firstChild);
+      }
+      btnElimina.style.display = 'block';
+      
+      document.getElementById('modalPrenotazione').classList.add('active');
+    }
+    
+    async function modificaEvento() {
+      const nome = document.getElementById('inputNomeEvento').value.trim();
+      const data = document.getElementById('inputData').value;
+      const descrizione = document.getElementById('inputDescrizioneEvento').value.trim();
+      
+      if (!nome || !data) {
+        alert('⚠️ Nome e data evento sono obbligatori!');
+        return;
+      }
+      
+      if (!eventoCorrente) return;
+      
+      showLoading('Aggiornamento evento...');
+      
+      const result = await callAPI('modificaEvento', {
+        id: eventoCorrente.id,
+        nome: nome,
+        data: data,
+        descrizione: descrizione
+      });
+      
+      hideLoading();
+      
+      if (result.errore) {
+        alert('Errore: ' + result.errore);
+        return;
+      }
+      
+      chiudiModal();
+      await caricaPrenotazioni();
+      
+      // Riapri evento modificato
+      const eventoAggiornato = eventi.find(e => e.id === eventoCorrente.id);
+      if (eventoAggiornato) {
+        await apriGestioneEvento(eventoAggiornato.id);
+      }
+      
+      alert('✅ Evento modificato!');
+    }
+    
+    function confermaEliminaEvento() {
+      if (!eventoCorrente) return;
+      
+      const conferma = confirm(
+        `⚠️ ATTENZIONE!\n\n` +
+        `Stai per eliminare l'evento "${eventoCorrente.nome}".\n\n` +
+        `Verranno eliminate TUTTE le prenotazioni associate a questo evento.\n\n` +
+        `Confermi l'eliminazione?`
+      );
+      
+      if (conferma) {
+        eliminaEvento();
+      }
+    }
+    
+    async function eliminaEvento() {
+      if (!eventoCorrente) return;
+      
+      showLoading('Eliminazione evento...');
+      
+      const result = await callAPI('eliminaEvento', {
+        id: eventoCorrente.id
+      });
+      
+      hideLoading();
+      
+      if (result.errore) {
+        alert('Errore: ' + result.errore);
+        return;
+      }
+      
+      chiudiModal();
+      chiudiPannelloEvento();
+      await caricaPrenotazioni();
+      
+      alert('✅ Evento eliminato!');
     }
     
     // Service Worker per PWA
