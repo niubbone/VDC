@@ -257,7 +257,7 @@
   
   <!-- FOOTER IN FONDO -->
   <div class="footer">
-    <p>⚓   Ver. 1.7   ⚓</p>
+    <p>⚓   Ver. <span id="appVersion">caricamento...</span>   ⚓</p>
   </div>
   
   <div id="modalPIN" class="modal">
@@ -509,6 +509,49 @@
     
     // Volume default
     bgMusic.volume = 0.3; // 30% volume
+    
+    // VERSIONING AUTOMATICO - Legge versione dal service worker
+    async function getAppVersion() {
+      try {
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          // Metodo 1: chiedi versione al service worker via message
+          const messageChannel = new MessageChannel();
+          
+          navigator.serviceWorker.controller.postMessage(
+            { type: 'GET_VERSION' },
+            [messageChannel.port2]
+          );
+          
+          messageChannel.port1.onmessage = (event) => {
+            if (event.data && event.data.version) {
+              document.getElementById('appVersion').textContent = event.data.version;
+            }
+          };
+          
+          // Timeout fallback
+          setTimeout(() => {
+            if (document.getElementById('appVersion').textContent === 'caricamento...') {
+              document.getElementById('appVersion').textContent = '2025.11.26';
+            }
+          }, 1000);
+        } else {
+          // Service worker non attivo, usa versione default
+          document.getElementById('appVersion').textContent = '2025.11.26';
+        }
+      } catch (error) {
+        console.log('Errore lettura versione:', error);
+        document.getElementById('appVersion').textContent = '2025.11.26';
+      }
+    }
+    
+    // Carica versione quando service worker è pronto
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(() => {
+        getAppVersion();
+      });
+    } else {
+      document.getElementById('appVersion').textContent = '2025.11.26';
+    }
   </script>
 </body>
 </html>

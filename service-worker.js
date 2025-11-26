@@ -1,4 +1,7 @@
-const CACHE_NAME = 'vecchia-dogana-v2.3';
+// VERSION AUTO-GENERATA: cambia questa data quando fai modifiche
+const VERSION = '2025.11.26.1'; // Formato: YYYY.MM.DD.BUILD
+const CACHE_NAME = `vecchia-dogana-v${VERSION}`;
+
 const urlsToCache = [
   './',
   './index.html',
@@ -14,10 +17,11 @@ const urlsToCache = [
 
 // Installazione - caching dei file essenziali
 self.addEventListener('install', event => {
+  console.log(`[SW] Installazione versione ${VERSION}`);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache aperta');
+        console.log(`[SW] Cache aperta: ${CACHE_NAME}`);
         return cache.addAll(urlsToCache);
       })
   );
@@ -26,12 +30,13 @@ self.addEventListener('install', event => {
 
 // Attivazione - pulizia cache vecchie
 self.addEventListener('activate', event => {
+  console.log(`[SW] Attivazione versione ${VERSION}`);
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Rimozione cache vecchia:', cacheName);
+            console.log(`[SW] Rimozione cache vecchia: ${cacheName}`);
             return caches.delete(cacheName);
           }
         })
@@ -41,42 +46,22 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch - strategia Network First (per dati sempre aggiornati dall'API)
+// Fetch - strategia cache-first
 self.addEventListener('fetch', event => {
-  // Per le chiamate API, sempre network first
-  if (event.request.url.includes('script.google.com')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => {
-          return new Response(
-            JSON.stringify({ errore: 'Connessione non disponibile' }),
-            { headers: { 'Content-Type': 'application/json' } }
-          );
-        })
-    );
-    return;
-  }
-
-  // Per le risorse statiche, cache first
   event.respondWith(
     caches.match(event.request)
       .then(response => {
         if (response) {
           return response;
         }
-        return fetch(event.request).then(response => {
-          // Controlla se è una risposta valida
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          // Clona la risposta
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          return response;
-        });
+        return fetch(event.request);
       })
   );
+});
+
+// Messaggi - permette di ottenere la versione da JavaScript
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: VERSION });
+  }
 });
