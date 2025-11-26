@@ -26,16 +26,24 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Georgia', serif;
-      background: linear-gradient(rgba(20, 40, 60, 0.7), rgba(20, 40, 60, 0.7)),
-                  url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23234" width="100" height="100"/></svg>');
-      min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 20px;
+      background: 
+        linear-gradient(rgba(20, 40, 60, 0.40), rgba(20, 40, 60, 0.40)),
+        url('./SfondoVD.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
+      align-items: center; 
+      padding: 20px;
     }
     .container {
       background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
       padding: 50px 40px; border-radius: 15px;
       box-shadow: 0 30px 80px rgba(0,0,0,0.6); max-width: 500px; width: 100%;
       border: 4px solid #6b4423; position: relative;
-      margin-top: 30px;
     }
     .logo { text-align: center; margin-bottom: 40px; }
     .logo h1 {
@@ -157,20 +165,6 @@
     }
     
     
-    /* PIRATA APPESO */
-    .pirata-appeso {
-      margin-top: 0;
-      text-align: center;
-      position: relative;
-    }
-    
-    .pirata-appeso img {
-      max-width: 280px;
-      width: 100%;
-      height: auto;
-      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));
-    }
-    
     /* FOOTER IN FONDO */
     .footer {
       text-align: center; 
@@ -184,11 +178,69 @@
     @media (max-width: 600px) {
       .container { padding: 30px 20px; }
       .logo h1 { font-size: 2em; }
-      .pirata-appeso img { max-width: 200px; }
+    }
+    
+    /* CONTROLLO AUDIO */
+    .audio-control {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
+      border: 3px solid #6b4423;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+    
+    .audio-control:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+    }
+    
+    .audio-control:active {
+      transform: translateY(0);
+    }
+    
+    .audio-icon {
+      font-size: 1.8em;
+      filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+    }
+    
+    .audio-control.muted {
+      opacity: 0.6;
+    }
+    
+    @media (max-width: 600px) {
+      .audio-control {
+        width: 50px;
+        height: 50px;
+        bottom: 15px;
+        right: 15px;
+      }
+      .audio-icon {
+        font-size: 1.5em;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- AUDIO BACKGROUND -->
+  <audio id="bgMusic" loop>
+    <source src="./musica-sottofondo.mp3" type="audio/mpeg">
+  </audio>
+  
+  <!-- CONTROLLO AUDIO -->
+  <div class="audio-control" id="audioControl" onclick="toggleAudio()" title="Click per attivare/disattivare musica">
+    <span class="audio-icon" id="audioIcon">🎵</span>
+  </div>
+  
   <div class="container">
     <div class="logo">
       <span class="skull">🏴‍☠️</span>
@@ -203,14 +255,9 @@
     </div>
   </div>
   
-  <!-- PIRATA APPESO -->
-  <div class="pirata-appeso">
-    <img src="pirata_appeso.gif" alt="Pirata appeso con forziere">
-  </div>
-  
   <!-- FOOTER IN FONDO -->
   <div class="footer">
-    <p>⚓   Ver. 2.0   ⚓</p>
+    <p>⚓   Ver. 1.7   ⚓</p>
   </div>
   
   <div id="modalPIN" class="modal">
@@ -408,6 +455,60 @@
           });
       });
     }
+  </script>
+  
+  <script>
+    // GESTIONE AUDIO SOTTOFONDO
+    const bgMusic = document.getElementById('bgMusic');
+    const audioControl = document.getElementById('audioControl');
+    const audioIcon = document.getElementById('audioIcon');
+    let audioPlaying = false;
+    
+    // Funzione toggle audio
+    function toggleAudio() {
+      if (audioPlaying) {
+        bgMusic.pause();
+        audioIcon.textContent = '🔇';
+        audioControl.classList.add('muted');
+        audioPlaying = false;
+        localStorage.setItem('musicEnabled', 'false');
+      } else {
+        bgMusic.play().catch(err => {
+          console.log('Autoplay bloccato dal browser:', err);
+        });
+        audioIcon.textContent = '🎵';
+        audioControl.classList.remove('muted');
+        audioPlaying = true;
+        localStorage.setItem('musicEnabled', 'true');
+      }
+    }
+    
+    // Prova avvio automatico (potrebbe essere bloccato dal browser)
+    document.addEventListener('DOMContentLoaded', () => {
+      // Verifica preferenza salvata
+      const musicEnabled = localStorage.getItem('musicEnabled');
+      
+      if (musicEnabled !== 'false') {
+        // Prova autoplay (potrebbe fallire)
+        bgMusic.play().then(() => {
+          audioPlaying = true;
+          audioIcon.textContent = '🎵';
+          console.log('Musica avviata automaticamente');
+        }).catch(() => {
+          // Autoplay bloccato - mostra icona muted
+          audioIcon.textContent = '🔇';
+          audioControl.classList.add('muted');
+          console.log('Autoplay bloccato - click sul bottone per attivare');
+        });
+      } else {
+        // Utente aveva disattivato la musica
+        audioIcon.textContent = '🔇';
+        audioControl.classList.add('muted');
+      }
+    });
+    
+    // Volume default
+    bgMusic.volume = 0.3; // 30% volume
   </script>
 </body>
 </html>
