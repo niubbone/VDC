@@ -443,12 +443,45 @@
     }
     // ===== FINE GESTIONE SPESE RAPIDE =====
     
-    // Registrazione Service Worker per PWA
+    // Registrazione Service Worker con AUTO-UPDATE
     if ('serviceWorker' in navigator) {
+      let refreshing = false;
+      
+      // Rileva quando nuovo service worker prende controllo
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        console.log('[SW] Nuova versione attivata, ricarico pagina...');
+        window.location.reload();
+      });
+      
+      // Registra service worker
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
           .then(registration => {
             console.log('✅ Service Worker registrato:', registration.scope);
+            
+            // Controlla aggiornamenti ogni 60 secondi
+            setInterval(() => {
+              registration.update();
+            }, 60000);
+            
+            // Gestisci nuovo service worker in attesa
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Nuovo service worker disponibile
+                  console.log('[SW] 🎉 Nuova versione disponibile!');
+                  
+                  // Attiva automaticamente senza chiedere (per semplicità)
+                  // Se vuoi chiedere conferma, usa: if (confirm('Nuova versione...'))
+                  console.log('[SW] Attivazione automatica...');
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
           })
           .catch(error => {
             console.log('❌ Registrazione Service Worker fallita:', error);
@@ -531,16 +564,16 @@
           // Timeout fallback
           setTimeout(() => {
             if (document.getElementById('appVersion').textContent === 'caricamento...') {
-              document.getElementById('appVersion').textContent = '2.0';
+              document.getElementById('appVersion').textContent = '2.5';
             }
           }, 1000);
         } else {
           // Service worker non attivo, usa versione default
-          document.getElementById('appVersion').textContent = '2.0';
+          document.getElementById('appVersion').textContent = '2.5';
         }
       } catch (error) {
         console.log('Errore lettura versione:', error);
-        document.getElementById('appVersion').textContent = '2.0';
+        document.getElementById('appVersion').textContent = '2.5';
       }
     }
     
@@ -550,7 +583,7 @@
         getAppVersion();
       });
     } else {
-      document.getElementById('appVersion').textContent = '2.0';
+      document.getElementById('appVersion').textContent = '2.5';
     }
   </script>
 </body>

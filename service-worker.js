@@ -25,6 +25,7 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
+  // IMPORTANTE: skipWaiting forza attivazione immediata
   self.skipWaiting();
 });
 
@@ -43,6 +44,7 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  // IMPORTANTE: claim forza controllo immediato di tutte le pagine
   self.clients.claim();
 });
 
@@ -63,5 +65,10 @@ self.addEventListener('fetch', event => {
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({ version: VERSION });
+  }
+  
+  // Permette di forzare skip waiting da JavaScript
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
