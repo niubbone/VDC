@@ -694,14 +694,14 @@
     }
     
     /* PANNELLO GESTIONE EVENTO */
-    /* PANNELLO GESTIONE EVENTO - OPZIONE PIRATA ELEGANTE */
+    /* PANNELLO GESTIONE EVENTO - OPZIONE PERGAMENA */
     .pannello-evento-gestione {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(107, 68, 35, 0.6);
+      background: rgba(0,0,0,0.8);
       z-index: 2000;
       display: none;
       align-items: center;
@@ -714,20 +714,20 @@
     }
     
     .pannello-evento-content {
-      background: linear-gradient(145deg, #f9f3e8 0%, #f4e4c1 100%);
-      border: 5px solid #c89858;
+      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
+      border: 4px solid #6b4423;
       border-radius: 15px;
       max-width: 900px;
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 10px 40px rgba(107, 68, 35, 0.7);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     }
     
     .pannello-evento-header {
-      background: linear-gradient(145deg, #c89858 0%, #b8884a 100%);
+      background: linear-gradient(145deg, rgba(139, 69, 19, 0.15) 0%, rgba(139, 69, 19, 0.05) 100%);
       padding: 25px 30px;
-      border-bottom: 4px solid #6b4423;
+      border-bottom: 3px solid #8b4513;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -736,19 +736,19 @@
     .pannello-evento-titolo h2 {
       font-family: 'Pirata One';
       font-size: 2em;
-      color: #2c1810;
+      color: #6b4423;
       margin: 0 0 5px 0;
-      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+      text-shadow: 1px 1px 2px rgba(139, 69, 19, 0.2);
     }
     
     .pannello-evento-titolo p {
-      color: #3d1f0f;
+      color: #8b4513;
       font-size: 1.1em;
       margin: 0;
     }
     
     .btn-chiudi-pannello {
-      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
       color: #2c1810;
       padding: 12px 25px;
       border: 3px solid #3d1f0f;
@@ -764,7 +764,6 @@
     .btn-chiudi-pannello:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 0 #3d1f0f;
-      background: linear-gradient(145deg, #fff 0%, #f4e4c1 100%);
     }
     
     .btn-chiudi-pannello:active {
@@ -773,9 +772,9 @@
     }
     
     .btn-modifica-evento {
-      background: linear-gradient(145deg, rgba(200, 152, 88, 0.4) 0%, rgba(184, 136, 74, 0.4) 100%);
-      color: #2c1810;
-      border: 2px solid #6b4423;
+      background: linear-gradient(145deg, rgba(232, 184, 115, 0.4) 0%, rgba(200, 152, 88, 0.4) 100%);
+      color: #6b4423;
+      border: 2px solid #8b4513;
       padding: 10px 20px;
       border-radius: 8px;
       cursor: pointer;
@@ -783,13 +782,13 @@
       font-size: 0.95em;
       font-weight: 600;
       transition: all 0.3s;
-      box-shadow: 0 3px 8px rgba(107, 68, 35, 0.3);
+      box-shadow: 0 3px 8px rgba(139, 69, 19, 0.3);
     }
     
     .btn-modifica-evento:hover {
-      background: linear-gradient(145deg, #c89858 0%, #b8884a 100%);
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
       transform: translateY(-2px);
-      box-shadow: 0 5px 12px rgba(107, 68, 35, 0.5);
+      box-shadow: 0 5px 12px rgba(139, 69, 19, 0.5);
     }
     
     .pannello-evento-body {
@@ -797,13 +796,13 @@
     }
     
     .contatore-evento-grande {
-      background: linear-gradient(145deg, #c89858 0%, #b8884a 100%);
-      border: 4px solid #6b4423;
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      border: 3px solid #6b4423;
       border-radius: 12px;
       padding: 25px;
       margin-bottom: 30px;
       text-align: center;
-      box-shadow: 0 5px 15px rgba(107, 68, 35, 0.5);
+      box-shadow: 0 5px 15px rgba(107, 68, 35, 0.4);
     }
     
     .contatore-evento-numero {
@@ -811,7 +810,7 @@
       font-size: 3.5em;
       color: #2c1810;
       font-weight: 700;
-      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.4);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
     }
     
     .contatore-evento-label {
@@ -826,8 +825,6 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid rgba(107, 68, 35, 0.2);
     }
     
     .prenotazioni-evento-header h3 {
@@ -839,8 +836,8 @@
     
     /* CARD PRENOTAZIONE EVENTO */
     .prenotazione-evento-card {
-      background: rgba(200, 152, 88, 0.12);
-      border: 2px solid #c89858;
+      background: rgba(139, 69, 19, 0.08);
+      border: 2px solid #8b4513;
       border-radius: 10px;
       padding: 20px;
       margin-bottom: 15px;
@@ -848,7 +845,7 @@
     }
     
     .prenotazione-evento-card:hover {
-      background: rgba(200, 152, 88, 0.2);
+      background: rgba(139, 69, 19, 0.15);
       transform: translateX(5px);
       box-shadow: 0 4px 12px rgba(107, 68, 35, 0.3);
     }
@@ -867,7 +864,7 @@
     }
     
     .prenotazione-evento-persone {
-      background: linear-gradient(145deg, #c89858 0%, #b8884a 100%);
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
       color: #2c1810;
       padding: 8px 15px;
       border-radius: 20px;
@@ -893,8 +890,8 @@
     }
     
     .prenotazione-evento-note {
-      background: rgba(200, 152, 88, 0.15);
-      border-left: 3px solid #c89858;
+      background: rgba(139, 69, 19, 0.1);
+      border-left: 3px solid #8b4513;
       padding: 10px 15px;
       margin: 10px 0;
       color: #6b4423;
@@ -1031,7 +1028,7 @@
   <!-- MODAL NUOVA/MODIFICA PRENOTAZIONE/EVENTO -->
   <div id="modalPrenotazione" class="modal">
     <div class="modal-content">
-      <div class="modal-header" id="modalTitolo">📝 Nuova Prenotazione</div>
+      <div class="modal-header" id="modalTitolo">⚓ Nuova Prenotazione</div>
       
       <!-- TOGGLE TIPO (solo in modalità cre azione) -->
       <div class="form-tipo-toggle" id="tipoToggle" style="display:none;">
@@ -1449,7 +1446,7 @@
       modalitaModifica = false;
       tipoCorrente = 'prenotazione';
       
-      document.getElementById('modalTitolo').textContent = '📝 Nuova Prenotazione';
+      document.getElementById('modalTitolo').textContent = '⚓ Nuova Prenotazione';
       document.getElementById('inputData').value = giornoSelezionato;
       document.getElementById('inputOra').value = '19:00';
       document.getElementById('inputCliente').value = '';
@@ -1578,7 +1575,7 @@
       } else {
         document.getElementById('btnTipoPrenotazione').classList.add('active');
         document.getElementById('btnTipoEvento').classList.remove('active');
-        document.getElementById('modalTitolo').textContent = '📝 Nuova Prenotazione';
+        document.getElementById('modalTitolo').textContent = '⚓ Nuova Prenotazione';
         document.getElementById('campiEvento').style.display = 'none';
         document.getElementById('campoOra').style.display = 'block';
         document.getElementById('campoOrarioArrivo').style.display = 'none';
@@ -1671,7 +1668,7 @@
       modalitaModifica = false;
       tipoCorrente = 'prenotazione';
       
-      document.getElementById('modalTitolo').textContent = '➕ Nuova Prenotazione Evento';
+      document.getElementById('modalTitolo').textContent = '🍷 Nuova Prenotazione Evento';
       document.getElementById('inputData').value = eventoCorrente.data;
       document.getElementById('inputOra').value = '';
       document.getElementById('inputCliente').value = '';
