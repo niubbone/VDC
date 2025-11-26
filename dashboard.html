@@ -9,6 +9,11 @@
   <meta name="theme-color" content="#14283c">
   <link rel="manifest" href="./manifest.json">
   
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="./icon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./icon-16x16.png">
+  <link rel="apple-touch-icon" href="./icon-152x152.png">
+  
   <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -93,9 +98,92 @@
     }
     .message.success { background: #90ee90; color: #006400; border: 2px solid #006400; }
     .message.error { background: #ff5252; color: #b71c1c; border: 2px solid #b71c1c; }
+    
+    /* LOADING OVERLAY */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.8); display: none;
+      justify-content: center; align-items: center; z-index: 9999;
+    }
+    .loading-overlay.active { display: flex; }
+    .spinner {
+      width: 60px; height: 60px; border: 5px solid #e8b873;
+      border-top-color: transparent; border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      color: #e8b873; font-family: 'Pirata One'; font-size: 1.5em;
+      margin-top: 20px; text-align: center;
+    }
+    .loading-container { display: flex; flex-direction: column; align-items: center; }
+    
+    /* GRID CHIUSURE RESPONSIVE */
+    .chiusure-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .chiusura-card {
+      background: #f4e4c1;
+      padding: 20px;
+      border-radius: 10px;
+      border: 3px solid #6b4423;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    .chiusura-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    }
+    .chiusura-card h4 {
+      font-family: 'Pirata One';
+      font-size: 1.3em;
+      color: #2c1810;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #8b4513;
+    }
+    .chiusura-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 0.95em;
+    }
+    .chiusura-row.highlight {
+      font-weight: 700;
+      background: rgba(232, 184, 115, 0.3);
+      padding: 10px;
+      margin: 10px -10px;
+      border-radius: 5px;
+    }
+    .chiusura-row.discrepanza {
+      background: #ffe6e6;
+      font-weight: 700;
+    }
+    .chiusura-row.discrepanza.positiva {
+      background: #e6ffe6;
+    }
+    
+    @media (max-width: 768px) {
+      .chiusure-grid {
+        grid-template-columns: 1fr;
+      }
+      .header { flex-direction: column; gap: 10px; text-align: center; }
+      .header h1 { font-size: 1.5em; }
+    }
   </style>
 </head>
 <body>
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">Caricamento...</div>
+    </div>
+  </div>
+  
   <div class="header">
     <h1>🎩 Quartier Generale</h1>
     <a href="index.html" class="btn-home">🏴‍☠️ Porto</a>
@@ -110,14 +198,18 @@
     
     <div id="consultazione" class="tab-content active">
       <div class="section">
-        <div class="section-title">Cerca Chiusura</div>
+        <div class="section-title">Consulta Chiusure - Periodo</div>
         <div class="form-row">
           <div class="form-group">
-            <label>Data:</label>
-            <input type="date" id="dataRicerca">
+            <label>Dal:</label>
+            <input type="date" id="consultaDa">
+          </div>
+          <div class="form-group">
+            <label>Al:</label>
+            <input type="date" id="consultaA">
           </div>
           <div style="display:flex; align-items:flex-end;">
-            <button class="btn btn-primary" onclick="cercaChiusura()">🔍 Cerca</button>
+            <button class="btn btn-primary" onclick="consultaPeriodo()">🔍 Consulta</button>
           </div>
         </div>
       </div>
@@ -192,10 +284,29 @@
       }
     }
     
+    // Funzioni loading
+    function showLoading(message = 'Caricamento...') {
+      const overlay = document.getElementById('loadingOverlay');
+      const text = document.getElementById('loadingText');
+      text.textContent = message;
+      overlay.classList.add('active');
+    }
+    
+    function hideLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.remove('active');
+    }
+    
     document.addEventListener('DOMContentLoaded', () => {
       const oggi = new Date();
-      document.getElementById('dataRicerca').valueAsDate = oggi;
-      document.getElementById('versDaData').valueAsDate = new Date(oggi.getFullYear(), oggi.getMonth(), 1);
+      const primoGiornoMese = new Date(oggi.getFullYear(), oggi.getMonth(), 1);
+      
+      // Imposta default consultazione: primo giorno mese -> oggi
+      document.getElementById('consultaDa').valueAsDate = primoGiornoMese;
+      document.getElementById('consultaA').valueAsDate = oggi;
+      
+      // Imposta default versamento
+      document.getElementById('versDaData').valueAsDate = primoGiornoMese;
       document.getElementById('versAData').valueAsDate = oggi;
       document.getElementById('statMese').value = oggi.getMonth() + 1;
       document.getElementById('statAnno').value = oggi.getFullYear();
@@ -208,40 +319,125 @@
       document.getElementById(tabName).classList.add('active');
     }
     
-    async function cercaChiusura() {
-      const data = document.getElementById('dataRicerca').value;
-      if (!data) { alert('⚠️ Seleziona una data!'); return; }
+    async function consultaPeriodo() {
+      const da = document.getElementById('consultaDa').value;
+      const a = document.getElementById('consultaA').value;
+      
+      if (!da || !a) {
+        alert('⚠️ Seleziona entrambe le date!');
+        return;
+      }
+      
+      if (da > a) {
+        alert('⚠️ Data inizio deve essere prima della data fine!');
+        return;
+      }
+      
+      showLoading('Consultazione chiusure...');
       
       try {
-        const dati = await callAPI('getDatiGiorno', { data: data });
-        if (dati.errore) {
+        const result = await callAPI('getChiusurePeriodo', { dataInizio: da, dataFine: a });
+        
+        hideLoading();
+        
+        if (result.errore) {
           document.getElementById('risultatoConsultazione').innerHTML = 
-            '<div class="message error">⚠️ ' + dati.errore + '</div>';
+            '<div class="message error">⚠️ ' + result.errore + '</div>';
           return;
         }
         
-        const html = `
-          <div class="dettaglio-box">
-            <h3 style="font-family:'Pirata One'; color:#2c1810; margin-bottom:15px;">
-              ${dati.giornoSettimana} ${dati.data}
-            </h3>
-            <div class="dettaglio-row"><span>Fondo Start:</span><span>${dati.fondoStart.toFixed(2)} €</span></div>
-            <div class="dettaglio-row"><span>Fondo End:</span><span>${dati.fondoEnd.toFixed(2)} €</span></div>
-            <div class="dettaglio-row"><span>Chiusura:</span><span>${dati.chiusura.toFixed(2)} €</span></div>
-            <div class="dettaglio-row"><span>Cash:</span><span>${dati.cash.toFixed(2)} €</span></div>
-            <div class="dettaglio-row"><span>POS:</span><span>${dati.pos.toFixed(2)} €</span></div>
-            <div class="dettaglio-row"><span>Satispay:</span><span>${dati.satispay.toFixed(2)} €</span></div>
-            <div class="dettaglio-row"><span>Report Prodotti:</span><span>${dati.reportProdotti.toFixed(2)} €</span></div>
-            <div class="dettaglio-row"><span>Spese:</span><span>${dati.totaleSpese.toFixed(2)} €</span></div>
-            <div class="dettaglio-row" style="font-weight:700; background:#e8b873;">
-              <span>Discrepanza:</span><span>${dati.discrepanza.toFixed(2)} €</span>
+        if (!result.chiusure || result.chiusure.length === 0) {
+          document.getElementById('risultatoConsultazione').innerHTML = 
+            '<div class="message error">⚠️ Nessuna chiusura trovata nel periodo selezionato</div>';
+          return;
+        }
+        
+        // Crea grid responsive con tutte le chiusure
+        let html = '<div class="chiusure-grid">';
+        
+        result.chiusure.forEach(c => {
+          const discrepanzaClass = c.discrepanza >= 0 ? 'positiva' : '';
+          
+          html += `
+            <div class="chiusura-card">
+              <h4>${c.giornoSettimana}<br>${c.data}</h4>
+              
+              <div class="chiusura-row">
+                <span>Fondo Start:</span>
+                <span><strong>${c.fondoStart.toFixed(2)} €</strong></span>
+              </div>
+              
+              <div class="chiusura-row">
+                <span>Fondo End:</span>
+                <span><strong>${c.fondoEnd.toFixed(2)} €</strong></span>
+              </div>
+              
+              <div class="chiusura-row highlight">
+                <span>Report Prod.:</span>
+                <span><strong>${c.reportProdotti.toFixed(2)} €</strong></span>
+              </div>
+              
+              <div class="chiusura-row">
+                <span>Cash:</span>
+                <span>${c.cash.toFixed(2)} €</span>
+              </div>
+              
+              <div class="chiusura-row">
+                <span>POS:</span>
+                <span>${c.pos.toFixed(2)} €</span>
+              </div>
+              
+              <div class="chiusura-row">
+                <span>Satispay:</span>
+                <span>${c.satispay.toFixed(2)} €</span>
+              </div>
+              
+              <div class="chiusura-row">
+                <span>Spese:</span>
+                <span>${c.totaleSpese.toFixed(2)} €</span>
+              </div>
+              
+              <div class="chiusura-row discrepanza ${discrepanzaClass}">
+                <span>Discrepanza:</span>
+                <span><strong>${c.discrepanza.toFixed(2)} €</strong></span>
+              </div>
+              
+              ${c.note ? `<div style="margin-top:10px; padding:8px; background:white; border-radius:5px; font-size:0.9em;">
+                <strong>Note:</strong> ${c.note}</div>` : ''}
             </div>
-            ${dati.note ? `<div style="margin-top:15px; padding:10px; background:white; border-radius:5px;">
-              <strong>Note:</strong> ${dati.note}</div>` : ''}
+          `;
+        });
+        
+        html += '</div>';
+        
+        // Aggiungi riepilogo in alto
+        const totReport = result.chiusure.reduce((sum, c) => sum + c.reportProdotti, 0);
+        const totDiscrepanza = result.chiusure.reduce((sum, c) => sum + c.discrepanza, 0);
+        
+        const riepilogo = `
+          <div class="dettaglio-box" style="margin-bottom:20px;">
+            <h3 style="font-family:'Pirata One'; color:#2c1810; margin-bottom:15px;">
+              📊 Riepilogo Periodo (${result.chiusure.length} giorni)
+            </h3>
+            <div class="dettaglio-row highlight">
+              <span>Totale Report Prodotti:</span>
+              <span><strong>${totReport.toFixed(2)} €</strong></span>
+            </div>
+            <div class="dettaglio-row ${totDiscrepanza >= 0 ? '' : 'discrepanza'}">
+              <span>Totale Discrepanza:</span>
+              <span><strong>${totDiscrepanza.toFixed(2)} €</strong></span>
+            </div>
+            <div class="dettaglio-row">
+              <span>Media Giornaliera:</span>
+              <span><strong>${(totReport / result.chiusure.length).toFixed(2)} €</strong></span>
+            </div>
           </div>
         `;
-        document.getElementById('risultatoConsultazione').innerHTML = html;
+        
+        document.getElementById('risultatoConsultazione').innerHTML = riepilogo + html;
+        
       } catch (error) {
+        hideLoading();
         alert('⚠️ Errore: ' + error.message);
       }
     }
@@ -252,8 +448,13 @@
       if (!da || !a) { alert('⚠️ Seleziona entrambe le date!'); return; }
       if (da > a) { alert('⚠️ Data inizio deve essere prima!'); return; }
       
+      showLoading('Calcolo versamento...');
+      
       try {
         const versamento = await callAPI('calcolaDatiVersamento', { dataInizio: da, dataFine: a });
+        
+        hideLoading();
+        
         let tagliHtml = '<div style="margin-top:20px;"><h4 style="margin-bottom:10px;">Tagli:</h4>';
         Object.entries(versamento.tagli).forEach(([taglio, qta]) => {
           if (qta > 0) tagliHtml += `<div class="dettaglio-row"><span>${taglio}:</span><span>${qta} pz</span></div>`;
@@ -280,6 +481,7 @@
         `;
         document.getElementById('risultatoVersamento').innerHTML = html;
       } catch (error) {
+        hideLoading();
         alert('⚠️ Errore: ' + error.message);
       }
     }
@@ -289,6 +491,8 @@
       const utente = prompt('👤 Il tuo nome:');
       if (!utente) { alert('⚠️ Nome obbligatorio!'); return; }
       
+      showLoading('Salvataggio versamento...');
+      
       try {
         const result = await callAPI('salvaVersamento', {
           dati: {
@@ -296,6 +500,8 @@
             discrepanza: 0, note: note || '', utente: utente
           }
         });
+        
+        hideLoading();
         
         if (result.successo) {
           alert('✅ ' + result.messaggio);
@@ -305,6 +511,7 @@
           alert('⚠️ Errore: ' + result.errore);
         }
       } catch (error) {
+        hideLoading();
         alert('⚠️ Errore: ' + error.message);
       }
     }
@@ -313,8 +520,13 @@
       const mese = parseInt(document.getElementById('statMese').value);
       const anno = parseInt(document.getElementById('statAnno').value);
       
+      showLoading('Calcolo statistiche...');
+      
       try {
         const stats = await callAPI('getStatisticheMese', { mese: mese, anno: anno });
+        
+        hideLoading();
+        
         const html = `
           <div class="stat-grid">
             <div class="stat-card"><h3>🗓️ Giorni</h3><div class="stat-value">${stats.giorniAperti}</div></div>
@@ -329,6 +541,7 @@
         `;
         document.getElementById('risultatoStatistiche').innerHTML = html;
       } catch (error) {
+        hideLoading();
         alert('⚠️ Errore: ' + error.message);
       }
     }
