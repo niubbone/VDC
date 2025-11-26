@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>📜 Chiusura Cassa</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#14283c">
+  <link rel="manifest" href="./manifest.json">
+  
   <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,6 +47,16 @@
     }
     .info-box h2 { font-family: 'Pirata One'; color: #2c1810; margin-bottom: 10px; font-size: 1.8em; }
     .info-item { display: inline-block; margin-right: 30px; font-size: 1.1em; color: #2c1810; }
+    .alert-box {
+      background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 8px;
+      margin-bottom: 20px; color: #856404; font-weight: 600;
+    }
+    .btn-precedente {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810; padding: 12px 24px; border: 2px solid #6b4423;
+      border-radius: 8px; cursor: pointer; font-weight: 700; font-family: 'Pirata One';
+      margin-top: 10px; display: inline-block; font-size: 1.15em;
+    }
     .section {
       background: rgba(244,228,193,0.5); padding: 20px; border-radius: 10px;
       margin-bottom: 20px; border: 2px dashed #6b4423;
@@ -67,8 +82,15 @@
       width: 100%; padding: 12px; border: 2px solid #8b4513;
       border-radius: 8px; font-size: 1.1em; background: white;
     }
-    .spesa-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-    .spesa-row input { flex: 1; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; }
+    .spesa-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .spesa-row .spesa-desc { 
+      flex: 1; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; 
+      min-width: 0; /* Permette al flex di ridursi */
+    }
+    .spesa-row .spesa-importo { 
+      width: 100px; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; 
+      flex-shrink: 0; /* Non si riduce */
+    }
     .btn-remove { background: #8b0000; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     .btn-add { background: #2e8b57; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .riepilogo {
@@ -80,10 +102,10 @@
       display: flex; justify-content: space-between; padding: 10px;
       margin-bottom: 5px; background: rgba(255,255,255,0.5); border-radius: 5px; font-size: 1.1em;
     }
-    .discrepanza { font-size: 1.5em; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 15px; }
-    .discrepanza.ok { background: #90ee90; color: #006400; }
-    .discrepanza.warning { background: #ffeb3b; color: #f57f17; }
-    .discrepanza.error { background: #ff5252; color: #b71c1c; }
+    .discrepanza { font-size: 1.5em; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 15px; color: #000000; }
+    .discrepanza.ok { background: #90ee90; }
+    .discrepanza.warning { background: #ffeb3b; }
+    .discrepanza.error { background: #ff5252; }
     .btn-salva {
       width: 100%; background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%);
       color: white; padding: 20px; border: 3px solid #1e5631; border-radius: 10px;
@@ -91,6 +113,31 @@
       margin-top: 20px; box-shadow: 0 6px 0 #1e5631;
     }
     #loading { text-align: center; padding: 50px; font-size: 1.5em; color: #f4e4c1; }
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;
+      overflow-y: auto; padding: 20px;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
+      padding: 30px; border-radius: 15px; max-width: 800px; width: 100%;
+      border: 4px solid #6b4423; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid #8b4513;
+    }
+    .modal-header h2 { font-family: 'Pirata One'; color: #2c1810; font-size: 2em; }
+    .btn-close {
+      background: #8b0000; color: white; border: none; padding: 10px 20px;
+      border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Rye';
+    }
+    .dettaglio-row {
+      display: flex; justify-content: space-between; padding: 10px;
+      margin-bottom: 5px; background: rgba(255,255,255,0.5); border-radius: 5px;
+    }
   </style>
 </head>
 <body>
@@ -107,6 +154,16 @@
       <div class="info-item"><strong>Data:</strong> <span id="dataOggi"></span></div>
       <div class="info-item"><strong>Giorno:</strong> <span id="giornoSettimana"></span></div>
       <div class="info-item"><strong>Fondo:</strong> <span id="fondoStart"></span> €</div>
+      <div>
+        <button class="btn-precedente" onclick="mostraChiusuraPrecedente()">👁️ Vedi Chiusura Precedente</button>
+        <div id="loadingPrecedente" style="display:none; margin-top:10px; color:#d4af37; font-style:italic;">
+          🏴‍☠️ Rovisto tra i registri del capitano...
+        </div>
+      </div>
+    </div>
+    
+    <div id="alertModifica" class="alert-box" style="display:none;">
+      ⚠️ Stai modificando una chiusura già esistente. I dati verranno aggiornati.
     </div>
     
     <div class="section">
@@ -119,22 +176,35 @@
     
     <div class="section">
       <div class="section-title">🔒 Fondo e Incassi</div>
+      <div style="background: #d9ead3; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #6b4423;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 700; color: #2c1810; font-size: 1.1em;">Fondo End (automatico):</span>
+          <span id="fondoEndDisplay" style="font-size: 1.3em; font-weight: 700; color: #2c1810;">0,00 €</span>
+        </div>
+        <div style="margin-top: 5px; font-size: 0.9em; color: #666; font-style: italic;">
+          ℹ️ Calcolato automaticamente dalla somma dei tagli
+        </div>
+      </div>
       <div class="grid">
         <div class="form-group">
-          <label>Fondo End:</label>
-          <input type="number" id="fondoEnd" step="0.01" oninput="ricalcola()">
+          <label>Chiusura (da stampa):</label>
+          <input type="number" id="chiusura" step="0.01" value="0" style="background: #e6f3ff;" oninput="ricalcola()" onfocus="this.select()">
+        </div>
+        <div class="form-group">
+          <label>Cash (portato via):</label>
+          <input type="number" id="cash" step="0.01" value="0" oninput="ricalcola()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>POS:</label>
-          <input type="number" id="pos" step="0.01" value="0" oninput="ricalcola()">
+          <input type="number" id="pos" step="0.01" value="0" oninput="ricalcola()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>Satispay:</label>
-          <input type="number" id="satispay" step="0.01" value="0" oninput="ricalcola()">
+          <input type="number" id="satispay" step="0.01" value="0" oninput="ricalcola()" onfocus="this.select()">
         </div>
         <div class="form-group">
-          <label>Tot. Prodotti:</label>
-          <input type="number" id="totProdotti" step="0.01" oninput="ricalcola()">
+          <label>Report Prodotti:</label>
+          <input type="number" id="reportProdotti" step="0.01" oninput="ricalcola()" onfocus="this.select()">
         </div>
       </div>
     </div>
@@ -142,7 +212,7 @@
     <div class="section">
       <div class="section-title">💸 Spese</div>
       <div id="speseContainer"></div>
-      <button class="btn-add" onclick="aggiungiSpesa()">➕ Aggiungi</button>
+      <button class="btn-add" onclick="aggiungiSpesa()">➕</button>
       <div style="text-align:right; margin-top:15px; font-size:1.2em; font-weight:bold; color:#2c1810;">
         Tot Spese: <span id="totaleSpese">0,00</span> €
       </div>
@@ -156,11 +226,22 @@
     <div class="riepilogo">
       <h3>⚖️ Riepilogo</h3>
       <div class="riepilogo-item"><span>Diff. Fondo:</span><span id="riepDiffFondo">0,00 €</span></div>
-      <div class="riepilogo-item"><span>Calcolato:</span><span id="riepCalcolato">0,00 €</span></div>
+      <div class="riepilogo-item"><span>Totale giorno:</span><span id="riepTotaleGiorno">0,00 €</span></div>
+      <div class="riepilogo-item"><span>Totale cassa:</span><span id="riepTotaleCassa">0,00 €</span></div>
       <div class="discrepanza" id="discrepanza">Discrepanza: 0,00 €</div>
     </div>
     
     <button class="btn-salva" onclick="salvaChiusura()">💾 Salva</button>
+  </div>
+  
+  <div id="modalPrecedente" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📋 Chiusura Precedente</h2>
+        <button class="btn-close" onclick="chiudiModalPrecedente()">✕ Chiudi</button>
+      </div>
+      <div id="contenutoPrecedente"></div>
+    </div>
   </div>
   
   <script>
@@ -184,15 +265,18 @@
     }
     
     const TAGLI = [
-      {valore:0.01,label:'0,01€'},{valore:0.02,label:'0,02€'},{valore:0.05,label:'0,05€'},
       {valore:0.10,label:'0,10€'},{valore:0.20,label:'0,20€'},{valore:0.50,label:'0,50€'},
       {valore:1,label:'1€'},{valore:2,label:'2€'},{valore:5,label:'5€'},
       {valore:10,label:'10€'},{valore:20,label:'20€'},{valore:50,label:'50€'},
-      {valore:100,label:'100€'},{valore:200,label:'200€'},{valore:500,label:'500€'}
+      {valore:100,label:'100€'}
     ];
+    
+    // Tagli visibili nel form (solo da 0,50€ in su)
+    const TAGLI_VISIBILI = TAGLI.filter(t => t.valore >= 0.50);
     
     let datiGiorno = null;
     let spese = [];
+    let modalitaModifica = false;
     
     document.addEventListener('DOMContentLoaded', caricaDatiOggi);
     
@@ -202,7 +286,15 @@
       
       try {
         datiGiorno = await callAPI('getDatiGiorno', { data: dataStr });
+        console.log('DEBUG - Risposta API:', datiGiorno);
         if (datiGiorno.errore) { alert('⚠️ ' + datiGiorno.errore); return; }
+        
+        // Controlla se esistono già dati compilati per oggi
+        if (datiGiorno.reportProdotti && datiGiorno.reportProdotti > 0) {
+          modalitaModifica = true;
+          document.getElementById('alertModifica').style.display = 'block';
+        }
+        
         inizializzaForm();
       } catch (error) {
         alert('⚠️ Errore: ' + error.message);
@@ -218,22 +310,24 @@
       document.getElementById('fondoStart').textContent = datiGiorno.fondoStart.toFixed(2);
       
       const tagliContainer = document.getElementById('tagli');
-      TAGLI.forEach(taglio => {
+      TAGLI_VISIBILI.forEach(taglio => {
         const div = document.createElement('div');
         div.className = 'taglio-item';
         div.innerHTML = `
           <span class="taglio-label">${taglio.label}</span>
           <input type="number" class="taglio-input" id="taglio_${taglio.label}" 
-                 value="${datiGiorno.tagli[taglio.label]||0}" min="0" step="1" oninput="ricalcolaTagli()">
+                 value="${datiGiorno.tagli[taglio.label]||0}" min="0" step="1" oninput="ricalcolaTagli()" onfocus="this.select()">
           <span class="taglio-total" id="total_${taglio.label}">0,00 €</span>
         `;
         tagliContainer.appendChild(div);
       });
       
-      if (datiGiorno.fondoEnd) document.getElementById('fondoEnd').value = datiGiorno.fondoEnd;
+      // Fondo End è automatico, non si carica da datiGiorno
+      if (datiGiorno.chiusura) document.getElementById('chiusura').value = datiGiorno.chiusura;
+      if (datiGiorno.cash) document.getElementById('cash').value = datiGiorno.cash;
       if (datiGiorno.pos) document.getElementById('pos').value = datiGiorno.pos;
       if (datiGiorno.satispay) document.getElementById('satispay').value = datiGiorno.satispay;
-      if (datiGiorno.totProdotti) document.getElementById('totProdotti').value = datiGiorno.totProdotti;
+      if (datiGiorno.reportProdotti) document.getElementById('reportProdotti').value = datiGiorno.reportProdotti;
       if (datiGiorno.note) document.getElementById('note').value = datiGiorno.note;
       
       spese = datiGiorno.spese && datiGiorno.spese.length > 0 ? datiGiorno.spese : [{ descrizione: '', importo: 0 }];
@@ -243,13 +337,15 @@
     
     function ricalcolaTagli() {
       let totale = 0;
-      TAGLI.forEach(taglio => {
+      TAGLI_VISIBILI.forEach(taglio => {
         const qta = parseFloat(document.getElementById(`taglio_${taglio.label}`).value) || 0;
         const valore = qta * taglio.valore;
         totale += valore;
         document.getElementById(`total_${taglio.label}`).textContent = valore.toFixed(2) + ' €';
       });
       document.getElementById('totaleContato').textContent = totale.toFixed(2);
+      // Aggiorna Fondo End automatico
+      document.getElementById('fondoEndDisplay').textContent = totale.toFixed(2) + ' €';
       ricalcola();
     }
     
@@ -270,10 +366,10 @@
         const div = document.createElement('div');
         div.className = 'spesa-row';
         div.innerHTML = `
-          <input type="text" placeholder="Descrizione" value="${spesa.descrizione}"
+          <input type="text" class="spesa-desc" placeholder="Descrizione" value="${spesa.descrizione}"
                  onchange="spese[${index}].descrizione = this.value">
-          <input type="number" placeholder="0.00" step="0.01" value="${spesa.importo}"
-                 oninput="spese[${index}].importo = parseFloat(this.value)||0; ricalcola()">
+          <input type="number" class="spesa-importo" placeholder="0.00" step="0.01" value="${spesa.importo}"
+                 oninput="spese[${index}].importo = parseFloat(this.value)||0; ricalcola()" onfocus="this.select()">
           <button class="btn-remove" onclick="rimuoviSpesa(${index})">🗑️</button>
         `;
         container.appendChild(div);
@@ -283,20 +379,24 @@
     
     function ricalcola() {
       const fondoStart = parseFloat(document.getElementById('fondoStart').textContent) || 0;
-      const fondoEnd = parseFloat(document.getElementById('fondoEnd').value) || 0;
+      // Fondo End = Totale Contato (automatico)
+      const fondoEnd = parseFloat(document.getElementById('totaleContato').textContent) || 0;
+      const cash = parseFloat(document.getElementById('cash').value) || 0;
       const pos = parseFloat(document.getElementById('pos').value) || 0;
       const satispay = parseFloat(document.getElementById('satispay').value) || 0;
-      const totProdotti = parseFloat(document.getElementById('totProdotti').value) || 0;
+      const reportProdotti = parseFloat(document.getElementById('reportProdotti').value) || 0;
       const totaleSpese = spese.reduce((sum, s) => sum + (s.importo||0), 0);
       
       document.getElementById('totaleSpese').textContent = totaleSpese.toFixed(2);
       
       const diffFondo = fondoStart - fondoEnd;
-      const calcolato = diffFondo + pos + satispay + totaleSpese;
-      const discrepanza = totProdotti - calcolato;
+      const totaleGiorno = cash + pos + satispay + totaleSpese;
+      const totaleCassa = totaleGiorno + diffFondo;
+      const discrepanza = reportProdotti - totaleCassa;
       
       document.getElementById('riepDiffFondo').textContent = diffFondo.toFixed(2) + ' €';
-      document.getElementById('riepCalcolato').textContent = calcolato.toFixed(2) + ' €';
+      document.getElementById('riepTotaleGiorno').textContent = totaleGiorno.toFixed(2) + ' €';
+      document.getElementById('riepTotaleCassa').textContent = totaleCassa.toFixed(2) + ' €';
       
       const discEl = document.getElementById('discrepanza');
       discEl.textContent = `Discrepanza: ${discrepanza.toFixed(2)} €`;
@@ -306,25 +406,124 @@
       else discEl.classList.add('error');
     }
     
+    async function mostraChiusuraPrecedente() {
+      try {
+        document.getElementById('loadingPrecedente').style.display = 'block';
+        
+        // Cerca il primo giorno precedente con dati compilati (fino a 30 giorni indietro)
+        const oggi = new Date();
+        let dati = null;
+        let giornoTrovato = false;
+        
+        for (let i = 1; i <= 30; i++) {
+          const dataPrecedente = new Date(oggi);
+          dataPrecedente.setDate(dataPrecedente.getDate() - i);
+          const dataStr = `${dataPrecedente.getFullYear()}-${String(dataPrecedente.getMonth()+1).padStart(2,'0')}-${String(dataPrecedente.getDate()).padStart(2,'0')}`;
+          
+          const risultato = await callAPI('getDatiGiorno', { data: dataStr });
+          
+          // Controlla se ha dati compilati (fondoEnd > 0)
+          if (!risultato.errore && risultato.fondoEnd && risultato.fondoEnd > 0) {
+            dati = risultato;
+            giornoTrovato = true;
+            break;
+          }
+        }
+        
+        if (!giornoTrovato || !dati) {
+          document.getElementById('loadingPrecedente').style.display = 'none';
+          alert('⚠️ Nessuna chiusura precedente trovata negli ultimi 30 giorni');
+          return;
+        }
+        
+        let tagliHtml = '<div class="section"><div class="section-title">💰 Tagli</div>';
+        let haTagli = false;
+        for (const [taglio, qta] of Object.entries(dati.tagli || {})) {
+          if (qta > 0) {
+            haTagli = true;
+            tagliHtml += `<div class="dettaglio-row"><span>${taglio}:</span><span>${qta} pz</span></div>`;
+          }
+        }
+        tagliHtml += haTagli ? '</div>' : '<div style="color:#666; font-style:italic;">Nessun taglio registrato</div></div>';
+        
+        let speseHtml = '<div class="section"><div class="section-title">💸 Spese</div>';
+        let hasDettaglioSpese = false;
+        if (dati.spese && dati.spese.length > 0) {
+          dati.spese.forEach(spesa => {
+            if (spesa.descrizione || spesa.importo) {
+              hasDettaglioSpese = true;
+              speseHtml += `<div class="dettaglio-row"><span>${spesa.descrizione || 'N/A'}:</span><span>${spesa.importo.toFixed(2)} €</span></div>`;
+            }
+          });
+        }
+        
+        // Aggiungi totale spese sempre in fondo
+        speseHtml += `<div class="dettaglio-row" style="font-weight:700; border-top:2px solid #333; margin-top:5px; padding-top:5px;">
+          <span>💸 Tot Spese:</span><span>${dati.totaleSpese.toFixed(2)} €</span>
+        </div>`;
+        
+        if (!hasDettaglioSpese) {
+          speseHtml = '<div class="section"><div class="section-title">💸 Spese</div><div style="color:#666; font-style:italic;">Nessun dettaglio spese</div>' + speseHtml.split('</div>').slice(-2).join('</div>');
+        }
+        speseHtml += '</div>';
+        
+        const html = `
+          <div class="info-box">
+            <h2>${dati.giornoSettimana} ${dati.data}</h2>
+          </div>
+          <div class="section">
+            <div class="section-title">📊 Riepilogo</div>
+            <div class="dettaglio-row"><span>Fondo Start:</span><span>${dati.fondoStart.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Fondo End:</span><span>${dati.fondoEnd.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Chiusura:</span><span>${dati.chiusura.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Cash:</span><span>${dati.cash.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>POS:</span><span>${dati.pos.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Satispay:</span><span>${dati.satispay.toFixed(2)} €</span></div>
+            <div class="dettaglio-row"><span>Report Prodotti:</span><span>${dati.reportProdotti.toFixed(2)} €</span></div>
+            <div class="dettaglio-row" style="font-weight:700; background:#ea9999;">
+              <span>⚠️ Discrepanza:</span><span>${dati.discrepanza.toFixed(2)} €</span>
+            </div>
+          </div>
+          ${tagliHtml}
+          ${speseHtml}
+          ${dati.note ? `<div class="section">
+            <div class="section-title">📝 Note</div>
+            <div style="padding:10px; background:white; border-radius:5px;">${dati.note}</div>
+          </div>` : ''}
+        `;
+        
+        document.getElementById('contenutoPrecedente').innerHTML = html;
+        document.getElementById('loadingPrecedente').style.display = 'none';
+        document.getElementById('modalPrecedente').classList.add('active');
+      } catch (error) {
+        document.getElementById('loadingPrecedente').style.display = 'none';
+        alert('⚠️ Errore: ' + error.message);
+      }
+    }
+    
+    function chiudiModalPrecedente() {
+      document.getElementById('modalPrecedente').classList.remove('active');
+    }
+    
     async function salvaChiusura() {
-      const utente = prompt('👤 Il tuo nome:');
-      if (!utente) { alert('⚠️ Nome obbligatorio!'); return; }
-      
       const tagli = {};
       TAGLI.forEach(taglio => {
-        tagli[taglio.label] = parseInt(document.getElementById(`taglio_${taglio.label}`).value) || 0;
+        const input = document.getElementById(`taglio_${taglio.label}`);
+        tagli[taglio.label] = input ? (parseInt(input.value) || 0) : 0;
       });
       
       const dati = {
         data: datiGiorno.data.split('/').reverse().join('-'),
         tagli: tagli,
-        fondoEnd: parseFloat(document.getElementById('fondoEnd').value) || 0,
+        // fondoEnd è automatico, non va più inviato
+        chiusura: parseFloat(document.getElementById('chiusura').value) || 0,
+        cash: parseFloat(document.getElementById('cash').value) || 0,
         pos: parseFloat(document.getElementById('pos').value) || 0,
         satispay: parseFloat(document.getElementById('satispay').value) || 0,
-        totProdotti: parseFloat(document.getElementById('totProdotti').value) || 0,
+        reportProdotti: parseFloat(document.getElementById('reportProdotti').value) || 0,
         spese: spese.filter(s => s.descrizione || s.importo),
         note: document.getElementById('note').value,
-        utente: utente
+        utente: new Date().toLocaleString('it-IT')
       };
       
       try {
