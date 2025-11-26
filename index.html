@@ -531,16 +531,16 @@
           // Timeout fallback
           setTimeout(() => {
             if (document.getElementById('appVersion').textContent === 'caricamento...') {
-              document.getElementById('appVersion').textContent = '2025.11.26';
+              document.getElementById('appVersion').textContent = '2.0';
             }
           }, 1000);
         } else {
           // Service worker non attivo, usa versione default
-          document.getElementById('appVersion').textContent = '2025.11.26';
+          document.getElementById('appVersion').textContent = '2.0';
         }
       } catch (error) {
         console.log('Errore lettura versione:', error);
-        document.getElementById('appVersion').textContent = '2025.11.26';
+        document.getElementById('appVersion').textContent = '2.0';
       }
     }
     
@@ -550,7 +550,7 @@
         getAppVersion();
       });
     } else {
-      document.getElementById('appVersion').textContent = '2025.11.26';
+      document.getElementById('appVersion').textContent = '2.0';
     }
   </script>
 </body>

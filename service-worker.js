@@ -1,5 +1,5 @@
-// VERSION AUTO-GENERATA: cambia questa data quando fai modifiche
-const VERSION = '2025.11.26.1'; // Formato: YYYY.MM.DD.BUILD
+// VERSION AUTO-GENERATA: cambia questa quando fai modifiche
+const VERSION = '2.0'; // Formato semplice: 2.0, 2.1, 2.1b, 2.2, ecc.
 const CACHE_NAME = `vecchia-dogana-v${VERSION}`;
 
 const urlsToCache = [
