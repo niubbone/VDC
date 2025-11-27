@@ -44,7 +44,7 @@
       align-items: center;
       margin-bottom: 30px;
       padding: 20px 30px;
-      background: rgba(20, 40, 60, 0.8);
+      background: rgba(35, 55, 80, 0.85);
       border: 3px solid #d4a574;
       border-radius: 15px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.5);
@@ -85,12 +85,12 @@
     
     @media (max-width: 768px) {
       .header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
+        flex-wrap: nowrap;
+        gap: 10px;
+        padding: 15px 20px;
       }
       .header h1 {
-        font-size: 1.8em;
+        font-size: 1.5em;
       }
     }
     
@@ -220,6 +220,11 @@
       font-weight: 700;
     }
     
+    .giorno.domenica {
+      border-color: #dc2626;
+      border-width: 2px;
+    }
+    
     .giorno.altro-mese {
       opacity: 0.4;
       cursor: default;
@@ -286,7 +291,7 @@
     
     /* PANNELLO LATERALE */
     .pannello-laterale {
-      background: rgba(20, 40, 60, 0.95);
+      background: rgba(35, 55, 80, 0.95);
       border: 3px solid #d4a574;
       border-radius: 15px;
       padding: 20px;
@@ -416,13 +421,13 @@
     }
     
     .btn-elimina {
-      background: #e74c3c;
+      background: #d47369;
       color: white;
-      border-color: #c0392b;
+      border-color: #c85a54;
     }
     
     .btn-elimina:hover {
-      background: #c0392b;
+      background: #c85a54;
     }
     
     /* MODAL */
@@ -592,15 +597,15 @@
     }
     
     .btn-modal.btn-elimina {
-      background: linear-gradient(145deg, #e74c3c 0%, #c0392b 100%);
+      background: linear-gradient(145deg, #d47369 0%, #c85a54 100%);
       color: white;
-      border-color: #a93226;
+      border-color: #c85a54;
       flex: 0 0 auto;
       min-width: 180px;
     }
     
     .btn-modal.btn-elimina:hover {
-      background: linear-gradient(145deg, #ec7063 0%, #e74c3c 100%);
+      background: linear-gradient(145deg, #e8a199 0%, #d47369 100%);
     }
     
     /* EMPTY STATE */
@@ -613,7 +618,8 @@
     .empty-state-icon {
       font-size: 4em;
       margin-bottom: 15px;
-      opacity: 0.5;
+      opacity: 1;
+      filter: none;
     }
     
     .empty-state-text {
@@ -1013,7 +1019,7 @@
         
         <div id="prenotazioniContainer">
           <div class="empty-state">
-            <div class="empty-state-icon">🗺️</div>
+            <div class="empty-state-icon">📆</div>
             <div class="empty-state-text">
               Clicca su un giorno per vedere le prenotazioni
             </div>
@@ -1365,6 +1371,9 @@
       
       for (let giorno = 1; giorno <= ultimoGiorno; giorno++) {
         const dataStr = `${annoCorrente}-${String(meseCorrente + 1).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`;
+        const dataObj = new Date(annoCorrente, meseCorrente, giorno);
+        const isDomenica = dataObj.getDay() === 0;
+        
         const isOggi = dataStr === oggiStr;
         const isSelezionato = giornoSelezionato === dataStr;
         
@@ -1379,6 +1388,7 @@
         let classi = 'giorno';
         if (isOggi) classi += ' oggi';
         if (isSelezionato) classi += ' selezionato';
+        if (isDomenica) classi += ' domenica';
         
         // Badge tipo (prenotazioni e/o eventi)
         let badgeTipo = '';
