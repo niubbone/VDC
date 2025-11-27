@@ -84,10 +84,15 @@
     }
     
     @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
       .header {
         flex-wrap: nowrap;
         gap: 10px;
-        padding: 15px 20px;
+        padding: 15px;
+        margin-bottom: 15px;
       }
       .header h1 {
         font-size: 1.5em;
@@ -221,8 +226,9 @@
     }
     
     .giorno.domenica {
+      background: #ffebee;
       border-color: #dc2626;
-      border-width: 2px;
+      border-width: 3px;
     }
     
     .giorno.altro-mese {
