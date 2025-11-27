@@ -3,34 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prenotazioni - Vecchia Dogana</title>
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#8b4513">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Prenotazioni VDC">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <title>⚓ Prenotazioni - Vecchia Dogana</title>
+  
+  <!-- PWA -->
+  <meta name="description" content="Gestione prenotazioni Vecchia Dogana">
+  <meta name="theme-color" content="#14283c">
+  <link rel="manifest" href="./manifest.json">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="./icon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./icon-16x16.png">
+  <link rel="apple-touch-icon" href="./icon-152x152.png">
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
   
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(rgba(244, 228, 193, 0.15), rgba(230, 217, 197, 0.15)), url('./SfondoVD.png');
+      font-family: 'Rye', serif;
+      background: linear-gradient(rgba(20, 40, 60, 0.40), rgba(20, 40, 60, 0.40)), url('./SfondoVD.png');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
+      color: #f4e4c1;
       min-height: 100vh;
       padding: 20px;
-      color: #2c1810;
     }
     
     .container {
@@ -38,126 +37,105 @@
       margin: 0 auto;
     }
     
-    /* HEADER CON ANCORA */
-    .header-container {
-      max-width: 1400px;
-      margin: 0 auto 25px auto;
-    }
-    
+    /* HEADER */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 30px;
       padding: 20px 30px;
-      background: #8A9AA6;
-      border: 3px solid #f4e4c1;
-      border-radius: 12px;
-      box-shadow: 0 6px 20px rgba(107, 68, 35, 0.25);
-    }
-    
-    .header-title {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    
-    .header-anchor {
-      font-size: 2.5em;
-      filter: drop-shadow(2px 2px 4px rgba(44, 24, 16, 0.3));
-      color: #f4e4c1;
+      background: rgba(20, 40, 60, 0.8);
+      border: 3px solid #d4a574;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
     }
     
     .header h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 2em;
-      font-weight: 700;
-      color: #f4e4c1;
+      font-family: 'Pirata One';
+      font-size: 2.5em;
+      color: #d4a574;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
       margin: 0;
-      letter-spacing: -0.01em;
-      text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.3);
     }
     
-    .btn-back {
-      background: linear-gradient(135deg, #f4e4c1 0%, #e6d9c5 100%);
-      color: #6b4423;
-      padding: 8px 14px;
-      border: none;
+    .btn-home {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      padding: 12px 25px;
+      border: 3px solid #3d1f0f;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 700;
-      font-family: 'Inter', sans-serif;
-      font-size: 1.8em;
-      box-shadow: 0 3px 10px rgba(107, 68, 35, 0.3);
-      transition: all 0.2s;
+      font-family: 'Rye', cursive;
+      font-size: 1em;
+      box-shadow: 0 4px 0 #3d1f0f;
       text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 42px;
-      line-height: 1;
-      text-shadow: 1px 1px 2px rgba(44, 24, 16, 0.15);
+      transition: all 0.2s;
     }
     
-    .btn-back:hover {
+    .btn-home:hover {
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(200, 152, 88, 0.4);
+      box-shadow: 0 6px 0 #3d1f0f;
     }
     
-    .btn-back:active {
+    .btn-home:active {
       transform: translateY(0);
+      box-shadow: 0 2px 0 #3d1f0f;
     }
     
-    .calendario-container {
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+      .header h1 {
+        font-size: 1.8em;
+      }
+    }
+    
+    /* LAYOUT PRINCIPALE */
+    .main-layout {
       display: grid;
       grid-template-columns: 1fr 400px;
       gap: 20px;
     }
     
-    @media (max-width: 968px) {
-      .calendario-container {
+    @media (max-width: 1024px) {
+      .main-layout {
         grid-template-columns: 1fr;
       }
-      
-      .header {
-        padding: 15px 20px;
-      }
-      
-      .header h1 {
-        font-size: 1.5em;
-      }
-      
-      .header-anchor {
-        font-size: 2em;
-      }
-      
-      .btn-back {
-        font-size: 1.5em;
-        padding: 6px 12px;
-        min-width: 38px;
-      }
-      
-      .pannello-laterale {
-        max-height: 500px !important;
-      }
-    }
-    
-    h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 2em;
-      font-weight: 700;
-      color: #6b4423;
-      margin-bottom: 25px;
-      text-align: center;
-      letter-spacing: -0.01em;
     }
     
     /* CALENDARIO */
-    .calendario {
-      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
-      border: 3px solid #c89858;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 6px 25px rgba(107, 68, 35, 0.25);
+    .calendario-container {
+      background: rgba(244, 228, 193, 0.95);
+      border: 4px solid #6b4423;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6),
+                  inset 0 0 50px rgba(139, 69, 19, 0.1);
+      position: relative;
+    }
+    
+    /* Effetto pergamena */
+    .calendario-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(139, 69, 19, 0.03) 2px,
+          rgba(139, 69, 19, 0.03) 4px
+        );
+      pointer-events: none;
+      border-radius: 15px;
     }
     
     .calendario-header {
@@ -166,76 +144,63 @@
       align-items: center;
       margin-bottom: 20px;
       padding-bottom: 15px;
-      border-bottom: 3px solid rgba(255, 255, 255, 0.6);
+      border-bottom: 3px solid #8b4513;
     }
     
     .calendario-header h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.5em;
-      font-weight: 700;
-      color: #6b4423;
-      text-shadow: 2px 2px 4px rgba(107, 68, 35, 0.25);
+      font-family: 'Pirata One';
+      font-size: 1.8em;
+      color: #2c1810;
+      text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.3);
     }
     
-    .calendario-nav {
+    .nav-mese {
       display: flex;
       gap: 10px;
+      align-items: center;
     }
     
     .btn-nav {
-      background: #fff;
-      border: 2px solid #c89858;
-      padding: 8px 16px;
+      background: linear-gradient(145deg, #6b4423 0%, #4a2f1a 100%);
+      color: #f4e4c1;
+      border: 2px solid #2c1810;
+      padding: 8px 15px;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: 700;
-      font-size: 0.95em;
-      color: #2c1810;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
-      box-shadow: 0 2px 6px rgba(107, 68, 35, 0.25);
-      text-shadow: 1px 1px 2px rgba(107, 68, 35, 0.15);
+      font-family: 'Pirata One';
+      font-size: 1.1em;
+      transition: all 0.3s;
     }
     
     .btn-nav:hover {
-      background: #c89858;
-      color: #fff;
-      transform: translateY(-1px);
+      background: linear-gradient(145deg, #8b5a3c 0%, #6b4423 100%);
+      transform: translateY(-2px);
     }
     
-    .giorni-settimana {
+    .calendario-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-      margin-bottom: 6px;
-    }
-    
-    .giorni-container {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
+      gap: 8px;
     }
     
     .giorno-settimana {
       text-align: center;
-      font-weight: 600;
-      color: #8b4513;
+      font-weight: 700;
+      color: #2c1810;
       padding: 10px;
-      background: #faf5ef;
+      background: rgba(139, 69, 19, 0.2);
       border-radius: 8px;
-      font-size: 0.85em;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
+      font-size: 0.9em;
     }
     
     .giorno {
       aspect-ratio: 1;
-      background: #faf8f3;
-      border: 2px solid #e8dcc8;
+      background: #fff;
+      border: 2px solid #8b4513;
       border-radius: 10px;
       padding: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s;
       position: relative;
       display: flex;
       flex-direction: column;
@@ -243,44 +208,22 @@
     }
     
     .giorno:hover {
-      background: #fff;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(200, 152, 88, 0.2);
-      border-color: #c89858;
+      background: #fffaf0;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(139, 69, 19, 0.3);
     }
     
     .giorno.oggi {
-      background: #fef9e7;
-      border-color: #8A9AA6;
-      border-width: 2px;
-      font-weight: 700;
-      box-shadow: 0 0 0 0.5px #8A9AA6;
-    }
-    
-    .giorno.oggi .giorno-numero {
-      color: #2c1810;
-    }
-    
-    .giorno.domenica {
-      border-color: #dc2626;
-      border-width: 2px;
-    }
-    
-    .giorno.selezionato {
-      background: linear-gradient(135deg, #c7f0bd 0%, #a7dba4 100%);
-      border-color: #90be6d;
+      background: #ffd700;
+      border-color: #8b4513;
       border-width: 3px;
       font-weight: 700;
     }
     
-    .giorno.selezionato .giorno-numero {
-      color: #2c1810;
-    }
-    
     .giorno.altro-mese {
-      opacity: 0.3;
+      opacity: 0.4;
       cursor: default;
-      background: #fafafa;
+      background: #e6d9c5;
     }
     
     .giorno.altro-mese:hover {
@@ -288,48 +231,66 @@
       box-shadow: none;
     }
     
+    .giorno.selezionato {
+      background: #90ee90;
+      border-color: #2c5f2d;
+      border-width: 3px;
+    }
+    
     .giorno-numero {
-      font-size: 1.05em;
-      font-weight: 600;
+      font-size: 1.2em;
       color: #2c1810;
+      font-weight: 700;
     }
     
     .giorno-badge {
       position: absolute;
       top: 5px;
       right: 5px;
-      background: linear-gradient(135deg, #e8b873 0%, #c89858 100%);
-      color: #fff;
-      font-size: 0.7em;
-      font-weight: 700;
-      width: 20px;
-      height: 20px;
+      background: #e74c3c;
+      color: white;
       border-radius: 50%;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 6px rgba(200, 152, 88, 0.3);
+      font-size: 0.75em;
+      font-weight: 700;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    .giorno-icona {
+      text-align: center;
+      font-size: 1.5em;
+      margin-top: 5px;
     }
     
     .giorno-tipo-badge {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2em;
       display: flex;
-      gap: 3px;
-      align-items: center;
-      margin-top: auto;
+      gap: 2px;
     }
     
-    .badge-prenotazione, .badge-evento {
-      font-size: 1.2em;
-      filter: drop-shadow(0 1px 3px rgba(107, 68, 35, 0.2));
+    .badge-prenotazione {
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    }
+    
+    .badge-evento {
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
     }
     
     /* PANNELLO LATERALE */
     .pannello-laterale {
-      background: #8A9AA6;
-      border: 3px solid #f4e4c1;
-      border-radius: 12px;
+      background: rgba(20, 40, 60, 0.95);
+      border: 3px solid #d4a574;
+      border-radius: 15px;
       padding: 20px;
-      box-shadow: 0 6px 25px rgba(107, 68, 35, 0.25);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
       max-height: 800px;
       overflow-y: auto;
     }
@@ -338,177 +299,169 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
       padding-bottom: 15px;
-      border-bottom: 3px solid rgba(244, 228, 193, 0.6);
+      border-bottom: 2px solid #d4a574;
     }
     
     .pannello-header h3 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.25em;
-      font-weight: 700;
-      color: #f4e4c1;
-      text-shadow: 1px 1px 3px rgba(44, 24, 16, 0.3);
+      font-family: 'Pirata One';
+      font-size: 1.5em;
+      color: #d4a574;
     }
     
     .btn-nuova {
-      background: linear-gradient(135deg, #f4e4c1 0%, #e6d9c5 100%);
-      color: #6b4423;
-      padding: 10px 18px;
-      border: none;
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      border: 2px solid #6b4423;
+      padding: 10px 20px;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: 700;
-      font-size: 1.5em;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
-      box-shadow: 0 3px 10px rgba(107, 68, 35, 0.3);
-      text-shadow: 1px 1px 2px rgba(44, 24, 16, 0.15);
-      min-width: 45px;
-      line-height: 1;
+      font-family: 'Pirata One';
+      font-size: 1.1em;
+      transition: all 0.3s;
     }
     
     .btn-nuova:hover {
+      background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(200, 152, 88, 0.35);
     }
     
     /* CARD PRENOTAZIONE */
     .prenotazione-card {
-      background: #faf8f3;
-      border: 2px solid #e8dcc8;
-      border-radius: 10px;
+      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
+      border: 3px solid #8b4513;
+      border-radius: 12px;
       padding: 15px;
-      margin-bottom: 12px;
-      transition: all 0.2s;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      position: relative;
     }
     
-    .prenotazione-card:hover {
-      border-color: #c89858;
-      box-shadow: 0 3px 10px rgba(200, 152, 88, 0.15);
-      transform: translateX(3px);
+    .prenotazione-card::before {
+      content: '⚓';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 2em;
+      opacity: 0.2;
     }
     
     .prenotazione-ora {
-      font-size: 1.2em;
+      font-size: 1.3em;
       font-weight: 700;
-      color: #8b4513;
-      margin-bottom: 6px;
+      color: #2c1810;
+      margin-bottom: 8px;
     }
     
     .prenotazione-cliente {
-      font-size: 1.05em;
+      font-size: 1.1em;
       color: #2c1810;
-      font-weight: 600;
       margin-bottom: 5px;
     }
     
     .prenotazione-dettagli {
       font-size: 0.9em;
-      color: #6b4423;
+      color: #4a2f1a;
       margin-bottom: 5px;
     }
     
     .prenotazione-note {
       font-size: 0.85em;
-      color: #8b4513;
+      color: #6b4423;
       font-style: italic;
-      background: #fff;
-      border-left: 3px solid #c89858;
-      padding: 8px 12px;
-      margin: 8px 0;
-      border-radius: 5px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #8b4513;
     }
     
-    .prenotazione-actions {
+    .prenotazione-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 0.8em;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    
+    .badge-confermato { background: #90ee90; color: #2c5f2d; }
+    .badge-attesa { background: #ffeb3b; color: #f57f17; }
+    .badge-annullato { background: #ff5252; color: #b71c1c; }
+    
+    .prenotazione-azioni {
       display: flex;
       gap: 8px;
       margin-top: 10px;
     }
     
-    .btn-modifica, .btn-elimina {
-      padding: 7px 14px;
-      border: none;
-      border-radius: 7px;
+    .btn-azione {
+      flex: 1;
+      padding: 8px;
+      border: 2px solid;
+      border-radius: 6px;
       cursor: pointer;
-      font-weight: 600;
-      font-size: 0.85em;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Rye';
+      font-size: 0.9em;
+      transition: all 0.3s;
     }
     
     .btn-modifica {
-      background: #fff;
-      color: #8b4513;
-      border: 2px solid #e8dcc8;
+      background: #e8b873;
+      color: #2c1810;
+      border-color: #6b4423;
     }
     
     .btn-modifica:hover {
-      background: #c89858;
-      color: #fff;
-      border-color: #c89858;
+      background: #f0c890;
     }
     
     .btn-elimina {
-      background: #fff5f5;
-      color: #d32f2f;
-      border: 2px solid #ffcdd2;
+      background: #e74c3c;
+      color: white;
+      border-color: #c0392b;
     }
     
     .btn-elimina:hover {
-      background: #d32f2f;
-      color: #fff;
-      border-color: #d32f2f;
+      background: #c0392b;
     }
     
-    /* LOADING SPINNER - FIX MOBILE */
+    /* MODAL */
+    
+    /* LOADING SPINNER */
     .loading-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(44, 24, 16, 0.85);
+      background: rgba(0, 0, 0, 0.7);
       display: none;
       justify-content: center;
       align-items: center;
-      z-index: 99999;
-      /* Fix mobile */
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
+      z-index: 9999;
     }
     
     .loading-overlay.active {
       display: flex;
-      display: -webkit-flex;
     }
     
     .spinner {
       width: 60px;
       height: 60px;
-      border: 5px solid rgba(232, 184, 115, 0.3);
-      border-top-color: #e8b873;
+      border: 5px solid #d4a574;
+      border-top-color: transparent;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      -webkit-animation: spin 0.8s linear infinite;
-      /* Fix mobile rendering */
-      will-change: transform;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
+      animation: spin 1s linear infinite;
     }
     
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
     
-    @-webkit-keyframes spin {
-      to { -webkit-transform: rotate(360deg); }
-    }
-    
     .loading-text {
-      color: #e8b873;
-      font-weight: 600;
-      font-size: 1.1em;
+      color: #d4a574;
+      font-family: 'Pirata One';
+      font-size: 1.5em;
       margin-top: 20px;
       text-align: center;
     }
@@ -517,12 +470,18 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      /* Fix mobile */
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
     }
     
-    /* MODAL */
+    /* FEEDBACK OTTIMISTICO */
+    .prenotazione-item.deleting {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    
+    .prenotazione-item.saving {
+      opacity: 0.7;
+    }
+    
     .modal {
       display: none;
       position: fixed;
@@ -531,144 +490,207 @@
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.8);
-      z-index: 3000;
+      z-index: 1000;
       align-items: center;
       justify-content: center;
-      /* Fix mobile */
-      -webkit-overflow-scrolling: touch;
     }
     
     .modal.active {
       display: flex;
-      display: -webkit-flex;
     }
     
     .modal-content {
-      background: #fff;
-      border: 2px solid #c89858;
-      border-radius: 12px;
-      padding: 25px;
+      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
+      border: 4px solid #6b4423;
+      border-radius: 15px;
+      padding: 30px;
       max-width: 500px;
       width: 90%;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 10px 40px rgba(107, 68, 35, 0.3);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     }
     
     .modal-header {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.5em;
-      font-weight: 700;
-      color: #6b4423;
+      font-family: 'Pirata One';
+      font-size: 1.8em;
+      color: #2c1810;
       margin-bottom: 20px;
+      text-align: center;
     }
     
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 15px;
     }
     
-    label {
+    .form-group label {
       display: block;
-      margin-bottom: 6px;
-      font-weight: 600;
-      color: #6b4423;
-      font-size: 0.9em;
-    }
-    
-    input, select, textarea {
-      width: 100%;
-      padding: 10px 14px;
-      border: 2px solid #e8dcc8;
-      border-radius: 8px;
-      font-size: 0.95em;
-      font-family: 'Inter', sans-serif;
-      transition: all 0.2s;
       color: #2c1810;
-      background: #fff;
+      font-weight: 700;
+      margin-bottom: 5px;
     }
     
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #c89858;
-      box-shadow: 0 0 0 3px rgba(200, 152, 88, 0.1);
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #8b4513;
+      border-radius: 8px;
+      font-family: 'Rye';
+      font-size: 1em;
+      background: white;
+      color: #2c1810;
     }
     
-    textarea {
+    .form-group textarea {
+      min-height: 80px;
       resize: vertical;
-      min-height: 70px;
     }
     
-    .form-actions {
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .modal-buttons {
       display: flex;
       gap: 10px;
       margin-top: 20px;
     }
     
-    .btn-submit {
+    .btn-modal {
       flex: 1;
       padding: 12px;
-      background: linear-gradient(135deg, #e8b873 0%, #c89858 100%);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.95em;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
-      box-shadow: 0 3px 10px rgba(200, 152, 88, 0.25);
-    }
-    
-    .btn-submit:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(200, 152, 88, 0.35);
-    }
-    
-    .btn-cancel {
-      flex: 1;
-      padding: 12px;
-      background: #fff;
-      color: #6b4423;
-      border: 2px solid #e8dcc8;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.95em;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
-    }
-    
-    .btn-cancel:hover {
-      background: #faf5ef;
-      border-color: #c89858;
-    }
-    
-    /* TOGGLE TIPO */
-    .toggle-tipo {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-    
-    .toggle-btn {
-      flex: 1;
-      padding: 10px;
-      background: #fff;
-      border: 2px solid #e8dcc8;
+      border: 2px solid;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: 600;
+      font-family: 'Pirata One';
+      font-size: 1.1em;
+      transition: all 0.3s;
+    }
+    
+    .btn-salva {
+      background: linear-gradient(145deg, #27ae60 0%, #1e8449 100%);
+      color: white;
+      border-color: #1e5631;
+    }
+    
+    .btn-salva:hover {
+      background: linear-gradient(145deg, #2ecc71 0%, #27ae60 100%);
+    }
+    
+    .btn-annulla {
+      background: linear-gradient(145deg, #95a5a6 0%, #7f8c8d 100%);
+      color: white;
+      border-color: #5a6a6b;
+    }
+    
+    .btn-annulla:hover {
+      background: linear-gradient(145deg, #a6b4b5 0%, #95a5a6 100%);
+    }
+    
+    .btn-modal.btn-elimina {
+      background: linear-gradient(145deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      border-color: #a93226;
+      flex: 0 0 auto;
+      min-width: 180px;
+    }
+    
+    .btn-modal.btn-elimina:hover {
+      background: linear-gradient(145deg, #ec7063 0%, #e74c3c 100%);
+    }
+    
+    /* EMPTY STATE */
+    .empty-state {
       text-align: center;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
-      color: #6b4423;
+      padding: 40px 20px;
+      color: #a67c52;
     }
     
-    .toggle-btn.active {
-      background: linear-gradient(135deg, #e8b873 0%, #c89858 100%);
-      color: #fff;
-      border-color: #c89858;
-      box-shadow: 0 3px 10px rgba(200, 152, 88, 0.25);
+    .empty-state-icon {
+      font-size: 4em;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+    
+    .empty-state-text {
+      font-size: 1.1em;
+    }
+    
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #d4a574;
+    }
+    
+    /* CARD EVENTO NEL PANNELLO LATERALE */
+    .evento-giorno-card {
+      background: linear-gradient(145deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+      border: 3px solid #ffd700;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);
+    }
+    
+    .evento-giorno-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+      border-color: #ffed4e;
+    }
+    
+    .evento-giorno-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .evento-giorno-nome {
+      font-family: 'Pirata One';
+      font-size: 1.5em;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .evento-giorno-contatore {
+      background: linear-gradient(145deg, #ffd700 0%, #ffed4e 100%);
+      border: 2px solid #8b4513;
+      border-radius: 8px;
+      padding: 8px 15px;
+      color: #2c1810;
+      font-weight: 700;
+      font-size: 1.2em;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    
+    .evento-giorno-descrizione {
+      color: #e8b873;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+    }
+    
+    .evento-giorno-cta {
+      color: #ffd700;
+      font-size: 0.9em;
+      font-weight: 600;
+      text-align: right;
+    }
+    
+    /* SEZIONE HEADER */
+    .sezione-header {
+      font-family: 'Pirata One';
+      font-size: 1.3em;
+      color: #d4a574;
+      margin: 25px 0 15px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(212, 165, 116, 0.3);
     }
     
     /* PANNELLO GESTIONE EVENTO */
@@ -678,121 +700,122 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       z-index: 2000;
       display: none;
       align-items: center;
       justify-content: center;
       padding: 20px;
-      /* Fix mobile */
-      -webkit-overflow-scrolling: touch;
     }
     
     .pannello-evento-gestione.active {
       display: flex;
-      display: -webkit-flex;
     }
     
     .pannello-evento-content {
-      background: #fff;
-      border: 3px solid #c89858;
-      border-radius: 12px;
+      background: rgba(20, 40, 60, 0.98);
+      border: 4px solid #d4a574;
+      border-radius: 15px;
       max-width: 900px;
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 10px 40px rgba(107, 68, 35, 0.3);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
     }
     
     .pannello-evento-header {
-      background: linear-gradient(135deg, #e8b873 0%, #c89858 100%);
-      padding: 25px;
+      background: linear-gradient(145deg, rgba(212, 165, 116, 0.2) 0%, rgba(212, 165, 116, 0.05) 100%);
+      padding: 25px 30px;
+      border-bottom: 3px solid #d4a574;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-radius: 10px 10px 0 0;
     }
     
     .pannello-evento-titolo h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.7em;
-      color: #fff;
-      margin: 0 0 6px 0;
-      font-weight: 700;
+      font-family: 'Pirata One';
+      font-size: 2em;
+      color: #ffd700;
+      margin: 0 0 5px 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
     }
     
     .pannello-evento-titolo p {
-      color: rgba(255,255,255,0.95);
-      font-size: 1em;
+      color: #e8b873;
+      font-size: 1.1em;
       margin: 0;
-      font-weight: 500;
     }
     
     .btn-chiudi-pannello {
-      background: rgba(255,255,255,0.25);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      color: #fff;
-      padding: 10px 20px;
-      border: 2px solid rgba(255,255,255,0.4);
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      padding: 12px 25px;
+      border: 3px solid #3d1f0f;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 700;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.95em;
+      font-family: 'Rye', cursive;
+      font-size: 1em;
+      box-shadow: 0 4px 0 #3d1f0f;
       transition: all 0.2s;
     }
     
     .btn-chiudi-pannello:hover {
-      background: rgba(255,255,255,0.35);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #3d1f0f;
+    }
+    
+    .btn-chiudi-pannello:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 0 #3d1f0f;
     }
     
     .btn-modifica-evento {
-      background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      color: #fff;
-      border: 2px solid rgba(255,255,255,0.35);
-      padding: 9px 18px;
+      background: linear-gradient(145deg, rgba(232, 184, 115, 0.4) 0%, rgba(200, 152, 88, 0.4) 100%);
+      color: #ffd700;
+      border: 2px solid #d4a574;
+      padding: 10px 20px;
       border-radius: 8px;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9em;
+      font-family: 'Rye', cursive;
+      font-size: 0.95em;
       font-weight: 600;
-      transition: all 0.2s;
+      transition: all 0.3s;
+      box-shadow: 0 3px 8px rgba(212, 165, 116, 0.3);
     }
     
     .btn-modifica-evento:hover {
-      background: rgba(255,255,255,0.3);
-      transform: translateY(-1px);
+      background: linear-gradient(145deg, rgba(255, 215, 0, 0.5) 0%, rgba(232, 184, 115, 0.5) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 12px rgba(212, 165, 116, 0.5);
     }
     
     .pannello-evento-body {
-      padding: 25px;
+      padding: 30px;
     }
     
     .contatore-evento-grande {
-      background: linear-gradient(135deg, #e8b873 0%, #c89858 100%);
+      background: linear-gradient(145deg, #ffd700 0%, #ffed4e 100%);
+      border: 3px solid #8b4513;
       border-radius: 12px;
-      padding: 28px;
-      margin-bottom: 25px;
+      padding: 25px;
+      margin-bottom: 30px;
       text-align: center;
-      box-shadow: 0 8px 25px rgba(200, 152, 88, 0.25);
+      box-shadow: 0 5px 15px rgba(139, 69, 19, 0.4);
     }
     
     .contatore-evento-numero {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Pirata One';
       font-size: 3.5em;
-      color: #fff;
+      color: #2c1810;
       font-weight: 700;
-      line-height: 1;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
     }
     
     .contatore-evento-label {
-      font-size: 1.15em;
-      color: rgba(255,255,255,0.95);
-      margin-top: 8px;
+      font-size: 1.3em;
+      color: #2c1810;
+      margin-top: 5px;
       font-weight: 600;
     }
     
@@ -800,63 +823,61 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
     
     .prenotazioni-evento-header h3 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.3em;
-      color: #6b4423;
+      font-family: 'Pirata One';
+      font-size: 1.5em;
+      color: #d4a574;
       margin: 0;
-      font-weight: 700;
     }
     
-    /* CARD PRENOTAZIONE EVENTO */
+    /* CARD PRENOTAZIONE EVENTO (con orario arrivo + note) */
     .prenotazione-evento-card {
-      background: #faf5ef;
-      border: 2px solid #e8dcc8;
+      background: rgba(212, 165, 116, 0.1);
+      border: 2px solid #d4a574;
       border-radius: 10px;
-      padding: 18px;
-      margin-bottom: 12px;
-      transition: all 0.2s;
+      padding: 20px;
+      margin-bottom: 15px;
+      transition: all 0.3s;
     }
     
     .prenotazione-evento-card:hover {
-      border-color: #c89858;
-      box-shadow: 0 3px 10px rgba(200, 152, 88, 0.15);
-      transform: translateX(3px);
+      background: rgba(212, 165, 116, 0.2);
+      transform: translateX(5px);
     }
     
     .prenotazione-evento-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     
     .prenotazione-evento-cliente {
-      font-size: 1.2em;
+      font-size: 1.3em;
       font-weight: 700;
-      color: #2c1810;
+      color: #ffd700;
     }
     
     .prenotazione-evento-persone {
-      background: linear-gradient(135deg, #e8b873 0%, #c89858 100%);
-      color: #fff;
-      padding: 7px 14px;
-      border-radius: 18px;
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      padding: 8px 15px;
+      border-radius: 20px;
       font-weight: 700;
-      font-size: 1em;
-      box-shadow: 0 3px 10px rgba(200, 152, 88, 0.25);
+      font-size: 1.1em;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     
     .prenotazione-evento-dettagli {
-      color: #6b4423;
-      font-size: 0.95em;
+      color: #e8b873;
+      font-size: 1em;
       margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
       flex-wrap: wrap;
     }
     
@@ -867,134 +888,79 @@
     }
     
     .prenotazione-evento-note {
-      background: #fff;
-      border-left: 3px solid #c89858;
-      padding: 10px 14px;
-      margin: 8px 0;
-      color: #6b4423;
-      font-size: 0.9em;
+      background: rgba(212, 165, 116, 0.1);
+      border-left: 3px solid #d4a574;
+      padding: 10px 15px;
+      margin: 10px 0;
+      color: #d4a574;
+      font-size: 0.95em;
       border-radius: 5px;
     }
     
-    /* CARD EVENTO */
-    .card-evento {
-      background: linear-gradient(135deg, #fff9f0 0%, #ffedd5 100%);
-      border: 3px solid #e8b873;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .card-evento::before {
-      content: '🍷';
-      position: absolute;
-      top: 8px;
-      right: 12px;
-      font-size: 2.2em;
-      opacity: 0.12;
-    }
-    
-    .card-evento:hover {
-      transform: translateX(3px);
-      box-shadow: 0 5px 18px rgba(232, 184, 115, 0.25);
-      border-color: #c89858;
-    }
-    
-    .evento-nome {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.25em;
-      font-weight: 700;
-      color: #8b4513;
-      margin-bottom: 6px;
+    /* TOGGLE TIPO NEL FORM */
+    .form-tipo-toggle {
       display: flex;
-      align-items: center;
-      gap: 6px;
+      gap: 10px;
+      margin-bottom: 25px;
+      background: rgba(212, 165, 116, 0.1);
+      padding: 5px;
+      border-radius: 10px;
+      border: 2px solid #d4a574;
     }
     
-    .evento-descrizione {
-      font-size: 0.95em;
-      color: #6b4423;
-      margin-bottom: 10px;
-      line-height: 1.4;
+    .toggle-btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Rye', cursive;
+      font-size: 1em;
+      font-weight: 600;
+      transition: all 0.3s;
+      background: transparent;
+      color: #d4a574;
     }
     
-    .evento-contatore {
-      display: inline-block;
-      background: linear-gradient(135deg, #e8b873 0%, #c89858 100%);
-      color: #fff;
-      padding: 5px 12px;
-      border-radius: 16px;
-      font-weight: 700;
-      font-size: 0.9em;
-      box-shadow: 0 3px 8px rgba(200, 152, 88, 0.25);
+    .toggle-btn.active {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     
-    /* FEEDBACK OTTIMISTICO */
-    .prenotazione-item.deleting {
-      opacity: 0.5;
-      pointer-events: none;
+    .toggle-btn:hover:not(.active) {
+      background: rgba(212, 165, 116, 0.2);
+    }
+    
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .calendario-grid {
+        gap: 4px;
+      }
+      
+      .giorno {
+        padding: 4px;
+      }
+      
+      .giorno-numero {
+        font-size: 1em;
+      }
+      
+      .giorno-icona {
+        font-size: 1.2em;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .header h1 {
+        font-size: 2em;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="header-container">
-    <div class="header">
-      <div class="header-title">
-        <span class="header-anchor">⚓</span>
-        <h1>Prenotazioni</h1>
-      </div>
-      <a href="index.html" class="btn-back" title="Torna indietro">
-        ↶
-      </a>
-    </div>
-  </div>
-  
-  <div class="container">
-    <div class="calendario-container">
-    <!-- CALENDARIO -->
-    <div class="calendario">
-      <div class="calendario-header">
-        <h2 id="meseAnno"></h2>
-        <div class="calendario-nav">
-          <button class="btn-nav" onclick="cambiaMese(-1)">◀</button>
-          <button class="btn-nav" onclick="cambiaMese(0)">Oggi</button>
-          <button class="btn-nav" onclick="cambiaMese(1)">▶</button>
-        </div>
-      </div>
-      
-      <div class="giorni-settimana">
-        <div class="giorno-settimana">Lun</div>
-        <div class="giorno-settimana">Mar</div>
-        <div class="giorno-settimana">Mer</div>
-        <div class="giorno-settimana">Gio</div>
-        <div class="giorno-settimana">Ven</div>
-        <div class="giorno-settimana">Sab</div>
-        <div class="giorno-settimana">Dom</div>
-      </div>
-      
-      <div class="giorni-container" id="giorniContainer"></div>
-    </div>
-    
-    <!-- PANNELLO LATERALE -->
-    <div class="pannello-laterale">
-      <div class="pannello-header">
-        <h3 id="pannelloTitolo">Seleziona un giorno</h3>
-        <button class="btn-nuova" onclick="nuovaPrenotazione()" title="Nuova prenotazione">+</button>
-      </div>
-      <div id="prenotazioniContainer">
-        <div style="text-align:center;padding:60px 20px;">
-          <div style="font-size:4em;margin-bottom:15px;">📆</div>
-          <p style="color:#f4e4c1;font-size:1.1em;line-height:1.6;">Clicca su un giorno per vedere le prenotazioni</p>
-        </div>
-      </div>
-    </div>
-    </div>
-  </div>
-  
   <!-- LOADING OVERLAY -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-container">
@@ -1003,130 +969,223 @@
     </div>
   </div>
   
-  <!-- MODAL FORM -->
-  <div class="modal" id="modal">
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header">
+      <h1>⚓ Registro delle Prenotazioni</h1>
+      <a href="index.html" class="btn-home">🏴‍☠️ Porto</a>
+    </div>
+    
+    <div class="main-layout">
+      <!-- CALENDARIO -->
+      <div class="calendario-container">
+        <div class="calendario-header">
+          <h2 id="meseAnnoTitolo">Novembre 2024</h2>
+          <div class="nav-mese">
+            <button class="btn-nav" onclick="cambiaMese(-1)">◄</button>
+            <button class="btn-nav" onclick="vaiOggi()">Oggi</button>
+            <button class="btn-nav" onclick="cambiaMese(1)">►</button>
+          </div>
+        </div>
+        
+        <div class="calendario-grid">
+          <!-- Giorni settimana -->
+          <div class="giorno-settimana">LUN</div>
+          <div class="giorno-settimana">MAR</div>
+          <div class="giorno-settimana">MER</div>
+          <div class="giorno-settimana">GIO</div>
+          <div class="giorno-settimana">VEN</div>
+          <div class="giorno-settimana">SAB</div>
+          <div class="giorno-settimana">DOM</div>
+        </div>
+        
+        <div class="calendario-grid" id="giorniContainer">
+          <!-- Giorni generati dinamicamente -->
+        </div>
+      </div>
+      
+      <!-- PANNELLO LATERALE -->
+      <div class="pannello-laterale">
+        <div class="pannello-header">
+          <h3 id="pannelloTitolo">Seleziona un giorno</h3>
+          <button class="btn-nuova" onclick="mostraModalNuova()" id="btnNuova" style="display:none;">➕</button>
+        </div>
+        
+        <div id="prenotazioniContainer">
+          <div class="empty-state">
+            <div class="empty-state-icon">🗺️</div>
+            <div class="empty-state-text">
+              Clicca su un giorno per vedere le prenotazioni
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- MODAL NUOVA/MODIFICA PRENOTAZIONE/EVENTO -->
+  <div id="modalPrenotazione" class="modal">
     <div class="modal-content">
       <div class="modal-header" id="modalTitolo">📝 Nuova Prenotazione</div>
       
-      <!-- Toggle tipo prenotazione/evento -->
-      <div class="toggle-tipo" id="toggleTipo">
-        <button class="toggle-btn active" id="btnTipoPrenotazione" onclick="switchToPrenotazione()">📝 Prenotazione</button>
-        <button class="toggle-btn" id="btnTipoEvento" onclick="switchToEvento()">🍷 Evento</button>
+      <!-- TOGGLE TIPO (solo in modalità cre azione) -->
+      <div class="form-tipo-toggle" id="tipoToggle" style="display:none;">
+        <button type="button" class="toggle-btn active" id="btnTipoPrenotazione" onclick="cambioTipo('prenotazione')">📝 Prenotazione</button>
+        <button type="button" class="toggle-btn" id="btnTipoEvento" onclick="cambioTipo('evento')">🍷 Evento</button>
       </div>
       
-      <!-- Form Prenotazione -->
-      <form id="formPrenotazione" style="display:block;">
+      <!-- CAMPI EVENTO (nascosti di default) -->
+      <div id="campiEvento" style="display:none;">
         <div class="form-group">
-          <label>📅 Data</label>
-          <input type="date" id="dataPrenotazione" required>
+          <label>Nome Evento *</label>
+          <input type="text" id="inputNomeEvento" placeholder="es: Degustazione Vini del Territorio">
         </div>
+        
         <div class="form-group">
-          <label>🕐 Ora</label>
-          <input type="time" id="oraPrenotazione" required>
+          <label>Descrizione Evento</label>
+          <textarea id="inputDescrizioneEvento" placeholder="Dettagli evento, orari, info..." rows="3"></textarea>
         </div>
+      </div>
+      
+      <!-- CAMPI PRENOTAZIONE (visibili di default) -->
+      <div id="campiPrenotazione">
         <div class="form-group">
-          <label>👤 Cliente</label>
-          <input type="text" id="clientePrenotazione" required>
+          <label>Data *</label>
+          <input type="date" id="inputData" required>
         </div>
-        <div class="form-group">
-          <label>📞 Telefono</label>
-          <input type="tel" id="telefonoPrenotazione" required>
+        
+        <div class="form-group" id="campoOra">
+          <label>Ora</label>
+          <input type="time" id="inputOra" value="19:00">
         </div>
-        <div class="form-group">
-          <label>👥 Persone</label>
-          <input type="number" id="personePrenotazione" min="1" required>
+        
+        <!-- CAMPO ORARIO ARRIVO (solo per prenotazioni evento) -->
+        <div class="form-group" id="campoOrarioArrivo" style="display:none;">
+          <label>Orario Arrivo (opzionale)</label>
+          <input type="time" id="inputOrarioArrivo" placeholder="es: 19:30">
         </div>
-        <div class="form-group">
-          <label>📋 Note</label>
-          <textarea id="notePrenotazione"></textarea>
+        
+        <div class="form-group" id="campoCliente">
+          <label id="labelCliente">Cliente *</label>
+          <input type="text" id="inputCliente" placeholder="Nome cliente o gruppo" required>
         </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Telefono</label>
+            <input type="tel" id="inputTelefono" placeholder="123456789">
+          </div>
+          
+          <div class="form-group">
+            <label>Persone</label>
+            <input type="number" id="inputPersone" min="1" value="2">
+          </div>
+        </div>
+        
         <div class="form-group">
-          <label>✅ Stato</label>
-          <select id="statoPrenotazione">
-            <option value="confermato">Confermato</option>
-            <option value="attesa">In Attesa</option>
-            <option value="cancellato">Cancellato</option>
+          <label>Note / Preferenze</label>
+          <textarea id="inputNote" placeholder="Allergie, richieste speciali, ecc..."></textarea>
+        </div>
+        
+        <div class="form-group" id="campoStato">
+          <label>Stato</label>
+          <select id="inputStato">
+            <option value="confermato">✅ Confermato</option>
+            <option value="attesa">⏳ In attesa</option>
+            <option value="annullato">❌ Annullato</option>
           </select>
         </div>
-        <input type="hidden" id="eventoIdPrenotazione">
-        <div class="form-actions">
-          <button type="submit" class="btn-submit">Salva</button>
-          <button type="button" class="btn-cancel" onclick="chiudiModal()">Annulla</button>
-        </div>
-      </form>
+      </div>
       
-      <!-- Form Evento -->
-      <form id="formEvento" style="display:none;">
-        <div class="form-group">
-          <label>🍷 Nome Evento</label>
-          <input type="text" id="nomeEvento" required>
-        </div>
-        <div class="form-group">
-          <label>📅 Data</label>
-          <input type="date" id="dataEvento" required>
-        </div>
-        <div class="form-group">
-          <label>📋 Descrizione</label>
-          <textarea id="descrizioneEvento"></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn-submit">Crea Evento</button>
-          <button type="button" class="btn-cancel" onclick="chiudiModal()">Annulla</button>
-        </div>
-      </form>
+      <div class="modal-buttons">
+        <button class="btn-modal btn-annulla" onclick="chiudiModal()">✕ Annulla</button>
+        <button class="btn-modal btn-salva" onclick="salvaPrenotazioneEvento()" id="btnSalva">💾 Salva</button>
+      </div>
+      
+      <!-- Pulsante Crea Evento -->
+      <div id="linkCreaEvento" style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(107, 68, 35, 0.3);">
+        <button onclick="switchToEvento()" style="
+          background: linear-gradient(145deg, rgba(232, 184, 115, 0.3) 0%, rgba(200, 152, 88, 0.3) 100%);
+          color: #2c1810;
+          border: 2px solid #d4a574;
+          padding: 12px 25px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-family: 'Rye', cursive;
+          font-size: 1em;
+          font-weight: 600;
+          transition: all 0.3s;
+          box-shadow: 0 3px 8px rgba(212, 165, 116, 0.3);
+          width: 100%;
+        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 12px rgba(212, 165, 116, 0.5)'"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 8px rgba(212, 165, 116, 0.3)'">
+          🍷 Crea Evento/Degustazione
+        </button>
+      </div>
     </div>
   </div>
   
   <!-- PANNELLO GESTIONE EVENTO -->
-  <div class="pannello-evento-gestione" id="pannelloEvento">
+  <div id="pannelloEventoGestione" class="pannello-evento-gestione">
     <div class="pannello-evento-content">
       <div class="pannello-evento-header">
         <div class="pannello-evento-titolo">
-          <h2 id="eventoNomeTitolo"></h2>
-          <p id="eventoDataTitolo"></p>
+          <h2 id="eventoGestioneNome">Nome Evento</h2>
+          <p id="eventoGestioneData">Data</p>
+          <p id="eventoGestioneDescrizione" style="color: #d4a574; margin-top: 10px;"></p>
         </div>
-        <div style="display:flex; gap:10px;">
-          <button class="btn-modifica-evento" onclick="modificaEventoCorrente()">✏️ Modifica</button>
-          <button class="btn-chiudi-pannello" onclick="chiudiPannelloEvento()">← Torna</button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn-modifica-evento" onclick="apriModalModificaEvento()" title="Modifica Evento">
+            ✏️ Modifica Evento
+          </button>
+          <button class="btn-chiudi-pannello" onclick="chiudiPannelloEvento()">◄ Torna al Giorno</button>
         </div>
       </div>
+      
       <div class="pannello-evento-body">
         <div class="contatore-evento-grande">
-          <div class="contatore-evento-numero" id="contatorePersone">0</div>
+          <div class="contatore-evento-numero" id="eventoContatoreNumero">0</div>
           <div class="contatore-evento-label">👥 Persone Confermate</div>
         </div>
         
         <div class="prenotazioni-evento-header">
-          <h3>📋 Prenotazioni Evento</h3>
-          <button class="btn-nuova" onclick="aggiungiPrenotazioneEvento()" title="Aggiungi prenotazione">+</button>
+          <h3>Prenotazioni Evento</h3>
+          <button class="btn-nuova" onclick="mostraModalPrenotazioneEvento()">➕ Aggiungi</button>
         </div>
-        <div id="prenotazioniEventoContainer"></div>
+        
+        <div id="prenotazioniEventoContainer">
+          <!-- Prenotazioni generate dinamicamente -->
+        </div>
       </div>
     </div>
   </div>
-
+  
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
     
-    let prenotazioni = [];
-    let eventi = [];
-    let annoCorrente = new Date().getFullYear();
     let meseCorrente = new Date().getMonth();
+    let annoCorrente = new Date().getFullYear();
     let giornoSelezionato = null;
-    let prenotazioneInModifica = null;
-    let eventoInModifica = null;
-    let eventoCorrente = null;
+    let prenotazioni = [];
+    let modalitaModifica = false;
+    let idPrenotazioneModifica = null;
     
-    // ===== SISTEMA CACHE LOCALSTORAGE =====
+    // Gestione Eventi Integrati
+    let eventi = [];
+    let eventoCorrente = null;
+    let tipoCorrente = 'prenotazione'; // 'prenotazione' o 'evento'
+    
+    const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+    
+    // ═══════════════════════════════════════════════════════════
+    // SISTEMA CACHE LOCALSTORAGE
+    // ═══════════════════════════════════════════════════════════
     const CACHE_TTL = 5 * 60 * 1000; // 5 minuti
-    const CACHE_PREFIX = 'vdc_';
     
     function getCacheKey(action, params = {}) {
-      const sortedParams = Object.keys(params).sort().reduce((acc, key) => {
-        acc[key] = params[key];
-        return acc;
-      }, {});
-      return `${CACHE_PREFIX}${action}_${JSON.stringify(sortedParams)}`;
+      const sortedParams = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
+      return `vdc_cache_${action}_${sortedParams}`;
     }
     
     function getCache(key) {
@@ -1134,7 +1193,7 @@
         const cached = localStorage.getItem(key);
         if (!cached) return null;
         
-        const {data, timestamp} = JSON.parse(cached);
+        const { data, timestamp } = JSON.parse(cached);
         const age = Date.now() - timestamp;
         
         if (age > CACHE_TTL) {
@@ -1142,7 +1201,7 @@
           return null;
         }
         
-        console.log(`📦 Cache HIT (age: ${Math.round(age/1000)}s): ${key.replace(CACHE_PREFIX, '')}`);
+        console.log(`📦 Cache HIT: ${key} (age: ${Math.round(age/1000)}s)`);
         return data;
       } catch (e) {
         console.error('Cache read error:', e);
@@ -1152,141 +1211,213 @@
     
     function setCache(key, data) {
       try {
-        const payload = {
-          data,
+        const cacheData = {
+          data: data,
           timestamp: Date.now()
         };
-        localStorage.setItem(key, JSON.stringify(payload));
-        console.log(`💾 Cache SET: ${key.replace(CACHE_PREFIX, '')}`);
+        localStorage.setItem(key, JSON.stringify(cacheData));
       } catch (e) {
+        console.error('Cache write error:', e);
         if (e.name === 'QuotaExceededError') {
-          console.warn('Cache full, clearing old entries...');
           clearOldCache();
           try {
-            localStorage.setItem(key, JSON.stringify({data, timestamp: Date.now()}));
+            localStorage.setItem(key, JSON.stringify(cacheData));
           } catch (e2) {
-            console.error('Cache still full after cleanup:', e2);
+            console.error('Cache write failed after cleanup:', e2);
           }
-        } else {
-          console.error('Cache write error:', e);
         }
       }
     }
     
-    function clearOldCache() {
+    function invalidateCache(pattern) {
       try {
-        const keys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
-        const entries = keys.map(k => {
-          try {
-            const data = JSON.parse(localStorage.getItem(k));
-            return {key: k, timestamp: data.timestamp || 0};
-          } catch {
-            return {key: k, timestamp: 0};
-          }
-        }).sort((a, b) => a.timestamp - b.timestamp);
-        
-        const toRemove = Math.ceil(entries.length * 0.3);
-        for (let i = 0; i < toRemove; i++) {
-          localStorage.removeItem(entries[i].key);
-        }
-        console.log(`🧹 Cleared ${toRemove} old cache entries`);
-      } catch (e) {
-        console.error('Cache cleanup error:', e);
-      }
-    }
-    
-    function invalidateCache(pattern = null) {
-      try {
-        const keys = Object.keys(localStorage).filter(k => {
-          if (!k.startsWith(CACHE_PREFIX)) return false;
-          if (!pattern) return true;
-          return k.includes(pattern);
-        });
-        
-        keys.forEach(k => localStorage.removeItem(k));
-        if (keys.length > 0) {
-          console.log(`🗑️ Invalidated ${keys.length} cache entries${pattern ? ` (${pattern})` : ''}`);
+        const keys = Object.keys(localStorage);
+        const toRemove = keys.filter(k => k.includes(pattern));
+        toRemove.forEach(k => localStorage.removeItem(k));
+        if (toRemove.length > 0) {
+          console.log(`🗑️ Cache invalidated: ${toRemove.length} entries (${pattern})`);
         }
       } catch (e) {
         console.error('Cache invalidation error:', e);
       }
     }
     
+    function clearOldCache() {
+      try {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('vdc_cache_'));
+        const entries = keys.map(k => {
+          try {
+            const { timestamp } = JSON.parse(localStorage.getItem(k));
+            return { key: k, timestamp };
+          } catch {
+            return { key: k, timestamp: 0 };
+          }
+        }).sort((a, b) => a.timestamp - b.timestamp);
+        
+        const toRemove = Math.ceil(entries.length * 0.3);
+        entries.slice(0, toRemove).forEach(({ key }) => localStorage.removeItem(key));
+        console.log(`🧹 Cleared ${toRemove} old cache entries`);
+      } catch (e) {
+        console.error('Cache cleanup error:', e);
+      }
+    }
+    // ═══════════════════════════════════════════════════════════
+    
+    // Funzioni loading
+    function showLoading(message = 'Caricamento...') {
+      const overlay = document.getElementById('loadingOverlay');
+      const text = document.getElementById('loadingText');
+      text.textContent = message;
+      overlay.classList.add('active');
+    }
+    
+    function hideLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.remove('active');
+    }
+    
+    // Inizializzazione
+    document.addEventListener('DOMContentLoaded', () => {
+      generaCalendario();
+      caricaPrenotazioni();
+    });
+    
     async function callAPI(action, data = {}) {
-      const isReadAction = action === 'getPrenotazioni' || action === 'getEventi';
+      // Controlla cache per letture
+      const isReadOperation = ['getPrenotazioni', 'getEventi', 'getPrenotazioneById'].includes(action);
       
-      if (isReadAction) {
+      if (isReadOperation) {
         const cacheKey = getCacheKey(action, data);
         const cached = getCache(cacheKey);
-        
-        if (cached) {
-          return cached;
-        }
-        
+        if (cached) return cached;
         console.log(`🌐 Cache MISS: ${action} - API call`);
       }
       
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
-          mode: 'cors',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: new URLSearchParams({azione: action, ...data})
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: action, ...data })
         });
         
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const text = await response.text();
+        const result = JSON.parse(text);
         
-        const result = await response.json();
-        
-        if (isReadAction && !result.errore) {
+        // Salva in cache solo letture riuscite
+        if (isReadOperation && !result.errore) {
           const cacheKey = getCacheKey(action, data);
           setCache(cacheKey, result);
         }
         
-        const writeActions = {
-          'salvaPrenotazione': 'getPrenotazioni',
-          'modificaPrenotazione': 'getPrenotazioni',
-          'eliminaPrenotazione': 'getPrenotazioni',
-          'creaEvento': 'getEventi',
-          'modificaEvento': 'getEventi',
-          'eliminaEvento': 'getEventi'
-        };
-        
-        if (writeActions[action]) {
-          invalidateCache(writeActions[action]);
+        // Invalida cache dopo modifiche
+        if (!isReadOperation && !result.errore) {
+          invalidateCache('vdc_cache_');
         }
         
         return result;
       } catch (error) {
         console.error('API error:', error);
         
-        if (isReadAction) {
+        // Fallback: usa cache stale se disponibile (offline support)
+        if (isReadOperation) {
           const cacheKey = getCacheKey(action, data);
           const staleCache = localStorage.getItem(cacheKey);
           if (staleCache) {
-            console.warn('⚠️ Using stale cache due to API error');
-            try {
-              return JSON.parse(staleCache).data;
-            } catch {}
+            console.log(`⚠️ Using stale cache for ${action} (offline)`);
+            return JSON.parse(staleCache).data;
           }
         }
         
-        return {errore: error.message};
+        return { errore: error.message };
       }
     }
     
-    function showLoading(text = 'Caricamento...') {
-      document.getElementById('loadingText').textContent = text;
-      document.getElementById('loadingOverlay').classList.add('active');
-    }
-    
-    function hideLoading() {
-      document.getElementById('loadingOverlay').classList.remove('active');
+    function generaCalendario() {
+      const container = document.getElementById('giorniContainer');
+      container.innerHTML = '';
+      
+      const titolo = document.getElementById('meseAnnoTitolo');
+      titolo.textContent = `${MESI[meseCorrente]} ${annoCorrente}`;
+      
+      // Primo giorno del mese
+      const primoGiorno = new Date(annoCorrente, meseCorrente, 1);
+      let giornoSettimana = primoGiorno.getDay();
+      giornoSettimana = giornoSettimana === 0 ? 6 : giornoSettimana - 1; // Lunedì = 0
+      
+      // Ultimo giorno del mese
+      const ultimoGiorno = new Date(annoCorrente, meseCorrente + 1, 0).getDate();
+      
+      // Giorni del mese precedente
+      const ultimoGiornoMesePrecedente = new Date(annoCorrente, meseCorrente, 0).getDate();
+      for (let i = giornoSettimana - 1; i >= 0; i--) {
+        const giorno = ultimoGiornoMesePrecedente - i;
+        container.innerHTML += `
+          <div class="giorno altro-mese">
+            <div class="giorno-numero">${giorno}</div>
+          </div>
+        `;
+      }
+      
+      // Giorni del mese corrente
+      const oggi = new Date();
+      const oggiStr = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}-${String(oggi.getDate()).padStart(2, '0')}`;
+      
+      for (let giorno = 1; giorno <= ultimoGiorno; giorno++) {
+        const dataStr = `${annoCorrente}-${String(meseCorrente + 1).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`;
+        const isOggi = dataStr === oggiStr;
+        const isSelezionato = giornoSelezionato === dataStr;
+        
+        // Prenotazioni normali (senza evento_id)
+        const prenotazioniNormali = prenotazioni.filter(p => p.data === dataStr && !p.evento_id);
+        const numPrenotazioni = prenotazioniNormali.length;
+        
+        // Eventi in questo giorno
+        const eventiGiorno = eventi.filter(e => e.data === dataStr);
+        const hasEvento = eventiGiorno.length > 0;
+        
+        let classi = 'giorno';
+        if (isOggi) classi += ' oggi';
+        if (isSelezionato) classi += ' selezionato';
+        
+        // Badge tipo (prenotazioni e/o eventi)
+        let badgeTipo = '';
+        if (hasEvento && numPrenotazioni > 0) {
+          badgeTipo = '<div class="giorno-tipo-badge"><span class="badge-prenotazione">⚓</span><span class="badge-evento">🍷</span></div>';
+        } else if (hasEvento) {
+          badgeTipo = '<div class="giorno-tipo-badge"><span class="badge-evento">🍷</span></div>';
+        } else if (numPrenotazioni > 0) {
+          badgeTipo = '<div class="giorno-tipo-badge"><span class="badge-prenotazione">⚓</span></div>';
+        }
+        
+        // Badge numero prenotazioni
+        const totaleGiorno = numPrenotazioni + (hasEvento ? 1 : 0);
+        const badgeNumero = totaleGiorno > 0 ? `<div class="giorno-badge">${totaleGiorno}</div>` : '';
+        
+        container.innerHTML += `
+          <div class="${classi}" onclick="selezionaGiorno('${dataStr}')">
+            <div class="giorno-numero">${giorno}</div>
+            ${badgeNumero}
+            ${badgeTipo}
+          </div>
+        `;
+      }
+      
+      // Giorni del mese successivo
+      const giorniRimanenti = 42 - (giornoSettimana + ultimoGiorno);
+      for (let giorno = 1; giorno <= giorniRimanenti; giorno++) {
+        container.innerHTML += `
+          <div class="giorno altro-mese">
+            <div class="giorno-numero">${giorno}</div>
+          </div>
+        `;
+      }
     }
     
     async function caricaPrenotazioni() {
       showLoading('Caricamento prenotazioni...');
       try {
+        // Carica prenotazioni ed eventi in parallelo (50% più veloce)
         const [resultPren, resultEventi] = await Promise.all([
           callAPI('getPrenotazioni', {
             anno: annoCorrente,
@@ -1314,6 +1445,7 @@
         eventi = [];
       }
       
+      // Genera calendario comunque (anche se vuoto)
       generaCalendario();
       
       if (giornoSelezionato) {
@@ -1330,385 +1462,598 @@
     }
     
     function mostraPrenotazioniGiorno(dataStr) {
+      // Filtra prenotazioni normali (senza evento_id) e eventi del giorno
       const prenotazioniNormali = prenotazioni.filter(p => p.data === dataStr && !p.evento_id);
       const eventiGiorno = eventi.filter(e => e.data === dataStr);
       
       const [anno, mese, giorno] = dataStr.split('-');
       const data = new Date(anno, mese - 1, giorno);
-      const nomeGiorno = data.toLocaleDateString('it-IT', {weekday: 'long', day: 'numeric', month: 'long'});
+      const nomeGiorno = data.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
       
       document.getElementById('pannelloTitolo').textContent = nomeGiorno.charAt(0).toUpperCase() + nomeGiorno.slice(1);
+      document.getElementById('btnNuova').style.display = 'block';
       
-      let html = '';
+      const container = document.getElementById('prenotazioniContainer');
       
-      eventiGiorno.forEach(evento => {
-        const numPersone = prenotazioni.filter(p => p.evento_id === evento.id).reduce((sum, p) => sum + parseInt(p.persone || 0), 0);
-        html += `
-          <div class="card-evento" onclick="apriGestioneEvento('${evento.id}')">
-            <div class="evento-nome">🍷 ${evento.nome}</div>
-            ${evento.descrizione ? `<div class="evento-descrizione">${evento.descrizione}</div>` : ''}
-            <div class="evento-contatore">${numPersone} 👥 confermati</div>
-          </div>
-        `;
-      });
-      
-      prenotazioniNormali.forEach(p => {
-        const iconaStato = p.stato === 'confermato' ? '✅' : p.stato === 'attesa' ? '⏳' : '❌';
-        html += `
-          <div class="prenotazione-card">
-            <div class="prenotazione-ora">🕐 ${p.ora}</div>
-            <div class="prenotazione-cliente">👤 ${p.cliente}</div>
-            <div class="prenotazione-dettagli">📞 ${p.telefono} • 👥 ${p.persone} persone • ${iconaStato} ${p.stato}</div>
-            ${p.note ? `<div class="prenotazione-note">📋 ${p.note}</div>` : ''}
-            <div class="prenotazione-actions">
-              <button class="btn-modifica" onclick="modificaPrenotazione('${p.id}')">✏️ Modifica</button>
-              <button class="btn-elimina" onclick="confermaElimina('${p.id}')">🗑️ Elimina</button>
+      // Se non ci sono né eventi né prenotazioni
+      if (eventiGiorno.length === 0 && prenotazioniNormali.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🏝️</div>
+            <div class="empty-state-text">
+              Nessuna prenotazione per questo giorno
             </div>
           </div>
         `;
-      });
-      
-      if (!html) {
-        html = '<div style="text-align:center;padding:50px 20px;"><div style="font-size:3.5em;margin-bottom:12px;">🏝️</div><p style="color:#f4e4c1;font-size:1.05em;opacity:0.9;">Nessuna prenotazione o evento per questo giorno</p></div>';
+        return;
       }
-      
-      document.getElementById('prenotazioniContainer').innerHTML = html;
-    }
-    
-    function generaCalendario() {
-      const container = document.getElementById('giorniContainer');
-      const primoGiorno = new Date(annoCorrente, meseCorrente, 1);
-      const ultimoGiorno = new Date(annoCorrente, meseCorrente + 1, 0);
-      const giorniMese = ultimoGiorno.getDate();
-      const primoGiornoSettimana = (primoGiorno.getDay() + 6) % 7;
-      
-      const nomiMesi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-      document.getElementById('meseAnno').textContent = `${nomiMesi[meseCorrente]} ${annoCorrente}`;
       
       container.innerHTML = '';
       
-      const mesePrec = meseCorrente === 0 ? 11 : meseCorrente - 1;
-      const annoPrec = meseCorrente === 0 ? annoCorrente - 1 : annoCorrente;
-      const giorniMesePrec = new Date(annoPrec, mesePrec + 1, 0).getDate();
-      
-      for (let i = primoGiornoSettimana - 1; i >= 0; i--) {
-        const giorno = giorniMesePrec - i;
-        container.innerHTML += `<div class="giorno altro-mese"><div class="giorno-numero">${giorno}</div></div>`;
+      // MOSTRA EVENTI (se presenti)
+      if (eventiGiorno.length > 0) {
+        eventiGiorno.forEach(evento => {
+          // Conta prenotazioni per questo evento
+          const prenotazioniEvento = prenotazioni.filter(p => p.evento_id === evento.id && p.stato !== 'annullato');
+          const totalePersone = prenotazioniEvento.reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
+          
+          container.innerHTML += `
+            <div class="evento-giorno-card" onclick="apriGestioneEvento('${evento.id}')">
+              <div class="evento-giorno-header">
+                <div class="evento-giorno-nome">🍷 ${evento.nome}</div>
+                <div class="evento-giorno-contatore">${totalePersone} 👥</div>
+              </div>
+              ${evento.descrizione ? `<div class="evento-giorno-descrizione">${evento.descrizione}</div>` : ''}
+              <div class="evento-giorno-cta">Click per gestire →</div>
+            </div>
+          `;
+        });
       }
       
-      const oggi = new Date();
-      const dataOggi = oggi.toISOString().split('T')[0];
-      
-      for (let giorno = 1; giorno <= giorniMese; giorno++) {
-        const dataStr = `${annoCorrente}-${String(meseCorrente + 1).padStart(2, '0')}-${String(giorno).padStart(2, '0')}`;
-        const dataObj = new Date(annoCorrente, meseCorrente, giorno);
-        const isDomenica = dataObj.getDay() === 0;
-        
-        const numPrenotazioni = prenotazioni.filter(p => p.data === dataStr && !p.evento_id).length;
-        const hasEvento = eventi.some(e => e.data === dataStr);
-        
-        const isOggi = dataStr === dataOggi;
-        const isSelezionato = dataStr === giornoSelezionato;
-        
-        let classi = 'giorno';
-        if (isOggi) classi += ' oggi';
-        if (isSelezionato) classi += ' selezionato';
-        if (isDomenica) classi += ' domenica';
-        
-        let badgeTipo = '';
-        if (hasEvento && numPrenotazioni > 0) {
-          badgeTipo = '<div class="giorno-tipo-badge"><span class="badge-prenotazione">⚓</span><span class="badge-evento">🍷</span></div>';
-        } else if (hasEvento) {
-          badgeTipo = '<div class="giorno-tipo-badge"><span class="badge-evento">🍷</span></div>';
-        } else if (numPrenotazioni > 0) {
-          badgeTipo = '<div class="giorno-tipo-badge"><span class="badge-prenotazione">⚓</span></div>';
+      // MOSTRA PRENOTAZIONI NORMALI (se presenti)
+      if (prenotazioniNormali.length > 0) {
+        if (eventiGiorno.length > 0) {
+          container.innerHTML += '<div class="sezione-header">⚓ Prenotazioni</div>';
         }
         
-        const totaleGiorno = numPrenotazioni + (hasEvento ? 1 : 0);
-        const badgeNumero = totaleGiorno > 0 ? `<div class="giorno-badge">${totaleGiorno}</div>` : '';
-        
-        container.innerHTML += `
-          <div class="${classi}" onclick="selezionaGiorno('${dataStr}')">
-            <div class="giorno-numero">${giorno}</div>
-            ${badgeNumero}
-            ${badgeTipo}
-          </div>
-        `;
-      }
-      
-      const giorniRestanti = 42 - (primoGiornoSettimana + giorniMese);
-      for (let i = 1; i <= giorniRestanti; i++) {
-        container.innerHTML += `<div class="giorno altro-mese"><div class="giorno-numero">${i}</div></div>`;
+        prenotazioniNormali.forEach(pren => {
+          const badgeClass = `badge-${pren.stato}`;
+          container.innerHTML += `
+            <div class="prenotazione-card">
+              <div class="prenotazione-ora">🕐 ${pren.ora || 'Orario da definire'}</div>
+              <div class="prenotazione-cliente">👤 ${pren.cliente}</div>
+              ${pren.telefono ? `<div class="prenotazione-dettagli">📞 ${pren.telefono}</div>` : ''}
+              ${pren.persone ? `<div class="prenotazione-dettagli">👥 ${pren.persone} ${pren.persone === 1 ? 'persona' : 'persone'}</div>` : ''}
+              ${pren.note ? `<div class="prenotazione-note">📝 ${pren.note}</div>` : ''}
+              <span class="prenotazione-badge ${badgeClass}">
+                ${pren.stato === 'confermato' ? '✅ Confermato' : pren.stato === 'attesa' ? '⏳ In attesa' : '❌ Annullato'}
+              </span>
+              <div class="prenotazione-azioni">
+                <button class="btn-azione btn-modifica" onclick="modificaPrenotazione('${pren.id}')">✏️ Modifica</button>
+                <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')">🗑️ Elimina</button>
+              </div>
+            </div>
+          `;
+        });
       }
     }
     
     function cambiaMese(delta) {
-      if (delta === 0) {
-        annoCorrente = new Date().getFullYear();
-        meseCorrente = new Date().getMonth();
-        giornoSelezionato = new Date().toISOString().split('T')[0];
-      } else {
-        meseCorrente += delta;
-        if (meseCorrente > 11) {
-          meseCorrente = 0;
-          annoCorrente++;
-        } else if (meseCorrente < 0) {
-          meseCorrente = 11;
-          annoCorrente--;
-        }
+      meseCorrente += delta;
+      if (meseCorrente > 11) {
+        meseCorrente = 0;
+        annoCorrente++;
+      } else if (meseCorrente < 0) {
+        meseCorrente = 11;
+        annoCorrente--;
       }
+      giornoSelezionato = null;
       caricaPrenotazioni();
     }
     
-    function nuovaPrenotazione() {
-      prenotazioneInModifica = null;
-      eventoInModifica = null;
+    function vaiOggi() {
+      const oggi = new Date();
+      meseCorrente = oggi.getMonth();
+      annoCorrente = oggi.getFullYear();
+      const oggiStr = `${oggi.getFullYear()}-${String(oggi.getMonth() + 1).padStart(2, '0')}-${String(oggi.getDate()).padStart(2, '0')}`;
+      giornoSelezionato = oggiStr;
+      caricaPrenotazioni();
+    }
+    
+    function mostraModalNuova() {
+      modalitaModifica = false;
+      tipoCorrente = 'prenotazione';
       
       document.getElementById('modalTitolo').textContent = '📝 Nuova Prenotazione';
-      document.getElementById('toggleTipo').style.display = 'flex';
-      switchToPrenotazione();
+      document.getElementById('inputData').value = giornoSelezionato;
+      document.getElementById('inputOra').value = '19:00';
+      document.getElementById('inputCliente').value = '';
+      document.getElementById('inputTelefono').value = '';
+      document.getElementById('inputPersone').value = '2';
+      document.getElementById('inputNote').value = '';
+      document.getElementById('inputStato').value = 'confermato';
       
-      document.getElementById('formPrenotazione').reset();
-      document.getElementById('formEvento').reset();
-      document.getElementById('dataPrenotazione').value = giornoSelezionato || '';
-      document.getElementById('eventoIdPrenotazione').value = '';
+      // Reset campi evento
+      document.getElementById('inputNomeEvento').value = '';
+      document.getElementById('inputDescrizioneEvento').value = '';
       
-      document.getElementById('modal').classList.add('active');
+      // Mostra prenotazione, nascondi evento
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'block';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva';
+      
+      document.getElementById('modalPrenotazione').classList.add('active');
     }
     
-    function switchToPrenotazione() {
-      document.getElementById('btnTipoPrenotazione').classList.add('active');
-      document.getElementById('btnTipoEvento').classList.remove('active');
-      document.getElementById('formPrenotazione').style.display = 'block';
-      document.getElementById('formEvento').style.display = 'none';
+    function modificaPrenotazione(id) {
+      const pren = prenotazioni.find(p => p.id === id);
+      if (!pren) return;
+      
+      modalitaModifica = true;
+      idPrenotazioneModifica = id;
+      tipoCorrente = 'prenotazione';
+      
+      document.getElementById('modalTitolo').textContent = '✏️ Modifica Prenotazione';
+      document.getElementById('inputData').value = pren.data;
+      document.getElementById('inputOra').value = pren.ora || '19:00';
+      document.getElementById('inputCliente').value = pren.cliente;
+      document.getElementById('inputTelefono').value = pren.telefono || '';
+      document.getElementById('inputPersone').value = pren.persone || 2;
+      document.getElementById('inputNote').value = pren.note || '';
+      document.getElementById('inputStato').value = pren.stato;
+      
+      // Nascondi link evento e mostra solo campi prenotazione
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva';
+      
+      document.getElementById('modalPrenotazione').classList.add('active');
     }
     
-    function switchToEvento() {
-      document.getElementById('btnTipoPrenotazione').classList.remove('active');
-      document.getElementById('btnTipoEvento').classList.add('active');
-      document.getElementById('formPrenotazione').style.display = 'none';
-      document.getElementById('formEvento').style.display = 'block';
+    
+    async function eliminaPrenotazione(id) {
+      if (!confirm('🗑️ Sei sicuro di voler eliminare questa prenotazione?')) {
+        return;
+      }
       
-      if (!eventoInModifica) {
-        document.getElementById('modalTitolo').textContent = '🍷 Nuovo Evento';
-        document.getElementById('dataEvento').value = giornoSelezionato || '';
+      showLoading('Eliminazione...');
+      
+      try {
+        const result = await callAPI('eliminaPrenotazione', { id: id });
+        
+        if (result.successo) {
+          await caricaPrenotazioni();
+          
+          // Se siamo in gestione evento, riapri evento
+          if (eventoCorrente) {
+            await apriGestioneEvento(eventoCorrente.id);
+          } else if (giornoSelezionato) {
+            mostraPrenotazioniGiorno(giornoSelezionato);
+          }
+          
+          hideLoading();
+          alert(`✅ ${result.messaggio}`);
+        } else {
+          hideLoading();
+          alert(`⚠️ Errore: ${result.errore}`);
+        }
+      } catch (error) {
+        hideLoading();
+        alert('❌ Errore: ' + error.message);
       }
     }
     
     function chiudiModal() {
-      document.getElementById('modal').classList.remove('active');
-      prenotazioneInModifica = null;
-      eventoInModifica = null;
-    }
-    
-    document.getElementById('formPrenotazione').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      showLoading('Salvataggio...');
+      document.getElementById('modalPrenotazione').classList.remove('active');
+      // Reset modal a stato prenotazione
+      tipoCorrente = 'prenotazione';
+      modalitaModifica = false;
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'block';
+      document.getElementById('tipoToggle').style.display = 'none';
       
-      const data = {
-        id: prenotazioneInModifica?.id || '',
-        data: document.getElementById('dataPrenotazione').value,
-        ora: document.getElementById('oraPrenotazione').value,
-        cliente: document.getElementById('clientePrenotazione').value,
-        telefono: document.getElementById('telefonoPrenotazione').value,
-        persone: document.getElementById('personePrenotazione').value,
-        note: document.getElementById('notePrenotazione').value,
-        stato: document.getElementById('statoPrenotazione').value,
-        evento_id: document.getElementById('eventoIdPrenotazione').value
-      };
-      
-      const action = prenotazioneInModifica ? 'modificaPrenotazione' : 'salvaPrenotazione';
-      const result = await callAPI(action, data);
-      
-      hideLoading();
-      
-      if (result.successo) {
-        chiudiModal();
-        await caricaPrenotazioni();
-        
-        if (eventoCorrente) {
-          apriGestioneEvento(eventoCorrente.id);
-        } else if (giornoSelezionato) {
-          mostraPrenotazioniGiorno(giornoSelezionato);
-        }
-      } else {
-        alert('Errore: ' + (result.errore || 'Impossibile salvare'));
-      }
-    });
-    
-    document.getElementById('formEvento').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      showLoading('Salvataggio evento...');
-      
-      const data = {
-        id: eventoInModifica?.id || '',
-        nome: document.getElementById('nomeEvento').value,
-        data: document.getElementById('dataEvento').value,
-        descrizione: document.getElementById('descrizioneEvento').value
-      };
-      
-      const action = eventoInModifica ? 'modificaEvento' : 'creaEvento';
-      const result = await callAPI(action, data);
-      
-      hideLoading();
-      
-      if (result.successo) {
-        chiudiModal();
-        await caricaPrenotazioni();
-        
-        if (eventoInModifica) {
-          apriGestioneEvento(eventoInModifica.id);
-        } else if (giornoSelezionato) {
-          mostraPrenotazioniGiorno(giornoSelezionato);
-        }
-      } else {
-        alert('Errore: ' + (result.errore || 'Impossibile salvare evento'));
-      }
-    });
-    
-    async function modificaPrenotazione(id) {
-      const pren = prenotazioni.find(p => p.id === id);
-      if (!pren) return;
-      
-      prenotazioneInModifica = pren;
-      
-      document.getElementById('modalTitolo').textContent = '✏️ Modifica Prenotazione';
-      document.getElementById('toggleTipo').style.display = 'none';
-      switchToPrenotazione();
-      
-      document.getElementById('dataPrenotazione').value = pren.data;
-      document.getElementById('oraPrenotazione').value = pren.ora;
-      document.getElementById('clientePrenotazione').value = pren.cliente;
-      document.getElementById('telefonoPrenotazione').value = pren.telefono;
-      document.getElementById('personePrenotazione').value = pren.persone;
-      document.getElementById('notePrenotazione').value = pren.note || '';
-      document.getElementById('statoPrenotazione').value = pren.stato;
-      document.getElementById('eventoIdPrenotazione').value = pren.evento_id || '';
-      
-      document.getElementById('modal').classList.add('active');
-    }
-    
-    async function confermaElimina(id) {
-      if (!confirm('Sei sicuro di voler eliminare questa prenotazione?')) return;
-      
-      showLoading('Eliminazione...');
-      const result = await callAPI('eliminaPrenotazione', {id});
-      hideLoading();
-      
-      if (result.successo) {
-        await caricaPrenotazioni();
-        
-        if (eventoCorrente) {
-          apriGestioneEvento(eventoCorrente.id);
-        } else if (giornoSelezionato) {
-          mostraPrenotazioniGiorno(giornoSelezionato);
-        }
-      } else {
-        alert('Errore: ' + (result.errore || 'Impossibile eliminare'));
+      // Nascondi pulsante elimina evento se esiste
+      const btnElimina = document.getElementById('btnEliminaEvento');
+      if (btnElimina) {
+        btnElimina.style.display = 'none';
       }
     }
     
-    function apriGestioneEvento(eventoId) {
-      const evento = eventi.find(e => e.id === eventoId);
-      if (!evento) return;
+    // ========== GESTIONE TIPO NEL MODAL ==========
+    function switchToEvento() {
+      tipoCorrente = 'evento';
+      document.getElementById('modalTitolo').textContent = '🍷 Nuovo Evento';
+      document.getElementById('campiEvento').style.display = 'block';
+      document.getElementById('campiPrenotazione').style.display = 'none';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Crea Evento';
       
-      eventoCorrente = evento;
+      // Mantieni data selezionata
+      document.getElementById('inputData').value = giornoSelezionato;
+    }
+    
+    function cambioTipo(tipo) {
+      tipoCorrente = tipo;
       
-      document.getElementById('eventoNomeTitolo').textContent = '🍷 ' + evento.nome;
-      document.getElementById('eventoDataTitolo').textContent = new Date(evento.data + 'T12:00:00').toLocaleDateString('it-IT', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'});
+      if (tipo === 'evento') {
+        document.getElementById('btnTipoEvento').classList.add('active');
+        document.getElementById('btnTipoPrenotazione').classList.remove('active');
+        document.getElementById('modalTitolo').textContent = '🍷 Nuovo Evento';
+        document.getElementById('campiEvento').style.display = 'block';
+        document.getElementById('campoOra').style.display = 'none';
+        document.getElementById('campoOrarioArrivo').style.display = 'none';
+        document.getElementById('campoCliente').style.display = 'none';
+        document.getElementById('campoStato').style.display = 'none';
+        document.getElementById('btnSalva').textContent = '💾 Crea Evento';
+      } else {
+        document.getElementById('btnTipoPrenotazione').classList.add('active');
+        document.getElementById('btnTipoEvento').classList.remove('active');
+        document.getElementById('modalTitolo').textContent = '📝 Nuova Prenotazione';
+        document.getElementById('campiEvento').style.display = 'none';
+        document.getElementById('campoOra').style.display = 'block';
+        document.getElementById('campoOrarioArrivo').style.display = 'none';
+        document.getElementById('campoCliente').style.display = 'block';
+        document.getElementById('campoStato').style.display = 'block';
+        document.getElementById('btnSalva').textContent = '💾 Salva';
+      }
+    }
+    
+    // ========== GESTIONE EVENTI ==========
+    async function apriGestioneEvento(id) {
+      eventoCorrente = eventi.find(e => e.id === id);
+      if (!eventoCorrente) return;
       
-      const prenotazioniEvento = prenotazioni.filter(p => p.evento_id === eventoId);
-      const totalePersone = prenotazioniEvento.reduce((sum, p) => sum + parseInt(p.persone || 0), 0);
+      // Aggiorna header pannello
+      const dataObj = new Date(eventoCorrente.data + 'T00:00:00');
+      const dataFormattata = dataObj.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       
-      document.getElementById('contatorePersone').textContent = totalePersone;
+      document.getElementById('eventoGestioneNome').textContent = eventoCorrente.nome;
+      document.getElementById('eventoGestioneData').textContent = '📅 ' + dataFormattata;
+      document.getElementById('eventoGestioneDescrizione').textContent = eventoCorrente.descrizione || '';
+      document.getElementById('eventoGestioneDescrizione').style.display = eventoCorrente.descrizione ? 'block' : 'none';
       
-      let html = '';
-      prenotazioniEvento.forEach(p => {
-        const iconaStato = p.stato === 'confermato' ? '✅' : p.stato === 'attesa' ? '⏳' : '❌';
-        html += `
+      // Carica prenotazioni evento
+      const prenotazioniEvento = prenotazioni.filter(p => p.evento_id === id);
+      const totalePersone = prenotazioniEvento.filter(p => p.stato !== 'annullato').reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
+      
+      document.getElementById('eventoContatoreNumero').textContent = totalePersone;
+      
+      mostraPrenotazioniEvento(prenotazioniEvento);
+      
+      // Mostra pannello
+      document.getElementById('pannelloEventoGestione').classList.add('active');
+    }
+    
+    function mostraPrenotazioniEvento(prenotazioniEvento) {
+      const container = document.getElementById('prenotazioniEventoContainer');
+      
+      if (prenotazioniEvento.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🏝️</div>
+            <div class="empty-state-text">
+              Nessuna prenotazione per questo evento
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = '';
+      prenotazioniEvento.forEach(pren => {
+        const badgeClass = `badge-${pren.stato}`;
+        const persone = parseInt(pren.persone) || 0;
+        
+        let dettagliHtml = '<div class="prenotazione-evento-dettagli">';
+        if (pren.ora) {
+          dettagliHtml += `<span>🕐 ${pren.ora}</span>`;
+        }
+        if (pren.telefono) {
+          dettagliHtml += `<span>📞 ${pren.telefono}</span>`;
+        }
+        dettagliHtml += `<span class="${badgeClass}">${pren.stato === 'confermato' ? '✅ Confermato' : pren.stato === 'attesa' ? '⏳ In attesa' : '❌ Annullato'}</span>`;
+        dettagliHtml += '</div>';
+        
+        container.innerHTML += `
           <div class="prenotazione-evento-card">
             <div class="prenotazione-evento-top">
-              <div class="prenotazione-evento-cliente">👤 ${p.cliente}</div>
-              <div class="prenotazione-evento-persone">${p.persone} 👥</div>
+              <div class="prenotazione-evento-cliente">👤 ${pren.cliente}</div>
+              <div class="prenotazione-evento-persone">${persone} 👥</div>
             </div>
-            <div class="prenotazione-evento-dettagli">
-              <span>🕐 ${p.ora}</span>
-              <span>📞 ${p.telefono}</span>
-              <span>${iconaStato} ${p.stato}</span>
-            </div>
-            ${p.note ? `<div class="prenotazione-evento-note">📋 ${p.note}</div>` : ''}
-            <div class="prenotazione-actions">
-              <button class="btn-modifica" onclick="modificaPrenotazione('${p.id}')">✏️ Modifica</button>
-              <button class="btn-elimina" onclick="confermaElimina('${p.id}')">🗑️ Elimina</button>
+            ${dettagliHtml}
+            ${pren.note ? `<div class="prenotazione-evento-note">📝 ${pren.note}</div>` : ''}
+            <div class="prenotazione-azioni" style="margin-top: 12px;">
+              <button class="btn-azione btn-modifica" onclick="modificaPrenotazioneEvento('${pren.id}')">✏️ Modifica</button>
+              <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')">🗑️ Elimina</button>
             </div>
           </div>
         `;
       });
-      
-      if (!html) {
-        html = '<div style="text-align:center;padding:50px 20px;"><div style="font-size:3.5em;margin-bottom:12px;">🏝️</div><p style="color:#f4e4c1;font-size:1.05em;opacity:0.9;">Nessuna prenotazione per questo evento</p></div>';
-      }
-      
-      document.getElementById('prenotazioniEventoContainer').innerHTML = html;
-      document.getElementById('pannelloEvento').classList.add('active');
     }
     
     function chiudiPannelloEvento() {
-      document.getElementById('pannelloEvento').classList.remove('active');
+      document.getElementById('pannelloEventoGestione').classList.remove('active');
       eventoCorrente = null;
+      caricaPrenotazioni(); // Ricarica per aggiornare contatori nel pannello laterale
+    }
+    
+    function mostraModalPrenotazioneEvento() {
+      modalitaModifica = false;
+      tipoCorrente = 'prenotazione';
       
-      if (giornoSelezionato) {
-        mostraPrenotazioniGiorno(giornoSelezionato);
+      document.getElementById('modalTitolo').textContent = '➕ Nuova Prenotazione Evento';
+      document.getElementById('inputData').value = eventoCorrente.data;
+      document.getElementById('inputOra').value = '';
+      document.getElementById('inputCliente').value = '';
+      document.getElementById('inputTelefono').value = '';
+      document.getElementById('inputPersone').value = '2';
+      document.getElementById('inputNote').value = '';
+      document.getElementById('inputStato').value = 'confermato';
+      
+      // Mostra solo campi prenotazione (no evento)
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva';
+      
+      document.getElementById('modalPrenotazione').classList.add('active');
+    }
+    
+    function modificaPrenotazioneEvento(id) {
+      const pren = prenotazioni.find(p => p.id === id);
+      if (!pren) return;
+      
+      modalitaModifica = true;
+      idPrenotazioneModifica = id;
+      tipoCorrente = 'prenotazione';
+      
+      document.getElementById('modalTitolo').textContent = '✏️ Modifica Prenotazione';
+      document.getElementById('inputData').value = pren.data;
+      document.getElementById('inputOra').value = pren.ora || '';
+      document.getElementById('inputCliente').value = pren.cliente;
+      document.getElementById('inputTelefono').value = pren.telefono || '';
+      document.getElementById('inputPersone').value = pren.persone || '2';
+      document.getElementById('inputNote').value = pren.note || '';
+      document.getElementById('inputStato').value = pren.stato;
+      
+      document.getElementById('campiEvento').style.display = 'none';
+      document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva';
+      
+      document.getElementById('modalPrenotazione').classList.add('active');
+    }
+    
+    async function salvaPrenotazioneEvento() {
+      if (tipoCorrente === 'evento') {
+        // Salva o modifica evento
+        const nome = document.getElementById('inputNomeEvento').value.trim();
+        const data = document.getElementById('inputData').value;
+        const descrizione = document.getElementById('inputDescrizioneEvento').value.trim();
+        
+        if (!nome || !data) {
+          alert('⚠️ Nome e data evento sono obbligatori!');
+          return;
+        }
+        
+        if (modalitaModifica && eventoCorrente) {
+          // Modifica evento esistente
+          await modificaEvento();
+        } else {
+          // Crea nuovo evento
+          showLoading('Creazione evento...');
+          
+          const result = await callAPI('creaEvento', {
+            nome: nome,
+            data: data,
+            descrizione: descrizione
+          });
+          
+          hideLoading();
+          
+          if (result.errore) {
+            alert('Errore: ' + result.errore);
+            return;
+          }
+          
+          chiudiModal();
+          await caricaPrenotazioni();
+          alert('✅ Evento creato!');
+        }
+        
+      } else {
+        // Salva prenotazione
+        const prenotazione = {
+          data: document.getElementById('inputData').value,
+          ora: document.getElementById('inputOra').value,
+          cliente: document.getElementById('inputCliente').value,
+          telefono: document.getElementById('inputTelefono').value,
+          persone: parseInt(document.getElementById('inputPersone').value) || 0,
+          note: document.getElementById('inputNote').value,
+          stato: document.getElementById('inputStato').value
+        };
+        
+        // Aggiungi evento_id se siamo in gestione evento
+        if (eventoCorrente) {
+          prenotazione.evento_id = eventoCorrente.id;
+        }
+        
+        if (!prenotazione.data || !prenotazione.cliente) {
+          alert('⚠️ Data e Cliente sono obbligatori!');
+          return;
+        }
+        
+        showLoading(modalitaModifica ? 'Aggiornamento...' : 'Salvataggio...');
+        
+        let result;
+        if (modalitaModifica) {
+          result = await callAPI('modificaPrenotazione', {
+            id: idPrenotazioneModifica,
+            prenotazione: prenotazione
+          });
+        } else {
+          result = await callAPI('salvaPrenotazione', {
+            prenotazione: prenotazione
+          });
+        }
+        
+        hideLoading();
+        
+        if (result.errore) {
+          alert('Errore: ' + result.errore);
+          return;
+        }
+        
+        chiudiModal();
+        
+        // Se siamo in gestione evento, riapri evento
+        if (eventoCorrente) {
+          await caricaPrenotazioni();
+          await apriGestioneEvento(eventoCorrente.id);
+        } else {
+          await caricaPrenotazioni();
+          if (giornoSelezionato) {
+            mostraPrenotazioniGiorno(giornoSelezionato);
+          }
+        }
+        
+        alert(`✅ ${result.messaggio || 'Salvato!'}`);
       }
     }
     
-    function aggiungiPrenotazioneEvento() {
+    // ========== MODIFICA EVENTO ==========
+    function apriModalModificaEvento() {
       if (!eventoCorrente) return;
       
-      prenotazioneInModifica = null;
-      
-      document.getElementById('modalTitolo').textContent = '🍷 Nuova Prenotazione Evento';
-      document.getElementById('toggleTipo').style.display = 'none';
-      switchToPrenotazione();
-      
-      document.getElementById('formPrenotazione').reset();
-      document.getElementById('dataPrenotazione').value = eventoCorrente.data;
-      document.getElementById('eventoIdPrenotazione').value = eventoCorrente.id;
-      
-      document.getElementById('modal').classList.add('active');
-    }
-    
-    function modificaEventoCorrente() {
-      if (!eventoCorrente) return;
-      
-      eventoInModifica = eventoCorrente;
+      modalitaModifica = true;
+      tipoCorrente = 'evento';
       
       document.getElementById('modalTitolo').textContent = '✏️ Modifica Evento';
-      document.getElementById('toggleTipo').style.display = 'none';
-      switchToEvento();
+      document.getElementById('inputNomeEvento').value = eventoCorrente.nome;
+      document.getElementById('inputData').value = eventoCorrente.data;
+      document.getElementById('inputDescrizioneEvento').value = eventoCorrente.descrizione || '';
       
-      document.getElementById('nomeEvento').value = eventoCorrente.nome;
-      document.getElementById('dataEvento').value = eventoCorrente.data;
-      document.getElementById('descrizioneEvento').value = eventoCorrente.descrizione || '';
+      // Mostra campi evento
+      document.getElementById('campiEvento').style.display = 'block';
+      document.getElementById('campiPrenotazione').style.display = 'none';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva Modifiche';
       
-      document.getElementById('modal').classList.add('active');
+      // Aggiungi pulsante elimina se non esiste
+      let btnElimina = document.getElementById('btnEliminaEvento');
+      if (!btnElimina) {
+        btnElimina = document.createElement('button');
+        btnElimina.id = 'btnEliminaEvento';
+        btnElimina.className = 'btn-modal btn-elimina';
+        btnElimina.textContent = '🗑️ Elimina Evento';
+        btnElimina.onclick = confermaEliminaEvento;
+        btnElimina.style.marginRight = 'auto';
+        document.querySelector('.modal-buttons').insertBefore(btnElimina, document.querySelector('.modal-buttons').firstChild);
+      }
+      btnElimina.style.display = 'block';
+      
+      document.getElementById('modalPrenotazione').classList.add('active');
     }
     
-    // Init
-    caricaPrenotazioni();
+    async function modificaEvento() {
+      const nome = document.getElementById('inputNomeEvento').value.trim();
+      const data = document.getElementById('inputData').value;
+      const descrizione = document.getElementById('inputDescrizioneEvento').value.trim();
+      
+      if (!nome || !data) {
+        alert('⚠️ Nome e data evento sono obbligatori!');
+        return;
+      }
+      
+      if (!eventoCorrente) return;
+      
+      showLoading('Aggiornamento evento...');
+      
+      const result = await callAPI('modificaEvento', {
+        id: eventoCorrente.id,
+        nome: nome,
+        data: data,
+        descrizione: descrizione
+      });
+      
+      hideLoading();
+      
+      if (result.errore) {
+        alert('Errore: ' + result.errore);
+        return;
+      }
+      
+      chiudiModal();
+      await caricaPrenotazioni();
+      
+      // Riapri evento modificato
+      const eventoAggiornato = eventi.find(e => e.id === eventoCorrente.id);
+      if (eventoAggiornato) {
+        await apriGestioneEvento(eventoAggiornato.id);
+      }
+      
+      alert('✅ Evento modificato!');
+    }
     
-    // Refresh cache ogni 30 secondi
-    setInterval(() => {
-      if (document.visibilityState === 'visible') {
+    function confermaEliminaEvento() {
+      if (!eventoCorrente) return;
+      
+      const conferma = confirm(
+        `⚠️ ATTENZIONE!\n\n` +
+        `Stai per eliminare l'evento "${eventoCorrente.nome}".\n\n` +
+        `Verranno eliminate TUTTE le prenotazioni associate a questo evento.\n\n` +
+        `Confermi l'eliminazione?`
+      );
+      
+      if (conferma) {
+        eliminaEvento();
+      }
+    }
+    
+    async function eliminaEvento() {
+      if (!eventoCorrente) return;
+      
+      showLoading('Eliminazione evento...');
+      
+      const result = await callAPI('eliminaEvento', {
+        id: eventoCorrente.id
+      });
+      
+      hideLoading();
+      
+      if (result.errore) {
+        alert('Errore: ' + result.errore);
+        return;
+      }
+      
+      chiudiModal();
+      chiudiPannelloEvento();
+      await caricaPrenotazioni();
+      
+      alert('✅ Evento eliminato!');
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // AUTO-REFRESH CACHE (ogni 30 secondi)
+    // ═══════════════════════════════════════════════════════════
+    setInterval(async () => {
+      if (!document.hidden) {
         console.log('🔄 Auto-refresh cache');
-        invalidateCache('getPrenotazioni');
-        invalidateCache('getEventi');
+        await caricaPrenotazioni();
       }
     }, 30000);
     
-    // PWA Service Worker
+    // Service Worker per PWA
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW:', err));
+      navigator.serviceWorker.register('./service-worker.js');
     }
   </script>
 </body>
