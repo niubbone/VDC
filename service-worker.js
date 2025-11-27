@@ -1,5 +1,5 @@
 // VERSION AUTO-GENERATA: cambia questa quando fai modifiche
-const VERSION = '3.1'; // Formato semplice: 2.0, 2.1, 2.1b, 2.2, ecc.
+const VERSION = '3.5'; // Formato semplice: 2.0, 2.1, 2.1b, 2.2, ecc.
 const CACHE_NAME = `vecchia-dogana-v${VERSION}`;
 
 const urlsToCache = [
