@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!-- 
+  VERSIONE: 3.5k FINALE
+  DATA: 2024-11-27 21:25
+  MODIFICHE: Auto-refresh 2 minuti | Service Worker attivo | Cache 5min | Promise.all | Layout finale
+-->
 <html lang="it">
 <head>
   <meta charset="UTF-8">
@@ -369,6 +374,15 @@
       font-size: 1.1em;
       color: #2c1810;
       margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    .prenotazione-info {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
     }
     
     .prenotazione-dettagli {
@@ -427,13 +441,13 @@
     }
     
     .btn-elimina {
-      background: #d47369;
-      color: white;
-      border-color: #c85a54;
+      background: #8b4513;
+      color: #f4e4c1;
+      border-color: #6b4423;
     }
     
     .btn-elimina:hover {
-      background: #c85a54;
+      background: #6b4423;
     }
     
     /* MODAL */
@@ -501,7 +515,7 @@
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.8);
-      z-index: 1000;
+      z-index: 3000;
       align-items: center;
       justify-content: center;
     }
@@ -603,15 +617,15 @@
     }
     
     .btn-modal.btn-elimina {
-      background: linear-gradient(145deg, #d47369 0%, #c85a54 100%);
-      color: white;
-      border-color: #c85a54;
+      background: linear-gradient(145deg, #8b4513 0%, #6b4423 100%);
+      color: #f4e4c1;
+      border-color: #6b4423;
       flex: 0 0 auto;
       min-width: 180px;
     }
     
     .btn-modal.btn-elimina:hover {
-      background: linear-gradient(145deg, #e8a199 0%, #d47369 100%);
+      background: linear-gradient(145deg, #6b4423 0%, #5a3819 100%);
     }
     
     /* EMPTY STATE */
@@ -641,20 +655,20 @@
     
     /* CARD EVENTO NEL PANNELLO LATERALE */
     .evento-giorno-card {
-      background: linear-gradient(145deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
-      border: 3px solid #ffd700;
+      background: #8A9AA6;
+      border: 3px solid #f4e4c1;
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 20px;
       cursor: pointer;
       transition: all 0.3s;
-      box-shadow: 0 4px 10px rgba(255, 215, 0, 0.2);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.3);
     }
     
     .evento-giorno-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
-      border-color: #ffed4e;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      border-color: #e8b873;
     }
     
     .evento-giorno-header {
@@ -667,29 +681,30 @@
     .evento-giorno-nome {
       font-family: 'Pirata One';
       font-size: 1.5em;
-      color: #ffd700;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      color: #f4e4c1;
+      text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.4);
     }
     
     .evento-giorno-contatore {
-      background: linear-gradient(145deg, #ffd700 0%, #ffed4e 100%);
+      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
       border: 2px solid #8b4513;
       border-radius: 8px;
       padding: 8px 15px;
       color: #2c1810;
       font-weight: 700;
       font-size: 1.2em;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.3);
     }
     
     .evento-giorno-descrizione {
-      color: #e8b873;
+      color: #f4e4c1;
       font-size: 0.9em;
       margin-bottom: 10px;
+      opacity: 0.9;
     }
     
     .evento-giorno-cta {
-      color: #ffd700;
+      color: #d4a574;
       font-size: 0.9em;
       font-weight: 600;
       text-align: right;
@@ -725,8 +740,8 @@
     }
     
     .pannello-evento-content {
-      background: rgba(20, 40, 60, 0.98);
-      border: 4px solid #d4a574;
+      background: #8A9AA6;
+      border: 4px solid #f4e4c1;
       border-radius: 15px;
       max-width: 900px;
       width: 100%;
@@ -736,9 +751,9 @@
     }
     
     .pannello-evento-header {
-      background: linear-gradient(145deg, rgba(212, 165, 116, 0.2) 0%, rgba(212, 165, 116, 0.05) 100%);
+      background: rgba(244, 228, 193, 0.15);
       padding: 25px 30px;
-      border-bottom: 3px solid #d4a574;
+      border-bottom: 3px solid #f4e4c1;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -747,9 +762,9 @@
     .pannello-evento-titolo h2 {
       font-family: 'Pirata One';
       font-size: 2em;
-      color: #ffd700;
+      color: #f4e4c1;
       margin: 0 0 5px 0;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+      text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.4);
     }
     
     .pannello-evento-titolo p {
@@ -807,7 +822,7 @@
     }
     
     .contatore-evento-grande {
-      background: linear-gradient(145deg, #ffd700 0%, #ffed4e 100%);
+      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
       border: 3px solid #8b4513;
       border-radius: 12px;
       padding: 25px;
@@ -841,14 +856,14 @@
     .prenotazioni-evento-header h3 {
       font-family: 'Pirata One';
       font-size: 1.5em;
-      color: #d4a574;
+      color: #f4e4c1;
       margin: 0;
     }
     
     /* CARD PRENOTAZIONE EVENTO (con orario arrivo + note) */
     .prenotazione-evento-card {
-      background: rgba(212, 165, 116, 0.1);
-      border: 2px solid #d4a574;
+      background: rgba(244, 228, 193, 0.15);
+      border: 2px solid #f4e4c1;
       border-radius: 10px;
       padding: 20px;
       margin-bottom: 15px;
@@ -1537,9 +1552,11 @@
           container.innerHTML += `
             <div class="prenotazione-card">
               <div class="prenotazione-ora">🕐 ${pren.ora || 'Orario da definire'}</div>
-              <div class="prenotazione-cliente">👤 ${pren.cliente}</div>
-              ${pren.telefono ? `<div class="prenotazione-dettagli">📞 ${pren.telefono}</div>` : ''}
-              ${pren.persone ? `<div class="prenotazione-dettagli">👥 ${pren.persone} ${pren.persone === 1 ? 'persona' : 'persone'}</div>` : ''}
+              <div class="prenotazione-info">
+                <div class="prenotazione-cliente">${pren.cliente}</div>
+                ${pren.telefono ? `<div class="prenotazione-dettagli">📞 ${pren.telefono}</div>` : ''}
+              </div>
+              ${pren.persone ? `<div class="prenotazione-dettagli">🧑‍🤝‍🧑 ${pren.persone} ${pren.persone === 1 ? 'persona' : 'persone'}</div>` : ''}
               ${pren.note ? `<div class="prenotazione-note">📝 ${pren.note}</div>` : ''}
               <span class="prenotazione-badge ${badgeClass}">
                 ${pren.stato === 'confermato' ? '✅ Confermato' : pren.stato === 'attesa' ? '⏳ In attesa' : '❌ Annullato'}
@@ -2058,16 +2075,17 @@
     }
     
     // ═══════════════════════════════════════════════════════════
-    // AUTO-REFRESH CACHE (ogni 30 secondi)
+    // AUTO-REFRESH CACHE (ogni 2 minuti)
     // ═══════════════════════════════════════════════════════════
     setInterval(async () => {
       if (!document.hidden) {
         console.log('🔄 Auto-refresh cache');
         await caricaPrenotazioni();
       }
-    }, 30000);
+    }, 120000); // 120000 ms = 2 minuti
     
     // Service Worker per PWA
+    // Service Worker per PWA (cache offline)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js');
     }
