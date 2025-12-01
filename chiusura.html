@@ -231,7 +231,7 @@
       <div class="discrepanza" id="discrepanza">Discrepanza: 0,00 €</div>
     </div>
     
-    <button class="btn-salva" onclick="salvaChiusura()">💾 Salva</button>
+    <button type="button" class="btn-salva" onclick="salvaChiusura()">💾 Salva</button>
   </div>
   
   <div id="modalPrecedente" class="modal">
@@ -514,6 +514,7 @@
       
       const dati = {
         data: datiGiorno.data.split('/').reverse().join('-'),
+        fondoStart: datiGiorno.fondoStart || 0,  // ← AGGIUNTO
         tagli: tagli,
         // fondoEnd è automatico, non va più inviato
         chiusura: parseFloat(document.getElementById('chiusura').value) || 0,
@@ -523,13 +524,13 @@
         reportProdotti: parseFloat(document.getElementById('reportProdotti').value) || 0,
         spese: spese.filter(s => s.descrizione || s.importo),
         note: document.getElementById('note').value,
-        utente: new Date().toLocaleString('it-IT')
+        inseritoDa: new Date().toLocaleString('it-IT')  // ← CORRETTO da "utente"
       };
       
       try {
         const result = await callAPI('salvaChiusura', { dati: dati });
         if (result.successo) {
-          alert('✅ ' + result.messaggio);
+          alert('✅ Chiusura salvata con successo!');
           window.location.href = 'index.html';
         } else {
           alert('⚠️ Errore: ' + result.errore);
