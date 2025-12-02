@@ -57,6 +57,11 @@
       border-radius: 8px; cursor: pointer; font-weight: 700; font-family: 'Pirata One';
       margin-top: 10px; display: inline-block; font-size: 1.15em;
     }
+    .btn-modifica {
+      background: #ffc107; color: #2c1810; padding: 10px 20px; border: 2px solid #e0a800;
+      border-radius: 8px; cursor: pointer; font-weight: 700; font-family: 'Rye';
+      margin-left: 15px; font-size: 1em;
+    }
     .section {
       background: rgba(244,228,193,0.5); padding: 20px; border-radius: 10px;
       margin-bottom: 20px; border: 2px dashed #6b4423;
@@ -85,11 +90,11 @@
     .spesa-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
     .spesa-row .spesa-desc { 
       flex: 1; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; 
-      min-width: 0; /* Permette al flex di ridursi */
+      min-width: 0;
     }
     .spesa-row .spesa-importo { 
       width: 100px; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; 
-      flex-shrink: 0; /* Non si riduce */
+      flex-shrink: 0;
     }
     .btn-remove { background: #8b0000; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     .btn-add { background: #2e8b57; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
@@ -162,9 +167,7 @@
       </div>
     </div>
     
-    <div id="alertModifica" class="alert-box" style="display:none;">
-      ⚠️ Stai modificando una chiusura già esistente. I dati verranno aggiornati.
-    </div>
+    <div id="alertModifica" class="alert-box" style="display:none;"></div>
     
     <div class="section">
       <div class="section-title">💰 Tagli</div>
@@ -231,7 +234,7 @@
       <div class="discrepanza" id="discrepanza">Discrepanza: 0,00 €</div>
     </div>
     
-    <button type="button" class="btn-salva" onclick="salvaChiusura()">💾 Salva</button>
+    <button type="button" class="btn-salva" id="btnSalva" onclick="salvaChiusura()">💾 Salva</button>
   </div>
   
   <div id="modalPrecedente" class="modal">
@@ -271,12 +274,11 @@
       {valore:100,label:'100€'}
     ];
     
-    // Tagli visibili nel form (solo da 0,50€ in su)
     const TAGLI_VISIBILI = TAGLI.filter(t => t.valore >= 0.50);
     
     let datiGiorno = null;
     let spese = [];
-    let modalitaModifica = false;
+    let modalitaConsultazione = false;
     
     document.addEventListener('DOMContentLoaded', caricaDatiOggi);
     
@@ -289,10 +291,13 @@
         console.log('DEBUG - Risposta API:', datiGiorno);
         if (datiGiorno.errore) { alert('⚠️ ' + datiGiorno.errore); return; }
         
-        // Controlla se esistono già dati compilati per oggi
-        if (datiGiorno.reportProdotti && datiGiorno.reportProdotti > 0) {
-          modalitaModifica = true;
+        if (datiGiorno.esisteChiusura) {
+          modalitaConsultazione = true;
           document.getElementById('alertModifica').style.display = 'block';
+          document.getElementById('alertModifica').innerHTML = `
+            ⚠️ <strong>Chiusura già registrata</strong> - Modalità consultazione
+            <button class="btn-modifica" onclick="abilitaModifica()">🔓 Modifica</button>
+          `;
         }
         
         inizializzaForm();
@@ -322,7 +327,6 @@
         tagliContainer.appendChild(div);
       });
       
-      // Fondo End è automatico, non si carica da datiGiorno
       if (datiGiorno.chiusura) document.getElementById('chiusura').value = datiGiorno.chiusura;
       if (datiGiorno.cash) document.getElementById('cash').value = datiGiorno.cash;
       if (datiGiorno.pos) document.getElementById('pos').value = datiGiorno.pos;
@@ -333,6 +337,71 @@
       spese = datiGiorno.spese && datiGiorno.spese.length > 0 ? datiGiorno.spese : [{ descrizione: '', importo: 0 }];
       aggiornaSpese();
       ricalcola();
+      
+      if (modalitaConsultazione) {
+        bloccaCampi();
+      }
+    }
+    
+    function bloccaCampi() {
+      document.querySelectorAll('input[type="number"], textarea').forEach(el => {
+        el.disabled = true;
+        el.style.background = '#f5f5f5';
+        el.style.cursor = 'not-allowed';
+      });
+      
+      document.querySelectorAll('.taglio-input').forEach(el => {
+        el.disabled = true;
+        el.style.background = '#f5f5f5';
+        el.style.cursor = 'not-allowed';
+      });
+      
+      document.getElementById('btnSalva').style.display = 'none';
+      
+      document.querySelectorAll('.btn-add, .btn-remove').forEach(btn => {
+        btn.style.display = 'none';
+      });
+    }
+    
+    function sbloccaCampi() {
+      document.querySelectorAll('input[type="number"], textarea').forEach(el => {
+        el.disabled = false;
+        el.style.background = '';
+        el.style.cursor = '';
+      });
+      
+      document.querySelectorAll('.taglio-input').forEach(el => {
+        el.disabled = false;
+        el.style.background = 'white';
+        el.style.cursor = '';
+      });
+      
+      const btnSalva = document.getElementById('btnSalva');
+      btnSalva.style.display = 'block';
+      btnSalva.textContent = '💾 Salva Modifiche';
+      
+      document.querySelectorAll('.btn-add').forEach(btn => {
+        btn.style.display = 'inline-block';
+      });
+      
+      document.querySelectorAll('.btn-remove').forEach(btn => {
+        btn.style.display = 'inline-block';
+      });
+    }
+    
+    function abilitaModifica() {
+      if (!confirm('⚠️ Stai per modificare una chiusura già registrata.\n\nSei sicuro di voler procedere?')) {
+        return;
+      }
+      
+      modalitaConsultazione = false;
+      sbloccaCampi();
+      
+      document.getElementById('alertModifica').innerHTML = `
+        <div style="background:#d4edda; padding:12px; border-radius:8px; border:1px solid #28a745;">
+          ✏️ <strong>Modalità modifica attiva</strong> - Puoi modificare i dati
+        </div>
+      `;
     }
     
     function ricalcolaTagli() {
@@ -344,7 +413,6 @@
         document.getElementById(`total_${taglio.label}`).textContent = valore.toFixed(2) + ' €';
       });
       document.getElementById('totaleContato').textContent = totale.toFixed(2);
-      // Aggiorna Fondo End automatico
       document.getElementById('fondoEndDisplay').textContent = totale.toFixed(2) + ' €';
       ricalcola();
     }
@@ -379,7 +447,6 @@
     
     function ricalcola() {
       const fondoStart = parseFloat(document.getElementById('fondoStart').textContent) || 0;
-      // Fondo End = Totale Contato (automatico)
       const fondoEnd = parseFloat(document.getElementById('totaleContato').textContent) || 0;
       const cash = parseFloat(document.getElementById('cash').value) || 0;
       const pos = parseFloat(document.getElementById('pos').value) || 0;
@@ -410,7 +477,6 @@
       try {
         document.getElementById('loadingPrecedente').style.display = 'block';
         
-        // Cerca il primo giorno precedente con dati compilati (fino a 30 giorni indietro)
         const oggi = new Date();
         let dati = null;
         let giornoTrovato = false;
@@ -422,7 +488,6 @@
           
           const risultato = await callAPI('getDatiGiorno', { data: dataStr });
           
-          // Controlla se ha dati compilati (fondoEnd > 0)
           if (!risultato.errore && risultato.fondoEnd && risultato.fondoEnd > 0) {
             dati = risultato;
             giornoTrovato = true;
@@ -457,7 +522,6 @@
           });
         }
         
-        // Aggiungi totale spese sempre in fondo
         speseHtml += `<div class="dettaglio-row" style="font-weight:700; border-top:2px solid #333; margin-top:5px; padding-top:5px;">
           <span>💸 Tot Spese:</span><span>${dati.totaleSpese.toFixed(2)} €</span>
         </div>`;
@@ -506,6 +570,11 @@
     }
     
     async function salvaChiusura() {
+      if (modalitaConsultazione) {
+        alert('❌ Non puoi salvare in modalità consultazione.\n\nUsa il bottone "Modifica" prima.');
+        return;
+      }
+      
       const tagli = {};
       TAGLI.forEach(taglio => {
         const input = document.getElementById(`taglio_${taglio.label}`);
@@ -514,9 +583,8 @@
       
       const dati = {
         data: datiGiorno.data.split('/').reverse().join('-'),
-        fondoStart: datiGiorno.fondoStart || 0,  // ← AGGIUNTO
+        fondoStart: datiGiorno.fondoStart || 0,
         tagli: tagli,
-        // fondoEnd è automatico, non va più inviato
         chiusura: parseFloat(document.getElementById('chiusura').value) || 0,
         cash: parseFloat(document.getElementById('cash').value) || 0,
         pos: parseFloat(document.getElementById('pos').value) || 0,
@@ -524,7 +592,7 @@
         reportProdotti: parseFloat(document.getElementById('reportProdotti').value) || 0,
         spese: spese.filter(s => s.descrizione || s.importo),
         note: document.getElementById('note').value,
-        inseritoDa: new Date().toLocaleString('it-IT')  // ← CORRETTO da "utente"
+        utente: 'Web'
       };
       
       try {
