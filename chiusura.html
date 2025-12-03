@@ -291,6 +291,15 @@
         console.log('DEBUG - Risposta API:', datiGiorno);
         if (datiGiorno.errore) { alert('⚠️ ' + datiGiorno.errore); return; }
         
+        // Se fondoStart è 0 o mancante, cerca fondoEnd del giorno precedente
+        if (!datiGiorno.fondoStart || datiGiorno.fondoStart === 0) {
+          const fondoEndPrecedente = await cercaFondoEndPrecedente(oggi);
+          if (fondoEndPrecedente > 0) {
+            datiGiorno.fondoStart = fondoEndPrecedente;
+            console.log(`✅ FondoStart impostato da precedente: ${fondoEndPrecedente.toFixed(2)} €`);
+          }
+        }
+        
         if (datiGiorno.esisteChiusura) {
           modalitaConsultazione = true;
           document.getElementById('alertModifica').style.display = 'block';
@@ -304,6 +313,24 @@
       } catch (error) {
         alert('⚠️ Errore: ' + error.message);
       }
+    }
+    
+    async function cercaFondoEndPrecedente(dataRiferimento) {
+      for (let i = 1; i <= 60; i++) {
+        const dataPrecedente = new Date(dataRiferimento);
+        dataPrecedente.setDate(dataPrecedente.getDate() - i);
+        const dataStr = `${dataPrecedente.getFullYear()}-${String(dataPrecedente.getMonth()+1).padStart(2,'0')}-${String(dataPrecedente.getDate()).padStart(2,'0')}`;
+        
+        try {
+          const risultato = await callAPI('getDatiGiorno', { data: dataStr });
+          if (!risultato.errore && risultato.fondoEnd && risultato.fondoEnd > 0) {
+            return risultato.fondoEnd;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+      return 0;
     }
     
     function inizializzaForm() {
@@ -336,6 +363,7 @@
       
       spese = datiGiorno.spese && datiGiorno.spese.length > 0 ? datiGiorno.spese : [{ descrizione: '', importo: 0 }];
       aggiornaSpese();
+      ricalcolaTagli(); // Calcola i totali dei tagli prima di ricalcola()
       ricalcola();
       
       if (modalitaConsultazione) {
