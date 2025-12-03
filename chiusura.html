@@ -603,6 +603,14 @@
         return;
       }
       
+      // Mostra loading sul bottone
+      const btnSalva = document.getElementById('btnSalva');
+      const testoOriginale = btnSalva.textContent;
+      btnSalva.disabled = true;
+      btnSalva.textContent = '⏳ Salvataggio in corso...';
+      btnSalva.style.opacity = '0.7';
+      btnSalva.style.cursor = 'not-allowed';
+      
       const tagli = {};
       TAGLI.forEach(taglio => {
         const input = document.getElementById(`taglio_${taglio.label}`);
@@ -630,9 +638,19 @@
           window.location.href = 'index.html';
         } else {
           alert('⚠️ Errore: ' + result.errore);
+          // Ripristina bottone in caso di errore
+          btnSalva.disabled = false;
+          btnSalva.textContent = testoOriginale;
+          btnSalva.style.opacity = '';
+          btnSalva.style.cursor = '';
         }
       } catch (error) {
         alert('⚠️ Errore: ' + error.message);
+        // Ripristina bottone in caso di errore
+        btnSalva.disabled = false;
+        btnSalva.textContent = testoOriginale;
+        btnSalva.style.opacity = '';
+        btnSalva.style.cursor = '';
       }
     }
   </script>
