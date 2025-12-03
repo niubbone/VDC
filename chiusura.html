@@ -484,7 +484,7 @@
       
       document.getElementById('totaleSpese').textContent = totaleSpese.toFixed(2);
       
-      const diffFondo = fondoStart - fondoEnd;
+      const diffFondo = fondoEnd - fondoStart;
       const totaleGiorno = cash + pos + satispay + totaleSpese;
       const totaleCassa = totaleGiorno + diffFondo;
       const discrepanza = reportProdotti - totaleCassa;
