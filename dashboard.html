@@ -118,6 +118,82 @@
     }
     .loading-container { display: flex; flex-direction: column; align-items: center; }
     
+    
+    /* MODAL MODIFICA CHIUSURA */
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;
+      overflow-y: auto;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
+      padding: 30px; border-radius: 15px; max-width: 600px; width: 90%;
+      border: 4px solid #6b4423; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+      max-height: 90vh; overflow-y: auto; margin: 20px;
+    }
+    .modal-content h2 {
+      font-family: 'Pirata One'; font-size: 1.8em; text-align: center;
+      color: #2c1810; margin-bottom: 20px;
+    }
+    .modal-section {
+      background: rgba(244,228,193,0.5); padding: 15px; border-radius: 10px;
+      margin-bottom: 15px; border: 2px dashed #6b4423;
+    }
+    .modal-section-title {
+      font-family: 'Rye'; font-size: 1.2em; color: #2c1810;
+      margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #8b4513;
+    }
+    .modal-form-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;
+    }
+    .modal-form-row.full { grid-template-columns: 1fr; }
+    .modal-form-group label {
+      display: block; margin-bottom: 5px; color: #2c1810;
+      font-weight: 700; font-size: 0.9em;
+    }
+    .modal-form-group input, .modal-form-group textarea {
+      width: 100%; padding: 10px; border: 2px solid #6b4423; border-radius: 5px;
+      font-size: 1em; background: white; color: #2c1810;
+    }
+    .modal-form-group textarea {
+      resize: vertical; min-height: 60px; font-family: inherit;
+    }
+    .spesa-row {
+      display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px;
+      align-items: end; margin-bottom: 8px;
+    }
+    .spesa-row input[readonly] {
+      background: #f0f0f0; cursor: not-allowed;
+    }
+    .btn-remove-spesa {
+      padding: 10px 12px; background: #ff5252; color: white;
+      border: 2px solid #b71c1c; border-radius: 5px; cursor: pointer;
+      font-weight: bold; font-size: 0.9em;
+    }
+    .discrepanza-display {
+      background: #90ee90; padding: 15px; border-radius: 10px;
+      text-align: center; font-size: 1.3em; font-weight: 700;
+      color: #2c1810; margin: 15px 0; border: 3px solid #006400;
+    }
+    .discrepanza-display.negativa {
+      background: #ff5252; border-color: #b71c1c;
+    }
+    .modal-buttons {
+      display: flex; gap: 15px; margin-top: 20px;
+    }
+    .modal-buttons button {
+      flex: 1; padding: 15px; border: 3px solid #3d1f0f;
+      border-radius: 8px; font-size: 1.1em; font-weight: 700;
+      font-family: 'Rye'; cursor: pointer; transition: all 0.3s;
+    }
+    .btn-salva {
+      background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); color: white;
+    }
+    .btn-annulla {
+      background: linear-gradient(145deg, #8b8b8b 0%, #5a5a5a 100%); color: white;
+    }
+    
     /* GRID CHIUSURE RESPONSIVE */
     .chiusure-grid {
       display: grid;
@@ -359,7 +435,14 @@
           const discrepanzaClass = c.discrepanza >= 0 ? 'positiva' : '';
           
           html += `
-            <div class="chiusura-card">
+          
+          html += `
+            <div class="chiusura-card" style="position:relative;">
+              <div style="position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2em;" 
+                   onclick="modificaChiusura('${c.data}')" 
+                   title="Modifica chiusura">
+                ✏️
+              </div>
               <h4>${c.giornoSettimana}<br>${c.data}</h4>
               
               <div class="chiusura-row">
@@ -526,6 +609,168 @@
       }
     }
     
+    
+    
+    let dataChiusuraCorrente = null;
+    let speseModalCorrente = [];
+    
+    async function modificaChiusura(data) {
+      dataChiusuraCorrente = data;
+      showLoading('Caricamento dati...');
+      
+      try {
+        const result = await callAPI('getDatiGiorno', { data: data });
+        
+        hideLoading();
+        
+        if (result.errore) {
+          alert('⚠️ Errore: ' + result.errore);
+          return;
+        }
+        
+        // Popola i campi del modal
+        document.getElementById('modalTitolo').textContent = `✏️ Modifica Chiusura ${data}`;
+        document.getElementById('editFondoStart').value = result.fondoStart.toFixed(2);
+        document.getElementById('editFondoEnd').value = result.fondoEnd.toFixed(2);
+        document.getElementById('editCash').value = result.cash.toFixed(2);
+        document.getElementById('editPOS').value = result.pos.toFixed(2);
+        document.getElementById('editSatispay').value = result.satispay.toFixed(2);
+        document.getElementById('editReport').value = result.reportProdotti.toFixed(2);
+        document.getElementById('editNote').value = result.note || '';
+        
+        // Carica le spese esistenti
+        speseModalCorrente = result.spese || [];
+        renderSpese();
+        
+        // Calcola discrepanza iniziale
+        calcolaDiscrepanzaModal();
+        
+        // Mostra il modal
+        document.getElementById('modalModifica').classList.add('active');
+        
+      } catch (error) {
+        hideLoading();
+        alert('⚠️ Errore: ' + error.message);
+      }
+    }
+    
+    function renderSpese() {
+      const container = document.getElementById('listaSpese');
+      container.innerHTML = '';
+      
+      speseModalCorrente.forEach((spesa, index) => {
+        const div = document.createElement('div');
+        div.className = 'spesa-row';
+        div.innerHTML = `
+          <div class="modal-form-group">
+            <label>Descrizione</label>
+            <input type="text" value="${spesa.descrizione || ''}" 
+                   onchange="aggiornaSpesa(${index}, 'descrizione', this.value)">
+          </div>
+          <div class="modal-form-group">
+            <label>Importo (€)</label>
+            <input type="number" step="0.01" value="${spesa.importo || 0}" 
+                   onchange="aggiornaSpesa(${index}, 'importo', this.value); calcolaDiscrepanzaModal();">
+          </div>
+          <button class="btn-remove-spesa" onclick="rimuoviSpesa(${index})">🗑️</button>
+        `;
+        container.appendChild(div);
+      });
+      
+      // Aggiungi righe vuote fino a 6 totali
+      while (speseModalCorrente.length < 6) {
+        speseModalCorrente.push({ descrizione: '', importo: 0 });
+      }
+    }
+    
+    function aggiungiSpesaModal() {
+      if (speseModalCorrente.length >= 6) {
+        alert('⚠️ Massimo 6 spese!');
+        return;
+      }
+      speseModalCorrente.push({ descrizione: '', importo: 0 });
+      renderSpese();
+    }
+    
+    function rimuoviSpesa(index) {
+      speseModalCorrente.splice(index, 1);
+      renderSpese();
+      calcolaDiscrepanzaModal();
+    }
+    
+    function aggiornaSpesa(index, campo, valore) {
+      if (campo === 'importo') {
+        speseModalCorrente[index][campo] = parseFloat(valore) || 0;
+      } else {
+        speseModalCorrente[index][campo] = valore;
+      }
+    }
+    
+    function calcolaDiscrepanzaModal() {
+      const cash = parseFloat(document.getElementById('editCash').value) || 0;
+      const pos = parseFloat(document.getElementById('editPOS').value) || 0;
+      const satispay = parseFloat(document.getElementById('editSatispay').value) || 0;
+      const report = parseFloat(document.getElementById('editReport').value) || 0;
+      
+      const totaleContato = cash + pos + satispay;
+      const discrepanza = totaleContato - report;
+      
+      const discrepanzaDiv = document.getElementById('discrepanzaModal');
+      discrepanzaDiv.textContent = `Discrepanza: ${discrepanza.toFixed(2)} €`;
+      
+      if (discrepanza < 0) {
+        discrepanzaDiv.classList.add('negativa');
+      } else {
+        discrepanzaDiv.classList.remove('negativa');
+      }
+    }
+    
+    function chiudiModalModifica() {
+      document.getElementById('modalModifica').classList.remove('active');
+      dataChiusuraCorrente = null;
+      speseModalCorrente = [];
+    }
+    
+    async function salvaModificaChiusura() {
+      if (!dataChiusuraCorrente) return;
+      
+      // Filtra spese vuote
+      const speseValide = speseModalCorrente.filter(s => s.descrizione || s.importo > 0);
+      
+      const datiModificati = {
+        fondoStart: parseFloat(document.getElementById('editFondoStart').value) || 0,
+        fondoEnd: parseFloat(document.getElementById('editFondoEnd').value) || 0,
+        cash: parseFloat(document.getElementById('editCash').value) || 0,
+        pos: parseFloat(document.getElementById('editPOS').value) || 0,
+        satispay: parseFloat(document.getElementById('editSatispay').value) || 0,
+        reportProdotti: parseFloat(document.getElementById('editReport').value) || 0,
+        spese: speseValide,
+        note: document.getElementById('editNote').value || '',
+        utente: 'Dashboard'
+      };
+      
+      showLoading('Salvataggio modifiche...');
+      chiudiModalModifica();
+      
+      try {
+        const saveResult = await callAPI('modificaChiusura', { data: dataChiusuraCorrente, dati: datiModificati });
+        
+        hideLoading();
+        
+        if (saveResult.successo) {
+          alert('✅ ' + saveResult.messaggio);
+          // Ricarica le chiusure del periodo
+          consultaPeriodo();
+        } else {
+          alert('⚠️ Errore: ' + saveResult.errore);
+        }
+      } catch (error) {
+        hideLoading();
+        alert('⚠️ Errore: ' + error.message);
+      }
+    }
+    
+    
     async function visualizzaStatistiche() {
       const mese = parseInt(document.getElementById('statMese').value);
       const anno = parseInt(document.getElementById('statAnno').value);
@@ -589,5 +834,83 @@
     });
   }
   </script>
+
+  <!-- MODAL MODIFICA CHIUSURA -->
+  <div id="modalModifica" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitolo">✏️ Modifica Chiusura</h2>
+      
+      <!-- FONDI -->
+      <div class="modal-section">
+        <div class="modal-section-title">💰 Fondi</div>
+        <div class="modal-form-row">
+          <div class="modal-form-group">
+            <label>Fondo Start (€)</label>
+            <input type="number" id="editFondoStart" step="0.01">
+          </div>
+          <div class="modal-form-group">
+            <label>Fondo End (€)</label>
+            <input type="number" id="editFondoEnd" step="0.01">
+          </div>
+        </div>
+      </div>
+      
+      <!-- INCASSI -->
+      <div class="modal-section">
+        <div class="modal-section-title">💵 Incassi</div>
+        <div class="modal-form-row">
+          <div class="modal-form-group">
+            <label>Cash (€)</label>
+            <input type="number" id="editCash" step="0.01" onchange="calcolaDiscrepanzaModal()">
+          </div>
+          <div class="modal-form-group">
+            <label>POS (€)</label>
+            <input type="number" id="editPOS" step="0.01" onchange="calcolaDiscrepanzaModal()">
+          </div>
+        </div>
+        <div class="modal-form-row">
+          <div class="modal-form-group">
+            <label>Satispay (€)</label>
+            <input type="number" id="editSatispay" step="0.01" onchange="calcolaDiscrepanzaModal()">
+          </div>
+          <div class="modal-form-group">
+            <label>Report Prodotti (€)</label>
+            <input type="number" id="editReport" step="0.01" onchange="calcolaDiscrepanzaModal()">
+          </div>
+        </div>
+      </div>
+      
+      <!-- SPESE -->
+      <div class="modal-section">
+        <div class="modal-section-title">🧾 Spese</div>
+        <div id="listaSpese"></div>
+        <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="aggiungiSpesaModal()">
+          ➕ Aggiungi Spesa
+        </button>
+      </div>
+      
+      <!-- NOTE -->
+      <div class="modal-section">
+        <div class="modal-section-title">📝 Note</div>
+        <div class="modal-form-row full">
+          <div class="modal-form-group">
+            <textarea id="editNote" placeholder="Note aggiuntive..."></textarea>
+          </div>
+        </div>
+      </div>
+      
+      <!-- DISCREPANZA -->
+      <div id="discrepanzaModal" class="discrepanza-display">
+        Discrepanza: 0,00 €
+      </div>
+      
+      <!-- BOTTONI -->
+      <div class="modal-buttons">
+        <button class="btn-annulla" onclick="chiudiModalModifica()">❌ Annulla</button>
+        <button class="btn-salva" onclick="salvaModificaChiusura()">✅ Salva</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
