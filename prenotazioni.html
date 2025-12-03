@@ -2084,6 +2084,132 @@
           }
         }
         
+        alert(`✅ ${result.messaggio || 'Salvato!'}`);
+      }
+    }
+    
+    // ========== MODIFICA EVENTO ==========
+    function apriModalModificaEvento() {
+      if (!eventoCorrente) return;
+      
+      modalitaModifica = true;
+      tipoCorrente = 'evento';
+      
+      document.getElementById('modalTitolo').textContent = '✏️ Modifica Evento';
+      document.getElementById('inputNomeEvento').value = eventoCorrente.nome;
+      document.getElementById('inputData').value = eventoCorrente.data;
+      document.getElementById('inputDescrizioneEvento').value = eventoCorrente.descrizione || '';
+      
+      // Mostra campi evento
+      document.getElementById('campiEvento').style.display = 'block';
+      document.getElementById('campiPrenotazione').style.display = 'none';
+      document.getElementById('linkCreaEvento').style.display = 'none';
+      document.getElementById('tipoToggle').style.display = 'none';
+      document.getElementById('btnSalva').textContent = '💾 Salva Modifiche';
+      
+      // Aggiungi pulsante elimina se non esiste
+      let btnElimina = document.getElementById('btnEliminaEvento');
+      if (!btnElimina) {
+        btnElimina = document.createElement('button');
+        btnElimina.id = 'btnEliminaEvento';
+        btnElimina.className = 'btn-modal btn-elimina';
+        btnElimina.textContent = '🗑️ Elimina Evento';
+        btnElimina.onclick = confermaEliminaEvento;
+        btnElimina.style.marginRight = 'auto';
+        document.querySelector('.modal-buttons').insertBefore(btnElimina, document.querySelector('.modal-buttons').firstChild);
+      }
+      btnElimina.style.display = 'block';
+      
+      document.getElementById('modalPrenotazione').classList.add('active');
+    }
+    
+    async function modificaEvento() {
+      const nome = document.getElementById('inputNomeEvento').value.trim();
+      const data = document.getElementById('inputData').value;
+      const descrizione = document.getElementById('inputDescrizioneEvento').value.trim();
+      
+      if (!nome || !data) {
+        alert('⚠️ Nome e data evento sono obbligatori!');
+        return;
+      }
+      
+      if (!eventoCorrente) return;
+      
+      showLoading('Aggiornamento evento...');
+      
+      const result = await callAPI('modificaEvento', {
+        id: eventoCorrente.id,
+        nome: nome,
+        data: data,
+        descrizione: descrizione
+      });
+      
+      hideLoading();
+      
+      if (result.errore) {
+        alert('Errore: ' + result.errore);
+        return;
+      }
+      
+      chiudiModal();
+      await caricaPrenotazioni();
+      
+      // Riapri evento modificato
+      const eventoAggiornato = eventi.find(e => e.id === eventoCorrente.id);
+      if (eventoAggiornato) {
+        await apriGestioneEvento(eventoAggiornato.id);
+      }
+      
+      alert('✅ Evento modificato!');
+    }
+    
+    function confermaEliminaEvento() {
+      if (!eventoCorrente) return;
+      
+      const conferma = confirm(
+        `⚠️ ATTENZIONE!\n\n` +
+        `Stai per eliminare l'evento "${eventoCorrente.nome}".\n\n` +
+        `Verranno eliminate TUTTE le prenotazioni associate a questo evento.\n\n` +
+        `Confermi l'eliminazione?`
+      );
+      
+      if (conferma) {
+        eliminaEvento();
+      }
+    }
+    
+    async function eliminaEvento() {
+      if (!eventoCorrente) return;
+      
+      showLoading('Eliminazione evento...');
+      
+      const result = await callAPI('eliminaEvento', {
+        id: eventoCorrente.id
+      });
+      
+      hideLoading();
+      
+      if (result.errore) {
+        alert('Errore: ' + result.errore);
+        return;
+      }
+      
+      chiudiModal();
+      chiudiPannelloEvento();
+      await caricaPrenotazioni();
+      
+      alert('✅ Evento eliminato!');
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // AUTO-REFRESH CACHE (ogni 2 minuti)
+    // ═══════════════════════════════════════════════════════════
+    setInterval(async () => {
+      if (!document.hidden) {
+        console.log('🔄 Auto-refresh cache');
+        await caricaPrenotazioni();
+      }
+    }, 120000); // 120000 ms = 2 minuti
     
     const RELOAD_KEY = 'sw_reloading';
     if ('serviceWorker' in navigator) {
