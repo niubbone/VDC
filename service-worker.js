@@ -2,7 +2,7 @@
 //  SERVICE WORKER - VECCHIA DOGANA
 //  Cambia SOLO questo numero ad ogni aggiornamento frontend ↓
 // ═══════════════════════════════════════════════════════════════════
-const VERSION = '3.5.8';
+const VERSION = '3.5.9';
 // ═══════════════════════════════════════════════════════════════════
 
 const CACHE_NAME = `vecchia-dogana-v${VERSION}`;
