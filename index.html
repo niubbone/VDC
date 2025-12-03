@@ -489,7 +489,7 @@
       });
     }
   </script>
-  
+
   <script>
     // GESTIONE AUDIO SOTTOFONDO
     const bgMusic = document.getElementById('bgMusic');
@@ -547,43 +547,125 @@
     async function getAppVersion() {
       try {
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-          // Metodo 1: chiedi versione al service worker via message
           const messageChannel = new MessageChannel();
+          const response = await new Promise((resolve, reject) => {
+            messageChannel.port1.onmessage = (event) => {
+              if (event.data.version) {
+                resolve(event.data.version);
+              } else {
+                reject(new Error('Versione non disponibile'));
+              }
+            };
+            
+            navigator.serviceWorker.controller.postMessage(
+              { type: 'GET_VERSION' },
+              [messageChannel.port2]
+            );
+            
+            setTimeout(() => reject(new Error('Timeout')), 2000);
+          });
           
-          navigator.serviceWorker.controller.postMessage(
-            { type: 'GET_VERSION' },
-            [messageChannel.port2]
-          );
-          
-          messageChannel.port1.onmessage = (event) => {
-            if (event.data && event.data.version) {
-              document.getElementById('appVersion').textContent = event.data.version;
-            }
-          };
-          
-          // Timeout fallback
-          setTimeout(() => {
-            if (document.getElementById('appVersion').textContent === 'caricamento...') {
-              document.getElementById('appVersion').textContent = '2.5';
-            }
-          }, 1000);
+          document.getElementById('appVersion').textContent = response;
         } else {
-          // Service worker non attivo, usa versione default
-          document.getElementById('appVersion').textContent = '2.5';
+          throw new Error('Service Worker non disponibile');
         }
       } catch (error) {
         console.log('Errore lettura versione:', error);
-        document.getElementById('appVersion').textContent = '2.5';
+        document.getElementById('appVersion').textContent = '3.5.7';
       }
     }
     
-    // Carica versione quando service worker è pronto
+    // ═══════════════════════════════════════════════════════════════════
+    // GESTIONE SERVICE WORKER CON AUTO-UPDATE
+    // ═══════════════════════════════════════════════════════════════════
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(() => {
-        getAppVersion();
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(registration => {
+            console.log('✅ Service Worker registrato');
+            
+            setInterval(() => {
+              registration.update();
+            }, 60000);
+            
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('🔄 Nuovo Service Worker pronto!');
+                  mostraNotificaAggiornamento();
+                }
+              });
+            });
+            
+            getAppVersion();
+          })
+          .catch(error => {
+            console.log('❌ Service Worker registrazione fallita:', error);
+            document.getElementById('appVersion').textContent = '3.5.7';
+          });
+      });
+      
+      navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data.type === 'SW_UPDATED') {
+          console.log(`📦 Service Worker aggiornato a v${event.data.version}`);
+        }
       });
     } else {
-      document.getElementById('appVersion').textContent = '2.5';
+      document.getElementById('appVersion').textContent = '3.5.7';
+    }
+
+    function mostraNotificaAggiornamento() {
+      let notifica = document.getElementById('sw-update-notifica');
+      
+      if (!notifica) {
+        notifica = document.createElement('div');
+        notifica.id = 'sw-update-notifica';
+        notifica.style.cssText = `
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          background: linear-gradient(145deg, #8b4513 0%, #654321 100%);
+          color: #f4e4c1;
+          padding: 15px 20px;
+          border-radius: 10px;
+          border: 3px solid #3d1f0f;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          z-index: 9999;
+          font-family: 'Georgia', serif;
+          font-weight: bold;
+          cursor: pointer;
+          animation: slideIn 0.3s ease-out;
+        `;
+        
+        notifica.innerHTML = `
+          🏴‍☠️ Nuova versione disponibile!<br>
+          <span style="font-size: 0.9em;">Clicca per aggiornare</span>
+        `;
+        
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        `;
+        document.head.appendChild(style);
+        
+        notifica.onclick = () => {
+          window.location.reload();
+        };
+        
+        document.body.appendChild(notifica);
+        
+        setTimeout(() => {
+          if (notifica.parentElement) {
+            notifica.style.animation = 'slideIn 0.3s ease-out reverse';
+            setTimeout(() => notifica.remove(), 300);
+          }
+        }, 10000);
+      }
     }
   </script>
 </body>
