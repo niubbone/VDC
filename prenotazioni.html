@@ -368,21 +368,22 @@
       }
       
       .btn-chiudi-mobile {
-        position: absolute;
-        top: -10px;
-        left: -10px;
+        position: sticky;
+        bottom: 20px;
+        left: calc(100% - 55px);
+        margin-top: auto;
         background: #8b0000;
         color: white;
         border: 2px solid white;
         border-radius: 50%;
-        width: 35px;
-        height: 35px;
-        font-size: 1.5em;
+        width: 50px;
+        height: 50px;
+        font-size: 1.8em;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.6);
         z-index: 10;
       }
       
@@ -1114,7 +1115,6 @@
       <!-- PANNELLO LATERALE -->
       <div class="pannello-laterale" id="pannelloLaterale">
         <div class="pannello-header">
-          <button class="btn-chiudi-mobile" onclick="chiudiPannelloMobile()" style="display:none;">✕</button>
           <h3 id="pannelloTitolo">Seleziona un giorno</h3>
           <button class="btn-nuova" onclick="mostraModalNuova()" id="btnNuova" style="display:none;">➕</button>
         </div>
@@ -1127,6 +1127,8 @@
             </div>
           </div>
         </div>
+        
+        <button class="btn-chiudi-mobile" onclick="chiudiPannelloMobile()" style="display:none;">✕</button>
       </div>
     </div>
   </div>
