@@ -2,8 +2,20 @@
 //  SERVICE WORKER - VECCHIA DOGANA - VERSIONE SEMPLIFICATA
 //  Cambia SOLO questo numero ad ogni aggiornamento ↓
 // ═══════════════════════════════════════════════════════════════════
-const VERSION = '3.6.3';
+const VERSION = '3.6.0';
 // ═══════════════════════════════════════════════════════════════════
+
+// NOTA: Non usiamo cache, quindi questi path sono solo di riferimento
+// const ASSETS = [
+//   './',
+//   './index.html',
+//   './chiusura.html',
+//   './prenotazioni.html',
+//   './dashboard.html',
+//   './assets/images/caffe.png',
+//   './assets/audio/pirate-theme.mp3',
+//   './manifest.json'
+// ];
 
 // ═══════════════════════════════════════════════════════════════════
 // INSTALL: Attiva immediatamente
