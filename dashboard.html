@@ -455,18 +455,21 @@
         
         hideLoading();
         
+        
         let dettaglioGiorniHtml = '';
         if (versamento.dettaglioGiorni && versamento.dettaglioGiorni.length > 0) {
           dettaglioGiorniHtml = '<div style="margin-top:20px;"><h4 style="margin-bottom:10px;">📅 Dettaglio Giornaliero:</h4>';
           dettaglioGiorniHtml += '<div style="max-height:300px; overflow-y:auto; background:rgba(255,255,255,0.3); padding:10px; border-radius:5px;">';
           versamento.dettaglioGiorni.forEach(giorno => {
-            const dataObj = new Date(giorno.data + 'T00:00:00');
+            const [gg, mm, aaaa] = giorno.data.split('/');
+            const dataObj = new Date(aaaa, mm - 1, gg);
             const giornoSettimana = dataObj.toLocaleDateString('it-IT', { weekday: 'long' });
-            const dataFormattata = dataObj.toLocaleDateString('it-IT');
+            const dataFormattata = giorno.data;
             dettaglioGiorniHtml += `<div class="dettaglio-row"><span>${giornoSettimana} ${dataFormattata}</span><span>${giorno.cash.toFixed(2)} €</span></div>`;
           });
           dettaglioGiorniHtml += '</div></div>';
         }
+        
         
         const html = `
           <div class="dettaglio-box">
