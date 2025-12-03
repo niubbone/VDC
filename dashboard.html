@@ -118,7 +118,6 @@
     }
     .loading-container { display: flex; flex-direction: column; align-items: center; }
     
-    
     /* MODAL MODIFICA CHIUSURA */
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -162,9 +161,6 @@
     .spesa-row {
       display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px;
       align-items: end; margin-bottom: 8px;
-    }
-    .spesa-row input[readonly] {
-      background: #f0f0f0; cursor: not-allowed;
     }
     .btn-remove-spesa {
       padding: 10px 12px; background: #ff5252; color: white;
@@ -435,14 +431,7 @@
           const discrepanzaClass = c.discrepanza >= 0 ? 'positiva' : '';
           
           html += `
-          
-          html += `
-            <div class="chiusura-card" style="position:relative;">
-              <div style="position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2em;" 
-                   onclick="modificaChiusura('${c.data}')" 
-                   title="Modifica chiusura">
-                ✏️
-              </div>
+            <div class="chiusura-card">
               <h4>${c.giornoSettimana}<br>${c.data}</h4>
               
               <div class="chiusura-row">
@@ -609,8 +598,37 @@
       }
     }
     
+    async function visualizzaStatistiche() {
+      const mese = parseInt(document.getElementById('statMese').value);
+      const anno = parseInt(document.getElementById('statAnno').value);
+      
+      showLoading('Calcolo statistiche...');
+      
+      try {
+        const stats = await callAPI('getStatisticheMese', { mese: mese, anno: anno });
+        
+        hideLoading();
+        
+        const html = `
+          <div class="stat-grid">
+            <div class="stat-card"><h3>🗓️ Giorni</h3><div class="stat-value">${stats.giorniAperti}</div></div>
+            <div class="stat-card"><h3>💰 Incasso</h3><div class="stat-value">${stats.totaleIncasso.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>📈 Media</h3><div class="stat-value">${stats.mediaGiornaliera.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>💵 Cash</h3><div class="stat-value">${stats.totaleCash.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>💳 POS</h3><div class="stat-value">${stats.totalePOS.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>📱 Satispay</h3><div class="stat-value">${stats.totaleSatispay.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>💸 Spese</h3><div class="stat-value">${stats.totaleSpese.toFixed(2)} €</div></div>
+            <div class="stat-card"><h3>⚠️ Discrepanza</h3><div class="stat-value">${stats.discrepanzaTotale.toFixed(2)} €</div></div>
+          </div>
+        `;
+        document.getElementById('risultatoStatistiche').innerHTML = html;
+      } catch (error) {
+        hideLoading();
+        alert('⚠️ Errore: ' + error.message);
+      }
+    }
     
-    
+    // FUNZIONI MODAL MODIFICA CHIUSURA
     let dataChiusuraCorrente = null;
     let speseModalCorrente = [];
     
@@ -628,7 +646,6 @@
           return;
         }
         
-        // Popola i campi del modal
         document.getElementById('modalTitolo').textContent = `✏️ Modifica Chiusura ${data}`;
         document.getElementById('editFondoStart').value = result.fondoStart.toFixed(2);
         document.getElementById('editFondoEnd').value = result.fondoEnd.toFixed(2);
@@ -638,14 +655,9 @@
         document.getElementById('editReport').value = result.reportProdotti.toFixed(2);
         document.getElementById('editNote').value = result.note || '';
         
-        // Carica le spese esistenti
         speseModalCorrente = result.spese || [];
         renderSpese();
-        
-        // Calcola discrepanza iniziale
         calcolaDiscrepanzaModal();
-        
-        // Mostra il modal
         document.getElementById('modalModifica').classList.add('active');
         
       } catch (error) {
@@ -677,9 +689,25 @@
         container.appendChild(div);
       });
       
-      // Aggiungi righe vuote fino a 6 totali
-      while (speseModalCorrente.length < 6) {
+      while (speseModalCorrente.length < 3) {
+        const index = speseModalCorrente.length;
         speseModalCorrente.push({ descrizione: '', importo: 0 });
+        const div = document.createElement('div');
+        div.className = 'spesa-row';
+        div.innerHTML = `
+          <div class="modal-form-group">
+            <label>Descrizione</label>
+            <input type="text" value="" 
+                   onchange="aggiornaSpesa(${index}, 'descrizione', this.value)">
+          </div>
+          <div class="modal-form-group">
+            <label>Importo (€)</label>
+            <input type="number" step="0.01" value="0" 
+                   onchange="aggiornaSpesa(${index}, 'importo', this.value); calcolaDiscrepanzaModal();">
+          </div>
+          <button class="btn-remove-spesa" onclick="rimuoviSpesa(${index})">🗑️</button>
+        `;
+        container.appendChild(div);
       }
     }
     
@@ -734,7 +762,6 @@
     async function salvaModificaChiusura() {
       if (!dataChiusuraCorrente) return;
       
-      // Filtra spese vuote
       const speseValide = speseModalCorrente.filter(s => s.descrizione || s.importo > 0);
       
       const datiModificati = {
@@ -759,42 +786,10 @@
         
         if (saveResult.successo) {
           alert('✅ ' + saveResult.messaggio);
-          // Ricarica le chiusure del periodo
           consultaPeriodo();
         } else {
           alert('⚠️ Errore: ' + saveResult.errore);
         }
-      } catch (error) {
-        hideLoading();
-        alert('⚠️ Errore: ' + error.message);
-      }
-    }
-    
-    
-    async function visualizzaStatistiche() {
-      const mese = parseInt(document.getElementById('statMese').value);
-      const anno = parseInt(document.getElementById('statAnno').value);
-      
-      showLoading('Calcolo statistiche...');
-      
-      try {
-        const stats = await callAPI('getStatisticheMese', { mese: mese, anno: anno });
-        
-        hideLoading();
-        
-        const html = `
-          <div class="stat-grid">
-            <div class="stat-card"><h3>🗓️ Giorni</h3><div class="stat-value">${stats.giorniAperti}</div></div>
-            <div class="stat-card"><h3>💰 Incasso</h3><div class="stat-value">${stats.totaleIncasso.toFixed(2)} €</div></div>
-            <div class="stat-card"><h3>📈 Media</h3><div class="stat-value">${stats.mediaGiornaliera.toFixed(2)} €</div></div>
-            <div class="stat-card"><h3>💵 Cash</h3><div class="stat-value">${stats.totaleCash.toFixed(2)} €</div></div>
-            <div class="stat-card"><h3>💳 POS</h3><div class="stat-value">${stats.totalePOS.toFixed(2)} €</div></div>
-            <div class="stat-card"><h3>📱 Satispay</h3><div class="stat-value">${stats.totaleSatispay.toFixed(2)} €</div></div>
-            <div class="stat-card"><h3>💸 Spese</h3><div class="stat-value">${stats.totaleSpese.toFixed(2)} €</div></div>
-            <div class="stat-card"><h3>⚠️ Discrepanza</h3><div class="stat-value">${stats.discrepanzaTotale.toFixed(2)} €</div></div>
-          </div>
-        `;
-        document.getElementById('risultatoStatistiche').innerHTML = html;
       } catch (error) {
         hideLoading();
         alert('⚠️ Errore: ' + error.message);
@@ -840,7 +835,6 @@
     <div class="modal-content">
       <h2 id="modalTitolo">✏️ Modifica Chiusura</h2>
       
-      <!-- FONDI -->
       <div class="modal-section">
         <div class="modal-section-title">💰 Fondi</div>
         <div class="modal-form-row">
@@ -855,7 +849,6 @@
         </div>
       </div>
       
-      <!-- INCASSI -->
       <div class="modal-section">
         <div class="modal-section-title">💵 Incassi</div>
         <div class="modal-form-row">
@@ -880,7 +873,6 @@
         </div>
       </div>
       
-      <!-- SPESE -->
       <div class="modal-section">
         <div class="modal-section-title">🧾 Spese</div>
         <div id="listaSpese"></div>
@@ -889,7 +881,6 @@
         </button>
       </div>
       
-      <!-- NOTE -->
       <div class="modal-section">
         <div class="modal-section-title">📝 Note</div>
         <div class="modal-form-row full">
@@ -899,12 +890,10 @@
         </div>
       </div>
       
-      <!-- DISCREPANZA -->
       <div id="discrepanzaModal" class="discrepanza-display">
         Discrepanza: 0,00 €
       </div>
       
-      <!-- BOTTONI -->
       <div class="modal-buttons">
         <button class="btn-annulla" onclick="chiudiModalModifica()">❌ Annulla</button>
         <button class="btn-salva" onclick="salvaModificaChiusura()">✅ Salva</button>
