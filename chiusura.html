@@ -653,103 +653,108 @@
         btnSalva.style.cursor = '';
       }
     }
-<script>
-// Registra Service Worker con gestione aggiornamenti
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js')
-      .then(registration => {
-        console.log('✅ Service Worker registrato');
-        
-        // Controlla aggiornamenti ogni 60 secondi
-        setInterval(() => {
-          registration.update();
-        }, 60000);
-        
-        // Rileva nuovo Service Worker in attesa
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
+  </script>
+  
+  <!-- ═══════════════════════════════════════════════════════════════════
+       GESTIONE SERVICE WORKER CON AUTO-UPDATE
+       ═══════════════════════════════════════════════════════════════════ -->
+  <script>
+  // Registra Service Worker con gestione aggiornamenti
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(registration => {
+          console.log('✅ Service Worker registrato');
           
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('🔄 Nuovo Service Worker pronto!');
-              
-              // Mostra notifica di aggiornamento (opzionale)
-              mostraNotificaAggiornamento();
-            }
+          // Controlla aggiornamenti ogni 60 secondi
+          setInterval(() => {
+            registration.update();
+          }, 60000);
+          
+          // Rileva nuovo Service Worker in attesa
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('🔄 Nuovo Service Worker pronto!');
+                
+                // Mostra notifica di aggiornamento (opzionale)
+                mostraNotificaAggiornamento();
+              }
+            });
           });
+        })
+        .catch(error => {
+          console.log('❌ Service Worker registrazione fallita:', error);
         });
-      })
-      .catch(error => {
-        console.log('❌ Service Worker registrazione fallita:', error);
-      });
-  });
-  
-  // Ascolta messaggi dal Service Worker
-  navigator.serviceWorker.addEventListener('message', event => {
-    if (event.data.type === 'SW_UPDATED') {
-      console.log(`📦 Service Worker aggiornato a v${event.data.version}`);
-    }
-  });
-}
-
-// Mostra notifica di aggiornamento (stile pirata)
-function mostraNotificaAggiornamento() {
-  // Crea elemento notifica se non esiste
-  let notifica = document.getElementById('sw-update-notifica');
-  
-  if (!notifica) {
-    notifica = document.createElement('div');
-    notifica.id = 'sw-update-notifica';
-    notifica.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: linear-gradient(145deg, #8b4513 0%, #654321 100%);
-      color: #f4e4c1;
-      padding: 15px 20px;
-      border-radius: 10px;
-      border: 3px solid #3d1f0f;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      z-index: 9999;
-      font-family: 'Georgia', serif;
-      font-weight: bold;
-      cursor: pointer;
-      animation: slideIn 0.3s ease-out;
-    `;
+    });
     
-    notifica.innerHTML = `
-      🏴‍☠️ Nuova versione disponibile!<br>
-      <span style="font-size: 0.9em;">Clicca per aggiornare</span>
-    `;
-    
-    // Aggiungi animazione
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes slideIn {
-        from { transform: translateX(400px); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+    // Ascolta messaggi dal Service Worker
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data.type === 'SW_UPDATED') {
+        console.log(`📦 Service Worker aggiornato a v${event.data.version}`);
       }
-    `;
-    document.head.appendChild(style);
-    
-    // Ricarica al click
-    notifica.onclick = () => {
-      window.location.reload();
-    };
-    
-    document.body.appendChild(notifica);
-    
-    // Rimuovi dopo 10 secondi se non cliccato
-    setTimeout(() => {
-      if (notifica.parentElement) {
-        notifica.style.animation = 'slideIn 0.3s ease-out reverse';
-        setTimeout(() => notifica.remove(), 300);
-      }
-    }, 10000);
+    });
   }
-}
-</script>
+
+  // Mostra notifica di aggiornamento (stile pirata)
+  function mostraNotificaAggiornamento() {
+    // Crea elemento notifica se non esiste
+    let notifica = document.getElementById('sw-update-notifica');
+    
+    if (!notifica) {
+      notifica = document.createElement('div');
+      notifica.id = 'sw-update-notifica';
+      notifica.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: linear-gradient(145deg, #8b4513 0%, #654321 100%);
+        color: #f4e4c1;
+        padding: 15px 20px;
+        border-radius: 10px;
+        border: 3px solid #3d1f0f;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        z-index: 9999;
+        font-family: 'Georgia', serif;
+        font-weight: bold;
+        cursor: pointer;
+        animation: slideIn 0.3s ease-out;
+      `;
+      
+      notifica.innerHTML = `
+        🏴‍☠️ Nuova versione disponibile!<br>
+        <span style="font-size: 0.9em;">Clicca per aggiornare</span>
+      `;
+      
+      // Aggiungi animazione
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(400px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Ricarica al click
+      notifica.onclick = () => {
+        window.location.reload();
+      };
+      
+      document.body.appendChild(notifica);
+      
+      // Rimuovi dopo 10 secondi se non cliccato
+      setTimeout(() => {
+        if (notifica.parentElement) {
+          notifica.style.animation = 'slideIn 0.3s ease-out reverse';
+          setTimeout(() => notifica.remove(), 300);
+        }
+      }, 10000);
+    }
+  }
+  </script>
   
 </body>
 </html>
