@@ -15,6 +15,23 @@
   <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
   
   <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎩 Dashboard Capitano</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#14283c">
+  <link rel="manifest" href="./manifest.json">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/icon-16x16.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -442,6 +459,7 @@
       }
     }
     
+    
     async function calcolaVersamento() {
       const da = document.getElementById('versDaData').value;
       const a = document.getElementById('versAData').value;
@@ -455,24 +473,50 @@
         
         hideLoading();
         
-        let tagliHtml = '<div style="margin-top:20px;"><h4 style="margin-bottom:10px;">Tagli:</h4>';
-        Object.entries(versamento.tagli).forEach(([taglio, qta]) => {
-          if (qta > 0) tagliHtml += `<div class="dettaglio-row"><span>${taglio}:</span><span>${qta} pz</span></div>`;
-        });
-        tagliHtml += '</div>';
+        // NUOVO: Mostra dettaglio giornaliero invece dei tagli
+        let dettaglioGiorniHtml = '';
+        if (versamento.dettaglioGiorni && versamento.dettaglioGiorni.length > 0) {
+          dettaglioGiorniHtml = `
+            <div style="margin-top:20px;">
+              <h4 style="margin-bottom:15px; font-family:'Pirata One'; color:#2c1810;">
+                📅 Dettaglio Giornaliero:
+              </h4>
+              <div style="max-height: 300px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 10px; border-radius: 8px;">
+          `;
+          
+          versamento.dettaglioGiorni.forEach(giorno => {
+            const dataObj = new Date(giorno.data + 'T00:00:00');
+            const giornoSettimana = dataObj.toLocaleDateString('it-IT', { weekday: 'long' });
+            const dataFormattata = dataObj.toLocaleDateString('it-IT');
+            
+            dettaglioGiorniHtml += `
+              <div class="dettaglio-row" style="border-bottom: 1px solid rgba(0,0,0,0.1); padding: 8px 5px;">
+                <span style="text-transform: capitalize;">
+                  ${giornoSettimana} ${dataFormattata}
+                </span>
+                <span style="font-weight: 600;">${giorno.cash.toFixed(2)} €</span>
+              </div>
+            `;
+          });
+          
+          dettaglioGiorniHtml += `
+              </div>
+            </div>
+          `;
+        }
         
         const html = `
           <div class="dettaglio-box">
             <h3 style="font-family:'Pirata One'; color:#2c1810; margin-bottom:15px;">
-              Versamento ${versamento.periodo}
+              💰 Versamento ${versamento.periodo}
             </h3>
             <div class="dettaglio-row"><span>Giorni:</span><span>${versamento.giorni}</span></div>
             <div class="dettaglio-row"><span>Tot Cash:</span><span>${versamento.totaleCash.toFixed(2)} €</span></div>
             <div class="dettaglio-row"><span>Spese:</span><span>${versamento.totaleSpese.toFixed(2)} €</span></div>
-            <div class="dettaglio-row" style="font-weight:700; background:#90ee90;">
-              <span>Da Versare:</span><span>${versamento.daVersare.toFixed(2)} €</span>
+            <div class="dettaglio-row" style="font-weight:700; background:#90ee90; font-size: 1.1em;">
+              <span>💵 Da Versare:</span><span>${versamento.daVersare.toFixed(2)} €</span>
             </div>
-            ${tagliHtml}
+            ${dettaglioGiorniHtml}
             <button class="btn btn-primary" style="width:100%; margin-top:20px;"
                     onclick="confermaVersamento('${da}', '${a}', ${versamento.daVersare})">
               ✅ Conferma Versamento
@@ -484,6 +528,8 @@
         hideLoading();
         alert('⚠️ Errore: ' + error.message);
       }
+    }
+    
     }
     
     async function confermaVersamento(da, a, importo) {
