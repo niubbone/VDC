@@ -1,74 +1,135 @@
-// VERSION AUTO-GENERATA: cambia questa quando fai modifiche
-const VERSION = '3.7.7'; // Formato semplice: 2.0, 2.1, 2.1b, 2.2, ecc.
+// ═══════════════════════════════════════════════════════════════════
+//  SERVICE WORKER - VECCHIA DOGANA
+//  Cambia SOLO questo numero ad ogni aggiornamento frontend ↓
+// ═══════════════════════════════════════════════════════════════════
+const VERSION = '3.5.8';
+// ═══════════════════════════════════════════════════════════════════
+
 const CACHE_NAME = `vecchia-dogana-v${VERSION}`;
 
-const urlsToCache = [
+const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './chiusura.html',
   './prenotazioni.html',
-  './dashboard.html',
-  './SfondoVD.png',
-  './musica-sottofondo.mp3',
-  './manifest.json',
-  './icon-32x32.png',
-  './icon-152x152.png'
+  './versamenti.html',
+  './eventi.html',
+  './caffe.png',
+  './manifest.json'
 ];
 
-// Installazione - caching dei file essenziali
+// ═══════════════════════════════════════════════════════════════════
+// INSTALL: Attivazione immediata del nuovo Service Worker
+// ═══════════════════════════════════════════════════════════════════
 self.addEventListener('install', event => {
-  console.log(`[SW] Installazione versione ${VERSION}`);
+  console.log(`🏴‍☠️ [SW v${VERSION}] Installazione in corso...`);
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log(`[SW] Cache aperta: ${CACHE_NAME}`);
-        return cache.addAll(urlsToCache);
+        console.log(`📦 [SW v${VERSION}] Pre-caching assets...`);
+        return cache.addAll(ASSETS_TO_CACHE);
+      })
+      .then(() => {
+        console.log(`✅ [SW v${VERSION}] Installato! Attivazione immediata...`);
+        return self.skipWaiting(); // ← Attiva subito senza aspettare
       })
   );
-  // IMPORTANTE: skipWaiting forza attivazione immediata
-  self.skipWaiting();
 });
 
-// Attivazione - pulizia cache vecchie
+// ═══════════════════════════════════════════════════════════════════
+// ACTIVATE: Pulizia cache vecchie + controllo immediato
+// ═══════════════════════════════════════════════════════════════════
 self.addEventListener('activate', event => {
-  console.log(`[SW] Attivazione versione ${VERSION}`);
+  console.log(`🔄 [SW v${VERSION}] Attivazione in corso...`);
+  
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log(`[SW] Rimozione cache vecchia: ${cacheName}`);
-            return caches.delete(cacheName);
-          }
-        })
-      );
+    Promise.all([
+      // 1. Elimina tutte le cache vecchie
+      caches.keys().then(cacheNames => {
+        const oldCaches = cacheNames.filter(name => name !== CACHE_NAME);
+        if (oldCaches.length > 0) {
+          console.log(`🗑️ [SW v${VERSION}] Rimozione cache vecchie:`, oldCaches);
+        }
+        return Promise.all(
+          oldCaches.map(name => caches.delete(name))
+        );
+      }),
+      
+      // 2. Prendi controllo di tutte le pagine aperte
+      clients.claim()
+    ]).then(() => {
+      console.log(`✅ [SW v${VERSION}] Attivo e in controllo!`);
+      
+      // 3. Notifica tutte le pagine del nuovo aggiornamento
+      return clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SW_UPDATED',
+            version: VERSION
+          });
+        });
+      });
     })
   );
-  // IMPORTANTE: claim forza controllo immediato di tutte le pagine
-  self.clients.claim();
 });
 
-// Fetch - strategia cache-first
+// ═══════════════════════════════════════════════════════════════════
+// FETCH: Strategia Cache-First con Network Fallback
+// ═══════════════════════════════════════════════════════════════════
 self.addEventListener('fetch', event => {
+  // Ignora richieste non-GET (POST, PUT, etc)
+  if (event.request.method !== 'GET') {
+    return;
+  }
+  
+  // Ignora richieste API (vanno sempre al server)
+  if (event.request.url.includes('script.google.com')) {
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
+      .then(cachedResponse => {
+        if (cachedResponse) {
+          // Trovato in cache
+          return cachedResponse;
         }
-        return fetch(event.request);
+        
+        // Non in cache, fetch dalla rete
+        return fetch(event.request).then(networkResponse => {
+          // Salva in cache per la prossima volta
+          if (networkResponse.status === 200) {
+            return caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, networkResponse.clone());
+              return networkResponse;
+            });
+          }
+          return networkResponse;
+        });
+      })
+      .catch(error => {
+        console.error(`❌ [SW v${VERSION}] Fetch fallito:`, error);
+        // Qui potresti servire una pagina offline custom
+        return new Response('Offline - Impossibile caricare la risorsa', {
+          status: 503,
+          statusText: 'Service Unavailable'
+        });
       })
   );
 });
 
-// Messaggi - permette di ottenere la versione da JavaScript
+// ═══════════════════════════════════════════════════════════════════
+// MESSAGE: Gestione messaggi dalle pagine
+// ═══════════════════════════════════════════════════════════════════
 self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'GET_VERSION') {
+  if (event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({ version: VERSION });
   }
   
-  // Permette di forzare skip waiting da JavaScript
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
+
+console.log(`🏴‍☠️ Service Worker v${VERSION} caricato`);
