@@ -638,11 +638,15 @@
     let speseModalCorrente = [];
     
     async function modificaChiusura(data) {
-      dataChiusuraCorrente = data;
+      // Converto da DD/MM/YYYY a YYYY-MM-DD
+      const [gg, mm, aaaa] = data.split('/');
+      const dataAPI = `${aaaa}-${mm}-${gg}`;
+      
+      dataChiusuraCorrente = dataAPI;
       showLoading('Caricamento dati...');
       
       try {
-        const result = await callAPI('getDatiGiorno', { data: data });
+        const result = await callAPI('getDatiGiorno', { data: dataAPI });
         
         hideLoading();
         
