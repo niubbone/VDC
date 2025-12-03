@@ -1,7 +1,7 @@
 {
   "name": "Vecchia Dogana - Gestione Nave",
   "short_name": "Vecchia Dogana",
-  "description": "Sistema di gestione per il bar Vecchia Dogana",
+  "description": "Sistema di gestione per il galeone Vecchia Dogana",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
