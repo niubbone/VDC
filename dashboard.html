@@ -431,7 +431,12 @@
           const discrepanzaClass = c.discrepanza >= 0 ? 'positiva' : '';
           
           html += `
-            <div class="chiusura-card">
+            <div class="chiusura-card" style="position:relative;">
+              <div style="position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2em;" 
+                   onclick="modificaChiusura('${c.data}')" 
+                   title="Modifica chiusura">
+                ✏️
+              </div>
               <h4>${c.giornoSettimana}<br>${c.data}</h4>
               
               <div class="chiusura-row">
