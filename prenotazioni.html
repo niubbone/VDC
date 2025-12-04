@@ -1286,6 +1286,42 @@
     let eventoCorrente = null;
     let tipoCorrente = 'prenotazione'; // 'prenotazione' o 'evento'
     
+    // ═══════════════════════════════════════════════════════════
+    // CACHE IN MEMORIA (VELOCISSIMA) - FASE 1
+    // ═══════════════════════════════════════════════════════════
+    const CACHE_MEMORIA_DURATION = 5 * 60 * 1000; // 5 minuti
+    let cacheMemoria = {
+      prenotazioni: null,
+      eventi: null,
+      timestamp: null,
+      mese: null,
+      anno: null
+    };
+    
+    function isCacheMemoriaValid() {
+      if (!cacheMemoria.timestamp) return false;
+      if (cacheMemoria.mese !== meseCorrente) return false;
+      if (cacheMemoria.anno !== annoCorrente) return false;
+      const age = Date.now() - cacheMemoria.timestamp;
+      return age < CACHE_MEMORIA_DURATION;
+    }
+    
+    function salvaCacheMemoria(pren, evt) {
+      cacheMemoria = {
+        prenotazioni: pren,
+        eventi: evt,
+        timestamp: Date.now(),
+        mese: meseCorrente,
+        anno: annoCorrente
+      };
+      console.log('⚡ Cache memoria salvata');
+    }
+    
+    function invalidaCacheMemoria() {
+      cacheMemoria.timestamp = null;
+      console.log('🗑️ Cache memoria invalidata');
+    }
+    
     const MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
                   'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
     
@@ -1530,6 +1566,20 @@
     }
     
     async function caricaPrenotazioni() {
+      // ⚡ FASE 1: Controlla cache memoria (VELOCISSIMA)
+      if (isCacheMemoriaValid()) {
+        console.log('⚡ Cache memoria HIT - Caricamento istantaneo!');
+        prenotazioni = cacheMemoria.prenotazioni;
+        eventi = cacheMemoria.eventi;
+        generaCalendario();
+        if (giornoSelezionato) {
+          mostraPrenotazioniGiorno(giornoSelezionato);
+        }
+        return; // ⚡ Ritorna subito! Nessuna chiamata API
+      }
+      
+      // Cache memoria non valida, carica da API
+      console.log('🔄 Cache miss - Caricamento da API...');
       showLoading('Caricamento prenotazioni...');
       try {
         // Carica prenotazioni ed eventi in parallelo (50% più veloce)
@@ -1554,6 +1604,10 @@
           console.error('Errore API eventi:', resultEventi.errore);
           eventi = [];
         }
+        
+        // ⚡ Salva in cache memoria
+        salvaCacheMemoria(prenotazioni, eventi);
+        
       } catch (error) {
         console.error('Errore caricamento:', error);
         prenotazioni = [];
@@ -1789,6 +1843,7 @@
         const result = await callAPI('eliminaPrenotazione', { id: id });
         
         if (result.successo) {
+          invalidaCacheMemoria(); // ⚡ Invalida cache
           await caricaPrenotazioni();
           
           // Se siamo in gestione evento, riapri evento
@@ -2027,6 +2082,7 @@
           }
           
           chiudiModal();
+          invalidaCacheMemoria(); // ⚡ Invalida cache
           await caricaPrenotazioni();
           alert('✅ Evento creato!');
         }
@@ -2075,6 +2131,7 @@
         }
         
         chiudiModal();
+        invalidaCacheMemoria(); // ⚡ Invalida cache
         
         // Se siamo in gestione evento, riapri evento
         if (eventoCorrente) {
@@ -2155,6 +2212,7 @@
       }
       
       chiudiModal();
+      invalidaCacheMemoria(); // ⚡ Invalida cache
       await caricaPrenotazioni();
       
       // Riapri evento modificato
@@ -2199,6 +2257,7 @@
       
       chiudiModal();
       chiudiPannelloEvento();
+      invalidaCacheMemoria(); // ⚡ Invalida cache
       await caricaPrenotazioni();
       
       alert('✅ Evento eliminato!');
