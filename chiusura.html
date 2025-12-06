@@ -93,23 +93,23 @@
       min-width: 0;
     }
     .spesa-row .spesa-importo { 
-      width: 100px; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; 
+      width: 80px; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; 
       flex-shrink: 0;
     }
     .btn-remove { 
       background: linear-gradient(145deg, #9b5523 0%, #8b4513 100%);
       color: #f4e4c1;
-      border: 3px solid #2c1810;
-      padding: 8px 12px;
-      border-radius: 10px;
+      border: 2px solid #2c1810;
+      padding: 4px 8px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 1em;
+      font-size: 0.9em;
       box-shadow: 
-        0 6px 0 #4a2408,
-        0 8px 12px rgba(0,0,0,0.6),
-        inset 0 2px 0 rgba(255,255,255,0.2),
-        inset 0 -2px 0 rgba(0,0,0,0.3);
+        0 4px 0 #4a2408,
+        0 6px 8px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        inset 0 -1px 0 rgba(0,0,0,0.3);
       transition: all 0.15s;
       position: relative;
       text-shadow: 0 1px 2px rgba(0,0,0,0.5);
@@ -118,34 +118,34 @@
       background: linear-gradient(145deg, #ab6533 0%, #9b5523 100%);
       transform: translateY(-2px);
       box-shadow: 
-        0 8px 0 #4a2408,
-        0 12px 18px rgba(0,0,0,0.7),
-        inset 0 2px 0 rgba(255,255,255,0.25),
-        inset 0 -2px 0 rgba(0,0,0,0.3);
+        0 6px 0 #4a2408,
+        0 10px 14px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        inset 0 -1px 0 rgba(0,0,0,0.3);
     }
     .btn-remove:active {
       transform: translateY(4px);
       box-shadow: 
-        0 2px 0 #4a2408,
-        0 4px 6px rgba(0,0,0,0.5),
+        0 0px 0 #4a2408,
+        0 2px 4px rgba(0,0,0,0.5),
         inset 0 1px 0 rgba(255,255,255,0.15),
         inset 0 -1px 0 rgba(0,0,0,0.4);
     }
     .btn-add { 
       background: linear-gradient(145deg, #e8c494 0%, #d4a574 100%);
       color: #2c1810;
-      border: 3px solid #8b4513;
-      padding: 8px 16px;
-      border-radius: 10px;
+      border: 2px solid #8b4513;
+      padding: 4px 10px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 1em;
+      font-size: 0.9em;
       margin-top: 10px;
       box-shadow: 
-        0 6px 0 #6b3410,
-        0 8px 12px rgba(0,0,0,0.6),
-        inset 0 2px 0 rgba(255,255,255,0.4),
-        inset 0 -2px 0 rgba(0,0,0,0.2);
+        0 4px 0 #6b3410,
+        0 6px 8px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.4),
+        inset 0 -1px 0 rgba(0,0,0,0.2);
       transition: all 0.15s;
       position: relative;
       text-shadow: 0 1px 0 rgba(255,255,255,0.3);
@@ -154,16 +154,16 @@
       background: linear-gradient(145deg, #f4d4a4 0%, #e6b784 100%);
       transform: translateY(-2px);
       box-shadow: 
-        0 8px 0 #6b3410,
-        0 12px 18px rgba(0,0,0,0.7),
-        inset 0 2px 0 rgba(255,255,255,0.5),
-        inset 0 -2px 0 rgba(0,0,0,0.2);
+        0 6px 0 #6b3410,
+        0 10px 14px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.5),
+        inset 0 -1px 0 rgba(0,0,0,0.2);
     }
     .btn-add:active {
       transform: translateY(4px);
       box-shadow: 
-        0 2px 0 #6b3410,
-        0 4px 6px rgba(0,0,0,0.5),
+        0 0px 0 #6b3410,
+        0 2px 4px rgba(0,0,0,0.5),
         inset 0 1px 0 rgba(255,255,255,0.3),
         inset 0 -1px 0 rgba(0,0,0,0.3);
     }
@@ -211,6 +211,18 @@
     .dettaglio-row {
       display: flex; justify-content: space-between; padding: 10px;
       margin-bottom: 5px; background: rgba(255,255,255,0.5); border-radius: 5px;
+    }
+    
+    /* Media Query per Mobile - Mantiene proporzioni corrette */
+    @media (max-width: 768px) {
+      .spesa-row .spesa-desc {
+        flex: 1;
+        min-width: 0;
+      }
+      .spesa-row .spesa-importo {
+        width: 80px;
+        flex-shrink: 0;
+      }
     }
   </style>
 </head>
