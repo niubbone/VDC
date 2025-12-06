@@ -306,7 +306,13 @@
         inset 0 1px 0 rgba(255,255,255,0.2),
         inset 0 -1px 0 rgba(0,0,0,0.4);
     }
-    #loading { text-align: center; padding: 50px; font-size: 1.5em; color: #f4e4c1; }
+    #loading { 
+      text-align: center; 
+      padding: 50px; 
+      font-size: 1.5em; 
+      color: #d4af37;
+      font-style: italic;
+    }
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;
@@ -373,6 +379,12 @@
         width: 80px;
         flex-shrink: 0;
       }
+      .btn-home {
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
     }
   </style>
 </head>
@@ -382,7 +394,7 @@
     <a href="index.html" class="btn-home">🏴‍☠️ Porto</a>
   </div>
   
-  <div id="loading">⏳ Caricamento...</div>
+  <div id="loading">🏴‍☠️ Rovisto tra i registri del capitano...</div>
   
   <div class="container" id="formChiusura" style="display:none;">
     <div class="info-box">
@@ -394,9 +406,6 @@
         <button class="btn-precedente" onclick="mostraChiusuraPrecedente()">
           👀 Vedi Chiusura Precedente
         </button>
-        <div id="loadingPrecedente" style="display:none; margin-top:10px; color:#d4af37; font-style:italic;">
-          🏴‍☠️ Rovisto tra i registri del capitano...
-        </div>
       </div>
     </div>
     
@@ -736,7 +745,9 @@
     
     async function mostraChiusuraPrecedente() {
       try {
-        document.getElementById('loadingPrecedente').style.display = 'block';
+        // Nasconde form e mostra loading principale
+        document.getElementById('formChiusura').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
         
         const oggi = new Date();
         let dati = null;
@@ -757,7 +768,9 @@
         }
         
         if (!giornoTrovato || !dati) {
-          document.getElementById('loadingPrecedente').style.display = 'none';
+          // Ripristina visualizzazione
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('formChiusura').style.display = 'block';
           alert('⚠️ Nessuna chiusura precedente trovata negli ultimi 30 giorni');
           return;
         }
@@ -818,10 +831,14 @@
         `;
         
         document.getElementById('contenutoPrecedente').innerHTML = html;
-        document.getElementById('loadingPrecedente').style.display = 'none';
+        // Nasconde loading e mostra modale
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('formChiusura').style.display = 'block';
         document.getElementById('modalPrecedente').classList.add('active');
       } catch (error) {
-        document.getElementById('loadingPrecedente').style.display = 'none';
+        // Ripristina visualizzazione in caso di errore
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('formChiusura').style.display = 'block';
         alert('⚠️ Errore: ' + error.message);
       }
     }
