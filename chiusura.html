@@ -318,7 +318,7 @@
       font-size: 1.5em; 
       color: #d4af37;
       font-style: italic;
-      background: linear-gradient(rgba(20, 40, 60, 0.40), rgba(20, 40, 60, 0.40)), url('./assets/images/caffe.png');
+      background: linear-gradient(rgba(20, 40, 60, 0.85), rgba(20, 40, 60, 0.85)), url('./assets/images/caffe.png');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
@@ -757,9 +757,8 @@
     
     async function mostraChiusuraPrecedente() {
       try {
-        // Nasconde form e mostra loading principale
-        document.getElementById('formChiusura').style.display = 'none';
-        document.getElementById('loading').style.display = 'block';
+        // Mostra loading sovrapposto (non nasconde form)
+        document.getElementById('loading').style.display = 'flex';
         
         const oggi = new Date();
         let dati = null;
@@ -780,9 +779,8 @@
         }
         
         if (!giornoTrovato || !dati) {
-          // Ripristina visualizzazione
+          // Nasconde loading
           document.getElementById('loading').style.display = 'none';
-          document.getElementById('formChiusura').style.display = 'block';
           alert('⚠️ Nessuna chiusura precedente trovata negli ultimi 30 giorni');
           return;
         }
@@ -845,12 +843,10 @@
         document.getElementById('contenutoPrecedente').innerHTML = html;
         // Nasconde loading e mostra modale
         document.getElementById('loading').style.display = 'none';
-        document.getElementById('formChiusura').style.display = 'block';
         document.getElementById('modalPrecedente').classList.add('active');
       } catch (error) {
-        // Ripristina visualizzazione in caso di errore
+        // Nasconde loading in caso di errore
         document.getElementById('loading').style.display = 'none';
-        document.getElementById('formChiusura').style.display = 'block';
         alert('⚠️ Errore: ' + error.message);
       }
     }
