@@ -187,16 +187,16 @@
       flex-shrink: 0;
     }
     .btn-remove { 
-      background: linear-gradient(145deg, #9b5523 0%, #8b4513 100%);
-      color: #f4e4c1;
-      border: 2px solid #2c1810;
+      background: linear-gradient(145deg, #c62828 0%, #8b0000 100%);
+      color: white;
+      border: 2px solid #6a0000;
       padding: 4px 8px;
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
       font-size: 0.9em;
       box-shadow: 
-        0 4px 0 #4a2408,
+        0 4px 0 #4a0000,
         0 6px 8px rgba(0,0,0,0.6),
         inset 0 1px 0 rgba(255,255,255,0.2),
         inset 0 -1px 0 rgba(0,0,0,0.3);
@@ -205,10 +205,10 @@
       text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
     .btn-remove:hover {
-      background: linear-gradient(145deg, #ab6533 0%, #9b5523 100%);
+      background: linear-gradient(145deg, #d32f2f 0%, #9b0000 100%);
       transform: translateY(-2px);
       box-shadow: 
-        0 6px 0 #4a2408,
+        0 6px 0 #4a0000,
         0 10px 14px rgba(0,0,0,0.7),
         inset 0 1px 0 rgba(255,255,255,0.25),
         inset 0 -1px 0 rgba(0,0,0,0.3);
@@ -216,7 +216,7 @@
     .btn-remove:active {
       transform: translateY(4px);
       box-shadow: 
-        0 0px 0 #4a2408,
+        0 0px 0 #4a0000,
         0 2px 4px rgba(0,0,0,0.5),
         inset 0 1px 0 rgba(255,255,255,0.15),
         inset 0 -1px 0 rgba(0,0,0,0.4);
@@ -307,8 +307,10 @@
         inset 0 -1px 0 rgba(0,0,0,0.4);
     }
     #loading { 
-      text-align: center; 
-      padding: 50px; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
       font-size: 1.5em; 
       color: #d4af37;
       font-style: italic;
