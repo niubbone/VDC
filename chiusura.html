@@ -96,8 +96,47 @@
       width: 100px; padding: 10px; border: 2px solid #8b4513; border-radius: 5px; 
       flex-shrink: 0;
     }
-    .btn-remove { background: #8b0000; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .btn-add { background: #2e8b57; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    .btn-remove { 
+      background: linear-gradient(145deg, #c85555 0%, #a04040 100%);
+      color: white; 
+      border: 2px solid #8b0000; 
+      padding: 10px 15px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: bold;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+      transition: all 0.2s;
+    }
+    .btn-remove:hover {
+      background: linear-gradient(145deg, #d46565 0%, #b05050 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .btn-remove:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .btn-add { 
+      background: linear-gradient(145deg, #5ca67a 0%, #4a8f65 100%);
+      color: white; 
+      border: 2px solid #2e7d4e; 
+      padding: 10px 20px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: bold; 
+      margin-top: 10px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+      transition: all 0.2s;
+    }
+    .btn-add:hover {
+      background: linear-gradient(145deg, #6cb88a 0%, #5a9f75 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    .btn-add:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
     .riepilogo {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
       padding: 20px; border-radius: 10px; border: 3px solid #3d1f0f; margin-top: 20px;
@@ -160,8 +199,8 @@
       <div class="info-item"><strong>Giorno:</strong> <span id="giornoSettimana"></span></div>
       <div class="info-item"><strong>Fondo:</strong> <span id="fondoStart"></span> €</div>
       <div>
-        <button class="btn-precedente" onclick="mostraChiusuraPrecedente()">👁️ Vedi Chiusura Precedente</button>
-        <div id="loadingPrecedente" style="display:none; margin-top:10px; color:#d4af37; font-style:italic;">
+        <button class="btn-precedente" onclick="mostraChiusuraPrecedente()">🔭 Vedi Chiusura Precedente</button>
+        <div id="loadingPrecedente" style="display:none; margin-top:10px; color:#3a2817; background:#f4e4c1; padding:15px 25px; border-radius:5px; font-size:1.1em; font-weight:600; display:inline-block; border:3px solid #8b6f47; box-shadow:inset 0 0 20px rgba(139,111,71,0.2); font-family:'Courier New',monospace; font-style:italic;">
           🏴‍☠️ Rovisto tra i registri del capitano...
         </div>
       </div>
@@ -183,9 +222,6 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-weight: 700; color: #2c1810; font-size: 1.1em;">Fondo End (automatico):</span>
           <span id="fondoEndDisplay" style="font-size: 1.3em; font-weight: 700; color: #2c1810;">0,00 €</span>
-        </div>
-        <div style="margin-top: 5px; font-size: 0.9em; color: #666; font-style: italic;">
-          ℹ️ Calcolato automaticamente dalla somma dei tagli
         </div>
       </div>
       <div class="grid">
@@ -494,10 +530,13 @@
       document.getElementById('riepTotaleCassa').textContent = totaleCassa.toFixed(2) + ' €';
       
       const discEl = document.getElementById('discrepanza');
-      discEl.textContent = `Discrepanza: ${discrepanza.toFixed(2)} €`;
+      // ⚡ Segno + per eccedenze
+      const segno = discrepanza > 0 ? '+' : '';
+      discEl.textContent = `Discrepanza: ${segno}${discrepanza.toFixed(2)} €`;
       discEl.className = 'discrepanza';
-      if (Math.abs(discrepanza) < 0.5) discEl.classList.add('ok');
-      else if (Math.abs(discrepanza) < 20) discEl.classList.add('warning');
+      // ⚡ Nuove soglie: Verde ≤5€, Giallo ≤15€, Rosso >15€
+      if (Math.abs(discrepanza) <= 5) discEl.classList.add('ok');
+      else if (Math.abs(discrepanza) <= 15) discEl.classList.add('warning');
       else discEl.classList.add('error');
     }
     
@@ -573,7 +612,7 @@
             <div class="dettaglio-row"><span>Satispay:</span><span>${dati.satispay.toFixed(2)} €</span></div>
             <div class="dettaglio-row"><span>Report Prodotti:</span><span>${dati.reportProdotti.toFixed(2)} €</span></div>
             <div class="dettaglio-row" style="font-weight:700; background:#ea9999;">
-              <span>⚠️ Discrepanza:</span><span>${dati.discrepanza.toFixed(2)} €</span>
+              <span>⚠️ Discrepanza:</span><span>${dati.discrepanza > 0 ? '+' : ''}${dati.discrepanza.toFixed(2)} €</span>
             </div>
           </div>
           ${tagliHtml}
