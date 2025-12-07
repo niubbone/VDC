@@ -66,31 +66,53 @@
     .btn-home {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
       color: #2c1810;
-      padding: 12px 25px;
-      border: 3px solid #3d1f0f;
+      padding: 8px 20px;
+      border: 2px solid #8b4513;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: 700;
-      font-family: 'Rye', cursive;
+      font-weight: bold;
       font-size: 1em;
-      box-shadow: 0 4px 0 #3d1f0f;
+      box-shadow: 
+        0 5px 0 #6b3410,
+        0 7px 10px rgba(0,0,0,0.6),
+        inset 0 2px 0 rgba(255,255,255,0.4),
+        inset 0 -2px 0 rgba(0,0,0,0.2);
+      transition: all 0.15s;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.3);
       text-decoration: none;
-      transition: all 0.2s;
+      display: inline-block;
+      white-space: nowrap;
+      font-family: 'Rye', cursive;
     }
     
     .btn-home:hover {
+      background: linear-gradient(145deg, #f4c489 0%, #d4a874 100%);
       transform: translateY(-2px);
-      box-shadow: 0 6px 0 #3d1f0f;
+      box-shadow: 
+        0 7px 0 #6b3410,
+        0 11px 16px rgba(0,0,0,0.7),
+        inset 0 2px 0 rgba(255,255,255,0.5),
+        inset 0 -2px 0 rgba(0,0,0,0.2);
     }
     
     .btn-home:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 0 #3d1f0f;
+      transform: translateY(4px);
+      box-shadow: 
+        0 1px 0 #6b3410,
+        0 3px 6px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        inset 0 -1px 0 rgba(0,0,0,0.3);
     }
     
     @media (max-width: 768px) {
       body {
         padding: 10px;
+      }
+      
+      .btn-home {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
       }
       
       .header {
@@ -408,20 +430,40 @@
     }
     
     .btn-nuova {
-      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      background: linear-gradient(145deg, #e8c494 0%, #d4a574 100%);
       color: #2c1810;
-      border: 2px solid #6b4423;
+      border: 2px solid #8b4513;
       padding: 10px 20px;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
       font-family: 'Pirata One';
       font-size: 1.1em;
-      transition: all 0.3s;
+      box-shadow: 
+        0 4px 0 #6b3410,
+        0 6px 8px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.4),
+        inset 0 -1px 0 rgba(0,0,0,0.2);
+      transition: all 0.15s;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.3);
     }
     
     .btn-nuova:hover {
-      background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
+      background: linear-gradient(145deg, #f4d4a4 0%, #e6b784 100%);
       transform: translateY(-2px);
+      box-shadow: 
+        0 6px 0 #6b3410,
+        0 10px 14px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.5),
+        inset 0 -1px 0 rgba(0,0,0,0.2);
+    }
+    
+    .btn-nuova:active {
+      transform: translateY(4px);
+      box-shadow: 
+        0 0px 0 #6b3410,
+        0 2px 4px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        inset 0 -1px 0 rgba(0,0,0,0.3);
     }
     
     /* CARD PRENOTAZIONE */
