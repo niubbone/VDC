@@ -31,8 +31,48 @@
     .header h1 { font-family: 'Pirata One'; font-size: 2em; text-shadow: 2px 2px 0 rgba(0,0,0,0.5); }
     .btn-home {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
-      color: #2c1810; padding: 12px 25px; border: 3px solid #3d1f0f;
-      border-radius: 8px; font-weight: 700; font-family: 'Rye'; text-decoration: none;
+      color: #2c1810;
+      padding: 8px 20px;
+      border: 2px solid #8b4513;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+      font-family: 'Rye', cursive;
+      box-shadow: 
+        0 5px 0 #6b3410,
+        0 7px 10px rgba(0,0,0,0.6),
+        inset 0 2px 0 rgba(255,255,255,0.4),
+        inset 0 -2px 0 rgba(0,0,0,0.2);
+      transition: all 0.15s;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+      text-decoration: none;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .btn-home:hover {
+      background: linear-gradient(145deg, #f4c489 0%, #d4a874 100%);
+      transform: translateY(-2px);
+      box-shadow: 
+        0 7px 0 #6b3410,
+        0 11px 16px rgba(0,0,0,0.7),
+        inset 0 2px 0 rgba(255,255,255,0.5),
+        inset 0 -2px 0 rgba(0,0,0,0.2);
+    }
+    .btn-home:active {
+      transform: translateY(4px);
+      box-shadow: 
+        0 1px 0 #6b3410,
+        0 3px 6px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        inset 0 -1px 0 rgba(0,0,0,0.3);
+    }
+    @media (max-width: 768px) {
+      .btn-home {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
     }
     .container { max-width: 1200px; margin: 0 auto; }
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
