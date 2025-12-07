@@ -293,9 +293,62 @@
         font-size: 1.5em;
       }
     }
+    
+    /* LOADING SPINNER */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .loading-overlay.active {
+      display: flex;
+    }
+    
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid #d4a574;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      color: #d4a574;
+      font-family: 'Pirata One';
+      font-size: 1.5em;
+      margin-top: 20px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <div class="loading-text">Verifico il codice...</div>
+    </div>
+  </div>
+  
   <!-- AUDIO BACKGROUND -->
   <audio id="bgMusic" loop>
     <source src="./assets/audio/musica-sottofondo.mp3" type="audio/mpeg">
@@ -393,8 +446,15 @@
       const pin = document.getElementById('pinInput').value;
       if (!pin) { alert('⚠️ Inserisci il codice segreto!'); return; }
       
+      // Mostra spinner
+      document.getElementById('loadingOverlay').classList.add('active');
+      
       try {
         const result = await callAPI('verificaPIN', { pin: pin });
+        
+        // Nascondi spinner
+        document.getElementById('loadingOverlay').classList.remove('active');
+        
         if (result.valido) {
           sessionStorage.setItem('auth', 'titolare');
           window.location.href = 'dashboard.html';
@@ -403,6 +463,8 @@
           setTimeout(() => document.getElementById('errorePin').style.display = 'none', 3000);
         }
       } catch (error) {
+        // Nascondi spinner anche in caso di errore
+        document.getElementById('loadingOverlay').classList.remove('active');
         alert('⚠️ Errore di connessione: ' + error.message);
       }
     }
