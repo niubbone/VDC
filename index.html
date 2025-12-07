@@ -94,7 +94,26 @@
     .modal-buttons { display: flex; gap: 15px; margin-top: 25px; }
     .modal-buttons button { flex: 1; }
     .btn-cancel {
-      background: linear-gradient(145deg, #8b8b8b 0%, #5a5a5a 100%); color: #f4e4c1;
+      background: linear-gradient(145deg, #558b2f 0%, #33691e 100%);
+      color: white;
+      border: 3px solid #3d1f0f;
+      border-radius: 8px;
+      padding: 18px 30px;
+      font-size: 1.2em;
+      font-weight: 700;
+      font-family: 'Rye', cursive;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #3d1f0f, 0 8px 20px rgba(0,0,0,0.4);
+      transition: all 0.15s;
+    }
+    .btn-cancel:hover {
+      background: linear-gradient(145deg, #689f38 0%, #558b2f 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #3d1f0f, 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .btn-cancel:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 #3d1f0f, 0 4px 10px rgba(0,0,0,0.4);
     }
     #errorePin {
       color: #8b0000; background: #ffcccc; padding: 12px; border-radius: 8px;
@@ -135,15 +154,49 @@
     }
     .btn-add-spesa {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      border: 3px solid #3d1f0f;
+      border-radius: 8px;
+      padding: 18px 30px;
+      font-size: 1.2em;
+      font-weight: 700;
+      font-family: 'Rye', cursive;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #3d1f0f, 0 8px 20px rgba(0,0,0,0.4);
+      transition: all 0.15s;
       width: 100%;
       margin-top: 10px;
     }
+    .btn-add-spesa:hover {
+      background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #3d1f0f, 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .btn-add-spesa:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 #3d1f0f, 0 4px 10px rgba(0,0,0,0.4);
+    }
     .btn-rimuovi-spesa {
-      background: linear-gradient(145deg, #d44 0%, #a22 100%);
+      background: linear-gradient(145deg, #c62828 0%, #8b0000 100%);
       color: white;
+      border: 2px solid #6a0000;
+      border-radius: 5px;
       padding: 8px 15px;
       font-size: 0.9em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #4a0000, 0 5px 10px rgba(0,0,0,0.4);
+      transition: all 0.15s;
       margin-top: 5px;
+    }
+    .btn-rimuovi-spesa:hover {
+      background: linear-gradient(145deg, #d32f2f 0%, #9b0000 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0 #4a0000, 0 7px 15px rgba(0,0,0,0.5);
+    }
+    .btn-rimuovi-spesa:active {
+      transform: translateY(3px);
+      box-shadow: 0 0 0 #4a0000, 0 2px 5px rgba(0,0,0,0.4);
     }
     #messaggioSpese {
       margin-top: 15px;
@@ -279,7 +332,7 @@
   <div id="modalSpeseRapide" class="modal">
     <div class="modal-content">
       <h2>💸 Inserisci Spese</h2>
-      <p style="color: #a67c52; font-size: 0.9em; margin-bottom: 15px;">
+      <p style="color: #000000; font-size: 0.9em; margin-bottom: 15px; font-weight: 600;">
         Le spese saranno aggiunte alla chiusura di oggi
       </p>
       <div id="containerSpese">
@@ -288,7 +341,7 @@
       <button class="btn btn-add-spesa" onclick="aggiungiCampoSpesa()">➕ Aggiungi Altra Spesa</button>
       <div id="messaggioSpese"></div>
       <div class="modal-buttons" style="margin-top: 20px;">
-        <button class="btn btn-cancel" onclick="chiudiModalSpeseRapide()">✕ Chiudi</button>
+        <button class="btn btn-cancel" onclick="chiudiModalSpeseRapide()">💾 Salva e Chiudi</button>
       </div>
     </div>
   </div>
