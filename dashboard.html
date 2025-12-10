@@ -789,8 +789,14 @@
       const satispay = parseFloat(document.getElementById('editSatispay').value) || 0;
       const report = parseFloat(document.getElementById('editReport').value) || 0;
       
+      // ⭐ FIX: Somma le spese
+      let totaleSpese = 0;
+      speseModalCorrente.forEach(spesa => {
+        totaleSpese += parseFloat(spesa.importo) || 0;
+      });
+      
       const totaleContato = cash + pos + satispay;
-      const discrepanza = totaleContato - report;
+      const discrepanza = totaleContato - report - totaleSpese;
       
       const discrepanzaDiv = document.getElementById('discrepanzaModal');
       discrepanzaDiv.textContent = `Discrepanza: ${discrepanza.toFixed(2)} €`;
@@ -829,7 +835,11 @@
       chiudiModalModifica();
       
       try {
-        const saveResult = await callAPI('modificaChiusura', { data: dataChiusuraCorrente, dati: datiModificati });
+        // ⭐ FIX: Passa la data in formato YYYY-MM-DD (già convertita in modificaChiusura)
+        const saveResult = await callAPI('modificaChiusura', { 
+          data: dataChiusuraCorrente, 
+          dati: datiModificati 
+        });
         
         hideLoading();
         
