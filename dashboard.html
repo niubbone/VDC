@@ -784,14 +784,31 @@
     }
     
     function calcolaDiscrepanzaModal() {
+      const fondoStart = parseFloat(document.getElementById('editFondoStart').value) || 0;
+      const fondoEnd = parseFloat(document.getElementById('editFondoEnd').value) || 0;
       const cash = parseFloat(document.getElementById('editCash').value) || 0;
       const pos = parseFloat(document.getElementById('editPOS').value) || 0;
       const satispay = parseFloat(document.getElementById('editSatispay').value) || 0;
       const report = parseFloat(document.getElementById('editReport').value) || 0;
       
-      // ⭐ FIX: Discrepanza = Totale Contato - Report (senza spese)
-      const totaleContato = cash + pos + satispay;
-      const discrepanza = totaleContato - report;
+      // ⭐ FIX: Somma le spese
+      let totaleSpese = 0;
+      speseModalCorrente.forEach(spesa => {
+        totaleSpese += parseFloat(spesa.importo) || 0;
+      });
+      
+      // Formula corretta:
+      // Totale giorno = Cash + POS + Satispay + Spese
+      const totaleGiorno = cash + pos + satispay + totaleSpese;
+      
+      // Diff. Fondo = Fondo End - Fondo Start
+      const diffFondo = fondoEnd - fondoStart;
+      
+      // Totale cassa = Diff. Fondo + Totale giorno
+      const totaleCassa = diffFondo + totaleGiorno;
+      
+      // Discrepanza = Totale cassa - Report
+      const discrepanza = totaleCassa - report;
       
       const discrepanzaDiv = document.getElementById('discrepanzaModal');
       discrepanzaDiv.textContent = `Discrepanza: ${discrepanza.toFixed(2)} €`;
@@ -812,6 +829,9 @@
     async function salvaModificaChiusura() {
       if (!dataChiusuraCorrente) return;
       
+      // ⭐ FIX: Salva la data PRIMA di chiudere il modal
+      const dataPerSalvataggio = dataChiusuraCorrente;
+      
       const speseValide = speseModalCorrente.filter(s => s.descrizione || s.importo > 0);
       
       const datiModificati = {
@@ -830,9 +850,9 @@
       chiudiModalModifica();
       
       try {
-        // ⭐ FIX: Passa la data in formato YYYY-MM-DD (già convertita in modificaChiusura)
+        // ⭐ USA la variabile locale salvata
         const saveResult = await callAPI('modificaChiusura', { 
-          data: dataChiusuraCorrente, 
+          data: dataPerSalvataggio, 
           dati: datiModificati 
         });
         
