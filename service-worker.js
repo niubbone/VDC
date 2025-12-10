@@ -2,7 +2,7 @@
 //  SERVICE WORKER - VECCHIA DOGANA - VERSIONE SEMPLIFICATA
 //  Cambia SOLO questo numero ad ogni aggiornamento ↓
 // ═══════════════════════════════════════════════════════════════════
-const VERSION = '3.9.5';
+const VERSION = '3.9.6';
 // ═══════════════════════════════════════════════════════════════════
 
 // NOTA: Non usiamo cache, quindi questi path sono solo di riferimento
