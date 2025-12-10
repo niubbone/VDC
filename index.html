@@ -716,5 +716,17 @@
       document.getElementById('appVersion').textContent = '2.5';
     }
   </script>
+
+  <!-- TWEMOJI SCRIPT -->
+  <script src="https://cdn.jsdelivr.net/npm/twemoji@latest/dist/twemoji.min.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      twemoji.parse(document.body, {
+        folder: 'svg',
+        ext: '.svg'
+      });
+    });
+  </script>
+
 </body>
 </html>
