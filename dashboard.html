@@ -789,14 +789,9 @@
       const satispay = parseFloat(document.getElementById('editSatispay').value) || 0;
       const report = parseFloat(document.getElementById('editReport').value) || 0;
       
-      // ⭐ FIX: Somma le spese
-      let totaleSpese = 0;
-      speseModalCorrente.forEach(spesa => {
-        totaleSpese += parseFloat(spesa.importo) || 0;
-      });
-      
+      // ⭐ FIX: Discrepanza = Totale Contato - Report (senza spese)
       const totaleContato = cash + pos + satispay;
-      const discrepanza = totaleContato - report - totaleSpese;
+      const discrepanza = totaleContato - report;
       
       const discrepanzaDiv = document.getElementById('discrepanzaModal');
       discrepanzaDiv.textContent = `Discrepanza: ${discrepanza.toFixed(2)} €`;
