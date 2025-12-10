@@ -723,10 +723,21 @@
     window.addEventListener('DOMContentLoaded', () => {
       twemoji.parse(document.body, {
         folder: 'svg',
-        ext: '.svg'
+        ext: '.svg',
+        className: 'emoji-inline'
       });
     });
   </script>
+  <style>
+    /* Emoji inline con dimensione testo */
+    img.emoji-inline {
+      height: 1em;
+      width: 1em;
+      margin: 0 .05em 0 .1em;
+      vertical-align: -0.1em;
+      display: inline-block;
+    }
+  </style>
 
 </body>
 </html>
