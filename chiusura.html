@@ -412,7 +412,12 @@
   <div class="container" id="formChiusura" style="display:none;">
     <div class="info-box">
       <h2>Info Giornaliere</h2>
-      <div class="info-item"><strong>Data:</strong> <span id="dataOggi"></span></div>
+      <div class="info-item">
+        <strong>Data:</strong> 
+        <select id="dataSelect" onchange="cambiaData()" style="padding: 8px; font-size: 1.1em; border-radius: 5px; border: 2px solid #8b4513; background: #fff2cc; font-weight: bold;">
+          <!-- Opzioni popolate dinamicamente -->
+        </select>
+      </div>
       <div class="info-item"><strong>Giorno:</strong> <span id="giornoSettimana"></span></div>
       <div class="info-item"><strong>Fondo:</strong> <span id="fondoStart"></span> €</div>
       <div>
@@ -531,12 +536,138 @@
     let datiGiorno = null;
     let spese = [];
     let modalitaConsultazione = false;
+    let dataSelezionata = null; // ⭐ Nuova variabile per tracciare la data scelta
+    
+    // ⭐ SMART DATE: Determina quali date sono selezionabili
+    function getDateSelezionabili() {
+      const ora = new Date();
+      const oraCorrente = ora.getHours();
+      const oggi = new Date(ora.getFullYear(), ora.getMonth(), ora.getDate());
+      const ieri = new Date(oggi);
+      ieri.setDate(ieri.getDate() - 1);
+      
+      const formatData = (d) => {
+        return {
+          display: `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`,
+          value: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,
+          obj: d
+        };
+      };
+      
+      // ⚡ FINESTRA NOTTURNA 00:01-06:00: Ieri + Oggi
+      if (oraCorrente >= 0 && oraCorrente < 6) {
+        return {
+          opzioni: [formatData(ieri), formatData(oggi)],
+          suggerito: formatData(ieri), // Suggerisci IERI
+          mostraAlert: true,
+          messaggio: `⏰ Sono le ${String(oraCorrente).padStart(2,'0')}:${String(ora.getMinutes()).padStart(2,'0')} - Vuoi registrare la chiusura di IERI o di OGGI?`
+        };
+      }
+      
+      // 📅 ORARIO NORMALE 06:01-23:59: Solo Oggi
+      return {
+        opzioni: [formatData(oggi)],
+        suggerito: formatData(oggi),
+        mostraAlert: false,
+        messaggio: null
+      };
+    }
+    
+    // ⭐ Popola il select con le date disponibili
+    function popolaSelectData() {
+      const config = getDateSelezionabili();
+      const select = document.getElementById('dataSelect');
+      select.innerHTML = '';
+      
+      config.opzioni.forEach((data, index) => {
+        const option = document.createElement('option');
+        option.value = data.value;
+        option.textContent = data.display;
+        if (data.value === config.suggerito.value) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+      
+      // Mostra alert se in finestra notturna
+      if (config.mostraAlert) {
+        if (!sessionStorage.getItem('smart_date_alert_shown')) {
+          alert(config.messaggio);
+          sessionStorage.setItem('smart_date_alert_shown', 'true');
+        }
+      }
+      
+      dataSelezionata = config.suggerito.value;
+      return config.suggerito.value;
+    }
+    
+    // ⭐ Gestisce cambio data dal select
+    async function cambiaData() {
+      const nuovaData = document.getElementById('dataSelect').value;
+      
+      if (nuovaData === dataSelezionata) return;
+      
+      const conferma = confirm(`⚠️ Vuoi cambiare la data di chiusura?\n\nNuova data: ${nuovaData.split('-').reverse().join('/')}`);
+      
+      if (!conferma) {
+        // Ripristina selezione precedente
+        document.getElementById('dataSelect').value = dataSelezionata;
+        return;
+      }
+      
+      // Ricarica i dati per la nuova data
+      document.getElementById('loading').style.display = 'flex';
+      document.getElementById('formChiusura').style.display = 'none';
+      
+      try {
+        datiGiorno = await callAPI('getDatiGiorno', { data: nuovaData });
+        
+        if (datiGiorno.errore) {
+          alert('⚠️ ' + datiGiorno.errore);
+          document.getElementById('dataSelect').value = dataSelezionata;
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('formChiusura').style.display = 'block';
+          return;
+        }
+        
+        // Cerca fondo se mancante
+        if (!datiGiorno.fondoStart || datiGiorno.fondoStart === 0) {
+          const dataObj = new Date(nuovaData);
+          const fondoEndPrecedente = await cercaFondoEndPrecedente(dataObj);
+          if (fondoEndPrecedente > 0) {
+            datiGiorno.fondoStart = fondoEndPrecedente;
+          }
+        }
+        
+        // Aggiorna modalità consultazione
+        modalitaConsultazione = datiGiorno.esisteChiusura;
+        if (datiGiorno.esisteChiusura) {
+          document.getElementById('alertModifica').style.display = 'block';
+          document.getElementById('alertModifica').innerHTML = `
+            ⚠️ <strong>Chiusura già registrata per questa data</strong> - Modalità consultazione
+            <button class="btn-modifica" onclick="abilitaModifica()">🔓 Modifica</button>
+          `;
+        } else {
+          document.getElementById('alertModifica').style.display = 'none';
+          modalitaConsultazione = false;
+        }
+        
+        dataSelezionata = nuovaData;
+        inizializzaForm();
+        
+      } catch (error) {
+        alert('⚠️ Errore: ' + error.message);
+        document.getElementById('dataSelect').value = dataSelezionata;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('formChiusura').style.display = 'block';
+      }
+    }
     
     document.addEventListener('DOMContentLoaded', caricaDatiOggi);
     
     async function caricaDatiOggi() {
-      const oggi = new Date();
-      const dataStr = `${oggi.getFullYear()}-${String(oggi.getMonth()+1).padStart(2,'0')}-${String(oggi.getDate()).padStart(2,'0')}`;
+      // ⭐ SMART DATE: Usa la data suggerita
+      const dataStr = popolaSelectData();
       
       try {
         datiGiorno = await callAPI('getDatiGiorno', { data: dataStr });
@@ -545,7 +676,8 @@
         
         // Se fondoStart è 0 o mancante, cerca fondoEnd del giorno precedente
         if (!datiGiorno.fondoStart || datiGiorno.fondoStart === 0) {
-          const fondoEndPrecedente = await cercaFondoEndPrecedente(oggi);
+          const dataObj = new Date(dataStr);
+          const fondoEndPrecedente = await cercaFondoEndPrecedente(dataObj);
           if (fondoEndPrecedente > 0) {
             datiGiorno.fondoStart = fondoEndPrecedente;
             console.log(`✅ FondoStart impostato da precedente: ${fondoEndPrecedente.toFixed(2)} €`);
@@ -589,7 +721,7 @@
       document.getElementById('loading').style.display = 'none';
       document.getElementById('formChiusura').style.display = 'block';
       
-      document.getElementById('dataOggi').textContent = datiGiorno.data;
+      // ⭐ dataOggi non esiste più, è sostituito da dataSelect
       document.getElementById('giornoSettimana').textContent = datiGiorno.giornoSettimana;
       document.getElementById('fondoStart').textContent = datiGiorno.fondoStart.toFixed(2);
       
@@ -877,7 +1009,7 @@
       });
       
       const dati = {
-        data: datiGiorno.data.split('/').reverse().join('-'),
+        data: dataSelezionata, // ⭐ Usa la data selezionata dal select
         fondoStart: datiGiorno.fondoStart || 0,
         tagli: tagli,
         chiusura: parseFloat(document.getElementById('chiusura').value) || 0,
