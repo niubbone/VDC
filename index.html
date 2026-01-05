@@ -145,40 +145,72 @@
     
     /* MODAL SPESE RAPIDE */
     .spesa-item {
-      background: rgba(255,255,255,0.5);
-      padding: 12px;
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
       border-radius: 8px;
-      margin-bottom: 10px;
-      border: 2px solid rgba(139,69,19,0.3);
-      display: grid;
-      grid-template-columns: 2fr 100px 50px; /* Descrizione ampia, importo stretto, bottone */
-      gap: 10px;
-      align-items: center;
+      margin-bottom: 15px;
+      border: 2px solid rgba(212, 165, 116, 0.3);
     }
-    .spesa-item.spesa-esistente input[type="text"] {
-      background: #f5f5f5;
-      color: #555;
+    .spesa-item.spesa-esistente {
+      background: rgba(255,255,255,0.15);
     }
     .spesa-item.spesa-nuova {
-      background: rgba(144, 238, 144, 0.25);
+      background: rgba(144, 238, 144, 0.15);
       border: 2px dashed #52c652;
     }
-    .spesa-item input[type="text"] {
+    .spesa-item input {
+      width: 100%;
       padding: 10px;
-      border: 2px solid #8b4513;
+      margin-bottom: 10px;
+      border: 2px solid #6b4423;
       border-radius: 5px;
       font-size: 1em;
-      background: #fff;
-      font-family: Georgia, serif;
+      background: #f4e4c1;
+      color: #2c1810;
     }
-    .spesa-item input[type="number"] {
-      padding: 10px;
-      border: 2px solid #8b4513;
+    .spesa-item input[type="text"]:read-only {
+      background: #e0e0e0;
+      color: #555;
+    }
+    .spesa-item input:last-child {
+      margin-bottom: 0;
+    }
+    .sezione-spese {
+      margin-bottom: 20px;
+    }
+    .sezione-title {
+      font-weight: bold;
+      color: #f4e4c1;
+      margin-bottom: 15px;
+      font-size: 1.1em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    .divider {
+      border-top: 2px solid rgba(212, 165, 116, 0.4);
+      margin: 25px 0;
+    }
+    .btn-elimina-inline {
+      background: linear-gradient(145deg, #c62828 0%, #8b0000 100%);
+      color: white;
+      border: 2px solid #6a0000;
       border-radius: 5px;
+      padding: 10px 15px;
       font-size: 1em;
-      background: #fff2cc;
-      font-family: Georgia, serif;
-      font-weight: 600;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 3px 0 #4a0000, 0 5px 10px rgba(0,0,0,0.4);
+      transition: all 0.15s;
+      width: 100%;
+      margin-top: 5px;
+    }
+    .btn-elimina-inline:hover {
+      background: linear-gradient(145deg, #d32f2f 0%, #9b0000 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0 #4a0000, 0 7px 15px rgba(0,0,0,0.5);
+    }
+    .btn-elimina-inline:active {
+      transform: translateY(3px);
+      box-shadow: 0 0 0 #4a0000, 0 2px 5px rgba(0,0,0,0.4);
     }
     .btn-add-spesa {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
@@ -226,58 +258,6 @@
       transform: translateY(3px);
       box-shadow: 0 0 0 #4a0000, 0 2px 5px rgba(0,0,0,0.4);
     }
-    
-    /* ⭐ BOTTONE ELIMINA INLINE - Stile 3D coerente */
-    .btn-elimina-spesa {
-      background: linear-gradient(145deg, #c62828 0%, #8b0000 100%);
-      color: white;
-      border: 2px solid #6a0000;
-      border-radius: 5px;
-      width: 45px;
-      height: 45px;
-      cursor: pointer;
-      font-size: 1.3em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 3px 0 #4a0000, 0 5px 10px rgba(0,0,0,0.4);
-      transition: all 0.15s;
-    }
-    .btn-elimina-spesa:hover {
-      background: linear-gradient(145deg, #d32f2f 0%, #9b0000 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 5px 0 #4a0000, 0 7px 15px rgba(0,0,0,0.5);
-    }
-    .btn-elimina-spesa:active {
-      transform: translateY(3px);
-      box-shadow: 0 0 0 #4a0000, 0 2px 5px rgba(0,0,0,0.4);
-    }
-    
-    /* ⭐ SEZIONI SPESE */
-    .sezione-spese {
-      background: rgba(139,69,19,0.15);
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      border: 2px solid rgba(107,68,35,0.3);
-    }
-    .sezione-title {
-      font-weight: bold;
-      color: #2c1810;
-      margin-bottom: 12px;
-      font-size: 1.1em;
-    }
-    .divider {
-      border-top: 2px solid rgba(61,31,15,0.3);
-      margin: 20px 0;
-    }
-    .messaggio-vuoto {
-      text-align: center;
-      color: #666;
-      font-style: italic;
-      padding: 15px;
-    }
-    
     #messaggioSpese {
       margin-top: 15px;
       padding: 12px;
@@ -465,8 +445,8 @@
   <div id="modalSpeseRapide" class="modal">
     <div class="modal-content">
       <h2>💸 Gestisci Spese</h2>
-      <p style="color: #2c1810; font-size: 0.9em; margin-bottom: 20px; font-weight: 600;">
-        Spese aggiunte alla chiusura di <strong><span id="dataSpeseModal"></span></strong>
+      <p style="color: #f4e4c1; font-size: 0.9em; margin-bottom: 20px; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+        Spese della chiusura di <strong><span id="dataSpeseModal"></span></strong>
       </p>
       
       <!-- SPESE ESISTENTI -->
@@ -486,7 +466,9 @@
       
       <button class="btn btn-add-spesa" onclick="aggiungiCampoSpesa()">➕ Aggiungi Altra Spesa</button>
       <div id="messaggioSpese"></div>
-      <button class="btn btn-cancel" onclick="chiudiModalSpeseRapide()" style="width: 100%; margin-top: 15px;">💾 Salva e Chiudi</button>
+      <div class="modal-buttons" style="margin-top: 20px;">
+        <button class="btn btn-cancel" onclick="chiudiModalSpeseRapide()">💾 Salva e Chiudi</button>
+      </div>
     </div>
   </div>
   
@@ -553,23 +535,24 @@
     });
     
     // ===== GESTIONE SPESE RAPIDE =====
-    let speseEsistenti = []; // Spese già salvate oggi
-    let nuoveSpese = [];     // Nuove spese da aggiungere
-    let dataSpese = null;    // Data delle spese
+    let speseEsistenti = [];
+    let nuoveSpese = [];
+    let dataSpese = null;
     
     async function mostraModalSpeseRapide() {
-      // Calcola data (con logica automatica ore notturne)
+      // ⭐ APERTURA IMMEDIATA (no delay)
+      document.getElementById('modalSpeseRapide').classList.add('active');
+      
+      // Calcola data
       const ora = new Date();
       const oraCorrente = ora.getHours();
       let data;
       
       if (oraCorrente >= 0 && oraCorrente < 4) {
-        // Fascia notturna: usa IERI
         const ieri = new Date(ora);
         ieri.setDate(ieri.getDate() - 1);
         data = new Date(ieri.getFullYear(), ieri.getMonth(), ieri.getDate());
       } else {
-        // Fascia normale: usa OGGI
         data = new Date(ora.getFullYear(), ora.getMonth(), ora.getDate());
       }
       
@@ -578,23 +561,25 @@
       
       document.getElementById('dataSpeseModal').textContent = dataDisplay;
       
-      // Carica spese esistenti
+      nuoveSpese = [];
+      document.getElementById('messaggioSpese').style.display = 'none';
+      
+      // Aggiungi prima spesa vuota subito
+      aggiungiCampoSpesa();
+      
+      // ⭐ Carica spese esistenti in background (async)
+      caricaSpeseEsistenti();
+    }
+    
+    async function caricaSpeseEsistenti() {
       try {
         const datiGiorno = await callAPI('getDatiGiorno', { data: dataSpese });
         speseEsistenti = datiGiorno.spese || [];
+        renderSpeseEsistenti();
       } catch (error) {
         console.error('Errore caricamento spese:', error);
         speseEsistenti = [];
       }
-      
-      nuoveSpese = [];
-      document.getElementById('messaggioSpese').style.display = 'none';
-      
-      renderSpeseEsistenti();
-      renderNuoveSpese();
-      aggiungiCampoSpesa(); // Prima nuova spesa vuota
-      
-      document.getElementById('modalSpeseRapide').classList.add('active');
     }
     
     function renderSpeseEsistenti() {
@@ -615,8 +600,8 @@
         div.innerHTML = `
           <input type="text" value="${spesa.descrizione}" readonly>
           <input type="number" value="${spesa.importo}" step="0.01" min="0" 
-                 onchange="modificaSpesaEsistente(${index}, this.value)">
-          <button class="btn-elimina-spesa" onclick="eliminaSpesaEsistente(${index})" title="Elimina spesa">🗑️</button>
+                 placeholder="Importo €" onchange="modificaSpesaEsistente(${index}, this.value)">
+          <button class="btn-elimina-inline" onclick="eliminaSpesaEsistente(${index})">🗑️ Elimina</button>
         `;
         container.appendChild(div);
       });
@@ -633,9 +618,9 @@
         div.innerHTML = `
           <input type="text" id="nuova-desc-${index}" placeholder="Descrizione spesa..." 
                  value="${spesa.descrizione}" onchange="aggiornaNuovaSpesa(${index})">
-          <input type="number" id="nuova-importo-${index}" placeholder="€" step="0.01" min="0"
+          <input type="number" id="nuova-importo-${index}" placeholder="Importo €" step="0.01" min="0"
                  value="${spesa.importo || ''}" onchange="aggiornaNuovaSpesa(${index})">
-          ${index > 0 ? `<button class="btn-elimina-spesa" onclick="rimuoviNuovaSpesa(${index})">🗑️</button>` : '<div style="width: 45px;"></div>'}
+          ${index > 0 ? `<button class="btn-elimina-inline" onclick="rimuoviNuovaSpesa(${index})">🗑️ Rimuovi</button>` : ''}
         `;
         container.appendChild(div);
       });
@@ -656,7 +641,6 @@
     function aggiungiCampoSpesa() {
       nuoveSpese.push({ descrizione: '', importo: 0 });
       renderNuoveSpese();
-      // Focus sul nuovo campo
       const index = nuoveSpese.length - 1;
       setTimeout(() => {
         const input = document.getElementById(`nuova-desc-${index}`);
@@ -670,7 +654,6 @@
       
       nuoveSpese[index] = { descrizione: desc, importo: importo };
       
-      // Se compilata, salva automaticamente
       if (desc && importo > 0) {
         salvaSpesaAutomatica();
       }
@@ -682,7 +665,6 @@
     }
     
     async function salvaSpesaAutomatica() {
-      // Combina spese esistenti + nuove valide
       const nuoveValide = nuoveSpese.filter(s => s.descrizione && s.importo > 0);
       const tutteSpese = [...speseEsistenti, ...nuoveValide];
       
@@ -694,9 +676,8 @@
           dati: { spese: tutteSpese }
         });
         
-        // Mostra messaggio successo temporaneo
         const msg = document.getElementById('messaggioSpese');
-        msg.textContent = '✅ Spese salvate automaticamente';
+        msg.textContent = '✅ Spese salvate';
         msg.className = 'successo';
         msg.style.display = 'block';
         setTimeout(() => msg.style.display = 'none', 2000);
