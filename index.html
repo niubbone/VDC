@@ -475,113 +475,97 @@
     
     // ===== GESTIONE SPESE RAPIDE =====
     let speseRapide = [];
-    let dataCorrente = null;
     
     function mostraModalSpeseRapide() {
-      // ⭐ Calcola data (logica notturna)
-      const ora = new Date();
-      const oraCorrente = ora.getHours();
-      let data;
-      
-      if (oraCorrente >= 0 && oraCorrente < 4) {
-        const ieri = new Date(ora);
-        ieri.setDate(ieri.getDate() - 1);
-        data = new Date(ieri.getFullYear(), ieri.getMonth(), ieri.getDate());
-      } else {
-        data = new Date(ora.getFullYear(), ora.getMonth(), ora.getDate());
-      }
-      
-      dataCorrente = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
-      
-      // ⭐ APRI SUBITO
-      document.getElementById('modalSpeseRapide').classList.add('active');
+      speseRapide = []; // Reset spese
+      document.getElementById('containerSpese').innerHTML = '';
       document.getElementById('messaggioSpese').style.display = 'none';
-      
-      // Carica in background
-      caricaSpeseEsistenti();
-    }
-    
-    async function caricaSpeseEsistenti() {
-      try {
-        const datiGiorno = await callAPI('getDatiGiorno', { data: dataCorrente });
-        const spese = datiGiorno.spese || [];
-        
-        // Reset
-        speseRapide = [...spese];
-        document.getElementById('containerSpese').innerHTML = '';
-        
-        // Renderizza esistenti + campo vuoto
-        speseRapide.forEach(spesa => aggiungiCampoSpesa(spesa));
-        aggiungiCampoSpesa(); // Campo vuoto finale
-        
-      } catch (error) {
-        console.error('Errore caricamento:', error);
-        speseRapide = [];
-        aggiungiCampoSpesa();
-      }
+      aggiungiCampoSpesa(); // Aggiungi prima spesa
+      document.getElementById('modalSpeseRapide').classList.add('active');
     }
     
     function chiudiModalSpeseRapide() {
       document.getElementById('modalSpeseRapide').classList.remove('active');
     }
     
-    function aggiungiCampoSpesa(spesaIniziale = null) {
+    function aggiungiCampoSpesa() {
       const container = document.getElementById('containerSpese');
-      const index = container.querySelectorAll('.spesa-item').length;
+      const index = speseRapide.length;
       
       const div = document.createElement('div');
       div.className = 'spesa-item';
+      div.id = `spesa-${index}`;
       div.innerHTML = `
-        <input type="text" class="desc-spesa" placeholder="Descrizione spesa" 
-               value="${spesaIniziale?.descrizione || ''}" onchange="salvaTutteLeSpese()">
-        <input type="number" class="importo-spesa" placeholder="Importo (€)" step="0.01" min="0"
-               value="${spesaIniziale?.importo || ''}" onchange="salvaTutteLeSpese()">
-        ${index > 0 || spesaIniziale ? `<button class="btn btn-rimuovi-spesa" onclick="rimuoviSpesa(this)">🗑️ Rimuovi</button>` : ''}
+        <input type="text" id="desc-${index}" placeholder="Descrizione spesa (es: Fornitore X)" 
+               onchange="salvaSpesaAutomatica(${index})">
+        <input type="number" id="importo-${index}" placeholder="Importo (€)" step="0.01" min="0"
+               onchange="salvaSpesaAutomatica(${index})">
+        ${index > 0 ? `<button class="btn btn-rimuovi-spesa" onclick="rimuoviSpesa(${index})">🗑️ Rimuovi</button>` : ''}
       `;
       container.appendChild(div);
       
-      // Focus su primo campo se vuoto
-      if (!spesaIniziale && index === 0) {
-        setTimeout(() => div.querySelector('.desc-spesa').focus(), 100);
+      speseRapide.push({ descrizione: '', importo: 0 });
+      
+      // Focus sul primo input
+      setTimeout(() => document.getElementById(`desc-${index}`).focus(), 100);
+    }
+    
+    function rimuoviSpesa(index) {
+      const elemento = document.getElementById(`spesa-${index}`);
+      if (elemento) {
+        elemento.remove();
+        speseRapide.splice(index, 1);
       }
     }
     
-    function rimuoviSpesa(btn) {
-      btn.closest('.spesa-item').remove();
-      salvaTutteLeSpese();
+    async function salvaSpesaAutomatica(index) {
+      const desc = document.getElementById(`desc-${index}`).value.trim();
+      const importo = parseFloat(document.getElementById(`importo-${index}`).value) || 0;
+      
+      // Aggiorna array locale
+      speseRapide[index] = { descrizione: desc, importo: importo };
+      
+      // Se entrambi i campi sono compilati, salva
+      if (desc && importo > 0) {
+        await inviaSpeseRapide();
+      }
     }
     
-    async function salvaTutteLeSpese() {
-      const container = document.getElementById('containerSpese');
-      const items = container.querySelectorAll('.spesa-item');
+    async function inviaSpeseRapide() {
+      // Filtra solo spese valide
+      const speseValide = speseRapide.filter(s => s.descrizione && s.importo > 0);
       
-      const spese = [];
-      items.forEach(item => {
-        const desc = item.querySelector('.desc-spesa')?.value.trim() || '';
-        const importo = parseFloat(item.querySelector('.importo-spesa')?.value) || 0;
-        if (desc && importo > 0) {
-          spese.push({ descrizione: desc, importo: importo });
-        }
-      });
+      if (speseValide.length === 0) return;
+      
+      const oggi = new Date();
+      const dataStr = `${oggi.getFullYear()}-${String(oggi.getMonth()+1).padStart(2,'0')}-${String(oggi.getDate()).padStart(2,'0')}`;
       
       try {
-        await callAPI('salvaChiusura', {
-          data: dataCorrente,
-          dati: { spese: spese }
+        const result = await callAPI('aggiungiSpeseRapide', {
+          data: dataStr,
+          spese: speseValide
         });
         
         const msg = document.getElementById('messaggioSpese');
-        msg.textContent = '✅ Salvato';
-        msg.className = 'successo';
         msg.style.display = 'block';
-        setTimeout(() => msg.style.display = 'none', 1500);
         
+        if (result.successo) {
+          msg.className = 'successo';
+          msg.textContent = `✅ ${result.messaggio}`;
+          
+          // Chiudi automaticamente dopo 2 secondi
+          setTimeout(() => {
+            chiudiModalSpeseRapide();
+          }, 2000);
+        } else {
+          msg.className = 'errore';
+          msg.textContent = `⚠️ Errore: ${result.errore}`;
+        }
       } catch (error) {
-        console.error('Errore salvataggio:', error);
         const msg = document.getElementById('messaggioSpese');
-        msg.textContent = '⚠️ Errore';
-        msg.className = 'errore';
         msg.style.display = 'block';
+        msg.className = 'errore';
+        msg.textContent = `⚠️ Errore di connessione: ${error.message}`;
       }
     }
     // ===== FINE GESTIONE SPESE RAPIDE =====
