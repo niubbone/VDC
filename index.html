@@ -175,6 +175,22 @@
     .spesa-item input:last-child {
       margin-bottom: 0;
     }
+    /* ⭐ Layout orizzontale su desktop */
+    @media (min-width: 600px) {
+      .spesa-item {
+        display: grid;
+        grid-template-columns: 2fr 130px;
+        gap: 10px;
+        align-items: start;
+      }
+      .spesa-item input {
+        margin-bottom: 0;
+      }
+      .spesa-item .btn-elimina-inline {
+        grid-column: 1 / -1;
+        margin-top: 10px;
+      }
+    }
     .sezione-spese {
       margin-bottom: 20px;
     }
@@ -670,24 +686,50 @@
       
       if (tutteSpese.length === 0) return;
       
+      const msg = document.getElementById('messaggioSpese');
+      
+      // Mostra "Salvataggio..."
+      msg.textContent = '⏳ Salvataggio in corso...';
+      msg.className = '';
+      msg.style.display = 'block';
+      msg.style.background = '#fff2cc';
+      msg.style.color = '#856404';
+      msg.style.border = '2px solid #ffc107';
+      
       try {
-        await callAPI('salvaChiusura', {
+        console.log('📤 Invio spese:', tutteSpese);
+        console.log('📅 Data:', dataSpese);
+        
+        const result = await callAPI('salvaChiusura', {
           data: dataSpese,
           dati: { spese: tutteSpese }
         });
         
-        const msg = document.getElementById('messaggioSpese');
-        msg.textContent = '✅ Spese salvate';
+        console.log('📥 Risposta API:', result);
+        
+        // Mostra successo
+        msg.textContent = `✅ ${tutteSpese.length} spese salvate correttamente`;
         msg.className = 'successo';
         msg.style.display = 'block';
-        setTimeout(() => msg.style.display = 'none', 2000);
+        setTimeout(() => msg.style.display = 'none', 3000);
+        
+        // Aggiorna le spese esistenti con quelle appena salvate
+        speseEsistenti = [...tutteSpese];
+        nuoveSpese = [];
+        renderSpeseEsistenti();
+        renderNuoveSpese();
+        aggiungiCampoSpesa(); // Aggiungi nuovo campo vuoto
         
       } catch (error) {
-        console.error('Errore salvataggio:', error);
-        const msg = document.getElementById('messaggioSpese');
-        msg.textContent = '⚠️ Errore salvataggio';
+        console.error('❌ Errore salvataggio:', error);
+        msg.textContent = `⚠️ Errore: ${error.message || 'Connessione fallita'}`;
         msg.className = 'errore';
         msg.style.display = 'block';
+        
+        // Mantieni l'errore visibile
+        setTimeout(() => {
+          msg.style.opacity = '0.7';
+        }, 5000);
       }
     }
     
