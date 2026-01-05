@@ -644,14 +644,41 @@
     
     function modificaSpesaEsistente(index, nuovoImporto) {
       speseEsistenti[index].importo = parseFloat(nuovoImporto) || 0;
-      salvaSpesaAutomatica();
+      salvaTutteLeSpeseEsistenti();
     }
     
     function eliminaSpesaEsistente(index) {
       if (!confirm(`Eliminare la spesa "${speseEsistenti[index].descrizione}"?`)) return;
       speseEsistenti.splice(index, 1);
       renderSpeseEsistenti();
-      salvaSpesaAutomatica();
+      salvaTutteLeSpeseEsistenti();
+    }
+    
+    // ⭐ Salva TUTTE le spese esistenti (sovrascrive)
+    async function salvaTutteLeSpeseEsistenti() {
+      if (speseEsistenti.length === 0) return;
+      
+      const msg = document.getElementById('messaggioSpese');
+      msg.textContent = '⏳ Salvataggio...';
+      msg.style.display = 'block';
+      msg.style.background = '#fff2cc';
+      msg.style.color = '#856404';
+      
+      try {
+        await callAPI('salvaChiusura', {
+          data: dataSpese,
+          dati: { spese: speseEsistenti }
+        });
+        
+        msg.textContent = '✅ Modifiche salvate';
+        msg.className = 'successo';
+        setTimeout(() => msg.style.display = 'none', 2000);
+        
+      } catch (error) {
+        console.error('❌ Errore:', error);
+        msg.textContent = '⚠️ Errore salvataggio';
+        msg.className = 'errore';
+      }
     }
     
     function aggiungiCampoSpesa() {
@@ -682,9 +709,9 @@
     
     async function salvaSpesaAutomatica() {
       const nuoveValide = nuoveSpese.filter(s => s.descrizione && s.importo > 0);
-      const tutteSpese = [...speseEsistenti, ...nuoveValide];
       
-      if (tutteSpese.length === 0) return;
+      // ⚠️ Se non ci sono nuove spese valide, non fare nulla
+      if (nuoveValide.length === 0) return;
       
       const msg = document.getElementById('messaggioSpese');
       
@@ -697,39 +724,42 @@
       msg.style.border = '2px solid #ffc107';
       
       try {
-        console.log('📤 Invio spese:', tutteSpese);
+        console.log('📤 Invio nuove spese:', nuoveValide);
         console.log('📅 Data:', dataSpese);
         
-        const result = await callAPI('salvaChiusura', {
+        // ⭐ USA API CORRETTA: aggiungiSpeseRapide (non salvaChiusura!)
+        const result = await callAPI('aggiungiSpeseRapide', {
           data: dataSpese,
-          dati: { spese: tutteSpese }
+          spese: nuoveValide
         });
         
         console.log('📥 Risposta API:', result);
         
-        // Mostra successo
-        msg.textContent = `✅ ${tutteSpese.length} spese salvate correttamente`;
-        msg.className = 'successo';
-        msg.style.display = 'block';
-        setTimeout(() => msg.style.display = 'none', 3000);
-        
-        // Aggiorna le spese esistenti con quelle appena salvate
-        speseEsistenti = [...tutteSpese];
-        nuoveSpese = [];
-        renderSpeseEsistenti();
-        renderNuoveSpese();
-        aggiungiCampoSpesa(); // Aggiungi nuovo campo vuoto
+        if (result.successo) {
+          // Mostra successo
+          msg.textContent = `✅ ${result.messaggio}`;
+          msg.className = 'successo';
+          msg.style.display = 'block';
+          setTimeout(() => msg.style.display = 'none', 3000);
+          
+          // Ricarica le spese per mostrare quelle appena salvate
+          await caricaSpeseEsistenti();
+          
+          // Reset nuove spese
+          nuoveSpese = [];
+          renderNuoveSpese();
+          aggiungiCampoSpesa(); // Aggiungi nuovo campo vuoto
+        } else {
+          msg.textContent = `⚠️ ${result.errore || 'Errore sconosciuto'}`;
+          msg.className = 'errore';
+          msg.style.display = 'block';
+        }
         
       } catch (error) {
         console.error('❌ Errore salvataggio:', error);
         msg.textContent = `⚠️ Errore: ${error.message || 'Connessione fallita'}`;
         msg.className = 'errore';
         msg.style.display = 'block';
-        
-        // Mantieni l'errore visibile
-        setTimeout(() => {
-          msg.style.opacity = '0.7';
-        }, 5000);
       }
     }
     
