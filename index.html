@@ -476,60 +476,32 @@
     // ===== GESTIONE SPESE RAPIDE =====
     let speseRapide = [];
     
-    async function mostraModalSpeseRapide() {
-      console.log('🚀 mostraModalSpeseRapide CHIAMATA');
-      
+    function mostraModalSpeseRapide() {
       speseRapide = []; // Reset spese
       document.getElementById('containerSpese').innerHTML = '';
       document.getElementById('messaggioSpese').style.display = 'none';
       
-      // ⭐ APRI SUBITO IL MODAL (no delay)
-      const modal = document.getElementById('modalSpeseRapide');
-      modal.classList.add('active');
-      console.log('✅ Modal aperto, classe active aggiunta');
+      // ⭐ APRI SUBITO
+      document.getElementById('modalSpeseRapide').classList.add('active');
       
-      // Aggiungi subito un campo vuoto
-      aggiungiCampoSpesa();
-      console.log('✅ Campo spesa vuoto aggiunto');
-      
-      // ⭐ Carica spese esistenti IN BACKGROUND (non bloccante)
-      caricaSpeseEsistentiInBackground();
+      // ⭐ Carica spese in background
+      caricaSpeseEsistenti();
     }
     
-    async function caricaSpeseEsistentiInBackground() {
-      console.log('📥 Inizio caricamento spese esistenti...');
-      
-      const ora = new Date();
-      const oraCorrente = ora.getHours();
-      let data;
-      
-      if (oraCorrente >= 0 && oraCorrente < 4) {
-        const ieri = new Date(ora);
-        ieri.setDate(ieri.getDate() - 1);
-        data = new Date(ieri.getFullYear(), ieri.getMonth(), ieri.getDate());
-      } else {
-        data = new Date(ora.getFullYear(), ora.getMonth(), ora.getDate());
-      }
-      
-      const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
-      console.log('📅 Data spese:', dataStr);
+    async function caricaSpeseEsistenti() {
+      const oggi = new Date();
+      const dataStr = `${oggi.getFullYear()}-${String(oggi.getMonth()+1).padStart(2,'0')}-${String(oggi.getDate()).padStart(2,'0')}`;
       
       try {
         const datiGiorno = await callAPI('getDatiGiorno', { data: dataStr });
-        const speseEsistenti = datiGiorno.spese || [];
-        console.log('📋 Spese esistenti trovate:', speseEsistenti.length);
+        const spese = datiGiorno.spese || [];
         
-        // Se ci sono spese, popolale PRIMA del campo vuoto
-        if (speseEsistenti.length > 0) {
-          const container = document.getElementById('containerSpese');
-          
-          // Rimuovi il campo vuoto temporaneo
-          container.innerHTML = '';
-          speseRapide = [];
-          
-          // Aggiungi tutte le spese esistenti
-          speseEsistenti.forEach((spesa, index) => {
+        if (spese.length > 0) {
+          // Popola con spese esistenti
+          spese.forEach(spesa => {
             speseRapide.push(spesa);
+            const container = document.getElementById('containerSpese');
+            const index = speseRapide.length - 1;
             
             const div = document.createElement('div');
             div.className = 'spesa-item';
@@ -543,43 +515,18 @@
             `;
             container.appendChild(div);
           });
-          
-          console.log('✅ Spese esistenti renderizzate');
-          
-          // Aggiungi nuovo campo vuoto alla fine
-          aggiungiCampoSpesa();
         }
       } catch (error) {
-        console.error('❌ Errore caricamento spese:', error);
+        console.error('Errore caricamento:', error);
       }
+      
+      // Aggiungi campo vuoto alla fine
+      aggiungiCampoSpesa();
     }
     
     function chiudiModalSpeseRapide() {
-      console.log('🚪 chiudiModalSpeseRapide CHIAMATA');
       document.getElementById('modalSpeseRapide').classList.remove('active');
     }
-    
-    // ⭐ PREVIENI CHIUSURA ACCIDENTALE AL CLICK FUORI
-    document.addEventListener('DOMContentLoaded', function() {
-      const modal = document.getElementById('modalSpeseRapide');
-      const modalContent = document.querySelector('#modalSpeseRapide .modal-content');
-      
-      modal.addEventListener('click', function(e) {
-        // Chiudi SOLO se click sul background scuro (non sul contenuto)
-        if (e.target === modal) {
-          console.log('⚠️ Click sul background modal - IGNORO (non chiudo)');
-          // NON chiudere - l'utente deve usare il bottone
-          // chiudiModalSpeseRapide();
-        }
-      });
-      
-      // Previeni propagazione click dal contenuto
-      if (modalContent) {
-        modalContent.addEventListener('click', function(e) {
-          e.stopPropagation();
-        });
-      }
-    });
     
     function aggiungiCampoSpesa() {
       const container = document.getElementById('containerSpese');
@@ -604,61 +551,24 @@
     }
     
     async function rimuoviSpesa(index) {
-      console.log('🗑️ Rimozione spesa index:', index);
-      
       const elemento = document.getElementById(`spesa-${index}`);
       if (elemento) {
         elemento.remove();
         speseRapide.splice(index, 1);
         
-        console.log('📊 Array dopo rimozione:', speseRapide);
+        // ⭐ Salva con salvaChiusura per sovrascrivere
+        const speseValide = speseRapide.filter(s => s.descrizione && s.importo > 0);
+        const oggi = new Date();
+        const dataStr = `${oggi.getFullYear()}-${String(oggi.getMonth()+1).padStart(2,'0')}-${String(oggi.getDate()).padStart(2,'0')}`;
         
-        // ⭐ Salva TUTTO l'array (sovrascrive con salvaChiusura)
-        await salvaTutteLeSpese();
-      }
-    }
-    
-    // ⭐ Salva TUTTE le spese (sovrascrive completamente)
-    async function salvaTutteLeSpese() {
-      const speseValide = speseRapide.filter(s => s.descrizione && s.importo > 0);
-      
-      console.log('💾 Salvataggio completo array spese:', speseValide);
-      
-      const ora = new Date();
-      const oraCorrente = ora.getHours();
-      let data;
-      
-      if (oraCorrente >= 0 && oraCorrente < 4) {
-        const ieri = new Date(ora);
-        ieri.setDate(ieri.getDate() - 1);
-        data = new Date(ieri.getFullYear(), ieri.getMonth(), ieri.getDate());
-      } else {
-        data = new Date(ora.getFullYear(), ora.getMonth(), ora.getDate());
-      }
-      
-      const dataStr = `${data.getFullYear()}-${String(data.getMonth()+1).padStart(2,'0')}-${String(data.getDate()).padStart(2,'0')}`;
-      
-      try {
-        // ⭐ USA salvaChiusura per SOVRASCRIVERE (non aggiungere)
-        await callAPI('salvaChiusura', {
-          data: dataStr,
-          dati: { spese: speseValide }
-        });
-        
-        const msg = document.getElementById('messaggioSpese');
-        msg.textContent = '✅ Modifiche salvate';
-        msg.className = 'successo';
-        msg.style.display = 'block';
-        setTimeout(() => msg.style.display = 'none', 2000);
-        
-        console.log('✅ Salvataggio completato');
-        
-      } catch (error) {
-        console.error('❌ Errore salvataggio:', error);
-        const msg = document.getElementById('messaggioSpese');
-        msg.textContent = '⚠️ Errore salvataggio';
-        msg.className = 'errore';
-        msg.style.display = 'block';
+        try {
+          await callAPI('salvaChiusura', {
+            data: dataStr,
+            dati: { spese: speseValide }
+          });
+        } catch (error) {
+          console.error('Errore eliminazione:', error);
+        }
       }
     }
     
