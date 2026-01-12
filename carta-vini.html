@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍷 Carta Vini al Calice - Vecchia Dogana</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    
+    h1 {
+      font-family: 'Pirata One', cursive;
+      color: #2a5298;
+      text-align: center;
+      font-size: 3em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 1.1em;
+      margin-bottom: 30px;
+    }
+    
+    /* Testo Intestazione */
+    .intro-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .intro-section label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2a5298;
+    }
+    
+    .intro-section textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.95em;
+      font-style: italic;
+      resize: vertical;
+    }
+    
+    /* Sezioni Vini */
+    .wine-section {
+      background: white;
+      border: 2px solid #2a5298;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #2a5298;
+    }
+    
+    .section-title {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #2a5298;
+      flex: 1;
+    }
+    
+    .section-icon {
+      font-size: 2em;
+      margin-right: 15px;
+    }
+    
+    /* Selezione Vino */
+    .wine-selector {
+      display: grid;
+      grid-template-columns: 2fr 150px 100px;
+      gap: 15px;
+      align-items: end;
+      margin-bottom: 15px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .form-group label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #555;
+      font-size: 0.9em;
+    }
+    
+    select, input[type="number"] {
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1em;
+      background: white;
+      transition: border-color 0.3s;
+    }
+    
+    select:focus, input:focus {
+      outline: none;
+      border-color: #2a5298;
+    }
+    
+    /* Bottoni */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+    }
+    
+    .btn-add {
+      background: #28a745;
+      color: white;
+    }
+    
+    .btn-add:hover {
+      background: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(40,167,69,0.4);
+    }
+    
+    .btn-remove {
+      background: #dc3545;
+      color: white;
+      padding: 8px 16px;
+      font-size: 0.9em;
+    }
+    
+    .btn-remove:hover {
+      background: #c82333;
+    }
+    
+    /* Lista Vini Selezionati */
+    .selected-wines {
+      margin-top: 20px;
+    }
+    
+    .wine-item {
+      background: #f8f9fa;
+      border-left: 4px solid #2a5298;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .wine-details {
+      flex: 1;
+    }
+    
+    .wine-name {
+      font-weight: bold;
+      color: #2a5298;
+      font-size: 1.1em;
+      margin-bottom: 5px;
+    }
+    
+    .wine-info {
+      color: #666;
+      font-size: 0.9em;
+      font-style: italic;
+    }
+    
+    .wine-price {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #28a745;
+      margin: 0 20px;
+    }
+    
+    /* Genera PDF */
+    .generate-section {
+      margin-top: 40px;
+      text-align: center;
+      padding: 30px;
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+      border-radius: 12px;
+    }
+    
+    .btn-generate {
+      background: #ffc107;
+      color: #000;
+      padding: 20px 50px;
+      font-size: 1.3em;
+      box-shadow: 0 8px 20px rgba(255,193,7,0.3);
+    }
+    
+    .btn-generate:hover {
+      background: #ffca2c;
+      transform: scale(1.05);
+    }
+    
+    .btn-generate:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Loading */
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+      color: white;
+      font-size: 1.2em;
+    }
+    
+    .loading.active {
+      display: block;
+    }
+    
+    /* Messaggio */
+    .message {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      display: none;
+    }
+    
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #c3e6cb;
+      display: block;
+    }
+    
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #f5c6cb;
+      display: block;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .wine-selector {
+        grid-template-columns: 1fr;
+      }
+      
+      h1 {
+        font-size: 2em;
+      }
+      
+      .wine-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .wine-price {
+        margin: 10px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Carta Vini al Calice</h1>
+    <div class="subtitle">Vecchia Dogana - Generatore Rapido</div>
+    
+    <!-- TESTO INTESTAZIONE -->
+    <div class="intro-section">
+      <label>Testo Intestazione</label>
+      <textarea id="introText">Vi presentiamo una selezione di vini frutto della nostra ricerca appassionata e instancabile. Il nostro obiettivo è quello di promuovere e condividere la biodiversità mondiale dei vitigni e valorizzare ogni singolo terroir che lo rappresenta. Buon Viaggio!</textarea>
+    </div>
+    
+    <!-- SEZIONE BOLLICINE -->
+    <div class="wine-section" id="section-bolle">
+      <div class="section-header">
+        <div class="section-title">Bollicine</div>
+      </div>
+      
+      <div class="wine-selector">
+        <div class="form-group">
+          <label>Seleziona Vino</label>
+          <select id="select-bolle">
+            <option value="">-- Caricamento vini... --</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Prezzo Calice (€)</label>
+          <input type="number" id="price-bolle" step="0.5" min="0" placeholder="7.00">
+        </div>
+        
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button class="btn btn-add" onclick="aggiungiVino('bolle')">Aggiungi</button>
+        </div>
+      </div>
+      
+      <div class="selected-wines" id="list-bolle"></div>
+    </div>
+    
+    <!-- SEZIONE BIANCHI -->
+    <div class="wine-section" id="section-bianchi">
+      <div class="section-header">
+        <div class="section-title">Bianchi</div>
+      </div>
+      
+      <div class="wine-selector">
+        <div class="form-group">
+          <label>Seleziona Vino</label>
+          <select id="select-bianchi">
+            <option value="">-- Caricamento vini... --</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Prezzo Calice (€)</label>
+          <input type="number" id="price-bianchi" step="0.5" min="0" placeholder="7.00">
+        </div>
+        
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button class="btn btn-add" onclick="aggiungiVino('bianchi')">Aggiungi</button>
+        </div>
+      </div>
+      
+      <div class="selected-wines" id="list-bianchi"></div>
+    </div>
+    
+    <!-- SEZIONE ROSSI -->
+    <div class="wine-section" id="section-rossi">
+      <div class="section-header">
+        <div class="section-title">Rossi e Rosati</div>
+      </div>
+      
+      <div class="wine-selector">
+        <div class="form-group">
+          <label>Seleziona Vino</label>
+          <select id="select-rossi">
+            <option value="">-- Caricamento vini... --</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Prezzo Calice (€)</label>
+          <input type="number" id="price-rossi" step="0.5" min="0" placeholder="7.00">
+        </div>
+        
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button class="btn btn-add" onclick="aggiungiVino('rossi')">Aggiungi</button>
+        </div>
+      </div>
+      
+      <div class="selected-wines" id="list-rossi"></div>
+    </div>
+    
+    <!-- SEZIONE SPECIALI -->
+    <div class="wine-section" id="section-speciali">
+      <div class="section-header">
+        <div class="section-title">Vini da Meditazione</div>
+      </div>
+      
+      <div class="wine-selector">
+        <div class="form-group">
+          <label>Seleziona Vino</label>
+          <select id="select-speciali">
+            <option value="">-- Caricamento vini... --</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Prezzo Calice (€)</label>
+          <input type="number" id="price-speciali" step="0.5" min="0" placeholder="7.00">
+        </div>
+        
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button class="btn btn-add" onclick="aggiungiVino('speciali')">Aggiungi</button>
+        </div>
+      </div>
+      
+      <div class="selected-wines" id="list-speciali"></div>
+    </div>
+    
+    <!-- GENERA PDF -->
+    <div class="generate-section">
+      <button class="btn btn-generate" id="btnGenera" onclick="generaCarta()">
+        GENERA CARTA VINI
+      </button>
+      <div class="loading" id="loading">⏳ Generazione in corso...</div>
+      <div class="message" id="message"></div>
+    </div>
+  </div>
+  
+  <script>
+    // ⭐ URL API Google Apps Script di CartaQR
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwIhY-mG3pIMos7nFjF-B382QwK8ROqc8TBFC9PJtpVi4IfPw1ug-2ajhKSB_Vl5LNh/exec';
+    
+    // Dati vini caricati da Google Sheets
+    let viniDisponibili = {
+      bolle: [],
+      bianchi: [],
+      rossi: [],
+      speciali: []
+    };
+    
+    // Vini selezionati per la carta
+    let viniSelezionati = {
+      bolle: [],
+      bianchi: [],
+      rossi: [],
+      speciali: []
+    };
+    
+    // ===== CARICAMENTO VINI DA API =====
+    async function caricaVini() {
+      try {
+        const response = await fetch(`${API_URL}?action=getViniPerCartaCalice`);
+        const data = await response.json();
+        
+        if (data.errore) {
+          throw new Error(data.errore);
+        }
+        
+        viniDisponibili = data.vini;
+        
+        // Popola dropdown
+        popolaDropdown('bolle', viniDisponibili.bolle);
+        popolaDropdown('bianchi', viniDisponibili.bianchi);
+        popolaDropdown('rossi', viniDisponibili.rossi);
+        popolaDropdown('speciali', viniDisponibili.speciali);
+        
+      } catch (error) {
+        console.error('Errore caricamento vini:', error);
+        alert('Errore nel caricamento dei vini. Verifica la connessione.');
+      }
+    }
+    
+    function popolaDropdown(categoria, vini) {
+      const select = document.getElementById(`select-${categoria}`);
+      select.innerHTML = '<option value="">-- Seleziona un vino --</option>';
+      
+      vini.forEach((vino, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${vino.nazione} - ${vino.nome}`;
+        select.appendChild(option);
+      });
+    }
+    
+    // ===== AGGIUNGI VINO =====
+    function aggiungiVino(categoria) {
+      const selectId = `select-${categoria}`;
+      const priceId = `price-${categoria}`;
+      
+      const selectEl = document.getElementById(selectId);
+      const priceEl = document.getElementById(priceId);
+      
+      const vinoIndex = selectEl.value;
+      const prezzo = parseFloat(priceEl.value);
+      
+      if (!vinoIndex || vinoIndex === '') {
+        alert('Seleziona un vino!');
+        return;
+      }
+      
+      if (!prezzo || prezzo <= 0) {
+        alert('Inserisci un prezzo valido!');
+        return;
+      }
+      
+      // Limite vini per sezione
+      if (viniSelezionati[categoria].length >= 4) {
+        alert('Massimo 4 vini per sezione!');
+        return;
+      }
+      
+      const vino = { ...viniDisponibili[categoria][vinoIndex], prezzo };
+      viniSelezionati[categoria].push(vino);
+      
+      // Reset campi
+      selectEl.value = '';
+      priceEl.value = '';
+      
+      // Aggiorna lista
+      aggiornaLista(categoria);
+    }
+    
+    // ===== RIMUOVI VINO =====
+    function rimuoviVino(categoria, index) {
+      viniSelezionati[categoria].splice(index, 1);
+      aggiornaLista(categoria);
+    }
+    
+    // ===== AGGIORNA LISTA =====
+    function aggiornaLista(categoria) {
+      const listEl = document.getElementById(`list-${categoria}`);
+      listEl.innerHTML = '';
+      
+      if (viniSelezionati[categoria].length === 0) {
+        listEl.innerHTML = '<p style="color: #999; font-style: italic;">Nessun vino selezionato</p>';
+        return;
+      }
+      
+      viniSelezionati[categoria].forEach((vino, index) => {
+        const div = document.createElement('div');
+        div.className = 'wine-item';
+        div.innerHTML = `
+          <div class="wine-details">
+            <div class="wine-name">${vino.nazione} - ${vino.nome}</div>
+            <div class="wine-info">${vino.aoc} (${vino.vitigni})</div>
+          </div>
+          <div class="wine-price">${vino.prezzo.toFixed(1)}€</div>
+          <button class="btn btn-remove" onclick="rimuoviVino('${categoria}', ${index})">Rimuovi</button>
+        `;
+        listEl.appendChild(div);
+      });
+    }
+    
+    // ===== GENERA CARTA =====
+    async function generaCarta() {
+      // Verifica selezioni
+      const totaleVini = viniSelezionati.bolle.length + 
+                          viniSelezionati.bianchi.length + 
+                          viniSelezionati.rossi.length + 
+                          viniSelezionati.speciali.length;
+      
+      if (totaleVini === 0) {
+        alert('Seleziona almeno un vino!');
+        return;
+      }
+      
+      const introText = document.getElementById('introText').value;
+      
+      // Disabilita bottone
+      const btnGenera = document.getElementById('btnGenera');
+      const loading = document.getElementById('loading');
+      const message = document.getElementById('message');
+      
+      btnGenera.disabled = true;
+      loading.classList.add('active');
+      message.style.display = 'none';
+      
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generaCartaVini',
+            introText: introText,
+            vini: viniSelezionati
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.successo) {
+          message.className = 'message success';
+          message.textContent = `✅ Carta generata! Apri il documento: ${data.docUrl}`;
+          message.style.display = 'block';
+          
+          // Apri il documento
+          window.open(data.docUrl, '_blank');
+        } else {
+          throw new Error(data.errore || 'Errore sconosciuto');
+        }
+        
+      } catch (error) {
+        message.className = 'message error';
+        message.textContent = `❌ Errore: ${error.message}`;
+        message.style.display = 'block';
+      } finally {
+        btnGenera.disabled = false;
+        loading.classList.remove('active');
+      }
+    }
+    
+    // ===== INIT =====
+    window.addEventListener('DOMContentLoaded', () => {
+      // Inizializza liste vuote
+      aggiornaLista('bolle');
+      aggiornaLista('bianchi');
+      aggiornaLista('rossi');
+      aggiornaLista('speciali');
+      
+      // Carica vini
+      caricaVini();
+    });
+  </script>
+</body>
+</html>
