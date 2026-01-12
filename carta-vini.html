@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🍷 Carta Vini al Calice - Vecchia Dogana</title>
+  <title>Carta Vini al Calice - Vecchia Dogana</title>
   <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
@@ -90,15 +91,10 @@
       flex: 1;
     }
     
-    .section-icon {
-      font-size: 2em;
-      margin-right: 15px;
-    }
-    
     /* Selezione Vino */
     .wine-selector {
       display: grid;
-      grid-template-columns: 2fr 150px 100px;
+      grid-template-columns: 2fr 150px 130px;
       gap: 15px;
       align-items: end;
       margin-bottom: 15px;
@@ -128,6 +124,22 @@
     select:focus, input:focus {
       outline: none;
       border-color: #2a5298;
+    }
+    
+    /* Select2 override */
+    .select2-container .select2-selection--single {
+      height: 46px !important;
+      border: 2px solid #ddd !important;
+      border-radius: 8px !important;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 42px !important;
+      padding-left: 12px !important;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 44px !important;
     }
     
     /* Bottoni */
@@ -178,6 +190,21 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: move;
+      transition: all 0.3s;
+    }
+    
+    .wine-item.dragging {
+      opacity: 0.5;
+      transform: scale(1.05);
+    }
+    
+    .wine-item .drag-handle {
+      margin-right: 10px;
+      color: #999;
+      cursor: grab;
+      font-size: 1.2em;
+      user-select: none;
     }
     
     .wine-details {
@@ -423,6 +450,8 @@
     </div>
   </div>
   
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
     // ⭐ URL API Google Apps Script di CartaQR
     const API_URL = 'https://script.google.com/macros/s/AKfycbwIhY-mG3pIMos7nFjF-B382QwK8ROqc8TBFC9PJtpVi4IfPw1ug-2ajhKSB_Vl5LNh/exec';
@@ -468,7 +497,8 @@
     }
     
     function popolaDropdown(categoria, vini) {
-      const select = document.getElementById(`select-${categoria}`);
+      const selectId = `select-${categoria}`;
+      const select = document.getElementById(selectId);
       select.innerHTML = '<option value="">-- Seleziona un vino --</option>';
       
       vini.forEach((vino, index) => {
@@ -477,6 +507,13 @@
         option.textContent = `${vino.nazione} - ${vino.nome}`;
         select.appendChild(option);
       });
+      
+      // Attiva Select2 per ricerca
+      $('#' + selectId).select2({
+        placeholder: '-- Cerca o seleziona un vino --',
+        allowClear: true,
+        width: '100%'
+      });
     }
     
     // ===== AGGIUNGI VINO =====
@@ -484,10 +521,8 @@
       const selectId = `select-${categoria}`;
       const priceId = `price-${categoria}`;
       
-      const selectEl = document.getElementById(selectId);
+      const vinoIndex = $('#' + selectId).val();
       const priceEl = document.getElementById(priceId);
-      
-      const vinoIndex = selectEl.value;
       const prezzo = parseFloat(priceEl.value);
       
       if (!vinoIndex || vinoIndex === '') {
@@ -510,7 +545,7 @@
       viniSelezionati[categoria].push(vino);
       
       // Reset campi
-      selectEl.value = '';
+      $('#' + selectId).val(null).trigger('change');
       priceEl.value = '';
       
       // Aggiorna lista
@@ -536,7 +571,10 @@
       viniSelezionati[categoria].forEach((vino, index) => {
         const div = document.createElement('div');
         div.className = 'wine-item';
+        div.setAttribute('data-index', index);
+        div.draggable = true;
         div.innerHTML = `
+          <span class="drag-handle">⋮⋮</span>
           <div class="wine-details">
             <div class="wine-name">${vino.nazione} - ${vino.nome}</div>
             <div class="wine-info">${vino.aoc} (${vino.vitigni})</div>
@@ -544,8 +582,65 @@
           <div class="wine-price">${vino.prezzo.toFixed(1)}€</div>
           <button class="btn btn-remove" onclick="rimuoviVino('${categoria}', ${index})">Rimuovi</button>
         `;
+        
+        // Drag & Drop
+        div.addEventListener('dragstart', (e) => {
+          div.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', index);
+        });
+        
+        div.addEventListener('dragend', () => {
+          div.classList.remove('dragging');
+        });
+        
+        div.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          const dragging = listEl.querySelector('.dragging');
+          const afterElement = getDragAfterElement(listEl, e.clientY);
+          if (afterElement == null) {
+            listEl.appendChild(dragging);
+          } else {
+            listEl.insertBefore(dragging, afterElement);
+          }
+        });
+        
+        div.addEventListener('drop', (e) => {
+          e.preventDefault();
+          riordinaVini(categoria);
+        });
+        
         listEl.appendChild(div);
       });
+    }
+    
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('.wine-item:not(.dragging)')];
+      
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+    
+    function riordinaVini(categoria) {
+      const listEl = document.getElementById(`list-${categoria}`);
+      const items = listEl.querySelectorAll('.wine-item');
+      const nuovoOrdine = [];
+      
+      items.forEach((item) => {
+        const oldIndex = parseInt(item.getAttribute('data-index'));
+        nuovoOrdine.push(viniSelezionati[categoria][oldIndex]);
+      });
+      
+      viniSelezionati[categoria] = nuovoOrdine;
+      aggiornaLista(categoria);
     }
     
     // ===== GENERA CARTA =====
@@ -575,7 +670,9 @@
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
           body: JSON.stringify({
             action: 'generaCartaVini',
             introText: introText,
@@ -587,16 +684,19 @@
         
         if (data.successo) {
           message.className = 'message success';
-          message.textContent = `✅ Carta generata! Apri il documento: ${data.docUrl}`;
+          message.textContent = '✅ Carta generata con successo!';
           message.style.display = 'block';
           
           // Apri il documento
-          window.open(data.docUrl, '_blank');
+          setTimeout(() => {
+            window.open(data.docUrl, '_blank');
+          }, 500);
         } else {
           throw new Error(data.errore || 'Errore sconosciuto');
         }
         
       } catch (error) {
+        console.error('Errore completo:', error);
         message.className = 'message error';
         message.textContent = `❌ Errore: ${error.message}`;
         message.style.display = 'block';
