@@ -442,6 +442,14 @@
     
     <!-- GENERA PDF -->
     <div class="generate-section">
+      <!-- Checkbox QR Code -->
+      <div style="margin-bottom: 15px; text-align: center;">
+        <label style="cursor: pointer; font-size: 14px;">
+          <input type="checkbox" id="chkIncludiQR" checked style="margin-right: 8px; cursor: pointer;">
+          Includi QR Code
+        </label>
+      </div>
+      
       <button class="btn btn-generate" id="btnGenera" onclick="generaCarta()">
         GENERA CARTA VINI
       </button>
@@ -657,6 +665,7 @@
       }
       
       const introText = document.getElementById('introText').value;
+      const includiQR = document.getElementById('chkIncludiQR').checked; // ⭐ Leggi checkbox
       
       // Disabilita bottone
       const btnGenera = document.getElementById('btnGenera');
@@ -666,6 +675,9 @@
       btnGenera.disabled = true;
       loading.classList.add('active');
       message.style.display = 'none';
+      
+      // Aggiungi includiQR ai vini selezionati
+      viniSelezionati.includiQR = includiQR; // ⭐ Aggiungi al payload
       
       try {
         const response = await fetch(API_URL, {
