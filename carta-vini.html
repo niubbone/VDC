@@ -344,7 +344,7 @@
         
         <div class="form-group">
           <label>Prezzo Calice (€)</label>
-          <input type="number" id="price-bolle" step="0.5" min="0" placeholder="7.00">
+          <input type="number" id="price-bolle" step="0.5" min="0" placeholder="0.00">
         </div>
         
         <div class="form-group">
@@ -372,7 +372,7 @@
         
         <div class="form-group">
           <label>Prezzo Calice (€)</label>
-          <input type="number" id="price-bianchi" step="0.5" min="0" placeholder="7.00">
+          <input type="number" id="price-bianchi" step="0.5" min="0" placeholder="0.00">
         </div>
         
         <div class="form-group">
@@ -400,7 +400,7 @@
         
         <div class="form-group">
           <label>Prezzo Calice (€)</label>
-          <input type="number" id="price-rossi" step="0.5" min="0" placeholder="7.00">
+          <input type="number" id="price-rossi" step="0.5" min="0" placeholder="0.00">
         </div>
         
         <div class="form-group">
@@ -428,7 +428,7 @@
         
         <div class="form-group">
           <label>Prezzo Calice (€)</label>
-          <input type="number" id="price-speciali" step="0.5" min="0" placeholder="7.00">
+          <input type="number" id="price-speciali" step="0.5" min="0" placeholder="0.00">
         </div>
         
         <div class="form-group">
@@ -516,11 +516,52 @@
         select.appendChild(option);
       });
       
-      // Attiva Select2 per ricerca
+      // Attiva Select2 per ricerca diretta
       $('#' + selectId).select2({
         placeholder: '-- Cerca o seleziona un vino --',
         allowClear: true,
-        width: '100%'
+        width: '100%',
+        minimumResultsForSearch: 0, // ⭐ Mostra sempre campo ricerca
+        dropdownAutoWidth: true,
+        language: {
+          noResults: function() {
+            return "Nessun vino trovato";
+          },
+          searching: function() {
+            return "Ricerca in corso...";
+          }
+        }
+      });
+      
+      // ⭐ Focus automatico sul campo ricerca quando si apre
+      $('#' + selectId).on('select2:open', function() {
+        setTimeout(() => {
+          document.querySelector('.select2-search__field').focus();
+        }, 10);
+      });
+      
+      // ⭐ Auto-popola prezzo quando si seleziona un vino
+      $('#' + selectId).on('select2:select', function(e) {
+        const vinoIndex = e.params.data.id;
+        const vino = viniDisponibili[categoria][vinoIndex];
+        const priceId = `price-${categoria}`;
+        const priceInput = document.getElementById(priceId);
+        
+        // Se il vino ha un prezzo predefinito, lo usa, altrimenti lascia vuoto
+        if (vino.calice && parseFloat(vino.calice) > 0) {
+          priceInput.value = parseFloat(vino.calice).toFixed(2);
+        } else {
+          priceInput.value = '';
+        }
+        
+        // Focus sul campo prezzo per facilitare l'editing
+        priceInput.focus();
+      });
+      
+      // Reset prezzo quando si deseleziona
+      $('#' + selectId).on('select2:clear', function() {
+        const priceId = `price-${categoria}`;
+        document.getElementById(priceId).value = '';
       });
     }
     
@@ -699,6 +740,9 @@
           message.textContent = '✅ Carta generata con successo!';
           message.style.display = 'block';
           
+          // ⭐ Salva configurazione in localStorage
+          salvaConfigurazione();
+          
           // Apri il documento
           setTimeout(() => {
             window.open(data.docUrl, '_blank');
@@ -718,6 +762,53 @@
       }
     }
     
+    // ⭐ SALVA CONFIGURAZIONE in localStorage
+    function salvaConfigurazione() {
+      const config = {
+        introText: document.getElementById('introText').value,
+        viniSelezionati: viniSelezionati,
+        includiQR: document.getElementById('chkIncludiQR').checked,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('cartaViniConfig', JSON.stringify(config));
+      console.log('✅ Configurazione salvata');
+    }
+    
+    // ⭐ CARICA ULTIMA CONFIGURAZIONE da localStorage
+    function caricaUltimaConfigurazione() {
+      try {
+        const savedConfig = localStorage.getItem('cartaViniConfig');
+        if (!savedConfig) return;
+        
+        const config = JSON.parse(savedConfig);
+        
+        // Ripristina intro text
+        if (config.introText) {
+          document.getElementById('introText').value = config.introText;
+        }
+        
+        // Ripristina checkbox QR
+        if (config.includiQR !== undefined) {
+          document.getElementById('chkIncludiQR').checked = config.includiQR;
+        }
+        
+        // Ripristina vini selezionati
+        if (config.viniSelezionati) {
+          viniSelezionati = config.viniSelezionati;
+          
+          // Aggiorna tutte le liste
+          aggiornaLista('bolle');
+          aggiornaLista('bianchi');
+          aggiornaLista('rossi');
+          aggiornaLista('speciali');
+        }
+        
+        console.log('✅ Configurazione ripristinata');
+      } catch (error) {
+        console.error('Errore caricamento configurazione:', error);
+      }
+    }
+    
     // ===== INIT =====
     window.addEventListener('DOMContentLoaded', () => {
       // Inizializza liste vuote
@@ -727,7 +818,10 @@
       aggiornaLista('speciali');
       
       // Carica vini
-      caricaVini();
+      caricaVini().then(() => {
+        // ⭐ Dopo aver caricato i vini, ripristina ultima configurazione
+        caricaUltimaConfigurazione();
+      });
     });
   </script>
 </body>
