@@ -740,16 +740,36 @@
         
         if (data.successo) {
           message.className = 'message success';
-          message.textContent = '✅ Carta generata con successo!';
+          message.innerHTML = `
+            ✅ Carta generata con successo!<br><br>
+            <a href="${data.docUrl}" target="_blank" style="
+              display: inline-block;
+              background: linear-gradient(145deg, #4CAF50 0%, #45a049 100%);
+              color: white;
+              padding: 15px 30px;
+              border-radius: 8px;
+              text-decoration: none;
+              font-weight: bold;
+              font-size: 1.1em;
+              box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+              transition: all 0.2s;
+              margin-top: 10px;
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.4)'"
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.3)'">
+              📄 APRI DOCUMENTO GOOGLE
+            </a>
+          `;
           message.style.display = 'block';
           
           // ⭐ Salva configurazione in localStorage
           salvaConfigurazione();
           
-          // Apri il documento
-          setTimeout(() => {
+          // Prova comunque ad aprire (funziona su alcuni browser)
+          try {
             window.open(data.docUrl, '_blank');
-          }, 500);
+          } catch(e) {
+            console.log('Popup bloccato - usa il pulsante');
+          }
         } else {
           throw new Error(data.errore || 'Errore sconosciuto');
         }
