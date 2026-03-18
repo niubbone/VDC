@@ -115,6 +115,28 @@
       transform: translateY(4px);
       box-shadow: 0 0 0 #3d1f0f, 0 4px 10px rgba(0,0,0,0.4);
     }
+    .capitano-menu {
+      display: flex; flex-direction: column; gap: 12px; margin-top: 10px;
+    }
+    .capitano-menu a, .capitano-menu button {
+      display: block; width: 100%;
+      padding: 15px 20px;
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810; border: 3px solid #3d1f0f; border-radius: 8px;
+      font-size: 1.1em; font-weight: 700; font-family: 'Rye', cursive;
+      cursor: pointer; text-align: center; text-decoration: none;
+      box-shadow: 0 4px 0 #3d1f0f, 0 6px 15px rgba(0,0,0,0.4);
+      transition: all 0.15s;
+    }
+    .capitano-menu a:hover, .capitano-menu button:hover {
+      background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
+      transform: translateY(-2px);
+    }
+    .capitano-menu a:active, .capitano-menu button:active {
+      transform: translateY(4px); box-shadow: 0 0 0 #3d1f0f;
+    }
+    #pinSection { display: block; }
+    #capitanoMenu { display: none; }
     #errorePin {
       color: #8b0000; background: #ffcccc; padding: 12px; border-radius: 8px;
       margin-top: 15px; display: none; text-align: center; font-weight: bold; border: 2px solid #8b0000;
@@ -381,16 +403,29 @@
   
   <div id="modalPIN" class="modal">
     <div class="modal-content">
-      <h2>Codice Segreto</h2>
-      <div class="form-group">
-        <label for="pinInput">PIN Capitano:</label>
-        <input type="password" id="pinInput" placeholder="••••" maxlength="4">
+      <h2>🎩 Accesso Capitano</h2>
+
+      <div id="pinSection">
+        <div class="form-group">
+          <label for="pinInput">PIN Capitano:</label>
+          <input type="password" id="pinInput" placeholder="••••" maxlength="4">
+        </div>
+        <div class="modal-buttons">
+          <button class="btn btn-cancel" onclick="chiudiModalPIN()">Indietro</button>
+          <button class="btn btn-primary" onclick="verificaPIN()">Entra</button>
+        </div>
+        <div id="errorePin">⚠️ Codice errato! Riprova.</div>
       </div>
-      <div class="modal-buttons">
-        <button class="btn btn-cancel" onclick="chiudiModalPIN()">Indietro</button>
-        <button class="btn btn-primary" onclick="verificaPIN()">Entra</button>
+
+      <div id="capitanoMenu">
+        <div class="capitano-menu">
+          <a href="dashboard.html">🎩 Quartier Generale</a>
+          <a href="gestione-vini.html">🍷 Gestione Vini</a>
+        </div>
+        <div class="modal-buttons" style="margin-top:15px;">
+          <button class="btn btn-cancel" onclick="chiudiModalPIN()">Esci</button>
+        </div>
       </div>
-      <div id="errorePin">⚠️ Codice errato! Riprova.</div>
     </div>
   </div>
   
@@ -439,6 +474,9 @@
     
     function chiudiModalPIN() {
       document.getElementById('modalPIN').classList.remove('active');
+      document.getElementById('pinSection').style.display = 'block';
+      document.getElementById('capitanoMenu').style.display = 'none';
+      document.getElementById('pinInput').value = '';
       document.getElementById('pinInput').value = '';
       document.getElementById('errorePin').style.display = 'none';
     }
@@ -458,7 +496,8 @@
         
         if (result.valido) {
           sessionStorage.setItem('auth', 'titolare');
-          window.location.href = 'dashboard.html';
+          document.getElementById('pinSection').style.display = 'none';
+          document.getElementById('capitanoMenu').style.display = 'block';
         } else {
           document.getElementById('errorePin').style.display = 'block';
           setTimeout(() => document.getElementById('errorePin').style.display = 'none', 3000);
