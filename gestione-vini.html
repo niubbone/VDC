@@ -648,13 +648,13 @@
       if(w.calice){
         toggleCalice();
         document.getElementById('f-calice').value=w.calice;
-        // Ricava il divisore: imponibile / costo_calice_imp = imponibile / (calice_prezzo/1.1) * 1.1
-        // Oppure: divisore = imponibile / (calice_prezzo/1.1)
-        const calImp = w.calice/1.1;
-        const divisoreCalcolato = w.imponibile / calImp;
-        const divisori = [3.1, 6, 6.1, 8, 12];
-        const più_vicino = divisori.reduce((a,b) => Math.abs(b-divisoreCalcolato)<Math.abs(a-divisoreCalcolato)?b:a);
-        document.getElementById('f-formato').value = più_vicino;
+        // Ricava il divisore da costoCalice (già calcolato dal foglio: imponibile / divisore)
+        if(w.costoCalice && w.imponibile){
+          const divisoreCalcolato = w.imponibile / w.costoCalice;
+          const divisori = [3.1, 6, 6.1, 8, 12];
+          const piuVicino = divisori.reduce((a,b) => Math.abs(b-divisoreCalcolato)<Math.abs(a-divisoreCalcolato)?b:a);
+          document.getElementById('f-formato').value = piuVicino;
+        }
       }
       ricalcola();
       document.getElementById('modalVino').classList.add('active');
