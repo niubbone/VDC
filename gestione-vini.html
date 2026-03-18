@@ -671,7 +671,7 @@
       try {
         const res = await callAPI('getVini');
         if (res.ok) {
-          wineData = res.vini;
+          wineData = res.vini.map(v => ({ ...v, id: v.codice }));
           filtraVini();
         } else {
           alert('Errore caricamento: ' + res.error);
