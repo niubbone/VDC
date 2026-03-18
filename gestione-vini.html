@@ -103,7 +103,9 @@
       border-left: 5px solid var(--cat-color, #2a5298);
       border-radius: 10px; padding: 16px; cursor: pointer;
       transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      user-select: none; -webkit-user-select: none;
     }
+    .wine-card * { pointer-events: none; cursor: pointer; }
     .wine-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(42,82,152,0.15); border-color: #2a5298; }
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
     .card-codice { font-size: 0.72em; color: #999; font-family: monospace; font-weight: bold; }
