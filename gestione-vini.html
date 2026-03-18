@@ -733,7 +733,7 @@
 
     // ── ELIMINA VINO ─────────────────────────────────────────────────
     async function eliminaVino() {
-      if (!confirm('Segnare "' + editingId + '" come abbandonato?')) return;
+      if (!confirm(`Eliminare definitivamente il vino ${editingId}? L'operazione non è reversibile.`)) return;
       showLoading('Eliminazione...');
       try {
         const res = await callAPI('deleteVino', { codice: editingId });
