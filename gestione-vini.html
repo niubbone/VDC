@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍷 Gestione Vini</title>
+  <meta name="theme-color" content="#1e3c72">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      max-width: 1200px; margin: 0 auto 20px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .header h1 {
+      font-family: 'Pirata One', cursive;
+      color: #fff; font-size: 2.2em;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+    }
+    .btn-home {
+      background: rgba(255,255,255,0.15);
+      color: #fff; padding: 9px 20px;
+      border: 2px solid rgba(255,255,255,0.4); border-radius: 8px;
+      font-weight: bold; font-size: 0.95em; cursor: pointer;
+      text-decoration: none; transition: all 0.2s; backdrop-filter: blur(4px);
+    }
+    .btn-home:hover { background: rgba(255,255,255,0.25); }
+
+    /* ── CONTAINER ── */
+    .container {
+      max-width: 1200px; margin: 0 auto;
+      background: rgba(255,255,255,0.97);
+      border-radius: 20px; padding: 28px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+    }
+
+    /* ── TABS ── */
+    .tabs { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .tab {
+      flex: 1; min-width: 120px; padding: 12px 16px;
+      background: #f0f4ff; border: 2px solid #c0cce8; border-radius: 10px;
+      cursor: pointer; font-weight: bold; text-align: center; color: #2a5298;
+      transition: all 0.2s; font-size: 0.95em;
+    }
+    .tab.active { background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%); color: #fff; border-color: #1e3c72; }
+    .tab:hover:not(.active) { background: #dce6ff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── TOOLBAR ── */
+    .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-wrap input {
+      width: 100%; padding: 11px 12px 11px 38px;
+      border: 2px solid #ddd; border-radius: 8px;
+      font-size: 0.95em; transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { outline: none; border-color: #2a5298; }
+    .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #999; }
+
+    /* filtri */
+    .filtri { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .filtro-btn {
+      padding: 6px 14px; border: 2px solid #c0cce8; border-radius: 20px;
+      background: #f0f4ff; color: #2a5298; font-size: 0.85em; cursor: pointer;
+      font-weight: bold; transition: all 0.2s;
+    }
+    .filtro-btn.active, .filtro-btn:hover {
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+      color: #fff; border-color: #1e3c72;
+    }
+
+    .btn-nuovo {
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+      color: #fff; padding: 11px 22px; border: none; border-radius: 8px;
+      font-weight: bold; font-size: 0.95em; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(42,82,152,0.35); transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-nuovo:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(42,82,152,0.5); }
+    .btn-nuovo:active { transform: translateY(0); }
+
+    /* ── WINE GRID ── */
+    .wine-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+    }
+    .wine-card {
+      background: #fff; border: 2px solid #e0e8f8;
+      border-left: 5px solid var(--cat-color, #2a5298);
+      border-radius: 10px; padding: 16px; cursor: pointer;
+      transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .wine-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(42,82,152,0.15); border-color: #2a5298; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .card-codice { font-size: 0.72em; color: #999; font-family: monospace; font-weight: bold; }
+    .card-cat-badge {
+      font-size: 0.72em; padding: 2px 8px; border-radius: 10px;
+      background: #f0f4ff; color: #2a5298; border: 1px solid #c0cce8; font-style: italic;
+    }
+    .card-nome { font-weight: bold; color: #1e3c72; font-size: 0.95em; margin-bottom: 3px; line-height: 1.3; }
+    .card-nazione { font-size: 0.85em; color: #666; font-style: italic; margin-bottom: 10px; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 8px; }
+    .card-prezzo { font-weight: bold; font-size: 1.2em; color: #2a5298; }
+    .card-prezzo small { font-size: 0.65em; color: #888; font-weight: normal; }
+    .card-fornitore { font-size: 0.75em; color: #999; text-align: right; }
+
+    .cat-rossi    { --cat-color: #c0392b; }
+    .cat-bianchi  { --cat-color: #c8a800; }
+    .cat-rosati   { --cat-color: #c0607a; }
+    .cat-bolle    { --cat-color: #2a80b9; }
+    .cat-speciali { --cat-color: #8e44ad; }
+
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 50px; color: #aaa; font-size: 1.05em; }
+
+    /* ── MODALE ── */
+    .modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); z-index: 1000;
+      justify-content: center; align-items: flex-start;
+      padding: 20px; overflow-y: auto; backdrop-filter: blur(3px);
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: #fff; border-radius: 16px;
+      width: 100%; max-width: 780px; margin: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      animation: slideDown 0.25s ease; overflow: hidden;
+    }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+
+    .modal-header {
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+      padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-header h2 { font-family: 'Arial', sans-serif; font-size: 1.1em; font-weight: bold; color: #fff; letter-spacing: 0.3px; }
+    .modal-close { background: none; border: none; color: rgba(255,255,255,0.8); font-size: 1.7em; cursor: pointer; line-height: 1; transition: color 0.2s; }
+    .modal-close:hover { color: #fff; }
+
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      padding: 16px 24px; background: #f8f9fc;
+      border-top: 2px solid #e8eef8;
+      display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;
+    }
+
+    /* sheet toggle */
+    .sheet-toggle { display: flex; gap: 0; margin-bottom: 20px; border: 2px solid #c0cce8; border-radius: 8px; overflow: hidden; }
+    .sheet-btn {
+      flex: 1; padding: 10px; background: #f0f4ff;
+      border: none; color: #2a5298; font-weight: bold; font-size: 0.9em;
+      cursor: pointer; transition: all 0.2s; border-right: 1px solid #c0cce8;
+    }
+    .sheet-btn:last-child { border-right: none; }
+    .sheet-btn.active { background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%); color: #fff; }
+
+    /* form */
+    .form-divider {
+      font-weight: bold; color: #2a5298; font-size: 0.9em;
+      display: flex; align-items: center; gap: 10px;
+      margin: 20px 0 15px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .form-divider::before, .form-divider::after { content:''; flex:1; height:2px; background:#e0e8f8; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+    .form-full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-weight: bold; font-size: 0.82em; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
+    .form-group label .req { color: #c0392b; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 12px; border: 2px solid #ddd; border-radius: 8px;
+      font-size: 0.95em; font-family: 'Arial', sans-serif;
+      transition: border-color 0.2s; background: #fff; color: #222;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #2a5298; }
+    .form-group textarea { resize: vertical; min-height: 75px; }
+    .form-group input[readonly] {
+      background: #f0f4ff; color: #2a5298; font-weight: bold;
+      border-color: #c0cce8; cursor: default;
+    }
+
+    /* calcoli */
+    .calc-box {
+      background: #f8faff; border: 2px solid #dce6f8;
+      border-radius: 10px; padding: 16px; margin-bottom: 16px;
+    }
+    .calc-box-title {
+      font-weight: bold; color: #2a5298; font-size: 0.9em;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 14px; padding-bottom: 8px;
+      border-bottom: 2px solid #dce6f8; display: flex; align-items: center; gap: 6px;
+    }
+    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .calc-item { display: flex; flex-direction: column; gap: 3px; }
+    .calc-label { font-size: 0.72em; color: #888; text-transform: uppercase; letter-spacing: 0.3px; }
+    .calc-value { font-family: 'Georgia', serif; font-size: 1.05em; font-weight: bold; color: #1e3c72; }
+    .calc-value.accent { color: #2a5298; }
+
+    .margin-bar-wrap { margin-top: 12px; }
+    .margin-bar-label { display: flex; justify-content: space-between; font-size: 0.78em; color: #888; margin-bottom: 4px; }
+    .margin-bar { height: 8px; background: #e0e8f8; border-radius: 4px; overflow: hidden; }
+    .margin-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; background: linear-gradient(90deg, #2a5298, #5b8dee); }
+
+    /* toggle */
+    .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .toggle-label { font-size: 0.88em; font-weight: bold; color: #555; cursor: pointer; text-transform: uppercase; letter-spacing: 0.3px; }
+    .toggle-switch {
+      width: 40px; height: 22px; background: #ddd;
+      border-radius: 11px; position: relative; cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-switch.on { background: #2a5298; }
+    .toggle-switch::after {
+      content:''; position: absolute; width:14px; height:14px;
+      background: #fff; border-radius: 50%; top:4px; left:4px;
+      transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch.on::after { left: 22px; }
+    .collapsible { display: none; }
+    .collapsible.visible { display: block; }
+
+    /* checkbox */
+    .check-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+    .check-row input[type=checkbox] { width: 17px; height: 17px; accent-color: #2a5298; cursor: pointer; }
+    .check-row label { font-size: 0.9em; color: #555; cursor: pointer; font-weight: bold; }
+
+    /* bottoni */
+    .btn {
+      padding: 11px 22px; border-radius: 8px;
+      font-weight: bold; font-size: 0.9em; cursor: pointer;
+      border: none; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .btn-primary { background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%); color: #fff; box-shadow: 0 4px 12px rgba(42,82,152,0.3); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(42,82,152,0.45); }
+    .btn-secondary { background: #f0f4ff; color: #2a5298; border: 2px solid #c0cce8; }
+    .btn-secondary:hover { background: #dce6ff; }
+    .btn-danger { background: #fff0f0; color: #c0392b; border: 2px solid #f5c6cb; margin-right: auto; }
+    .btn-danger:hover { background: #ffe0e0; }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .calc-grid { grid-template-columns: 1fr 1fr; }
+      .header h1 { font-size: 1.5em; }
+      .container { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING -->
+  <div id="loadingOverlay" style="display:none;position:fixed;inset:0;background:rgba(30,60,114,0.75);z-index:9999;justify-content:center;align-items:center;backdrop-filter:blur(3px);">
+    <div style="text-align:center;color:#fff;">
+      <div style="font-size:2.5em;margin-bottom:12px;animation:spin 1s linear infinite">⚓</div>
+      <div id="loadingText" style="font-family:'Pirata One',cursive;font-size:1.3em;letter-spacing:1px;">Caricamento...</div>
+    </div>
+  </div>
+  <style>@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}</style>
+
+  <div class="header">
+    <h1>🍷 Gestione Vini</h1>
+    <a href="index.html" class="btn-home">🏴‍☠️ Porto</a>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" onclick="mostraTab('elenco', this)">📜 Elenco Vini</div>
+      <div class="tab" onclick="mostraTab('statistiche', this)">📊 Statistiche</div>
+    </div>
+
+    <div id="elenco" class="tab-content active">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Cerca nome, nazione, fornitore…" oninput="filtraVini()">
+        </div>
+        <button class="btn-nuovo" onclick="apriNuovoVino()">+ Nuovo Vino</button>
+      </div>
+      <div class="filtri">
+        <button class="filtro-btn active" onclick="setFiltro(this,'tutti')">Tutti</button>
+        <button class="filtro-btn" onclick="setFiltro(this,'I Rossi')">🔴 Rossi</button>
+        <button class="filtro-btn" onclick="setFiltro(this,'I Bianchi')">⚪ Bianchi</button>
+        <button class="filtro-btn" onclick="setFiltro(this,'I Rosati')">🌸 Rosati</button>
+        <button class="filtro-btn" onclick="setFiltro(this,'Le Bolle')">🫧 Bolle</button>
+        <button class="filtro-btn" onclick="setFiltro(this,'I Vini Speciali')">✨ Speciali</button>
+      </div>
+      <div class="wine-grid" id="wineGrid"></div>
+    </div>
+
+    <div id="statistiche" class="tab-content">
+      <div style="padding:40px; text-align:center; color:#aaa; font-style:italic;">
+        Prossimamente — ricarichi medi, distribuzione per nazione, vini in carta vs totale.
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ MODALE ════════════════════ -->
+  <div class="modal" id="modalVino" onclick="chiudiSeOutside(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitolo">⚓ Nuovo Vino</h2>
+        <button class="modal-close" onclick="chiudiModale()">×</button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="sheet-toggle">
+          <button class="sheet-btn active" id="btnDist" onclick="setSheet('DIST')">📦 Distributori (D-)</button>
+          <button class="sheet-btn" id="btnImport" onclick="setSheet('IMPORT')">🚢 Import (I-)</button>
+        </div>
+
+        <div class="form-divider">📋 Dati Vino</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nazione <span class="req">*</span></label>
+            <input type="text" id="f-nazione" list="list-nazioni" oninput="ricalcola()">
+            <datalist id="list-nazioni">
+              <option>Argentina</option><option>Australia</option><option>Austria</option>
+              <option>Bulgaria</option><option>Canada</option><option>Cile</option><option>Cina</option>
+              <option>Croazia</option><option>Francia</option><option>Germania</option><option>Grecia</option>
+              <option>Libano</option><option>Marocco</option><option>Nuova Zelanda</option>
+              <option>Portogallo</option><option>Romania</option><option>Slovenia</option>
+              <option>Spagna</option><option>Sud Africa</option><option>Ungheria</option><option>USA</option>
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label>Nome vino (interno) <span class="req">*</span></label>
+            <input type="text" id="f-vino" placeholder="es. Thalvin - Tandem Rosé">
+          </div>
+          <div class="form-group">
+            <label>Imponibile (€) <span class="req">*</span></label>
+            <input type="number" id="f-imponibile" step="0.01" min="0" placeholder="0.00" oninput="ricalcola()">
+          </div>
+          <div class="form-group" id="wrap-ss" style="display:none">
+            <label>Spese Spedizione (SS)</label>
+            <input type="number" id="f-ss" step="0.01" min="0" value="1.00" oninput="ricalcola()">
+          </div>
+          <div class="form-group" id="wrap-ivato">
+            <label>Costo Bottiglia ivato</label>
+            <input type="text" id="f-costo-ivato" readonly placeholder="—">
+          </div>
+          <div class="form-group">
+            <label>Fornitore</label>
+            <input type="text" id="f-fornitore" list="list-fornitori">
+            <datalist id="list-fornitori">
+              <option>A Piedi Nudi</option><option>Abbondanza</option><option>Cavalli</option>
+              <option>Cave de Pyrene</option><option>Ceretto</option><option>Elemento Indigeno</option>
+              <option>Ellenika</option><option>Gemma</option><option>MJ Selections</option>
+              <option>Proposta Vini</option><option>STC Wine</option><option>Sarzi</option>
+              <option>Velier</option><option>Vino e Design</option><option>World of Flavours</option>
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label>Categoria Costo</label>
+            <select id="f-cat-costo">
+              <option value="">— seleziona —</option>
+              <option>FERMI</option><option>BOLLICINE</option>
+              <option>CHAMPAGNE</option><option>SPECIALI</option>
+            </select>
+          </div>
+          <div class="form-group" style="justify-content:flex-end; padding-top:20px;">
+            <div class="check-row">
+              <input type="checkbox" id="f-abbandonato">
+              <label for="f-abbandonato">Abbandonato</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calcoli bottiglia -->
+        <div class="calc-box">
+          <div class="calc-box-title">⚖️ Prezzo al Tavolo</div>
+          <div class="form-grid" style="margin-bottom:12px;">
+            <div class="form-group">
+              <label>Prezzo automatico (formula)</label>
+              <input type="text" id="f-tavolo-aut" readonly placeholder="—">
+            </div>
+            <div class="form-group">
+              <label>Prezzo listino (definitivo) <span class="req">*</span></label>
+              <input type="number" id="f-tavolo-listino" step="1" min="0" placeholder="0" oninput="ricalcolaBottiglia()">
+            </div>
+          </div>
+          <div class="calc-grid">
+            <div class="calc-item"><div class="calc-label">Ricarico (x)</div><div class="calc-value" id="c-ric-x">—</div></div>
+            <div class="calc-item"><div class="calc-label">Ricarico (€ imp)</div><div class="calc-value" id="c-ric-eur">—</div></div>
+            <div class="calc-item"><div class="calc-label">Asporto -30%</div><div class="calc-value" id="c-asporto">—</div></div>
+            <div class="calc-item"><div class="calc-label">Bott. a pareggio</div><div class="calc-value accent" id="c-nbott">—</div></div>
+          </div>
+          <div class="margin-bar-wrap">
+            <div class="margin-bar-label"><span>Margine sul listino</span><span id="c-margin-pct">—</span></div>
+            <div class="margin-bar"><div class="margin-bar-fill" id="c-margin-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <!-- Calice -->
+        <div class="toggle-row">
+          <div class="toggle-switch" id="caliceToggle" onclick="toggleCalice()"></div>
+          <span class="toggle-label" onclick="toggleCalice()">🥂 Venduto al calice</span>
+        </div>
+        <div class="collapsible" id="caliceSection">
+          <div class="calc-box">
+            <div class="calc-box-title">🥂 Prezzo al Calice</div>
+            <div class="form-grid" style="margin-bottom:12px;">
+              <div class="form-group form-full">
+                <label>Formato bottiglia</label>
+                <select id="f-formato" onchange="ricalcolaCalice()">
+                  <option value="6.1">0,75 L — 6,1 calici (standard)</option>
+                  <option value="3.1">0,375 L — 3,1 calici (mezza)</option>
+                  <option value="6">Speciale — 6 calici</option>
+                  <option value="8">Speciale — 8 calici</option>
+                  <option value="12">Speciale — 12 calici</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Prezzo calice (€ ivato)</label>
+                <input type="number" id="f-calice" step="0.5" min="0" placeholder="0.00" oninput="ricalcolaCalice()">
+              </div>
+              <div class="form-group">
+                <label>Ricavo calice (ivato)</label>
+                <input type="text" id="f-calice-ricavo" readonly placeholder="—">
+              </div>
+            </div>
+            <div class="calc-grid">
+              <div class="calc-item"><div class="calc-label">Ricarico (x)</div><div class="calc-value" id="cc-ric-x">—</div></div>
+              <div class="calc-item"><div class="calc-label">Ricarico (€ imp)</div><div class="calc-value" id="cc-ric-eur">—</div></div>
+              <div class="calc-item"><div class="calc-label">Costo calice (imp)</div><div class="calc-value" id="cc-costo">—</div></div>
+              <div class="calc-item"><div class="calc-label">Margine calice</div><div class="calc-value accent" id="cc-margine">—</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Carta vini -->
+        <div class="form-divider">📜 Carta Vini</div>
+        <div class="check-row" style="margin-bottom:15px;">
+          <input type="checkbox" id="f-incarta">
+          <label for="f-incarta">In carta</label>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nome in carta</label>
+            <input type="text" id="f-nome-carta" placeholder="es. Thalvin-Graillot - Tandem Rosé">
+          </div>
+          <div class="form-group">
+            <label>Categoria carta</label>
+            <select id="f-cat-carta">
+              <option value="">— seleziona —</option>
+              <option>I Rossi</option><option>I Bianchi</option>
+              <option>I Rosati</option><option>Le Bolle</option>
+              <option>I Vini Speciali</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>AOG / AOC / Denominazione</label>
+            <input type="text" id="f-aoc" placeholder="es. Zenata AOG">
+          </div>
+          <div class="form-group">
+            <label>Vitigni</label>
+            <input type="text" id="f-vitigni" placeholder="es. Cinsault 100%">
+          </div>
+          <div class="form-group form-full">
+            <label>Descrizione (carta)</label>
+            <textarea id="f-descrizione" placeholder="Descrizione per la carta vini…"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="btnElimina" onclick="eliminaVino()" style="display:none">🗑 Elimina</button>
+        <button class="btn btn-secondary" onclick="chiudiModale()">Annulla</button>
+        <button class="btn btn-primary" onclick="salvaVino()">Salva Vino</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── CONFIG ──────────────────────────────────────────────────────
+    const API_URL = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
+
+    async function callAPI(action, data = {}) {
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, ...data })
+        });
+        return await res.json();
+      } catch(err) {
+        console.error('Errore API:', err);
+        throw err;
+      }
+    }
+
+    function showLoading(msg = 'Caricamento...') {
+      document.getElementById('loadingText').textContent = msg;
+      document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+    function hideLoading() {
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // ── DATI ────────────────────────────────────────────────────────
+    let wineData = [];  // popolato da loadVini()
+
+    let currentSheet = 'DIST', filtroAttivo = 'tutti', editingId = null, caliceOn = false;
+
+    function costoDist(i) { return i * 1.22; }
+    function costoImport(i, ss) { return i + (ss||0); }
+    function tavoloAut(c, sh) {
+      if (sh==='DIST') { if(c>=50) return c*1.8; if(c>=25) return c*2.2; if(c>15) return c*2.6; return c*3; }
+      return c<=15 ? c*3+5 : c*2.6+5;
+    }
+    function fmt(n) { return isNaN(n)||!n ? '—' : '€'+n.toFixed(2); }
+    function fmtX(n) { return isNaN(n)||!n ? '—' : n.toFixed(2)+'x'; }
+
+    function ricalcola() {
+      const imp = parseFloat(document.getElementById('f-imponibile').value)||0;
+      const ss  = parseFloat(document.getElementById('f-ss').value)||0;
+      const costo = currentSheet==='DIST' ? costoDist(imp) : costoImport(imp,ss);
+      document.getElementById('f-costo-ivato').value = imp>0 ? '€'+costo.toFixed(2) : '';
+      const aut = imp>0 ? tavoloAut(costo,currentSheet) : NaN;
+      document.getElementById('f-tavolo-aut').value = !isNaN(aut) ? '€'+aut.toFixed(2) : '';
+      ricalcolaBottiglia(); ricalcolaCalice();
+    }
+    function ricalcolaBottiglia() {
+      const imp=parseFloat(document.getElementById('f-imponibile').value)||0;
+      const ss=parseFloat(document.getElementById('f-ss').value)||0;
+      const listino=parseFloat(document.getElementById('f-tavolo-listino').value)||0;
+      if(!imp||!listino){['c-ric-x','c-ric-eur','c-asporto','c-nbott'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('c-margin-pct').textContent='—';document.getElementById('c-margin-bar').style.width='0%';return;}
+      const costo=currentSheet==='DIST'?costoDist(imp):costoImport(imp,ss);
+      const lImp=listino/1.1, ricX=lImp/imp, ricEur=lImp-imp, margin=(ricEur/lImp)*100;
+      document.getElementById('c-ric-x').textContent=fmtX(ricX);
+      document.getElementById('c-ric-eur').textContent=fmt(ricEur);
+      document.getElementById('c-asporto').textContent=fmt(listino*0.7);
+      document.getElementById('c-nbott').textContent=(costo/(listino-costo)).toFixed(1)+' bott.';
+      document.getElementById('c-margin-pct').textContent=margin.toFixed(0)+'%';
+      document.getElementById('c-margin-bar').style.width=Math.min(100,Math.max(0,margin))+'%';
+    }
+    function ricalcolaCalice() {
+      const imp=parseFloat(document.getElementById('f-imponibile').value)||0;
+      const cal=parseFloat(document.getElementById('f-calice').value)||0;
+      const div=parseFloat(document.getElementById('f-formato').value)||6.1;
+      if(!imp||!cal){['cc-ric-x','cc-ric-eur','cc-costo','cc-margine'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('f-calice-ricavo').value='';return;}
+      const cc=imp/div, cImp=cal/1.1;
+      document.getElementById('cc-ric-x').textContent=fmtX(cImp/cc);
+      document.getElementById('cc-ric-eur').textContent=fmt(cImp-cc);
+      document.getElementById('cc-costo').textContent=fmt(cc);
+      document.getElementById('cc-margine').textContent=((cImp-cc)/cImp*100).toFixed(0)+'%';
+      document.getElementById('f-calice-ricavo').value='€'+(cal/div).toFixed(2);
+    }
+
+    function setSheet(sh) {
+      currentSheet=sh;
+      document.getElementById('btnDist').classList.toggle('active',sh==='DIST');
+      document.getElementById('btnImport').classList.toggle('active',sh==='IMPORT');
+      document.getElementById('wrap-ss').style.display=sh==='IMPORT'?'':'none';
+      document.getElementById('wrap-ivato').style.display=sh==='DIST'?'':'none';
+      ricalcola();
+    }
+    function toggleCalice() {
+      caliceOn=!caliceOn;
+      document.getElementById('caliceToggle').classList.toggle('on',caliceOn);
+      document.getElementById('caliceSection').classList.toggle('visible',caliceOn);
+    }
+    function catClass(cat) {
+      if(!cat) return '';
+      if(cat.includes('Rossi')) return 'cat-rossi';
+      if(cat.includes('Bianchi')) return 'cat-bianchi';
+      if(cat.includes('Rosati')) return 'cat-rosati';
+      if(cat.includes('Bolle')) return 'cat-bolle';
+      if(cat.includes('Speciali')) return 'cat-speciali';
+      return '';
+    }
+    function setFiltro(btn,val) {
+      document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active'); filtroAttivo=val; filtraVini();
+    }
+    function filtraVini() {
+      const q=document.getElementById('searchInput').value.toLowerCase();
+      let wines=wineData.filter(w=>!w.abbandonato);
+      if(filtroAttivo!=='tutti') wines=wines.filter(w=>w.catCarta===filtroAttivo);
+      if(q) wines=wines.filter(w=>(w.vino||'').toLowerCase().includes(q)||(w.nomeCarta||'').toLowerCase().includes(q)||(w.nazione||'').toLowerCase().includes(q)||(w.fornitore||'').toLowerCase().includes(q));
+      const grid=document.getElementById('wineGrid');
+      if(!wines.length){grid.innerHTML='<div class="empty-state">Nessun vino trovato</div>';return;}
+      grid.innerHTML=wines.map(w=>`
+        <div class="wine-card ${catClass(w.catCarta)}" onclick="apriModifica('${w.id}')">
+          <div class="card-header"><span class="card-codice">${w.id}</span>${w.catCarta?`<span class="card-cat-badge">${w.catCarta}</span>`:''}</div>
+          <div class="card-nome">${w.nomeCarta||w.vino}</div>
+          <div class="card-nazione">${w.nazione}${w.aoc?' · '+w.aoc:''}</div>
+          <div class="card-footer">
+            <div class="card-prezzo">€${w.tavoloListino}<small>/bott.</small>${w.calice?`  €${w.calice}<small>/cal.</small>`:''}</div>
+            <div class="card-fornitore">${w.fornitore||''}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    function resetForm() {
+      ['f-nazione','f-vino','f-imponibile','f-ss','f-costo-ivato','f-tavolo-aut','f-tavolo-listino',
+       'f-calice','f-calice-ricavo','f-fornitore','f-nome-carta','f-aoc','f-vitigni','f-descrizione']
+        .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      ['f-cat-costo','f-cat-carta','f-formato'].forEach(id=>document.getElementById(id).value=id==='f-formato'?'6.1':'');
+      document.getElementById('f-abbandonato').checked=false;
+      document.getElementById('f-incarta').checked=false;
+      ['c-ric-x','c-ric-eur','c-asporto','c-nbott','c-margin-pct','cc-ric-x','cc-ric-eur','cc-costo','cc-margine']
+        .forEach(id=>document.getElementById(id).textContent='—');
+      document.getElementById('c-margin-bar').style.width='0%';
+      if(caliceOn) toggleCalice();
+      setSheet('DIST');
+    }
+
+    function apriNuovoVino() {
+      editingId=null; resetForm();
+      document.getElementById('modalTitolo').textContent='⚓ Nuovo Vino';
+      document.getElementById('btnElimina').style.display='none';
+      document.getElementById('f-ss').value='1.00';
+      document.getElementById('modalVino').classList.add('active');
+    }
+    function apriModifica(id) {
+      const w=wineData.find(x=>x.id===id); if(!w) return;
+      editingId=id; resetForm();
+      document.getElementById('modalTitolo').textContent='✏️ '+w.id+' — '+(w.nomeCarta||w.vino);
+      document.getElementById('btnElimina').style.display='block';
+      setSheet(w.sheet);
+      ['nazione','vino','imponibile','fornitore'].forEach(k=>document.getElementById('f-'+k).value=w[k]||'');
+      if(w.sheet==='IMPORT') document.getElementById('f-ss').value=w.ss||1;
+      document.getElementById('f-cat-costo').value=w.catCosto||'';
+      document.getElementById('f-tavolo-listino').value=w.tavoloListino||'';
+      document.getElementById('f-abbandonato').checked=!!w.abbandonato;
+      document.getElementById('f-incarta').checked=!!w.incarta;
+      document.getElementById('f-nome-carta').value=w.nomeCarta||'';
+      document.getElementById('f-cat-carta').value=w.catCarta||'';
+      document.getElementById('f-aoc').value=w.aoc||'';
+      document.getElementById('f-vitigni').value=w.vitigni||'';
+      document.getElementById('f-descrizione').value=w.descrizione||'';
+      if(w.calice){
+        toggleCalice();
+        document.getElementById('f-calice').value=w.calice;
+        // Ricava il divisore: imponibile / costo_calice_imp = imponibile / (calice_prezzo/1.1) * 1.1
+        // Oppure: divisore = imponibile / (calice_prezzo/1.1)
+        const calImp = w.calice/1.1;
+        const divisoreCalcolato = w.imponibile / calImp;
+        const divisori = [3.1, 6, 6.1, 8, 12];
+        const più_vicino = divisori.reduce((a,b) => Math.abs(b-divisoreCalcolato)<Math.abs(a-divisoreCalcolato)?b:a);
+        document.getElementById('f-formato').value = più_vicino;
+      }
+      ricalcola();
+      document.getElementById('modalVino').classList.add('active');
+    }
+    function chiudiModale(){document.getElementById('modalVino').classList.remove('active');}
+    function chiudiSeOutside(e){if(e.target===document.getElementById('modalVino'))chiudiModale();}
+    function mostraTab(tab,el){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active'); document.getElementById(tab).classList.add('active');
+    }
+
+    // ── LOAD VINI ────────────────────────────────────────────────────
+    async function loadVini() {
+      showLoading('Carico la stiva...');
+      try {
+        const res = await callAPI('getVini');
+        if (res.ok) {
+          wineData = res.vini;
+          filtraVini();
+        } else {
+          alert('Errore caricamento: ' + res.error);
+        }
+      } catch(e) {
+        alert('Impossibile connettersi al server.');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // ── SALVA VINO ───────────────────────────────────────────────────
+    async function salvaVino() {
+      const imp = parseFloat(document.getElementById('f-imponibile').value);
+      const vino = document.getElementById('f-vino').value.trim();
+      const nazione = document.getElementById('f-nazione').value.trim();
+      if (!imp || !vino || !nazione) {
+        alert('Compila almeno: Nazione, Nome Vino e Imponibile.');
+        return;
+      }
+      const divisore = caliceOn ? parseFloat(document.getElementById('f-formato').value) || 6.1 : 6.1;
+      const payload = {
+        action: 'saveVino',
+        codice: editingId || null,
+        sheet: currentSheet,
+        nazione, vino,
+        imponibile: imp,
+        ss: document.getElementById('f-ss').value || 1,
+        divisore,
+        fornitore: document.getElementById('f-fornitore').value,
+        catCosto: document.getElementById('f-cat-costo').value,
+        tavoloListino: document.getElementById('f-tavolo-listino').value,
+        calice: caliceOn ? document.getElementById('f-calice').value : null,
+        abbandonato: document.getElementById('f-abbandonato').checked,
+        incarta: document.getElementById('f-incarta').checked,
+        nomeCarta: document.getElementById('f-nome-carta').value,
+        catCarta: document.getElementById('f-cat-carta').value,
+        aoc: document.getElementById('f-aoc').value,
+        vitigni: document.getElementById('f-vitigni').value,
+        descrizione: document.getElementById('f-descrizione').value,
+      };
+      showLoading(editingId ? 'Aggiornamento...' : 'Salvataggio...');
+      try {
+        const res = await callAPI('saveVino', payload);
+        if (res.ok) {
+          chiudiModale();
+          await loadVini();
+        } else {
+          alert('Errore: ' + res.error);
+        }
+      } catch(e) {
+        alert('Errore di connessione.');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // ── ELIMINA VINO ─────────────────────────────────────────────────
+    async function eliminaVino() {
+      if (!confirm('Segnare "' + editingId + '" come abbandonato?')) return;
+      showLoading('Eliminazione...');
+      try {
+        const res = await callAPI('deleteVino', { codice: editingId });
+        if (res.ok) {
+          chiudiModale();
+          await loadVini();
+        } else {
+          alert('Errore: ' + res.error);
+        }
+      } catch(e) {
+        alert('Errore di connessione.');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // ── INIT ─────────────────────────────────────────────────────────
+    loadVini();
+  </script>
+</body>
+</html>
