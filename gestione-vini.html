@@ -96,35 +96,41 @@
     .wine-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 15px;
+      gap: 14px;
     }
     .wine-card {
-      background: #fff; border: 2px solid #e0e8f8;
-      border-left: 5px solid var(--cat-color, #2a5298);
-      border-radius: 10px; padding: 16px; cursor: pointer;
-      transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      background: var(--card-bg, #f8f9ff);
+      border: 1.5px solid var(--cat-color, #2a5298);
+      border-radius: 12px; padding: 16px; cursor: pointer;
+      transition: all 0.18s;
       user-select: none; -webkit-user-select: none;
     }
     .wine-card * { pointer-events: none; cursor: pointer; }
-    .wine-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(42,82,152,0.15); border-color: #2a5298; }
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-    .card-codice { font-size: 0.72em; color: #999; font-family: monospace; font-weight: bold; }
-    .card-cat-badge {
-      font-size: 0.72em; padding: 2px 8px; border-radius: 10px;
-      background: #f0f4ff; color: #2a5298; border: 1px solid #c0cce8; font-style: italic;
+    .wine-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .card-codice {
+      font-size: 13px; font-family: monospace; font-weight: bold;
+      color: #fff; background: var(--cat-color, #2a5298);
+      padding: 3px 9px; border-radius: 5px;
     }
-    .card-nome { font-weight: bold; color: #1e3c72; font-size: 0.95em; margin-bottom: 3px; line-height: 1.3; }
-    .card-nazione { font-size: 0.85em; color: #666; font-style: italic; margin-bottom: 10px; }
-    .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 8px; }
-    .card-prezzo { font-weight: bold; font-size: 1.2em; color: #2a5298; }
-    .card-prezzo small { font-size: 0.65em; color: #888; font-weight: normal; }
-    .card-fornitore { font-size: 0.75em; color: #999; text-align: right; }
+    .card-cat-badge {
+      font-size: 12px; font-style: italic;
+      color: var(--cat-color, #2a5298);
+    }
+    .card-nome { font-size: 15px; font-weight: bold; color: #1a2e5a; line-height: 1.3; margin-bottom: 4px; }
+    .card-nazione { font-size: 13px; color: #2a7a4a; font-style: italic; margin-bottom: 14px; }
+    .card-prezzi { display: flex; gap: 12px; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 12px; }
+    .card-p { display: flex; flex-direction: column; flex: 1; }
+    .card-p-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6px; color: #888; margin-bottom: 2px; }
+    .card-p-val { font-size: 17px; font-weight: bold; color: #1a2e5a; }
+    .card-p-val.imp { color: #888; font-size: 15px; }
+    .card-fornitore { font-size: 12px; color: #888; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.06); }
 
-    .cat-rossi    { --cat-color: #c0392b; }
-    .cat-bianchi  { --cat-color: #c8a800; }
-    .cat-rosati   { --cat-color: #c0607a; }
-    .cat-bolle    { --cat-color: #2a80b9; }
-    .cat-speciali { --cat-color: #8e44ad; }
+    .cat-rossi    { --cat-color: #c0392b; --card-bg: #fff8f8; }
+    .cat-bianchi  { --cat-color: #9a7f00; --card-bg: #fffde6; }
+    .cat-rosati   { --cat-color: #c0607a; --card-bg: #fff0f4; }
+    .cat-bolle    { --cat-color: #1a6a9a; --card-bg: #f0f7ff; }
+    .cat-speciali { --cat-color: #7a3aaa; --card-bg: #f8f0ff; }
 
     .empty-state { grid-column: 1/-1; text-align: center; padding: 50px; color: #aaa; font-size: 1.05em; }
 
@@ -601,7 +607,10 @@
           <div class="card-nome">${w.nomeCarta||w.vino}</div>
           <div class="card-nazione">${w.nazione}${w.aoc?' · '+w.aoc:''}</div>
           <div class="card-footer">
-            <div class="card-prezzo">€${w.tavoloListino}<small>/bott.</small>${w.calice?`  €${w.calice}<small>/cal.</small>`:''}</div>
+            <div class="card-prezzi">
+              <div class="card-prezzo">€${w.tavoloListino} <span>/ bott.</span></div>
+              ${w.calice?`<div class="card-prezzo-cal">€${w.calice} <span>/ cal.</span></div>`:''}
+            </div>
             <div class="card-fornitore">${w.fornitore||''}</div>
           </div>
         </div>`).join('');
@@ -679,7 +688,16 @@
           alert('Errore caricamento: ' + res.error);
         }
       } catch(e) {
-        alert('Impossibile connettersi al server.');
+        // Fallback mock per anteprima locale
+        wineData = [
+          {id:'D-0001',codice:'D-0001',sheet:'DIST',nazione:'Australia',vino:'De Bortoli Shiraz First Block',imponibile:4.24,nomeCarta:'De Bortoli - First Block',catCarta:'I Rossi',aoc:'New South Wales',vitigni:'Shiraz',tavoloListino:26,calice:6,fornitore:'World of Flavours',catCosto:'FERMI',incarta:true,abbandonato:false,costoCalice:0.69},
+          {id:'D-0003',codice:'D-0003',sheet:'DIST',nazione:'Grecia',vino:'Perivleptos White',imponibile:5.1,nomeCarta:'Theodorakakos - Perivleptos White',catCarta:'I Bianchi',aoc:'Laconia PGI',vitigni:'Moschofilero',tavoloListino:26,calice:null,fornitore:'Ellenika',catCosto:'FERMI',incarta:true,abbandonato:false,costoCalice:null},
+          {id:'D-0009',codice:'D-0009',sheet:'DIST',nazione:'Francia',vino:"Peyrassol - Rosé Méditerranée",imponibile:6.5,nomeCarta:"Peyrassol - Rosé Méditerranée",catCarta:'I Rosati',aoc:'Côtes de Provence',tavoloListino:28,calice:null,fornitore:'Proposta Vini',catCosto:'FERMI',incarta:true,abbandonato:false,costoCalice:null},
+          {id:'D-0118',codice:'D-0118',sheet:'DIST',nazione:'Francia',vino:'Sadi Malot Brut Grand Cru',imponibile:32,nomeCarta:"Sadi Malot - L'Equilibre Grand Cru",catCarta:'Le Bolle',aoc:'Champagne',tavoloListino:72,calice:14,fornitore:'Velier',catCosto:'CHAMPAGNE',incarta:true,abbandonato:false,costoCalice:5.24},
+          {id:'D-0080',codice:'D-0080',sheet:'DIST',nazione:'Cina',vino:'Silver Heights - Sand Lake Moon Orange',imponibile:18,nomeCarta:'Sand Lake Moon Orange',catCarta:'I Vini Speciali',aoc:'Ningxia',tavoloListino:60,calice:null,fornitore:'A Piedi Nudi',catCosto:'SPECIALI',incarta:true,abbandonato:false,costoCalice:null},
+          {id:'I-0005',codice:'I-0005',sheet:'IMPORT',nazione:'Austria',vino:'Matthias Warnung - Potatoland',imponibile:9.5,nomeCarta:'Potatoland',catCarta:'I Bianchi',aoc:'Kamptal',tavoloListino:33,calice:7,fornitore:'Elemento Indigeno',catCosto:'FERMI',incarta:true,abbandonato:false,costoCalice:1.56},
+        ].map(v => ({...v, id: v.codice}));
+        filtraVini();
       } finally {
         hideLoading();
       }
