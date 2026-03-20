@@ -123,11 +123,11 @@
     .card-prezzo-cal span { font-size: 13px; color: #888; font-weight: 400; }
     .card-fornitore { font-size: 13px; color: #999; text-align: right; }
 
-    .cat-rossi    { --cat-color: #c0392b; --card-bg: #fff8f8; }
+    .cat-rossi    { --cat-color: #c0392b; --card-bg: #fff5f5; }
     .cat-bianchi  { --cat-color: #9a7f00; --card-bg: #fffde6; }
-    .cat-rosati   { --cat-color: #c0607a; --card-bg: #fff0f4; }
+    .cat-rosati   { --cat-color: #e07aaa; --card-bg: #fff0f7; }
     .cat-bolle    { --cat-color: #1a6a9a; --card-bg: #f0f7ff; }
-    .cat-speciali { --cat-color: #7a3aaa; --card-bg: #f8f0ff; }
+    .cat-speciali { --cat-color: #2a7a4a; --card-bg: #f0fff5; }
 
     .empty-state { grid-column: 1/-1; text-align: center; padding: 50px; color: #aaa; font-size: 1.05em; }
 
@@ -281,6 +281,7 @@
   <div class="container">
     <div class="tabs">
       <div class="tab active" onclick="mostraTab('elenco', this)">📜 Elenco Vini</div>
+      <div class="tab" onclick="mostraTab('sync', this)">🔄 Sync Cassa</div>
       <div class="tab" onclick="mostraTab('statistiche', this)">📊 Statistiche</div>
     </div>
 
@@ -301,6 +302,61 @@
         <button class="filtro-btn" onclick="setFiltro(this,'I Vini Speciali')">✨ Speciali</button>
       </div>
       <div class="wine-grid" id="wineGrid"></div>
+    </div>
+
+    <div id="sync" class="tab-content">
+
+      <div style="margin-bottom:20px;">
+        <label style="font-weight:bold;font-size:0.85em;text-transform:uppercase;letter-spacing:0.3px;color:#555;display:block;margin-bottom:8px;">
+          Export Cassa in Cloud (.xlsx)
+        </label>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <input type="file" id="syncFileInput" accept=".xlsx" style="flex:1;min-width:200px;">
+          <button class="btn-nuovo" onclick="analizzaSync()">Analizza</button>
+        </div>
+        <p style="font-size:12px;color:#aaa;margin-top:6px;">Carica l'export xlsx di Cassa in Cloud — il sistema confronta con WineCost e prepara il file di import aggiornato.</p>
+      </div>
+
+      <div id="syncRisultato" style="display:none;">
+
+        <!-- Riepilogo -->
+        <div id="syncRiepilogo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;"></div>
+
+        <!-- Prezzi da aggiornare -->
+        <div id="syncPrezziWrap" style="display:none;margin-bottom:24px;">
+          <div style="font-weight:bold;font-size:0.9em;color:#2a5298;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e0e8f8;">
+            💶 Prezzi da aggiornare
+          </div>
+          <div style="overflow-x:auto;">
+            <table id="syncPrezziTable" style="width:100%;font-size:13px;border-collapse:collapse;"></table>
+          </div>
+        </div>
+
+        <!-- Categoria da impostare -->
+        <div id="syncCatWrap" style="display:none;margin-bottom:24px;">
+          <div style="font-weight:bold;font-size:0.9em;color:#2a5298;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e0e8f8;">
+            🏷 Categoria da impostare (→ BOTTIGLIE AL TAVOLO)
+          </div>
+          <div style="overflow-x:auto;">
+            <table id="syncCatTable" style="width:100%;font-size:13px;border-collapse:collapse;"></table>
+          </div>
+        </div>
+
+        <!-- Vini nuovi -->
+        <div id="syncNuoviWrap" style="display:none;margin-bottom:24px;">
+          <div style="font-weight:bold;font-size:0.9em;color:#2a5298;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e0e8f8;">
+            ✨ Vini nuovi da aggiungere
+          </div>
+          <p style="font-size:12px;color:#888;margin-bottom:10px;">Nome Cassa auto-generato da VINO — modifica se necessario prima di generare il file.</p>
+          <div style="overflow-x:auto;">
+            <table id="syncNuoviTable" style="width:100%;font-size:13px;border-collapse:collapse;"></table>
+          </div>
+        </div>
+
+        <div style="text-align:right;margin-top:20px;">
+          <button class="btn-nuovo" onclick="generaImport()">⬇ Genera file import</button>
+        </div>
+      </div>
     </div>
 
     <div id="statistiche" class="tab-content">
@@ -765,8 +821,195 @@
       }
     }
 
+    // ── SYNC CASSA ────────────────────────────────────────────────────
+
+    let syncWineCost = [];   // vini da WineCost (caricati via GAS)
+    let syncCassaRows = [];  // tutte le righe del file Cassa
+    let syncCassaHeaders = [];
+    let syncWorkbook = null;
+
+    // Helper: nome Cassa da nome interno WC
+    function toNomeCassa(vino) {
+      return vino.toUpperCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // rimuove accenti
+        .replace(/[^A-Z0-9 \-']/g, ' ')
+        .replace(/\s+/g, ' ').trim()
+        .substring(0, 50);
+    }
+
+    function trStyled(cells, isHeader=false) {
+      const tag = isHeader ? 'th' : 'td';
+      const bg = isHeader ? 'background:#f0f4ff;font-weight:bold;' : '';
+      return '<tr>' + cells.map(c => `<${tag} style="padding:6px 10px;border:1px solid #e0e8f8;${bg}">${c}</${tag}>`).join('') + '</tr>';
+    }
+
+    async function analizzaSync() {
+      const fileInput = document.getElementById('syncFileInput');
+      if (!fileInput.files.length) { alert('Carica prima il file export di Cassa in Cloud.'); return; }
+
+      showLoading('Analisi in corso...');
+      try {
+        // 1. Leggi WineCost via GAS
+        const res = await callAPI('getVini');
+        if (!res.ok) { alert('Errore WineCost: ' + res.error); return; }
+        syncWineCost = res.vini.filter(v => v.incarta);
+
+        // 2. Leggi xlsx Cassa con SheetJS
+        const buf = await fileInput.files[0].arrayBuffer();
+        syncWorkbook = XLSX.read(buf, { type: 'array' });
+        const ws = syncWorkbook.Sheets['Prodotti'];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        syncCassaHeaders = rows[0];
+        syncCassaRows = rows.slice(1);
+
+        const idxID       = syncCassaHeaders.indexOf('ID Interno');
+        const idxDesc     = syncCassaHeaders.indexOf('Descrizione');
+        const idxPrezzo   = syncCassaHeaders.indexOf('Prezzo Base');
+        const idxCat      = syncCassaHeaders.indexOf('Categoria');
+
+        // Mappa ID Interno -> indice riga Cassa
+        const cassaById = {};
+        syncCassaRows.forEach((row, i) => {
+          if (row[idxID]) cassaById[String(row[idxID]).trim()] = i;
+        });
+
+        // 3. Analisi
+        const prezziDiff = [], catDiff = [], nuovi = [];
+
+        syncWineCost.forEach(wv => {
+          const codice = wv.codice;
+          if (cassaById.hasOwnProperty(codice)) {
+            const ri = cassaById[codice];
+            const row = syncCassaRows[ri];
+            const prezzoCassa = parseFloat(row[idxPrezzo]) || 0;
+            const prezzoWC = parseFloat(wv.tavoloListino) || 0;
+            if (Math.abs(prezzoCassa - prezzoWC) > 0.01) {
+              prezziDiff.push({ codice, nomeWC: wv.nomeCarta || wv.vino, nazione: wv.nazione, prezzoCassa, prezzoWC, ri });
+            }
+            const catCassa = String(row[idxCat] || '').trim();
+            if (catCassa !== 'BOTTIGLIE AL TAVOLO') {
+              catDiff.push({ codice, nomeWC: wv.nomeCarta || wv.vino, catCassa, ri });
+            }
+          } else {
+            nuovi.push({ codice, vino: wv.vino, nomeCarta: wv.nomeCarta, nazione: wv.nazione, prezzoWC: wv.tavoloListino, nomeCassa: toNomeCassa(wv.vino) });
+          }
+        });
+
+        // 4. Render
+        const riepilogo = document.getElementById('syncRiepilogo');
+        riepilogo.innerHTML = [
+          ['Vini WineCost (in carta)', syncWineCost.length],
+          ['Abbinati per ID', syncWineCost.length - nuovi.length],
+          ['Prezzi da aggiornare', prezziDiff.length],
+          ['Categoria da impostare', catDiff.length],
+          ['Vini nuovi', nuovi.length],
+        ].map(([label, val]) => `
+          <div style="background:#f8faff;border:1px solid #dce6f8;border-radius:8px;padding:14px;text-align:center;">
+            <div style="font-size:24px;font-weight:bold;color:#2a5298;">${val}</div>
+            <div style="font-size:12px;color:#888;margin-top:4px;">${label}</div>
+          </div>`).join('');
+
+        // Prezzi
+        const pwrap = document.getElementById('syncPrezziWrap');
+        if (prezziDiff.length) {
+          pwrap.style.display = '';
+          document.getElementById('syncPrezziTable').innerHTML =
+            trStyled(['Codice','Nazione','Nome WineCost','€ Cassa','€ WineCost','Diff'], true) +
+            prezziDiff.map(m => {
+              const diff = (m.prezzoWC - m.prezzoCassa).toFixed(0);
+              const col = m.prezzoWC > m.prezzoCassa ? 'color:#27ae60' : 'color:#c0392b';
+              return trStyled([m.codice, m.nazione, m.nomeWC, `€${m.prezzoCassa}`, `€${m.prezzoWC}`, `<span style="${col};font-weight:bold;">${diff>0?'+':''}${diff}€</span>`]);
+            }).join('');
+        } else { pwrap.style.display = 'none'; }
+
+        // Categoria
+        const cwrap = document.getElementById('syncCatWrap');
+        if (catDiff.length) {
+          cwrap.style.display = '';
+          document.getElementById('syncCatTable').innerHTML =
+            trStyled(['Codice','Nome','Categoria attuale'], true) +
+            catDiff.map(m => trStyled([m.codice, m.nomeWC, m.catCassa || '(vuota)'])).join('');
+        } else { cwrap.style.display = 'none'; }
+
+        // Nuovi
+        const nwrap = document.getElementById('syncNuoviWrap');
+        if (nuovi.length) {
+          nwrap.style.display = '';
+          document.getElementById('syncNuoviTable').innerHTML =
+            trStyled(['Codice','Nazione','Nome WineCost','Nome Cassa (editabile)','€'], true) +
+            nuovi.map((n,i) => trStyled([
+              n.codice, n.nazione, n.nomeCarta || n.vino,
+              `<input id="nn_${i}" value="${n.nomeCassa}" style="width:200px;padding:4px 6px;border:1px solid #c0cce8;border-radius:4px;font-size:12px;">`,
+              `€${n.prezzoWC}`
+            ])).join('');
+          // salva riferimento nuovi per generaImport
+          document.getElementById('syncNuoviTable').dataset.nuovi = JSON.stringify(nuovi);
+        } else { nwrap.style.display = 'none'; }
+
+        document.getElementById('syncRisultato').style.display = '';
+        // salva dati per generaImport
+        document.getElementById('syncRisultato').dataset.prezzi = JSON.stringify(prezziDiff);
+        document.getElementById('syncRisultato').dataset.cat = JSON.stringify(catDiff);
+
+      } catch(e) {
+        alert('Errore: ' + e.message);
+        console.error(e);
+      } finally { hideLoading(); }
+    }
+
+    function generaImport() {
+      if (!syncWorkbook) { alert('Analizza prima il file.'); return; }
+
+      const idxID     = syncCassaHeaders.indexOf('ID Interno');
+      const idxPrezzo = syncCassaHeaders.indexOf('Prezzo Base');
+      const idxCat    = syncCassaHeaders.indexOf('Categoria');
+      const idxDesc   = syncCassaHeaders.indexOf('Descrizione');
+      const idxUUID   = syncCassaHeaders.indexOf('ID');
+
+      const prezziDiff = JSON.parse(document.getElementById('syncRisultato').dataset.prezzi || '[]');
+      const catDiff    = JSON.parse(document.getElementById('syncRisultato').dataset.cat || '[]');
+      const nuoviBase  = JSON.parse(document.getElementById('syncNuoviTable').dataset.nuovi || '[]');
+
+      // Applica prezzi
+      prezziDiff.forEach(m => { syncCassaRows[m.ri][idxPrezzo] = m.prezzoWC; });
+
+      // Applica categoria
+      catDiff.forEach(m => { syncCassaRows[m.ri][idxCat] = 'BOTTIGLIE AL TAVOLO'; });
+
+      // Aggiungi nuovi vini
+      nuoviBase.forEach((n, i) => {
+        const nomeInput = document.getElementById(`nn_${i}`);
+        const nomeCassa = nomeInput ? nomeInput.value.trim().toUpperCase() : n.nomeCassa;
+        // Costruisce riga con la stessa lunghezza dell'header
+        const newRow = new Array(syncCassaHeaders.length).fill(null);
+        newRow[idxDesc]   = nomeCassa;
+        newRow[idxPrezzo] = n.prezzoWC;
+        newRow[idxCat]    = 'BOTTIGLIE AL TAVOLO';
+        newRow[idxID]     = n.codice;
+        syncCassaRows.push(newRow);
+      });
+
+      // Ricostruisce sheet Prodotti
+      const ws = syncWorkbook.Sheets['Prodotti'];
+      const allRows = [syncCassaHeaders, ...syncCassaRows];
+      const newSheet = XLSX.utils.aoa_to_sheet(allRows);
+      syncWorkbook.Sheets['Prodotti'] = newSheet;
+
+      // Download
+      const buf = XLSX.write(syncWorkbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([buf], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+      a.download = `VecchiaDogana_CassaCloud_Sync_${today}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
     // ── INIT ─────────────────────────────────────────────────────────
     loadVini();
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
