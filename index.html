@@ -442,23 +442,24 @@
     .vini-menu a {
       display: block;
       padding: 16px 20px;
-      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
-      color: #fff;
+      background: #fff;
+      color: #1e3c72;
       border-radius: 8px;
       font-family: 'Arial', sans-serif;
       font-size: 1em;
       font-weight: bold;
       text-align: center;
       text-decoration: none;
-      box-shadow: 0 3px 0 #142d5c;
+      border: 2px solid #c0cce8;
+      box-shadow: 0 3px 0 #c0cce8;
       transition: all 0.15s;
     }
-    .vini-menu a:hover { transform: translateY(-2px); }
-    .vini-menu a:active { transform: translateY(3px); box-shadow: 0 0 0 #142d5c; }
+    .vini-menu a:hover { background: #f0f4ff; transform: translateY(-1px); }
+    .vini-menu a:active { transform: translateY(3px); box-shadow: 0 0 0 #c0cce8; }
     .vini-menu-back {
-      background: #f0f4ff;
-      color: #2a5298;
-      border: 2px solid #c0cce8;
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+      color: #fff;
+      border: none;
       border-radius: 8px;
       padding: 10px;
       font-family: 'Arial', sans-serif;
@@ -467,6 +468,7 @@
       text-align: center;
       cursor: pointer;
       width: 100%;
+      box-shadow: 0 3px 0 #142d5c;
     }
   </style>
   <div id="modalVini" class="modal">
@@ -579,6 +581,17 @@
     document.getElementById('pinInput').addEventListener('keypress', e => {
       if (e.key === 'Enter') verificaPIN();
     });
+
+    // Riapri submenu vini se si torna dalle pagine vini
+    if (new URLSearchParams(window.location.search).get('menu') === 'vini') {
+      if (sessionStorage.getItem('auth') === 'titolare') {
+        document.getElementById('pinViniSection').style.display = 'none';
+        document.getElementById('viniMenu').style.display = 'block';
+        document.getElementById('modalVini').classList.add('active');
+      } else {
+        mostraModalVini();
+      }
+    }
 
     // ===== MODAL GESTIONE VINI =====
     function mostraModalVini() {
