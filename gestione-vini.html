@@ -73,14 +73,18 @@
     /* filtri */
     .filtri { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
     .filtro-btn {
-      padding: 6px 14px; border: 2px solid #c0cce8; border-radius: 20px;
-      background: #f0f4ff; color: #2a5298; font-size: 0.85em; cursor: pointer;
+      padding: 6px 14px; border: 2px solid #ddd; border-radius: 20px;
+      background: #f5f5f5; color: #555; font-size: 0.85em; cursor: pointer;
       font-weight: bold; transition: all 0.2s;
     }
-    .filtro-btn.active, .filtro-btn:hover {
-      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
-      color: #fff; border-color: #1e3c72;
-    }
+    .filtro-btn:hover { opacity: 0.85; }
+    .filtro-btn.active { color: #fff; border-color: transparent; }
+    .filtro-btn[data-cat="tutti"].active   { background: #2a5298; }
+    .filtro-btn[data-cat="I Rossi"].active  { background: #8b0000; }
+    .filtro-btn[data-cat="I Bianchi"].active{ background: #9a7f00; }
+    .filtro-btn[data-cat="I Rosati"].active { background: #e07aaa; }
+    .filtro-btn[data-cat="Le Bolle"].active { background: #1a6a9a; }
+    .filtro-btn[data-cat="I Vini Speciali"].active { background: #2a7a4a; }
 
     .btn-nuovo {
       background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
@@ -99,8 +103,10 @@
       gap: 14px;
     }
     .wine-card {
-      background: var(--card-bg, #f8f9ff);
-      border: 1.5px solid var(--cat-color, #2a5298);
+      background: #fff;
+      border: 1px solid #e0e8f8;
+      border-left: 5px solid var(--cat-color, #2a5298);
+      border-bottom: 3px solid var(--cat-color, #2a5298);
       border-radius: 12px; padding: 16px; cursor: pointer;
       transition: all 0.18s;
       user-select: none; -webkit-user-select: none;
@@ -123,11 +129,11 @@
     .card-prezzo-cal span { font-size: 13px; color: #888; font-weight: 400; }
     .card-fornitore { font-size: 13px; color: #999; text-align: right; }
 
-    .cat-rossi    { --cat-color: #c0392b; --card-bg: #fff5f5; }
-    .cat-bianchi  { --cat-color: #9a7f00; --card-bg: #fffde6; }
-    .cat-rosati   { --cat-color: #e07aaa; --card-bg: #fff0f7; }
-    .cat-bolle    { --cat-color: #1a6a9a; --card-bg: #f0f7ff; }
-    .cat-speciali { --cat-color: #2a7a4a; --card-bg: #f0fff5; }
+    .cat-rossi    { --cat-color: #cc0000; }
+    .cat-bianchi  { --cat-color: #9a7f00; }
+    .cat-rosati   { --cat-color: #e07aaa; }
+    .cat-bolle    { --cat-color: #1a6a9a; }
+    .cat-speciali { --cat-color: #2a7a4a; }
 
     .empty-state { grid-column: 1/-1; text-align: center; padding: 50px; color: #aaa; font-size: 1.05em; }
 
@@ -294,12 +300,12 @@
         <button class="btn-nuovo" onclick="apriNuovoVino()">+ Nuovo Vino</button>
       </div>
       <div class="filtri">
-        <button class="filtro-btn active" onclick="setFiltro(this,'tutti')">Tutti</button>
-        <button class="filtro-btn" onclick="setFiltro(this,'I Rossi')">🔴 Rossi</button>
-        <button class="filtro-btn" onclick="setFiltro(this,'I Bianchi')">⚪ Bianchi</button>
-        <button class="filtro-btn" onclick="setFiltro(this,'I Rosati')">🌸 Rosati</button>
-        <button class="filtro-btn" onclick="setFiltro(this,'Le Bolle')">🫧 Bolle</button>
-        <button class="filtro-btn" onclick="setFiltro(this,'I Vini Speciali')">✨ Speciali</button>
+        <button class="filtro-btn active" data-cat="tutti" onclick="setFiltro(this,'tutti')">Tutti</button>
+        <button class="filtro-btn" data-cat="I Rossi" onclick="setFiltro(this,'I Rossi')">Rossi</button>
+        <button class="filtro-btn" data-cat="I Bianchi" onclick="setFiltro(this,'I Bianchi')">Bianchi</button>
+        <button class="filtro-btn" data-cat="I Rosati" onclick="setFiltro(this,'I Rosati')">Rosati</button>
+        <button class="filtro-btn" data-cat="Le Bolle" onclick="setFiltro(this,'Le Bolle')">Bolle</button>
+        <button class="filtro-btn" data-cat="I Vini Speciali" onclick="setFiltro(this,'I Vini Speciali')">Speciali</button>
       </div>
       <div class="wine-grid" id="wineGrid"></div>
     </div>
@@ -1009,6 +1015,14 @@
 
     // ── INIT ─────────────────────────────────────────────────────────
     loadVini();
+    // Attiva tab da URL param (?tab=sync)
+    const urlTab = new URLSearchParams(window.location.search).get('tab');
+    if (urlTab === 'sync') {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelector('.tab:nth-child(2)').classList.add('active');
+      document.getElementById('sync').classList.add('active');
+    }
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
