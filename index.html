@@ -115,28 +115,6 @@
       transform: translateY(4px);
       box-shadow: 0 0 0 #3d1f0f, 0 4px 10px rgba(0,0,0,0.4);
     }
-    .capitano-menu {
-      display: flex; flex-direction: column; gap: 12px; margin-top: 10px;
-    }
-    .capitano-menu a, .capitano-menu button {
-      display: block; width: 100%;
-      padding: 15px 20px;
-      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
-      color: #2c1810; border: 3px solid #3d1f0f; border-radius: 8px;
-      font-size: 1.1em; font-weight: 700; font-family: 'Rye', cursive;
-      cursor: pointer; text-align: center; text-decoration: none;
-      box-shadow: 0 4px 0 #3d1f0f, 0 6px 15px rgba(0,0,0,0.4);
-      transition: all 0.15s;
-    }
-    .capitano-menu a:hover, .capitano-menu button:hover {
-      background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
-      transform: translateY(-2px);
-    }
-    .capitano-menu a:active, .capitano-menu button:active {
-      transform: translateY(4px); box-shadow: 0 0 0 #3d1f0f;
-    }
-    #pinSection { display: block; }
-    #capitanoMenu { display: none; }
     #errorePin {
       color: #8b0000; background: #ffcccc; padding: 12px; border-radius: 8px;
       margin-top: 15px; display: none; text-align: center; font-weight: bold; border: 2px solid #8b0000;
@@ -391,7 +369,7 @@
       <button class="btn btn-spese-rapide" onclick="mostraModalSpeseRapide()">💸 Inserisci Spesa Rapida</button>
       <a href="prenotazioni.html" class="btn btn-spese-rapide">⚓ Prenotazioni</a>
       <a href="chiusura.html" class="btn btn-primary">📜 Registra Chiusura</a>
-      <a href="carta-vini.html" class="btn btn-primary">🍷 Carta Vini al Calice</a>
+      <button class="btn btn-secondary" onclick="mostraModalVini()">🍷 Gestione Vini</button>
       <button class="btn btn-secondary" onclick="mostraModalPIN()">🎩 Accesso Capitano</button>
     </div>
   </div>
@@ -403,32 +381,49 @@
   
   <div id="modalPIN" class="modal">
     <div class="modal-content">
-      <h2>🎩 Accesso Capitano</h2>
+      <h2>Codice Segreto</h2>
+      <div class="form-group">
+        <label for="pinInput">PIN Capitano:</label>
+        <input type="password" id="pinInput" placeholder="••••" maxlength="4">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="chiudiModalPIN()">Indietro</button>
+        <button class="btn btn-primary" onclick="verificaPIN()">Entra</button>
+      </div>
+      <div id="errorePin">⚠️ Codice errato! Riprova.</div>
+    </div>
+  </div>
+  
+  <!-- MODAL GESTIONE VINI -->
+  <div id="modalVini" class="modal">
+    <div class="modal-content">
+      <h2>🍷 Gestione Vini</h2>
 
-      <div id="pinSection">
+      <div id="pinViniSection">
         <div class="form-group">
-          <label for="pinInput">PIN Capitano:</label>
-          <input type="password" id="pinInput" placeholder="••••" maxlength="4">
+          <label for="pinViniInput">PIN:</label>
+          <input type="password" id="pinViniInput" placeholder="••••" maxlength="4">
         </div>
         <div class="modal-buttons">
-          <button class="btn btn-cancel" onclick="chiudiModalPIN()">Indietro</button>
-          <button class="btn btn-primary" onclick="verificaPIN()">Entra</button>
+          <button class="btn btn-cancel" onclick="chiudiModalVini()">Indietro</button>
+          <button class="btn btn-primary" onclick="verificaPINVini()">Entra</button>
         </div>
-        <div id="errorePin">⚠️ Codice errato! Riprova.</div>
+        <div id="errorePinVini">⚠️ Codice errato! Riprova.</div>
       </div>
 
-      <div id="capitanoMenu">
+      <div id="viniMenu" style="display:none;">
         <div class="capitano-menu">
-          <a href="dashboard.html">🎩 Quartier Generale</a>
           <a href="gestione-vini.html">🍷 Gestione Vini</a>
+          <a href="carta-vini.html">🗂 Gestione Carta Calici</a>
+          <a href="gestione-vini.html?tab=sync">🔄 Sync Cassa</a>
         </div>
         <div class="modal-buttons" style="margin-top:15px;">
-          <button class="btn btn-cancel" onclick="chiudiModalPIN()">Esci</button>
+          <button class="btn btn-cancel" onclick="chiudiModalVini()">Esci</button>
         </div>
       </div>
     </div>
   </div>
-  
+
   <!-- MODAL SPESE RAPIDE -->
   <div id="modalSpeseRapide" class="modal">
     <div class="modal-content">
@@ -474,9 +469,6 @@
     
     function chiudiModalPIN() {
       document.getElementById('modalPIN').classList.remove('active');
-      document.getElementById('pinSection').style.display = 'block';
-      document.getElementById('capitanoMenu').style.display = 'none';
-      document.getElementById('pinInput').value = '';
       document.getElementById('pinInput').value = '';
       document.getElementById('errorePin').style.display = 'none';
     }
@@ -496,8 +488,7 @@
         
         if (result.valido) {
           sessionStorage.setItem('auth', 'titolare');
-          document.getElementById('pinSection').style.display = 'none';
-          document.getElementById('capitanoMenu').style.display = 'block';
+          window.location.href = 'dashboard.html';
         } else {
           document.getElementById('errorePin').style.display = 'block';
           setTimeout(() => document.getElementById('errorePin').style.display = 'none', 3000);
@@ -511,6 +502,47 @@
     
     document.getElementById('pinInput').addEventListener('keypress', e => {
       if (e.key === 'Enter') verificaPIN();
+    });
+
+    // ===== MODAL GESTIONE VINI =====
+    function mostraModalVini() {
+      document.getElementById('pinViniSection').style.display = 'block';
+      document.getElementById('viniMenu').style.display = 'none';
+      document.getElementById('pinViniInput').value = '';
+      document.getElementById('errorePinVini').style.display = 'none';
+      document.getElementById('modalVini').classList.add('active');
+    }
+
+    function chiudiModalVini() {
+      document.getElementById('modalVini').classList.remove('active');
+      document.getElementById('pinViniInput').value = '';
+      document.getElementById('pinViniSection').style.display = 'block';
+      document.getElementById('viniMenu').style.display = 'none';
+    }
+
+    async function verificaPINVini() {
+      const pin = document.getElementById('pinViniInput').value;
+      if (!pin) { alert('⚠️ Inserisci il codice segreto!'); return; }
+      document.getElementById('loadingOverlay').classList.add('active');
+      try {
+        const result = await callAPI('verificaPIN', { pin });
+        document.getElementById('loadingOverlay').classList.remove('active');
+        if (result.valido) {
+          sessionStorage.setItem('auth', 'titolare');
+          document.getElementById('pinViniSection').style.display = 'none';
+          document.getElementById('viniMenu').style.display = 'block';
+        } else {
+          document.getElementById('errorePinVini').style.display = 'block';
+          setTimeout(() => document.getElementById('errorePinVini').style.display = 'none', 3000);
+        }
+      } catch (error) {
+        document.getElementById('loadingOverlay').classList.remove('active');
+        alert('⚠️ Errore di connessione: ' + error.message);
+      }
+    }
+
+    document.getElementById('pinViniInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') verificaPINVini();
     });
     
     // ===== GESTIONE SPESE RAPIDE =====
