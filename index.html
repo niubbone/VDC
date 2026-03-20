@@ -395,30 +395,82 @@
   </div>
   
   <!-- MODAL GESTIONE VINI -->
+  <style>
+    #modalVini .modal-content {
+      background: #fff;
+      border: 1px solid #e0e8f8;
+      padding: 0;
+      overflow: hidden;
+    }
+    .vini-modal-header {
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+      padding: 20px 24px;
+      text-align: center;
+    }
+    .vini-modal-header h2 {
+      font-family: 'Georgia', serif;
+      font-size: 1.2em;
+      color: #fff;
+      margin: 0;
+    }
+    .vini-modal-body { padding: 20px 24px; }
+    .vini-menu { display: flex; flex-direction: column; gap: 12px; }
+    .vini-menu a {
+      display: block;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+      color: #fff;
+      border-radius: 8px;
+      font-family: 'Rye', cursive;
+      font-size: 1.05em;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      box-shadow: 0 3px 0 #142d5c;
+      transition: all 0.15s;
+    }
+    .vini-menu a:hover { transform: translateY(-2px); }
+    .vini-menu a:active { transform: translateY(3px); box-shadow: 0 0 0 #142d5c; }
+    .vini-menu-back {
+      background: #f0f4ff;
+      color: #2a5298;
+      border: 2px solid #c0cce8;
+      border-radius: 8px;
+      padding: 10px;
+      font-family: 'Rye', cursive;
+      font-size: 0.9em;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      width: 100%;
+    }
+  </style>
   <div id="modalVini" class="modal">
     <div class="modal-content">
-      <h2>🍷 Gestione Vini</h2>
-
-      <div id="pinViniSection">
-        <div class="form-group">
-          <label for="pinViniInput">PIN:</label>
-          <input type="password" id="pinViniInput" placeholder="••••" maxlength="4">
-        </div>
-        <div class="modal-buttons">
-          <button class="btn btn-cancel" onclick="chiudiModalVini()">Indietro</button>
-          <button class="btn btn-primary" onclick="verificaPINVini()">Entra</button>
-        </div>
-        <div id="errorePinVini">⚠️ Codice errato! Riprova.</div>
+      <div class="vini-modal-header">
+        <h2>🍷 Gestione Vini</h2>
       </div>
-
-      <div id="viniMenu" style="display:none;">
-        <div class="capitano-menu">
-          <a href="gestione-vini.html">🍷 Gestione Vini</a>
-          <a href="carta-vini.html">🗂 Gestione Carta Calici</a>
-          <a href="gestione-vini.html?tab=sync">🔄 Sync Cassa</a>
+      <div class="vini-modal-body">
+        <div id="pinViniSection">
+          <div class="form-group">
+            <label for="pinViniInput">PIN:</label>
+            <input type="password" id="pinViniInput" placeholder="••••" maxlength="4">
+          </div>
+          <div class="modal-buttons">
+            <button class="btn btn-cancel" onclick="chiudiModalVini()">Indietro</button>
+            <button class="btn btn-primary" onclick="verificaPINVini()">Entra</button>
+          </div>
+          <div id="errorePinVini">⚠️ Codice errato! Riprova.</div>
         </div>
-        <div class="modal-buttons" style="margin-top:15px;">
-          <button class="btn btn-cancel" onclick="chiudiModalVini()">Esci</button>
+        <div id="viniMenu" style="display:none;">
+          <div class="vini-menu">
+            <a href="gestione-vini.html">🍾 Gestione Vini</a>
+            <a href="carta-vini.html">🍷 Gestione Carta Calici</a>
+            <a href="gestione-vini.html?tab=sync">🔄 Sync Cassa</a>
+          </div>
+          <div style="margin-top:12px;">
+            <button class="vini-menu-back" onclick="chiudiModalVini()">← Indietro</button>
+          </div>
         </div>
       </div>
     </div>
