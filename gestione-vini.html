@@ -1037,7 +1037,7 @@
       ws['!ref'] = `${firstCell}:${lastCol}${lastRow}`;
 
       // Download
-      const buf = XLSX.write(syncWorkbook, { bookType: 'xlsx', type: 'array' });
+      const buf = XLSX.write(syncWorkbook, { bookType: 'xlsx', type: 'array', compression: true });
       const blob = new Blob([buf], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
