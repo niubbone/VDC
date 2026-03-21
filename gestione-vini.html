@@ -920,11 +920,15 @@
         if (prezziDiff.length) {
           pwrap.style.display = '';
           document.getElementById('syncPrezziTable').innerHTML =
-            trStyled(['Codice','Nazione','Nome WineCost','€ Cassa','€ WineCost','Diff'], true) +
-            prezziDiff.map(m => {
+            trStyled(['✓','Codice','Nazione','Nome WineCost','€ Cassa','€ WineCost','Diff'], true) +
+            prezziDiff.map((m, i) => {
               const diff = (m.prezzoWC - m.prezzoCassa).toFixed(0);
               const col = m.prezzoWC > m.prezzoCassa ? 'color:#27ae60' : 'color:#c0392b';
-              return trStyled([m.codice, m.nazione, m.nomeWC, `€${m.prezzoCassa}`, `€${m.prezzoWC}`, `<span style="${col};font-weight:bold;">${diff>0?'+':''}${diff}€</span>`]);
+              return trStyled([
+                `<input type="checkbox" id="cp_${i}" checked style="width:16px;height:16px;accent-color:#2a5298;">`,
+                m.codice, m.nazione, m.nomeWC, `€${m.prezzoCassa}`, `€${m.prezzoWC}`,
+                `<span style="${col};font-weight:bold;">${diff>0?'+':''}${diff}€</span>`
+              ]);
             }).join('');
         } else { pwrap.style.display = 'none'; }
 
@@ -933,8 +937,11 @@
         if (catDiff.length) {
           cwrap.style.display = '';
           document.getElementById('syncCatTable').innerHTML =
-            trStyled(['Codice','Nome','Categoria attuale'], true) +
-            catDiff.map(m => trStyled([m.codice, m.nomeWC, m.catCassa || '(vuota)'])).join('');
+            trStyled(['✓','Codice','Nome','Categoria attuale'], true) +
+            catDiff.map((m, i) => trStyled([
+              `<input type="checkbox" id="cc_${i}" checked style="width:16px;height:16px;accent-color:#2a5298;">`,
+              m.codice, m.nomeWC, m.catCassa || '(vuota)'
+            ])).join('');
         } else { cwrap.style.display = 'none'; }
 
         // Nuovi
@@ -942,13 +949,13 @@
         if (nuovi.length) {
           nwrap.style.display = '';
           document.getElementById('syncNuoviTable').innerHTML =
-            trStyled(['Codice','Nazione','Nome WineCost','Nome Cassa (editabile)','€'], true) +
+            trStyled(['✓','Codice','Nazione','Nome WineCost','Nome Cassa (editabile)','€'], true) +
             nuovi.map((n,i) => trStyled([
+              `<input type="checkbox" id="cn_${i}" checked style="width:16px;height:16px;accent-color:#2a5298;">`,
               n.codice, n.nazione, n.nomeCarta || n.vino,
               `<input id="nn_${i}" value="${n.nomeCassa}" style="width:200px;padding:4px 6px;border:1px solid #c0cce8;border-radius:4px;font-size:12px;">`,
               `€${n.prezzoWC}`
             ])).join('');
-          // salva riferimento nuovi per generaImport
           document.getElementById('syncNuoviTable').dataset.nuovi = JSON.stringify(nuovi);
         } else { nwrap.style.display = 'none'; }
 
@@ -970,36 +977,64 @@
       const idxPrezzo = syncCassaHeaders.indexOf('Prezzo Base');
       const idxCat    = syncCassaHeaders.indexOf('Categoria');
       const idxDesc   = syncCassaHeaders.indexOf('Descrizione');
-      const idxUUID   = syncCassaHeaders.indexOf('ID');
 
       const prezziDiff = JSON.parse(document.getElementById('syncRisultato').dataset.prezzi || '[]');
       const catDiff    = JSON.parse(document.getElementById('syncRisultato').dataset.cat || '[]');
       const nuoviBase  = JSON.parse(document.getElementById('syncNuoviTable').dataset.nuovi || '[]');
+      const ws = syncWorkbook.Sheets['Prodotti'];
 
-      // Applica prezzi
-      prezziDiff.forEach(m => { syncCassaRows[m.ri][idxPrezzo] = m.prezzoWC; });
+      // Modifica solo le celle necessarie direttamente nel foglio
+      // Helper: converte indice colonna 0-based in lettera Excel (A, B, ... Z, AA, ...)
+      function colLetter(n) {
+        let s = '';
+        n += 1;
+        while (n > 0) { s = String.fromCharCode(65 + (n-1) % 26) + s; n = Math.floor((n-1) / 26); }
+        return s;
+      }
+      function setCella(rowIdx, colIdx, val) {
+        // rowIdx = indice riga dati 0-based (0 = prima riga dati, escluso header)
+        const ref = colLetter(colIdx) + (rowIdx + 2); // +2: riga 1 = header
+        if (!ws[ref]) ws[ref] = {};
+        ws[ref].v = val;
+        ws[ref].t = typeof val === 'number' ? 'n' : 's';
+        ws[ref].w = String(val);
+      }
 
-      // Applica categoria
-      catDiff.forEach(m => { syncCassaRows[m.ri][idxCat] = 'BOTTIGLIE AL TAVOLO'; });
-
-      // Aggiungi nuovi vini
-      nuoviBase.forEach((n, i) => {
-        const nomeInput = document.getElementById(`nn_${i}`);
-        const nomeCassa = nomeInput ? nomeInput.value.trim().toUpperCase() : n.nomeCassa;
-        // Costruisce riga con la stessa lunghezza dell'header
-        const newRow = new Array(syncCassaHeaders.length).fill(null);
-        newRow[idxDesc]   = nomeCassa;
-        newRow[idxPrezzo] = n.prezzoWC;
-        newRow[idxCat]    = 'BOTTIGLIE AL TAVOLO';
-        newRow[idxID]     = n.codice;
-        syncCassaRows.push(newRow);
+      // Prezzi — solo celle selezionate
+      prezziDiff.forEach((m, i) => {
+        if (document.getElementById(`cp_${i}`)?.checked) {
+          setCella(m.ri, idxPrezzo, m.prezzoWC);
+        }
       });
 
-      // Ricostruisce sheet Prodotti
-      const ws = syncWorkbook.Sheets['Prodotti'];
-      const allRows = [syncCassaHeaders, ...syncCassaRows];
-      const newSheet = XLSX.utils.aoa_to_sheet(allRows);
-      syncWorkbook.Sheets['Prodotti'] = newSheet;
+      // Categoria — solo celle selezionate
+      catDiff.forEach((m, i) => {
+        if (document.getElementById(`cc_${i}`)?.checked) {
+          setCella(m.ri, idxCat, 'BOTTIGLIE AL TAVOLO');
+        }
+      });
+
+      // Nuovi — aggiungi righe solo se selezionate
+      // Prima aggiorna il range del foglio per includerle
+      const rangeMatch = ws['!ref'] ? ws['!ref'].match(/:[A-Z]+(\d+)/) : null;
+      let lastRow = rangeMatch ? parseInt(rangeMatch[1]) : syncCassaRows.length + 1;
+
+      nuoviBase.forEach((n, i) => {
+        if (!document.getElementById(`cn_${i}`)?.checked) return;
+        const nomeInput = document.getElementById(`nn_${i}`);
+        const nomeCassa = nomeInput ? nomeInput.value.trim().toUpperCase() : n.nomeCassa;
+        lastRow++;
+        const rowIdx = lastRow - 2; // converti in 0-based dati
+        setCella(rowIdx, idxDesc,   nomeCassa);
+        setCella(rowIdx, idxPrezzo, n.prezzoWC);
+        setCella(rowIdx, idxCat,    'BOTTIGLIE AL TAVOLO');
+        setCella(rowIdx, idxID,     n.codice);
+      });
+
+      // Aggiorna !ref per includere eventuali nuove righe
+      const firstCell = ws['!ref'] ? ws['!ref'].split(':')[0] : 'A1';
+      const lastCol = colLetter(syncCassaHeaders.length - 1);
+      ws['!ref'] = `${firstCell}:${lastCol}${lastRow}`;
 
       // Download
       const buf = XLSX.write(syncWorkbook, { bookType: 'xlsx', type: 'array' });
