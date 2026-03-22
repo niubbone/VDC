@@ -360,7 +360,7 @@
         </div>
 
         <div style="text-align:right;margin-top:20px;">
-          <button class="btn-nuovo" onclick="generaImport()">⬇ Genera file import</button>
+          <button class="btn-nuovo" onclick="generaImport()">⬇ Scarica modifiche (.json)</button>
         </div>
       </div>
     </div>
@@ -973,79 +973,41 @@
     function generaImport() {
       if (!syncWorkbook) { alert('Analizza prima il file.'); return; }
 
-      const idxID     = syncCassaHeaders.indexOf('ID Interno');
-      const idxPrezzo = syncCassaHeaders.indexOf('Prezzo Base');
-      const idxCat    = syncCassaHeaders.indexOf('Categoria');
-      const idxDesc   = syncCassaHeaders.indexOf('Descrizione');
-
       const prezziDiff = JSON.parse(document.getElementById('syncRisultato').dataset.prezzi || '[]');
       const catDiff    = JSON.parse(document.getElementById('syncRisultato').dataset.cat || '[]');
       const nuoviBase  = JSON.parse(document.getElementById('syncNuoviTable').dataset.nuovi || '[]');
-      const ws = syncWorkbook.Sheets['Prodotti'];
 
-      // Modifica solo le celle necessarie direttamente nel foglio
-      // Helper: converte indice colonna 0-based in lettera Excel (A, B, ... Z, AA, ...)
-      function colLetter(n) {
-        let s = '';
-        n += 1;
-        while (n > 0) { s = String.fromCharCode(65 + (n-1) % 26) + s; n = Math.floor((n-1) / 26); }
-        return s;
-      }
-      function setCella(rowIdx, colIdx, val) {
-        // rowIdx = indice riga dati 0-based (0 = prima riga dati, escluso header)
-        const ref = colLetter(colIdx) + (rowIdx + 2); // +2: riga 1 = header
-        if (!ws[ref]) ws[ref] = {};
-        ws[ref].v = val;
-        ws[ref].t = typeof val === 'number' ? 'n' : 's';
-        ws[ref].w = String(val);
-      }
+      // Raccoglie solo le modifiche selezionate
+      const modifiche = {
+        prezzi: prezziDiff
+          .filter((m, i) => document.getElementById(`cp_${i}`)?.checked)
+          .map(m => ({ codice: m.codice, nomeWC: m.nomeWC, prezzoWC: m.prezzoWC, prezzoCassa: m.prezzoCassa })),
+        categorie: catDiff
+          .filter((m, i) => document.getElementById(`cc_${i}`)?.checked)
+          .map(m => ({ codice: m.codice, nomeWC: m.nomeWC })),
+        nuovi: nuoviBase
+          .filter((n, i) => document.getElementById(`cn_${i}`)?.checked)
+          .map((n, i) => {
+            const input = document.getElementById(`nn_${i}`);
+            return { codice: n.codice, nazione: n.nazione, nomeCarta: n.nomeCarta || n.vino,
+                     nomeCassa: (input ? input.value.trim().toUpperCase() : n.nomeCassa), prezzoWC: n.prezzoWC };
+          })
+      };
 
-      // Prezzi — solo celle selezionate
-      prezziDiff.forEach((m, i) => {
-        if (document.getElementById(`cp_${i}`)?.checked) {
-          setCella(m.ri, idxPrezzo, m.prezzoWC);
-        }
-      });
+      const totale = modifiche.prezzi.length + modifiche.categorie.length + modifiche.nuovi.length;
+      if (!totale) { alert('Nessuna modifica selezionata.'); return; }
 
-      // Categoria — solo celle selezionate
-      catDiff.forEach((m, i) => {
-        if (document.getElementById(`cc_${i}`)?.checked) {
-          setCella(m.ri, idxCat, 'BOTTIGLIE AL TAVOLO');
-        }
-      });
-
-      // Nuovi — aggiungi righe solo se selezionate
-      // Prima aggiorna il range del foglio per includerle
-      const rangeMatch = ws['!ref'] ? ws['!ref'].match(/:[A-Z]+(\d+)/) : null;
-      let lastRow = rangeMatch ? parseInt(rangeMatch[1]) : syncCassaRows.length + 1;
-
-      nuoviBase.forEach((n, i) => {
-        if (!document.getElementById(`cn_${i}`)?.checked) return;
-        const nomeInput = document.getElementById(`nn_${i}`);
-        const nomeCassa = nomeInput ? nomeInput.value.trim().toUpperCase() : n.nomeCassa;
-        lastRow++;
-        const rowIdx = lastRow - 2; // converti in 0-based dati
-        setCella(rowIdx, idxDesc,   nomeCassa);
-        setCella(rowIdx, idxPrezzo, n.prezzoWC);
-        setCella(rowIdx, idxCat,    'BOTTIGLIE AL TAVOLO');
-        setCella(rowIdx, idxID,     n.codice);
-      });
-
-      // Aggiorna !ref per includere eventuali nuove righe
-      const firstCell = ws['!ref'] ? ws['!ref'].split(':')[0] : 'A1';
-      const lastCol = colLetter(syncCassaHeaders.length - 1);
-      ws['!ref'] = `${firstCell}:${lastCol}${lastRow}`;
-
-      // Download
-      const buf = XLSX.write(syncWorkbook, { bookType: 'xlsx', type: 'array', compression: true });
-      const blob = new Blob([buf], { type: 'application/octet-stream' });
+      // Scarica JSON
+      const blob = new Blob([JSON.stringify(modifiche, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
-      a.download = `VecchiaDogana_CassaCloud_Sync_${today}.xlsx`;
+      a.download = `sync_modifiche_${today}.json`;
       a.click();
       URL.revokeObjectURL(url);
+
+      alert(`File JSON scaricato con ${totale} modifiche.\n\nAprilo con SyncCassa.bat insieme all'export di Cassa in Cloud.`);
     }
 
     // ── INIT ─────────────────────────────────────────────────────────
