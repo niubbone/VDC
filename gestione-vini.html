@@ -366,8 +366,10 @@
     </div>
 
     <div id="statistiche" class="tab-content">
-      <div style="padding:40px; text-align:center; color:#aaa; font-style:italic;">
-        Prossimamente — ricarichi medi, distribuzione per nazione, vini in carta vs totale.
+      <div id="statsContent" style="padding:20px 0;">
+        <div style="text-align:center;color:#aaa;font-style:italic;padding:40px;">
+          Caricamento statistiche...
+        </div>
       </div>
     </div>
   </div>
@@ -434,6 +436,7 @@
               <option value="">— seleziona —</option>
               <option>FERMI</option><option>BOLLICINE</option>
               <option>CHAMPAGNE</option><option>SPECIALI</option>
+              <option>PREMIUM</option><option>BAG IN BOX</option>
             </select>
           </div>
           <div class="form-group" style="justify-content:flex-end; padding-top:20px;">
@@ -743,6 +746,7 @@
         if (res.ok) {
           wineData = res.vini.map(v => ({ ...v, id: v.codice }));
           filtraVini();
+          renderStats();
         } else {
           alert('Errore caricamento: ' + res.error);
         }
@@ -1010,7 +1014,189 @@
       alert(`File JSON scaricato con ${totale} modifiche.\n\nAprilo con SyncCassa.bat insieme all'export di Cassa in Cloud.`);
     }
 
-    // ── INIT ─────────────────────────────────────────────────────────
+    // ── STATISTICHE ──────────────────────────────────────────────────
+    function renderStats() {
+      const vini = wineData.filter(w => !w.abbandonato);
+
+      const CAT_BASE      = ['FERMI','BOLLICINE'];
+      const CAT_CHAMPAGNE = ['CHAMPAGNE'];
+      const CAT_SPECIALI  = ['SPECIALI'];
+      const CAT_NO_CALICI = ['CHAMPAGNE','SPECIALI','PREMIUM','BAG IN BOX'];
+
+      // Calcola metriche per un vino
+      function metriche(w) {
+        const imp  = parseFloat(w.imponibile) || 0;
+        const tav  = parseFloat(w.tavoloListino) || 0;
+        const cal  = parseFloat(w.calice) || null;
+        const cCal = parseFloat(w.costoCalice) || null;
+        if (!imp || !tav) return null;
+        const asp = tav * 0.7;
+        return {
+          ric_x:   tav / 1.1 / imp,
+          ric_eur: tav / 1.1 - imp,
+          asp_x:   asp / 1.1 / imp,
+          asp_eur: asp / 1.1 - imp,
+          cal_x:   (cal && cCal) ? (cal / 1.1 / cCal) : null,
+          cal_eur: (cal && cCal) ? (cal / 1.1 - cCal) : null,
+          calice:  cal,
+        };
+      }
+
+      function media(arr, key) {
+        const vals = arr.map(v => v[key]).filter(v => v !== null && !isNaN(v));
+        return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+      }
+
+      function gruppo(cats) {
+        return vini
+          .filter(w => cats.includes(w.catCosto))
+          .map(w => metriche(w)).filter(Boolean);
+      }
+
+      const gBase  = gruppo(CAT_BASE);
+      const gChamp = gruppo(CAT_CHAMPAGNE);
+      const gSpec  = gruppo(CAT_SPECIALI);
+
+      // Distribuzione calici (solo FERMI+BOLLICINE)
+      const calici_dist = {};
+      vini.filter(w => !CAT_NO_CALICI.includes(w.catCosto) && w.calice)
+          .forEach(w => {
+            const p = Math.round(parseFloat(w.calice));
+            calici_dist[p] = (calici_dist[p] || 0) + 1;
+          });
+
+      function fmt(v, dec=2) { return v !== null ? v.toFixed(dec) : '—'; }
+      function fmtEur(v) { return v !== null ? `€${v.toFixed(2)}` : '—'; }
+
+      function cardMedia(label, rows, n) {
+        const ric_x   = media(rows, 'ric_x');
+        const ric_eur = media(rows, 'ric_eur');
+        const asp_x   = media(rows, 'asp_x');
+        const asp_eur = media(rows, 'asp_eur');
+        const cal_x   = media(rows.filter(r => r.cal_x !== null), 'cal_x');
+        const cal_eur = media(rows.filter(r => r.cal_eur !== null), 'cal_eur');
+        const hasCal  = rows.some(r => r.cal_x !== null);
+        return `
+          <div style="background:#fff;border:1px solid #e0e8f8;border-left:5px solid #2a5298;border-bottom:3px solid #2a5298;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+              <span style="font-weight:bold;font-size:15px;color:#1e3c72;">${label}</span>
+              <span style="font-size:12px;color:#aaa;">${n} vini</span>
+            </div>
+            <table style="width:100%;font-size:13px;border-collapse:collapse;">
+              <tr style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;">
+                <td style="padding:4px 8px 8px 0;width:40%"></td>
+                <td style="padding:4px 8px 8px;text-align:center;">Ricarico X</td>
+                <td style="padding:4px 8px 8px;text-align:center;">Guadagno €</td>
+              </tr>
+              ${hasCal ? `<tr>
+                <td style="padding:5px 8px 5px 0;color:#555;font-weight:bold;">Calice</td>
+                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmt(cal_x)}</td>
+                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmtEur(cal_eur)}</td>
+              </tr>` : ''}
+              <tr style="border-top:1px solid #f0f4ff;">
+                <td style="padding:5px 8px 5px 0;color:#555;font-weight:bold;">Bottiglia tavolo</td>
+                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmt(ric_x)}</td>
+                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmtEur(ric_eur)}</td>
+              </tr>
+              <tr style="border-top:1px solid #f0f4ff;">
+                <td style="padding:5px 8px 5px 0;color:#555;font-weight:bold;">Bottiglia asporto</td>
+                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmt(asp_x)}</td>
+                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmtEur(asp_eur)}</td>
+              </tr>
+            </table>
+          </div>`;
+      }
+
+      // Distribuzione calici
+      const maxCal = Math.max(...Object.values(calici_dist), 1);
+      const caliciHtml = `
+        <div style="background:#fff;border:1px solid #e0e8f8;border-left:5px solid #1a6a9a;border-bottom:3px solid #1a6a9a;border-radius:10px;padding:18px 20px;">
+          <div style="font-weight:bold;font-size:15px;color:#1e3c72;margin-bottom:16px;">Distribuzione calici <span style="font-size:12px;color:#aaa;font-weight:normal;">(FERMI + BOLLICINE)</span></div>
+          ${Object.entries(calici_dist).sort((a,b)=>a[0]-b[0]).map(([p,n]) => `
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+              <span style="width:50px;font-size:14px;font-weight:bold;color:#1a6a9a;">€${p}</span>
+              <div style="flex:1;background:#f0f4ff;border-radius:4px;height:22px;position:relative;">
+                <div style="background:#1a6a9a;width:${Math.round(n/maxCal*100)}%;height:100%;border-radius:4px;"></div>
+              </div>
+              <span style="width:30px;font-size:13px;color:#555;text-align:right;">${n}</span>
+            </div>`).join('')}
+        </div>`;
+
+      // Distribuzione per nazione (tutti i vini in carta)
+      const nazioni = {};
+      vini.filter(w => w.incarta).forEach(w => {
+        const n = w.nazione || 'N/D';
+        nazioni[n] = (nazioni[n] || { count: 0, prezzi: [] });
+        nazioni[n].count++;
+        if (w.tavoloListino) nazioni[n].prezzi.push(parseFloat(w.tavoloListino));
+      });
+      const nazioniSorted = Object.entries(nazioni).sort((a,b) => b[1].count - a[1].count);
+      const maxNaz = nazioniSorted[0]?.[1].count || 1;
+
+      const nazioniHtml = `
+        <div style="background:#fff;border:1px solid #e0e8f8;border-left:5px solid #9a7f00;border-bottom:3px solid #9a7f00;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+          <div style="font-weight:bold;font-size:15px;color:#1e3c72;margin-bottom:16px;">Distribuzione per nazione</div>
+          ${nazioniSorted.map(([naz, d]) => {
+            const mediaPrezzo = d.prezzi.length ? (d.prezzi.reduce((a,b)=>a+b,0)/d.prezzi.length).toFixed(0) : '—';
+            return `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+              <span style="width:110px;font-size:13px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${naz}</span>
+              <div style="flex:1;background:#f0f4ff;border-radius:4px;height:20px;position:relative;">
+                <div style="background:#9a7f00;width:${Math.round(d.count/maxNaz*100)}%;height:100%;border-radius:4px;"></div>
+              </div>
+              <span style="width:24px;font-size:13px;color:#555;text-align:right;">${d.count}</span>
+              <span style="width:44px;font-size:12px;color:#aaa;text-align:right;">€${mediaPrezzo}</span>
+            </div>`;
+          }).join('')}
+        </div>`;
+
+      // Prezzo medio bottiglia per categoria
+      const prezziCat = {};
+      vini.filter(w => w.tavoloListino).forEach(w => {
+        const cat = w.catCosto || 'N/D';
+        if (!prezziCat[cat]) prezziCat[cat] = [];
+        prezziCat[cat].push(parseFloat(w.tavoloListino));
+      });
+      const prezziHtml = `
+        <div style="background:#fff;border:1px solid #e0e8f8;border-left:5px solid #c0392b;border-bottom:3px solid #c0392b;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+          <div style="font-weight:bold;font-size:15px;color:#1e3c72;margin-bottom:14px;">Prezzo medio bottiglia al tavolo</div>
+          <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <tr style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #f0f4ff;">
+              <td style="padding:4px 8px 8px 0;">Categoria</td>
+              <td style="padding:4px 8px 8px;text-align:center;">Vini</td>
+              <td style="padding:4px 8px 8px;text-align:center;">Min</td>
+              <td style="padding:4px 8px 8px;text-align:center;">Media</td>
+              <td style="padding:4px 8px 8px;text-align:center;">Max</td>
+            </tr>
+            ${['FERMI','BOLLICINE','CHAMPAGNE','SPECIALI','PREMIUM','BAG IN BOX'].filter(c => prezziCat[c]?.length).map(cat => {
+              const ps = prezziCat[cat];
+              const min  = Math.min(...ps).toFixed(0);
+              const max  = Math.max(...ps).toFixed(0);
+              const avg  = (ps.reduce((a,b)=>a+b,0)/ps.length).toFixed(0);
+              return `<tr style="border-top:1px solid #f0f4ff;">
+                <td style="padding:6px 8px 6px 0;color:#555;font-weight:bold;">${cat}</td>
+                <td style="padding:6px 8px;text-align:center;color:#888;">${ps.length}</td>
+                <td style="padding:6px 8px;text-align:center;color:#888;">€${min}</td>
+                <td style="padding:6px 8px;text-align:center;font-weight:bold;color:#2a5298;">€${avg}</td>
+                <td style="padding:6px 8px;text-align:center;color:#888;">€${max}</td>
+              </tr>`;
+            }).join('')}
+          </table>
+        </div>`;
+
+      document.getElementById('statsContent').innerHTML = `
+        <div style="margin-bottom:8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Prezzi di vendita</div>
+        ${prezziHtml}
+        <div style="margin:20px 0 8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Campione principale</div>
+        ${cardMedia('FERMI + BOLLICINE', gBase, gBase.length)}
+        <div style="margin:20px 0 8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Categorie separate</div>
+        ${gChamp.length ? cardMedia('Champagne', gChamp, gChamp.length) : ''}
+        ${gSpec.length  ? cardMedia('Speciali',  gSpec,  gSpec.length)  : ''}
+        <div style="margin:20px 0 8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Prezzi al calice</div>
+        ${caliciHtml}
+        <div style="margin:20px 0 8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Provenienza</div>
+        ${nazioniHtml}`;
+    }
     const urlTab = new URLSearchParams(window.location.search).get('tab');
     if (urlTab === 'sync') {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
