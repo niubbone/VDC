@@ -1116,7 +1116,7 @@
               ${riga('Bottiglia tavolo', 'ric_x', 'ric_eur')}
               ${riga('Bottiglia asporto', 'asp_x', 'asp_eur')}
             </table>
-            <div style="font-size:10px;color:#bbb;margin-top:8px;">Ricarico X · €guadagno netto</div>
+            <div style="font-size:10px;color:#bbb;margin-top:8px;">Ricarico (X) · Margine netto (€)</div>
           </div>`;
       }
 
@@ -1198,16 +1198,16 @@
         </div>`;
 
       document.getElementById('statsContent').innerHTML = `
-        <div style="margin-bottom:8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Prezzi di vendita</div>
+        <div style="margin-bottom:8px;font-size:11px;color:#555;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Prezzi di vendita</div>
         ${prezziHtml}
-        <div style="margin:20px 0 8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Campione principale</div>
+        <div style="margin:20px 0 8px;font-size:11px;color:#555;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Ricarico categoria principale</div>
         ${cardMedia('FERMI + BOLLICINE', gBase, gBase.length)}
-        <div style="margin:20px 0 8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Categorie separate</div>
+        <div style="margin:20px 0 8px;font-size:11px;color:#555;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Ricarico categorie secondarie</div>
         ${gChamp.length ? cardMedia('Champagne', gChamp, gChamp.length) : ''}
         ${gSpec.length  ? cardMedia('Speciali',  gSpec,  gSpec.length)  : ''}
-        <div style="margin:20px 0 8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Prezzi al calice</div>
+        <div style="margin:20px 0 8px;font-size:11px;color:#555;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Prezzi al calice</div>
         ${caliciHtml}
-        <div style="margin:20px 0 8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Provenienza</div>
+        <div style="margin:20px 0 8px;font-size:11px;color:#555;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Provenienza</div>
         ${nazioniHtml}`;
     }
     const urlTab = new URLSearchParams(window.location.search).get('tab');
