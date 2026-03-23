@@ -1039,6 +1039,7 @@
           cal_x:   (cal && cCal) ? (cal / 1.1 / cCal) : null,
           cal_eur: (cal && cCal) ? (cal / 1.1 - cCal) : null,
           calice:  cal,
+          sheet:   w.sheet,
         };
       }
 
@@ -1069,13 +1070,35 @@
       function fmtEur(v) { return v !== null ? `€${v.toFixed(2)}` : '—'; }
 
       function cardMedia(label, rows, n) {
-        const ric_x   = media(rows, 'ric_x');
-        const ric_eur = media(rows, 'ric_eur');
-        const asp_x   = media(rows, 'asp_x');
-        const asp_eur = media(rows, 'asp_eur');
-        const cal_x   = media(rows.filter(r => r.cal_x !== null), 'cal_x');
-        const cal_eur = media(rows.filter(r => r.cal_eur !== null), 'cal_eur');
-        const hasCal  = rows.some(r => r.cal_x !== null);
+        const rowsDist = rows.filter(r => r.sheet === 'DIST');
+        const rowsImp  = rows.filter(r => r.sheet === 'IMPORT');
+
+        function riga(labelR, key, keyEur) {
+          const vals = [
+            [rowsDist, keyEur ? key : key],
+            [rowsImp,  keyEur ? key : key],
+            [rows,     keyEur ? key : key],
+          ];
+          function m(arr, k) {
+            const v = arr.map(r => r[k]).filter(v => v !== null && !isNaN(v));
+            return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null;
+          }
+          const [vd, vi, vt] = vals.map(([arr, k]) => m(arr, k));
+          const [ed, ei, et] = keyEur ? vals.map(([arr]) => m(arr, keyEur)) : [null,null,null];
+          function cell(x, e) {
+            if (x === null) return '<td style="padding:5px 8px;text-align:center;color:#ccc;">—</td>';
+            const txt = e !== null
+              ? `<span style="font-weight:bold;color:#2a5298;">${x.toFixed(2)}</span><br><span style="font-size:11px;color:#888;">€${e.toFixed(2)}</span>`
+              : `<span style="font-weight:bold;color:#2a5298;">${x.toFixed(2)}</span>`;
+            return `<td style="padding:5px 8px;text-align:center;">${txt}</td>`;
+          }
+          return `<tr style="border-top:1px solid #f0f4ff;">
+            <td style="padding:5px 8px 5px 0;color:#555;font-weight:bold;">${labelR}</td>
+            ${cell(vd, ed)}${cell(vi, ei)}${cell(vt, et)}
+          </tr>`;
+        }
+
+        const hasCal = rows.some(r => r.cal_x !== null);
         return `
           <div style="background:#fff;border:1px solid #e0e8f8;border-left:5px solid #2a5298;border-bottom:3px solid #2a5298;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -1083,27 +1106,17 @@
               <span style="font-size:12px;color:#aaa;">${n} vini</span>
             </div>
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
-              <tr style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;">
-                <td style="padding:4px 8px 8px 0;width:40%"></td>
-                <td style="padding:4px 8px 8px;text-align:center;">Ricarico X</td>
-                <td style="padding:4px 8px 8px;text-align:center;">Guadagno €</td>
+              <tr style="color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e0e8f8;">
+                <td style="padding:4px 8px 8px 0;width:38%"></td>
+                <td style="padding:4px 8px 8px;text-align:center;">Dist.<br><span style="font-size:10px;color:#bbb;">${rowsDist.length}</span></td>
+                <td style="padding:4px 8px 8px;text-align:center;">Import<br><span style="font-size:10px;color:#bbb;">${rowsImp.length}</span></td>
+                <td style="padding:4px 8px 8px;text-align:center;">Totale<br><span style="font-size:10px;color:#bbb;">${n}</span></td>
               </tr>
-              ${hasCal ? `<tr>
-                <td style="padding:5px 8px 5px 0;color:#555;font-weight:bold;">Calice</td>
-                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmt(cal_x)}</td>
-                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmtEur(cal_eur)}</td>
-              </tr>` : ''}
-              <tr style="border-top:1px solid #f0f4ff;">
-                <td style="padding:5px 8px 5px 0;color:#555;font-weight:bold;">Bottiglia tavolo</td>
-                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmt(ric_x)}</td>
-                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmtEur(ric_eur)}</td>
-              </tr>
-              <tr style="border-top:1px solid #f0f4ff;">
-                <td style="padding:5px 8px 5px 0;color:#555;font-weight:bold;">Bottiglia asporto</td>
-                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmt(asp_x)}</td>
-                <td style="padding:5px 8px;text-align:center;font-weight:bold;color:#2a5298;">${fmtEur(asp_eur)}</td>
-              </tr>
+              ${hasCal ? riga('Calice', 'cal_x', 'cal_eur') : ''}
+              ${riga('Bottiglia tavolo', 'ric_x', 'ric_eur')}
+              ${riga('Bottiglia asporto', 'asp_x', 'asp_eur')}
             </table>
+            <div style="font-size:10px;color:#bbb;margin-top:8px;">Ricarico X · €guadagno netto</div>
           </div>`;
       }
 
