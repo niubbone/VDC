@@ -558,15 +558,24 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
 
     async function callAPI(action, data = {}) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 45000); // 45s timeout
       try {
         const res = await fetch(API_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action, ...data })
+          body: JSON.stringify({ action, ...data }),
+          signal: controller.signal
         });
+        clearTimeout(timeout);
         return await res.json();
       } catch(err) {
+        clearTimeout(timeout);
+        if (err.name === 'AbortError') {
+          console.error('Timeout API:', action);
+          throw new Error('Il server non risponde. Riprova tra qualche secondo.');
+        }
         console.error('Errore API:', err);
         throw err;
       }
@@ -751,16 +760,13 @@
           alert('Errore caricamento: ' + res.error);
         }
       } catch(e) {
-        // Fallback mock per anteprima locale
-        wineData = [
-          {id:'D-0001',codice:'D-0001',sheet:'DIST',nazione:'Australia',vino:'De Bortoli Shiraz First Block',imponibile:4.24,nomeCarta:'De Bortoli - First Block',catCarta:'I Rossi',aoc:'New South Wales',vitigni:'Shiraz',tavoloListino:26,calice:6,fornitore:'World of Flavours',catCosto:'FERMI',incarta:true,abbandonato:false,costoCalice:0.69},
-          {id:'D-0003',codice:'D-0003',sheet:'DIST',nazione:'Grecia',vino:'Perivleptos White',imponibile:5.1,nomeCarta:'Theodorakakos - Perivleptos White',catCarta:'I Bianchi',aoc:'Laconia PGI',vitigni:'Moschofilero',tavoloListino:26,calice:null,fornitore:'Ellenika',catCosto:'FERMI',incarta:true,abbandonato:false,costoCalice:null},
-          {id:'D-0009',codice:'D-0009',sheet:'DIST',nazione:'Francia',vino:"Peyrassol - Rosé Méditerranée",imponibile:6.5,nomeCarta:"Peyrassol - Rosé Méditerranée",catCarta:'I Rosati',aoc:'Côtes de Provence',tavoloListino:28,calice:null,fornitore:'Proposta Vini',catCosto:'FERMI',incarta:true,abbandonato:false,costoCalice:null},
-          {id:'D-0118',codice:'D-0118',sheet:'DIST',nazione:'Francia',vino:'Sadi Malot Brut Grand Cru',imponibile:32,nomeCarta:"Sadi Malot - L'Equilibre Grand Cru",catCarta:'Le Bolle',aoc:'Champagne',tavoloListino:72,calice:14,fornitore:'Velier',catCosto:'CHAMPAGNE',incarta:true,abbandonato:false,costoCalice:5.24},
-          {id:'D-0080',codice:'D-0080',sheet:'DIST',nazione:'Cina',vino:'Silver Heights - Sand Lake Moon Orange',imponibile:18,nomeCarta:'Sand Lake Moon Orange',catCarta:'I Vini Speciali',aoc:'Ningxia',tavoloListino:60,calice:null,fornitore:'A Piedi Nudi',catCosto:'SPECIALI',incarta:true,abbandonato:false,costoCalice:null},
-          {id:'I-0005',codice:'I-0005',sheet:'IMPORT',nazione:'Austria',vino:'Matthias Warnung - Potatoland',imponibile:9.5,nomeCarta:'Potatoland',catCarta:'I Bianchi',aoc:'Kamptal',tavoloListino:33,calice:7,fornitore:'Elemento Indigeno',catCosto:'FERMI',incarta:true,abbandonato:false,costoCalice:1.56},
-        ].map(v => ({...v, id: v.codice}));
-        filtraVini();
+        console.error('loadVini fallito:', e);
+        wineData = [];
+        document.getElementById('wineGrid').innerHTML =
+          `<div style="text-align:center;padding:40px 20px;color:#c94040;">
+            <p style="font-size:1.2em;">⚠️ ${e.message || 'Errore di connessione al server'}</p>
+            <button onclick="loadVini()" style="margin-top:15px;padding:10px 25px;border-radius:8px;border:1px solid #c94040;background:#fff;color:#c94040;cursor:pointer;font-size:1em;">🔄 Riprova</button>
+          </div>`;
       } finally {
         hideLoading();
       }
