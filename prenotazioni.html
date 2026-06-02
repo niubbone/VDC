@@ -1226,13 +1226,17 @@
         <div class="form-row">
           <div class="form-group">
             <label>Telefono</label>
-            <input type="tel" id="inputTelefono" placeholder="123456789">
+            <input type="tel" id="inputTelefono">
           </div>
           
           <div class="form-group">
             <label>Persone</label>
             <input type="number" id="inputPersone" min="1" value="2">
           </div>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="inputEmail" placeholder="cliente@email.com">
         </div>
         
         <div class="form-group">
@@ -1828,6 +1832,7 @@
       document.getElementById('inputOra').value = '19:00';
       document.getElementById('inputCliente').value = '';
       document.getElementById('inputTelefono').value = '';
+      document.getElementById('inputEmail').value = '';
       document.getElementById('inputPersone').value = '2';
       document.getElementById('inputNote').value = '';
       document.getElementById('inputStato').value = 'confermato';
@@ -1859,6 +1864,7 @@
       document.getElementById('inputOra').value = pren.ora || '19:00';
       document.getElementById('inputCliente').value = pren.cliente;
       document.getElementById('inputTelefono').value = pren.telefono || '';
+      document.getElementById('inputEmail').value = pren.email || '';
       document.getElementById('inputPersone').value = pren.persone || 2;
       document.getElementById('inputNote').value = pren.note || '';
       document.getElementById('inputStato').value = pren.stato;
@@ -2051,6 +2057,7 @@
       document.getElementById('inputOra').value = '';
       document.getElementById('inputCliente').value = '';
       document.getElementById('inputTelefono').value = '';
+      document.getElementById('inputEmail').value = '';
       document.getElementById('inputPersone').value = '2';
       document.getElementById('inputNote').value = '';
       document.getElementById('inputStato').value = 'confermato';
@@ -2078,6 +2085,7 @@
       document.getElementById('inputOra').value = pren.ora || '';
       document.getElementById('inputCliente').value = pren.cliente;
       document.getElementById('inputTelefono').value = pren.telefono || '';
+      document.getElementById('inputEmail').value = pren.email || '';
       document.getElementById('inputPersone').value = pren.persone || '2';
       document.getElementById('inputNote').value = pren.note || '';
       document.getElementById('inputStato').value = pren.stato;
@@ -2136,6 +2144,7 @@
           ora: document.getElementById('inputOra').value,
           cliente: document.getElementById('inputCliente').value,
           telefono: document.getElementById('inputTelefono').value,
+          email: document.getElementById('inputEmail').value,
           persone: parseInt(document.getElementById('inputPersone').value) || 0,
           note: document.getElementById('inputNote').value,
           stato: document.getElementById('inputStato').value
