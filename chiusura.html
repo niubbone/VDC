@@ -443,23 +443,23 @@
       <div class="grid">
         <div class="form-group">
           <label>Chiusura (da stampa):</label>
-          <input type="number" id="chiusura" step="0.01" value="0" style="background: #e6f3ff;" oninput="ricalcola()" onfocus="this.select()">
+          <input type="number" id="chiusura" step="0.01" value="0" style="background: #e6f3ff;" oninput="ricalcola(); segnaModificato()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>Cash (portato via):</label>
-          <input type="number" id="cash" step="0.01" value="0" oninput="ricalcola()" onfocus="this.select()">
+          <input type="number" id="cash" step="0.01" value="0" oninput="ricalcola(); segnaModificato()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>POS:</label>
-          <input type="number" id="pos" step="0.01" value="0" oninput="ricalcola()" onfocus="this.select()">
+          <input type="number" id="pos" step="0.01" value="0" oninput="ricalcola(); segnaModificato()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>Satispay:</label>
-          <input type="number" id="satispay" step="0.01" value="0" oninput="ricalcola()" onfocus="this.select()">
+          <input type="number" id="satispay" step="0.01" value="0" oninput="ricalcola(); segnaModificato()" onfocus="this.select()">
         </div>
         <div class="form-group">
           <label>Report Prodotti:</label>
-          <input type="number" id="reportProdotti" step="0.01" oninput="ricalcola()" onfocus="this.select()">
+          <input type="number" id="reportProdotti" step="0.01" oninput="ricalcola(); segnaModificato()" onfocus="this.select()">
         </div>
       </div>
     </div>
@@ -475,7 +475,7 @@
     
     <div class="section">
       <div class="section-title">📝 Note</div>
-      <textarea id="note" placeholder="Note..." style="width:100%; min-height:80px; padding:12px; border:2px solid #8b4513; border-radius:8px;"></textarea>
+      <textarea id="note" placeholder="Note..." style="width:100%; min-height:80px; padding:12px; border:2px solid #8b4513; border-radius:8px;" oninput="segnaModificato()"></textarea>
     </div>
     
     <div class="riepilogo">
@@ -502,15 +502,33 @@
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
     
+    // Fetch con timeout + retry esponenziale: assorbe i glitch transitori di GAS
+    // (cold-start, "Service invoked too many times") che altrimenti diventano errori visibili.
+    async function fetchConRetry(url, options, tentativi = 3, timeoutMs = 20000) {
+      for (let i = 0; i < tentativi; i++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const res = await fetch(url, { ...options, signal: controller.signal });
+          clearTimeout(timeoutId);
+          return res;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          if (i === tentativi - 1) throw error;
+          await new Promise(r => setTimeout(r, 800 * Math.pow(2, i)));
+        }
+      }
+    }
+
     async function callAPI(action, data = {}) {
       try {
-        const response = await fetch(API_URL, {
+        const response = await fetchConRetry(API_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: action, ...data })
         });
-        
+
         const text = await response.text();
         return JSON.parse(text);
       } catch (error) {
@@ -532,6 +550,69 @@
     let spese = [];
     let modalitaConsultazione = false;
     let dataSelezionata = null; // Data calcolata automaticamente
+    let formDirty = false; // true se ci sono modifiche non salvate (blocca il reload automatico del SW)
+
+    function segnaModificato() {
+      formDirty = true;
+      salvaDraftLocale();
+    }
+
+    function raccogliDatiForm() {
+      const tagli = {};
+      TAGLI.forEach(taglio => {
+        const input = document.getElementById(`taglio_${taglio.label}`);
+        if (input) tagli[taglio.label] = input.value;
+      });
+      return {
+        tagli,
+        chiusura: document.getElementById('chiusura').value,
+        cash: document.getElementById('cash').value,
+        pos: document.getElementById('pos').value,
+        satispay: document.getElementById('satispay').value,
+        reportProdotti: document.getElementById('reportProdotti').value,
+        note: document.getElementById('note').value,
+        spese
+      };
+    }
+
+    function chiaveDraft() {
+      return 'vdc_chiusura_draft_' + dataSelezionata;
+    }
+
+    function salvaDraftLocale() {
+      if (!dataSelezionata) return;
+      try {
+        localStorage.setItem(chiaveDraft(), JSON.stringify(raccogliDatiForm()));
+      } catch (e) { /* storage pieno o non disponibile: ignora */ }
+    }
+
+    function cancellaDraftLocale() {
+      if (dataSelezionata) localStorage.removeItem(chiaveDraft());
+      formDirty = false;
+    }
+
+    function ripristinaDraftLocale() {
+      if (!dataSelezionata) return false;
+      const raw = localStorage.getItem(chiaveDraft());
+      if (!raw) return false;
+      try {
+        const draft = JSON.parse(raw);
+        TAGLI.forEach(taglio => {
+          const input = document.getElementById(`taglio_${taglio.label}`);
+          if (input && draft.tagli && draft.tagli[taglio.label] !== undefined) input.value = draft.tagli[taglio.label];
+        });
+        if (draft.chiusura !== undefined) document.getElementById('chiusura').value = draft.chiusura;
+        if (draft.cash !== undefined) document.getElementById('cash').value = draft.cash;
+        if (draft.pos !== undefined) document.getElementById('pos').value = draft.pos;
+        if (draft.satispay !== undefined) document.getElementById('satispay').value = draft.satispay;
+        if (draft.reportProdotti !== undefined) document.getElementById('reportProdotti').value = draft.reportProdotti;
+        if (draft.note !== undefined) document.getElementById('note').value = draft.note;
+        if (draft.spese && draft.spese.length > 0) { spese = draft.spese; aggiornaSpese(); }
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
     
     // ⭐ LOGICA AUTOMATICA: Calcola la data di chiusura in base all'ora
     function getDataChiusura() {
@@ -581,7 +662,7 @@
       }
       
       try {
-        datiGiorno = await callAPI('getDatiGiorno', { data: dataStr });
+        datiGiorno = await callAPI('getDatiGiorno', { data: dataStr, soloLettura: true });
         console.log('DEBUG - Risposta API:', datiGiorno);
         if (datiGiorno.errore) { alert('⚠️ ' + datiGiorno.errore); return; }
         
@@ -620,7 +701,7 @@
         const dataStr = `${dataPrecedente.getFullYear()}-${String(dataPrecedente.getMonth()+1).padStart(2,'0')}-${String(dataPrecedente.getDate()).padStart(2,'0')}`;
         
         try {
-          const risultato = await callAPI('getDatiGiorno', { data: dataStr });
+          const risultato = await callAPI('getDatiGiorno', { data: dataStr, soloLettura: true });
           if (!risultato.errore && risultato.fondoEnd && risultato.fondoEnd > 0) {
             return risultato.fondoEnd;
           }
@@ -645,8 +726,8 @@
         div.className = 'taglio-item';
         div.innerHTML = `
           <span class="taglio-label">${taglio.label}</span>
-          <input type="number" class="taglio-input" id="taglio_${taglio.label}" 
-                 value="${datiGiorno.tagli[taglio.label]||0}" min="0" step="1" oninput="ricalcolaTagli()" onfocus="this.select()">
+          <input type="number" class="taglio-input" id="taglio_${taglio.label}"
+                 value="${datiGiorno.tagli[taglio.label]||0}" min="0" step="1" oninput="ricalcolaTagli(); segnaModificato()" onfocus="this.select()">
           <span class="taglio-total" id="total_${taglio.label}">0,00 €</span>
         `;
         tagliContainer.appendChild(div);
@@ -663,9 +744,16 @@
       aggiornaSpese();
       ricalcolaTagli(); // Calcola i totali dei tagli prima di ricalcola()
       ricalcola();
-      
+
       if (modalitaConsultazione) {
         bloccaCampi();
+      } else if (ripristinaDraftLocale()) {
+        // C'erano modifiche non salvate (es. reload imprevisto): le ripristiniamo
+        formDirty = true;
+        ricalcolaTagli();
+        ricalcola();
+        document.getElementById('alertModifica').style.display = 'block';
+        document.getElementById('alertModifica').innerHTML = '📝 <strong>Ripristinate modifiche non salvate</strong> dell\'ultima sessione';
       }
     }
     
@@ -746,11 +834,13 @@
     function aggiungiSpesa() {
       spese.push({ descrizione: '', importo: 0 });
       aggiornaSpese();
+      segnaModificato();
     }
-    
+
     function rimuoviSpesa(index) {
       spese.splice(index, 1);
       aggiornaSpese();
+      segnaModificato();
     }
     
     function aggiornaSpese() {
@@ -761,9 +851,9 @@
         div.className = 'spesa-row';
         div.innerHTML = `
           <input type="text" class="spesa-desc" placeholder="Descrizione" value="${spesa.descrizione}"
-                 onchange="spese[${index}].descrizione = this.value">
+                 onchange="spese[${index}].descrizione = this.value; segnaModificato()">
           <input type="number" class="spesa-importo" placeholder="0.00" step="0.01" value="${spesa.importo}"
-                 oninput="spese[${index}].importo = parseFloat(this.value)||0; ricalcola()" onfocus="this.select()">
+                 oninput="spese[${index}].importo = parseFloat(this.value)||0; ricalcola(); segnaModificato()" onfocus="this.select()">
           <button class="btn-remove" onclick="rimuoviSpesa(${index})">✕</button>
         `;
         container.appendChild(div);
@@ -816,8 +906,8 @@
           dataPrecedente.setDate(dataPrecedente.getDate() - i);
           const dataStr = `${dataPrecedente.getFullYear()}-${String(dataPrecedente.getMonth()+1).padStart(2,'0')}-${String(dataPrecedente.getDate()).padStart(2,'0')}`;
           
-          const risultato = await callAPI('getDatiGiorno', { data: dataStr });
-          
+          const risultato = await callAPI('getDatiGiorno', { data: dataStr, soloLettura: true });
+
           if (!risultato.errore && risultato.fondoEnd && risultato.fondoEnd > 0) {
             dati = risultato;
             giornoTrovato = true;
@@ -939,6 +1029,7 @@
       try {
         const result = await callAPI('salvaChiusura', { dati: dati });
         if (result.successo) {
+          cancellaDraftLocale();
           alert('✅ Chiusura salvata con successo!');
           window.location.href = 'index.html';
         } else {
@@ -969,7 +1060,10 @@
         reg.addEventListener('updatefound', () => {
           const newSW = reg.installing;
           newSW.addEventListener('statechange', () => {
-            if (newSW.state === 'activated' && !sessionStorage.getItem(RELOAD_KEY)) {
+            // ⭐ Non ricaricare se ci sono modifiche non salvate: il draft resta in
+            // localStorage e verrà ripristinato al prossimo giro comunque, ma evitiamo
+            // di interrompere l'utente mentre sta compilando la chiusura.
+            if (newSW.state === 'activated' && !formDirty && !sessionStorage.getItem(RELOAD_KEY)) {
               sessionStorage.setItem(RELOAD_KEY, 'true');
               setTimeout(() => window.location.reload(), 500);
             }
@@ -977,16 +1071,16 @@
         });
       })
       .catch(err => console.log('❌ SW:', err));
-    
+
     let reloadTriggered = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!reloadTriggered && !sessionStorage.getItem(RELOAD_KEY)) {
+      if (!reloadTriggered && !formDirty && !sessionStorage.getItem(RELOAD_KEY)) {
         reloadTriggered = true;
         sessionStorage.setItem(RELOAD_KEY, 'true');
         setTimeout(() => window.location.reload(), 500);
       }
     });
-    
+
     window.addEventListener('load', () => {
       setTimeout(() => sessionStorage.removeItem(RELOAD_KEY), 2000);
     });

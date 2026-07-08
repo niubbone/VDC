@@ -1475,19 +1475,37 @@
       caricaPrenotazioni();
     });
     
+    // Fetch con timeout + retry esponenziale: assorbe i glitch transitori di GAS
+    // (cold-start, "Service invoked too many times") che altrimenti diventano errori visibili.
+    async function fetchConRetry(url, options, tentativi = 3, timeoutMs = 20000) {
+      for (let i = 0; i < tentativi; i++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const res = await fetch(url, { ...options, signal: controller.signal });
+          clearTimeout(timeoutId);
+          return res;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          if (i === tentativi - 1) throw error;
+          await new Promise(r => setTimeout(r, 800 * Math.pow(2, i)));
+        }
+      }
+    }
+
     async function callAPI(action, data = {}) {
       // Controlla cache per letture
       const isReadOperation = ['getPrenotazioni', 'getEventi', 'getPrenotazioneById'].includes(action);
-      
+
       if (isReadOperation) {
         const cacheKey = getCacheKey(action, data);
         const cached = getCache(cacheKey);
         if (cached) return cached;
         console.log(`🌐 Cache MISS: ${action} - API call`);
       }
-      
+
       try {
-        const response = await fetch(API_URL, {
+        const response = await fetchConRetry(API_URL, {
           method: 'POST',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
