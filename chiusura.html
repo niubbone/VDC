@@ -487,6 +487,10 @@
     </div>
     
     <button type="button" class="btn-salva" id="btnSalva" onclick="salvaChiusura()">💾 Salva</button>
+
+    <div id="bannerErrore" style="display:none; margin-top:14px; padding:14px 16px; border-radius:10px;
+         background:#fff3cd; border:2px solid #e0a800; color:#856404; font-weight:600; line-height:1.4;">
+    </div>
   </div>
   
   <div id="modalPrecedente" class="modal">
@@ -992,12 +996,41 @@
       document.getElementById('modalPrecedente').classList.remove('active');
     }
     
+    // Mostra/nasconde l'avviso persistente sotto il bottone Salva.
+    function mostraBannerErrore(html) {
+      const b = document.getElementById('bannerErrore');
+      if (!b) return;
+      b.innerHTML = html;
+      b.style.display = html ? 'block' : 'none';
+    }
+
+    // Se il salvataggio fallisce mentre si è offline, riprova da solo appena
+    // torna la rete (una volta sola). La bozza resta comunque sul dispositivo.
+    let _riprovaAlRitornoRete = false;
+    window.addEventListener('online', () => {
+      if (_riprovaAlRitornoRete) {
+        _riprovaAlRitornoRete = false;
+        mostraBannerErrore('🔄 Rete tornata disponibile: nuovo tentativo di salvataggio in corso…');
+        salvaChiusura();
+      }
+    });
+
     async function salvaChiusura() {
       if (modalitaConsultazione) {
         alert('❌ Non puoi salvare in modalità consultazione.\n\nUsa il bottone "Modifica" prima.');
         return;
       }
-      
+
+      // Pre-check: nessuna rete → non provare nemmeno, avvisa e conserva la bozza.
+      if (navigator.onLine === false) {
+        salvaDraftLocale();
+        _riprovaAlRitornoRete = true;
+        mostraBannerErrore('📴 <b>Nessuna connessione.</b> La chiusura NON è stata salvata. ' +
+          'I dati sono conservati su questo dispositivo: riprova appena torni online ' +
+          '(ci proverà anche da sola).');
+        return;
+      }
+
       // Mostra loading sul bottone
       const btnSalva = document.getElementById('btnSalva');
       const testoOriginale = btnSalva.textContent;
@@ -1005,6 +1038,7 @@
       btnSalva.textContent = '⏳ Salvataggio in corso...';
       btnSalva.style.opacity = '0.7';
       btnSalva.style.cursor = 'not-allowed';
+      mostraBannerErrore('');
       
       const tagli = {};
       TAGLI.forEach(taglio => {
@@ -1026,27 +1060,39 @@
         utente: 'Web'
       };
       
-      try {
-        const result = await callAPI('salvaChiusura', { dati: dati });
-        if (result.successo) {
-          cancellaDraftLocale();
-          alert('✅ Chiusura salvata con successo!');
-          window.location.href = 'index.html';
-        } else {
-          alert('⚠️ Errore: ' + result.errore);
-          // Ripristina bottone in caso di errore
-          btnSalva.disabled = false;
-          btnSalva.textContent = testoOriginale;
-          btnSalva.style.opacity = '';
-          btnSalva.style.cursor = '';
-        }
-      } catch (error) {
-        alert('⚠️ Errore: ' + error.message);
-        // Ripristina bottone in caso di errore
+      const ripristinaBottone = () => {
         btnSalva.disabled = false;
         btnSalva.textContent = testoOriginale;
         btnSalva.style.opacity = '';
         btnSalva.style.cursor = '';
+      };
+
+      try {
+        const result = await callAPI('salvaChiusura', { dati: dati });
+        if (result.successo) {
+          _riprovaAlRitornoRete = false;
+          mostraBannerErrore('');
+          cancellaDraftLocale();
+          alert('✅ Chiusura salvata con successo!');
+          window.location.href = 'index.html';
+        } else {
+          // Il server ha risposto ma rifiuta il salvataggio: NON è un problema di
+          // rete, non serve riprovare da soli. La bozza resta comunque salvata.
+          _riprovaAlRitornoRete = false;
+          salvaDraftLocale();
+          mostraBannerErrore('⚠️ <b>Chiusura NON salvata.</b> ' + (result.errore || 'Errore del server') +
+            '<br>I dati restano su questo dispositivo. Controlla e riprova.');
+          ripristinaBottone();
+        }
+      } catch (error) {
+        // Non siamo riusciti a parlare col server (rete assente, timeout, o
+        // risposta non valida): il dato NON è salvato ma la bozza è conservata.
+        _riprovaAlRitornoRete = true;
+        salvaDraftLocale();
+        mostraBannerErrore('❌ <b>Chiusura NON salvata: il server non ha risposto.</b> ' +
+          'Probabile assenza di rete.<br>I dati sono conservati su questo dispositivo e ' +
+          'il salvataggio verrà ritentato appena torni online. Puoi anche ripremere “Salva”.');
+        ripristinaBottone();
       }
     }
   </script>
