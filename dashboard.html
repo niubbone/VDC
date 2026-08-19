@@ -138,6 +138,32 @@
     }
     .message.success { background: #90ee90; color: #006400; border: 2px solid #006400; }
     .message.error { background: #ff5252; color: #b71c1c; border: 2px solid #b71c1c; }
+
+    /* DIAGNOSTICA */
+    .diag-tabella {
+      width: 100%; border-collapse: collapse; margin-top: 10px;
+      background: #f4e4c1; font-size: 0.92em;
+    }
+    .diag-tabella th, .diag-tabella td {
+      border: 1px solid #6b4423; padding: 8px 10px; text-align: left;
+    }
+    .diag-tabella th {
+      background: #8b6644; color: #f4e4c1; font-weight: 700;
+      position: sticky; top: 0;
+    }
+    .diag-scroll { max-height: 420px; overflow: auto; border: 2px solid #6b4423; border-radius: 8px; }
+    .diag-wrap { overflow-x: auto; }
+    .esito-ok { color: #006400; font-weight: 700; }
+    .esito-errore { color: #b71c1c; font-weight: 700; }
+    .diag-anomalia {
+      background: #fff3cd; border: 2px solid #e0a800; border-radius: 8px;
+      padding: 12px 14px; margin-bottom: 10px; color: #5b4304; line-height: 1.45;
+    }
+    .diag-anomalia.grave { background: #ffdada; border-color: #b71c1c; color: #7a1414; }
+    .diag-nota {
+      background: rgba(255,255,255,0.6); border-left: 5px solid #6b4423;
+      padding: 10px 14px; margin-bottom: 15px; font-size: 0.92em; line-height: 1.45; color: #2c1810;
+    }
     
     /* LOADING OVERLAY */
     .loading-overlay {
@@ -306,6 +332,7 @@
       <div class="tab active" onclick="mostraTab('consultazione')">🔎 Consultazione</div>
       <div class="tab" onclick="mostraTab('versamento')">💰 Versamenti</div>
       <div class="tab" onclick="mostraTab('statistiche')">📊 Statistiche</div>
+      <div class="tab" onclick="mostraTab('diagnostica')">🩺 Diagnostica</div>
     </div>
     
     <div id="consultazione" class="tab-content active">
@@ -374,6 +401,32 @@
       </div>
       <div id="risultatoStatistiche"></div>
     </div>
+
+    <div id="diagnostica" class="tab-content">
+      <div class="section">
+        <div class="section-title">Controllo Chiusure</div>
+        <div class="diag-nota">
+          Confronta quello che è <strong>scritto sul foglio</strong> con il <strong>registro dei tentativi</strong>
+          ricevuti dal server, per capire se una chiusura mancante o strana è stata:
+          mai inviata (rete assente), inviata ma rifiutata, scritta a mano sul foglio, oppure
+          salvata dall'app e poi cancellata.
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Dal:</label>
+            <input type="date" id="diagDa">
+          </div>
+          <div class="form-group">
+            <label>Al:</label>
+            <input type="date" id="diagA">
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button class="btn btn-primary" onclick="eseguiDiagnostica()">🩺 Controlla</button>
+          </div>
+        </div>
+      </div>
+      <div id="risultatoDiagnostica"></div>
+    </div>
   </div>
   
   <script>
@@ -440,6 +493,12 @@
       document.getElementById('versAData').valueAsDate = oggi;
       document.getElementById('statMese').value = oggi.getMonth() + 1;
       document.getElementById('statAnno').value = oggi.getFullYear();
+
+      // Diagnostica: ultimi 30 giorni
+      const trentaGiorniFa = new Date(oggi);
+      trentaGiorniFa.setDate(trentaGiorniFa.getDate() - 30);
+      document.getElementById('diagDa').valueAsDate = trentaGiorniFa;
+      document.getElementById('diagA').valueAsDate = oggi;
     });
     
     function mostraTab(tabName) {
@@ -448,7 +507,182 @@
       event.target.classList.add('active');
       document.getElementById(tabName).classList.add('active');
     }
-    
+
+    // ===== DIAGNOSTICA CHIUSURE =====
+    // Incrocia due fonti indipendenti: cosa c'è scritto sul foglio del mese
+    // (getChiusurePeriodo) e quali tentativi sono ARRIVATI al server
+    // (getLogChiusure). Le discordanze tra le due dicono cosa è successo.
+
+    function diagEsc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // getChiusurePeriodo restituisce le date come gg/mm/aaaa, il log come aaaa-mm-gg
+    function diagIsoDaItaliano(d) {
+      const p = String(d).split('/');
+      return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : String(d);
+    }
+
+    function diagItalianoDaIso(iso) {
+      const p = String(iso).split('-');
+      return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : String(iso);
+    }
+
+    function diagElencoGiorni(da, a) {
+      const giorni = [];
+      const d = new Date(da + 'T12:00:00');
+      const fine = new Date(a + 'T12:00:00');
+      while (d <= fine) {
+        giorni.push(d.getFullYear() + '-' +
+          String(d.getMonth() + 1).padStart(2, '0') + '-' +
+          String(d.getDate()).padStart(2, '0'));
+        d.setDate(d.getDate() + 1);
+      }
+      return giorni;
+    }
+
+    async function eseguiDiagnostica() {
+      const da = document.getElementById('diagDa').value;
+      const a = document.getElementById('diagA').value;
+      const box = document.getElementById('risultatoDiagnostica');
+
+      if (!da || !a) { alert('⚠️ Seleziona entrambe le date!'); return; }
+      if (da > a) { alert('⚠️ Data inizio deve essere prima della data fine!'); return; }
+
+      showLoading('Controllo chiusure...');
+
+      try {
+        const [log, periodo] = await Promise.all([
+          callAPI('getLogChiusure', { limite: 1000 }),
+          callAPI('getChiusurePeriodo', { dataInizio: da, dataFine: a })
+        ]);
+        hideLoading();
+
+        if (log.errore || periodo.errore) {
+          box.innerHTML = '<div class="message error">⚠️ ' +
+            diagEsc(log.errore || periodo.errore) + '</div>';
+          return;
+        }
+
+        const righeLog = (log.righe || []);
+        // Il registro è nato a metà strada: prima di quella data l'assenza di
+        // righe non significa nulla, quindi non va segnalata come anomalia.
+        // Vale solo se abbiamo davvero la prima riga: se il taglio a 1000 righe
+        // ha scartato le più vecchie, meglio non dedurre una data di inizio.
+        const registroCompleto = righeLog.length >= (log.totale || 0);
+        const inizioRegistro = righeLog.length ? righeLog[0].timestamp.slice(0, 10) : null;
+
+        // Le righe senza giorno valorizzato (errori precoci) restano visibili
+        // in tabella: sono proprio i casi che non vanno persi.
+        const logPeriodo = righeLog.filter(r =>
+          !r.giorno || (r.giorno >= da && r.giorno <= a));
+        const logPerGiorno = {};
+        logPeriodo.forEach(r => {
+          if (r.giorno) (logPerGiorno[r.giorno] = logPerGiorno[r.giorno] || []).push(r);
+        });
+
+        const chiusurePerGiorno = {};
+        (periodo.chiusure || []).forEach(c => {
+          chiusurePerGiorno[diagIsoDaItaliano(c.data)] = c;
+        });
+
+        const anomalie = [];
+        const giorniSenzaNulla = [];
+
+        diagElencoGiorni(da, a).forEach(iso => {
+          const chiusura = chiusurePerGiorno[iso];
+          const tentativi = logPerGiorno[iso] || [];
+          const ok = tentativi.filter(t => t.esito === 'OK');
+          const errori = tentativi.filter(t => t.esito !== 'OK');
+          const etichetta = diagItalianoDaIso(iso);
+          const copertoDalRegistro = inizioRegistro && iso >= inizioRegistro;
+
+          if (chiusura && tentativi.length === 0 && copertoDalRegistro) {
+            anomalie.push({ grave: false, html:
+              `<strong>${etichetta} — chiusura scritta a mano sul foglio.</strong><br>
+               Sul foglio ci sono i dati (Report ${chiusura.reportProdotti.toFixed(2)} €) ma il server
+               non ha mai ricevuto nessun tentativo di salvataggio per quel giorno: i valori sono stati
+               digitati direttamente sul foglio Google, non dall'app.` });
+          }
+
+          if (!chiusura && ok.length > 0) {
+            anomalie.push({ grave: true, html:
+              `<strong>${etichetta} — chiusura salvata ma sparita dal foglio.</strong><br>
+               Il server l'ha registrata come salvata (${diagEsc(ok[ok.length - 1].timestamp)})
+               ma sul foglio del mese ora non c'è: è stata cancellata o sovrascritta a mano.` });
+          }
+
+          if (errori.length > 0) {
+            anomalie.push({ grave: !chiusura, html:
+              `<strong>${etichetta} — ${errori.length} tentativo/i falliti sul server.</strong><br>
+               ${errori.map(e => diagEsc(e.timestamp) + ': ' + diagEsc(e.dettaglio)).join('<br>')}
+               <br>${chiusura ? 'La chiusura risulta comunque presente sul foglio.'
+                              : 'Sul foglio non c\'è nessuna chiusura per quel giorno.'}` });
+          }
+
+          if (!chiusura && tentativi.length === 0) giorniSenzaNulla.push(etichetta);
+        });
+
+        let html = '';
+
+        if (!inizioRegistro) {
+          html += `<div class="diag-nota">📒 Il registro dei tentativi è ancora vuoto:
+            nessuna chiusura è passata dal server da quando è attivo.</div>`;
+        } else if (registroCompleto) {
+          html += `<div class="diag-nota">📒 Il registro dei tentativi parte dal
+            <strong>${diagItalianoDaIso(inizioRegistro)}</strong>: per i giorni precedenti
+            l'assenza di righe non è un'anomalia, semplicemente non c'era ancora il registro.</div>`;
+        } else {
+          html += `<div class="diag-nota">📒 Il registro è più lungo delle 1000 righe caricate:
+            sono state lette solo quelle dal <strong>${diagItalianoDaIso(inizioRegistro)}</strong> in poi.
+            Per i giorni precedenti il controllo non è attendibile.</div>`;
+        }
+
+        html += '<div class="dettaglio-box"><h3 style="font-family:\'Pirata One\'; color:#2c1810; margin-bottom:15px;">🚨 Anomalie</h3>';
+        if (anomalie.length === 0) {
+          html += '<div class="message success">✅ Nessuna anomalia: foglio e registro coincidono.</div>';
+        } else {
+          anomalie.forEach(x => {
+            html += `<div class="diag-anomalia${x.grave ? ' grave' : ''}">${x.html}</div>`;
+          });
+        }
+        if (giorniSenzaNulla.length > 0) {
+          html += `<div class="diag-nota" style="margin-top:15px;">🌙 Giorni senza chiusura e senza
+            tentativi (probabile giorno di riposo): ${giorniSenzaNulla.join(', ')}</div>`;
+        }
+        html += '</div>';
+
+        html += `<div class="dettaglio-box">
+          <h3 style="font-family:'Pirata One'; color:#2c1810; margin-bottom:15px;">
+            📜 Registro tentativi (${logPeriodo.length} nel periodo, ${log.totale || 0} in totale)
+          </h3>`;
+        if (logPeriodo.length === 0) {
+          html += '<div class="diag-nota">Nessun tentativo registrato nel periodo selezionato.</div>';
+        } else {
+          html += `<div class="diag-wrap"><div class="diag-scroll"><table class="diag-tabella">
+            <thead><tr><th>Quando</th><th>Giorno</th><th>Da</th><th>Esito</th><th>Dettaglio</th></tr></thead><tbody>`;
+          logPeriodo.slice().reverse().forEach(r => {
+            html += `<tr>
+              <td>${diagEsc(r.timestamp)}</td>
+              <td>${diagEsc(diagItalianoDaIso(r.giorno))}</td>
+              <td>${diagEsc(r.utente)}</td>
+              <td class="${r.esito === 'OK' ? 'esito-ok' : 'esito-errore'}">${diagEsc(r.esito)}</td>
+              <td>${diagEsc(r.dettaglio)}</td>
+            </tr>`;
+          });
+          html += '</tbody></table></div></div>';
+        }
+        html += '</div>';
+
+        box.innerHTML = html;
+      } catch (error) {
+        hideLoading();
+        box.innerHTML = '<div class="message error">⚠️ Errore di connessione: ' +
+          diagEsc(error.message) + '</div>';
+      }
+    }
+
     async function consultaPeriodo() {
       const da = document.getElementById('consultaDa').value;
       const a = document.getElementById('consultaA').value;
