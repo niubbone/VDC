@@ -407,9 +407,9 @@
         <div class="section-title">Controllo Chiusure</div>
         <div class="diag-nota">
           Confronta quello che è <strong>scritto sul foglio</strong> con il <strong>registro dei tentativi</strong>
-          ricevuti dal server, per capire se una chiusura mancante o strana è stata:
-          mai inviata (rete assente), inviata ma rifiutata, scritta a mano sul foglio, oppure
-          salvata dall'app e poi cancellata.
+          registrati dal server, per capire se una chiusura mancante o strana è stata:
+          mai partita dal dispositivo (rete assente), inviata ma rifiutata, scritta a mano sul
+          foglio, oppure salvata dall'app e poi cancellata.
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -594,7 +594,11 @@
           const chiusura = chiusurePerGiorno[iso];
           const tentativi = logPerGiorno[iso] || [];
           const ok = tentativi.filter(t => t.esito === 'OK');
-          const errori = tentativi.filter(t => t.esito !== 'OK');
+          // Due famiglie diverse: il server ha rifiutato (ERRORE) oppure la
+          // richiesta non è mai partita e il client l'ha raccontata dopo
+          // (ERRORE CLIENT). Vogliono spiegazioni diverse.
+          const errori = tentativi.filter(t => t.esito === 'ERRORE');
+          const erroriClient = tentativi.filter(t => t.esito === 'ERRORE CLIENT');
           const etichetta = diagItalianoDaIso(iso);
           const copertoDalRegistro = inizioRegistro && iso >= inizioRegistro;
 
@@ -615,10 +619,18 @@
 
           if (errori.length > 0) {
             anomalie.push({ grave: !chiusura, html:
-              `<strong>${etichetta} — ${errori.length} tentativo/i falliti sul server.</strong><br>
+              `<strong>${etichetta} — ${errori.length} tentativo/i rifiutati dal server.</strong><br>
                ${errori.map(e => diagEsc(e.timestamp) + ': ' + diagEsc(e.dettaglio)).join('<br>')}
                <br>${chiusura ? 'La chiusura risulta comunque presente sul foglio.'
                               : 'Sul foglio non c\'è nessuna chiusura per quel giorno.'}` });
+          }
+
+          if (erroriClient.length > 0) {
+            anomalie.push({ grave: !chiusura, html:
+              `<strong>${etichetta} — il salvataggio non è mai partito dal dispositivo.</strong><br>
+               ${erroriClient.map(e => diagEsc(e.dettaglio)).join('<br>')}
+               <br>${chiusura ? 'La chiusura è comunque finita sul foglio (ritentata o inserita dopo).'
+                              : 'Sul foglio non c\'è nessuna chiusura per quel giorno: da recuperare.'}` });
           }
 
           if (!chiusura && tentativi.length === 0) giorniSenzaNulla.push(etichetta);

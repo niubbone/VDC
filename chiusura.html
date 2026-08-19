@@ -595,6 +595,57 @@
       formDirty = false;
     }
 
+    // ===== CODA TENTATIVI MAI ARRIVATI AL SERVER =====
+    // Il registro lato server vede solo ciò che arriva: un salvataggio che non
+    // parte (rete assente, timeout) non lascia traccia da nessuna parte. Qui lo
+    // annotiamo sul dispositivo e lo recapitiamo al primo collegamento riuscito.
+    // UNA VOCE PER GIORNO: i ritentativi incrementano il contatore, non
+    // aggiungono voci, così un giorno storto resta una riga sola sul foglio.
+    const CODA_KEY = 'vdc_tentativi_falliti';
+    const CODA_MAX = 20;
+    const APP_VERSION = '4.6';
+
+    function leggiCodaTentativi() {
+      try {
+        const raw = localStorage.getItem(CODA_KEY);
+        const coda = raw ? JSON.parse(raw) : [];
+        return Array.isArray(coda) ? coda : [];
+      } catch (e) { return []; }
+    }
+
+    function accodaTentativoFallito(motivo) {
+      if (!dataSelezionata) return;
+      try {
+        const adesso = new Date().toLocaleString('it-IT');
+        const coda = leggiCodaTentativi();
+        const voce = coda.find(v => v.giorno === dataSelezionata);
+        if (voce) {
+          voce.tentativi = (voce.tentativi || 1) + 1;
+          voce.ultimo = adesso;
+          voce.motivo = motivo;
+        } else {
+          coda.push({ giorno: dataSelezionata, utente: 'Web', tentativi: 1,
+                      primo: adesso, ultimo: adesso, motivo: motivo, versione: APP_VERSION });
+        }
+        // Tetto di sicurezza: se il dispositivo resta scollegato a lungo non
+        // deve accumulare all'infinito, tengono le voci più recenti.
+        localStorage.setItem(CODA_KEY, JSON.stringify(coda.slice(-CODA_MAX)));
+      } catch (e) { /* storage pieno o non disponibile: ignora */ }
+    }
+
+    // Non blocca mai l'interfaccia e non aggiunge chiamate quando va tutto bene:
+    // se la coda è vuota esce subito, senza toccare la rete.
+    async function svuotaCodaTentativi() {
+      const coda = leggiCodaTentativi();
+      if (coda.length === 0 || navigator.onLine === false) return;
+      try {
+        const esito = await callAPI('logTentativiFalliti', { tentativi: coda });
+        if (esito && esito.successo) localStorage.removeItem(CODA_KEY);
+      } catch (e) {
+        // Ancora irraggiungibile: la coda resta lì per il prossimo giro.
+      }
+    }
+
     function ripristinaDraftLocale() {
       if (!dataSelezionata) return false;
       const raw = localStorage.getItem(chiaveDraft());
@@ -669,7 +720,11 @@
         datiGiorno = await callAPI('getDatiGiorno', { data: dataStr, soloLettura: true });
         console.log('DEBUG - Risposta API:', datiGiorno);
         if (datiGiorno.errore) { alert('⚠️ ' + datiGiorno.errore); return; }
-        
+
+        // La rete funziona: se c'è un fallimento in sospeso da una sera storta,
+        // recapitalo ora. In assenza di coda non fa nulla e non attende niente.
+        svuotaCodaTentativi();
+
         // Mostra la data calcolata
         document.getElementById('dataChiusura').textContent = config.data.display;
         
@@ -1024,6 +1079,7 @@
       // Pre-check: nessuna rete → non provare nemmeno, avvisa e conserva la bozza.
       if (navigator.onLine === false) {
         salvaDraftLocale();
+        accodaTentativoFallito('dispositivo offline (non inviata)');
         _riprovaAlRitornoRete = true;
         mostraBannerErrore('📴 <b>Nessuna connessione.</b> La chiusura NON è stata salvata. ' +
           'I dati sono conservati su questo dispositivo: riprova appena torni online ' +
@@ -1073,6 +1129,9 @@
           _riprovaAlRitornoRete = false;
           mostraBannerErrore('');
           cancellaDraftLocale();
+          // Momento migliore per recapitare i fallimenti in sospeso: la rete
+          // ha appena funzionato. Se non c'è niente in coda non fa nulla.
+          await svuotaCodaTentativi();
           alert('✅ Chiusura salvata con successo!');
           window.location.href = 'index.html';
         } else {
@@ -1089,6 +1148,7 @@
         // risposta non valida): il dato NON è salvato ma la bozza è conservata.
         _riprovaAlRitornoRete = true;
         salvaDraftLocale();
+        accodaTentativoFallito(error && error.message ? error.message : String(error));
         mostraBannerErrore('❌ <b>Chiusura NON salvata: il server non ha risposto.</b> ' +
           'Probabile assenza di rete.<br>I dati sono conservati su questo dispositivo e ' +
           'il salvataggio verrà ritentato appena torni online. Puoi anche ripremere “Salva”.');
