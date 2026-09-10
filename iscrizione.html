@@ -400,6 +400,10 @@
       // la seconda iscrizione finirebbe sulla scheda della prima.
       if (!dati.nome) return mostraErrore('Scrivi il tuo nome.');
       if (!dati.cognome) return mostraErrore('Scrivi anche il tuo cognome.');
+      // Campo vuoto e campo sbagliato sono due errori diversi: "controlla
+      // l'indirizzo" a chi non l'ha proprio scritto lo manda a rileggere una
+      // riga vuota.
+      if (!dati.email) return mostraErrore('Scrivi la tua email.');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(dati.email)) {
         return mostraErrore('Controlla l\'indirizzo email: non sembra valido.');
       }
