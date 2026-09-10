@@ -107,6 +107,29 @@
     }
     .tab-icona { font-size: 1.05em; line-height: 1; }
     .tab-testo { white-space: nowrap; }
+
+    /* Sotto-tab dentro un tab principale.
+       Volutamente più sobri dei tab di primo livello — piatti, in riga,
+       niente icona impilata: se avessero lo stesso peso visivo la gerarchia
+       sparirebbe e sembrerebbero sei tab su due file invece di due livelli. */
+    .sottotabs {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px;
+      border-bottom: 2px solid rgba(107, 68, 35, 0.5); padding-bottom: 12px;
+    }
+    .sottotab {
+      padding: 8px 20px; border-radius: 8px; cursor: pointer;
+      background: rgba(244, 228, 193, 0.35);
+      border: 2px solid rgba(107, 68, 35, 0.55);
+      color: #4a2c18; font-family: 'Rye', cursive; font-size: 0.88em;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .sottotab:hover { background: rgba(244, 228, 193, 0.6); }
+    .sottotab.active {
+      background: linear-gradient(145deg, #8b6644 0%, #6b4423 100%);
+      color: #f4e4c1; border-color: #4a2c18;
+    }
+    .sotto-content { display: none; }
+    .sotto-content.active { display: block; }
     .tab.active { background: linear-gradient(145deg, #e8b873 0%, #c89858 100%); color: #2c1810; }
     .tab-content {
       display: none; background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
@@ -434,37 +457,70 @@
       <div class="tab" onclick="mostraTab('statistiche')">
         <span class="tab-icona">📊</span><span class="tab-testo">Statistiche</span>
       </div>
-      <div class="tab" onclick="mostraTab('diagnostica')">
-        <span class="tab-icona">🩺</span><span class="tab-testo">Diagnostica</span>
-      </div>
       <div class="tab" onclick="mostraTab('rubrica')">
         <span class="tab-icona">👥</span><span class="tab-testo">Rubrica</span>
       </div>
-      <div class="tab" onclick="mostraTab('prenotazioni')">
-        <span class="tab-icona">🧾</span><span class="tab-testo">Prenotazioni</span>
+      <div class="tab" onclick="mostraTab('incassi')">
+        <span class="tab-icona">🧾</span><span class="tab-testo">Incassi</span>
       </div>
     </div>
     
     <div id="chiusure" class="tab-content active">
-      <div class="section">
-        <div class="section-title">Consulta Chiusure - Periodo</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Dal:</label>
-            <input type="date" id="consultaDa">
-          </div>
-          <div class="form-group">
-            <label>Al:</label>
-            <input type="date" id="consultaA">
-          </div>
-          <div style="display:flex; align-items:flex-end;">
-            <button class="btn btn-primary" onclick="consultaPeriodo()">🔍 Consulta</button>
+      <!-- La diagnostica sta qui dentro perche' diagnostica le chiusure:
+           era un tab di pari livello, ma non e' un'altra area del gestionale,
+           e' un secondo modo di guardare la stessa cosa. -->
+      <div class="sottotabs">
+        <div class="sottotab active" onclick="mostraSottoTab('consulta')">🔍 Consulta</div>
+        <div class="sottotab" onclick="mostraSottoTab('diagnostica')">🩺 Diagnostica</div>
+      </div>
+
+      <div id="consulta" class="sotto-content active">
+        <div class="section">
+          <div class="section-title">Consulta Chiusure - Periodo</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Dal:</label>
+              <input type="date" id="consultaDa">
+            </div>
+            <div class="form-group">
+              <label>Al:</label>
+              <input type="date" id="consultaA">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn btn-primary" onclick="consultaPeriodo()">🔍 Consulta</button>
+            </div>
           </div>
         </div>
+        <div id="risultatoConsultazione"></div>
       </div>
-      <div id="risultatoConsultazione"></div>
+
+      <div id="diagnostica" class="sotto-content">
+        <div class="section">
+          <div class="section-title">Controllo Chiusure</div>
+          <div class="diag-nota">
+            Confronta quello che è <strong>scritto sul foglio</strong> con il <strong>registro dei tentativi</strong>
+            registrati dal server, per capire se una chiusura mancante o strana è stata:
+            mai partita dal dispositivo (rete assente), inviata ma rifiutata, scritta a mano sul
+            foglio, oppure salvata dall'app e poi cancellata.
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Dal:</label>
+              <input type="date" id="diagDa">
+            </div>
+            <div class="form-group">
+              <label>Al:</label>
+              <input type="date" id="diagA">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn btn-primary" onclick="eseguiDiagnostica()">🩺 Controlla</button>
+            </div>
+          </div>
+        </div>
+        <div id="risultatoDiagnostica"></div>
+      </div>
     </div>
-    
+
     <div id="versamento" class="tab-content">
       <div class="section">
         <div class="section-title">Prepara Versamento</div>
@@ -510,32 +566,6 @@
         </div>
       </div>
       <div id="risultatoStatistiche"></div>
-    </div>
-
-    <div id="diagnostica" class="tab-content">
-      <div class="section">
-        <div class="section-title">Controllo Chiusure</div>
-        <div class="diag-nota">
-          Confronta quello che è <strong>scritto sul foglio</strong> con il <strong>registro dei tentativi</strong>
-          registrati dal server, per capire se una chiusura mancante o strana è stata:
-          mai partita dal dispositivo (rete assente), inviata ma rifiutata, scritta a mano sul
-          foglio, oppure salvata dall'app e poi cancellata.
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Dal:</label>
-            <input type="date" id="diagDa">
-          </div>
-          <div class="form-group">
-            <label>Al:</label>
-            <input type="date" id="diagA">
-          </div>
-          <div style="display:flex; align-items:flex-end;">
-            <button class="btn btn-primary" onclick="eseguiDiagnostica()">🩺 Controlla</button>
-          </div>
-        </div>
-      </div>
-      <div id="risultatoDiagnostica"></div>
     </div>
 
     <!-- ===== RUBRICA CLIENTI ===== -->
@@ -587,7 +617,7 @@
     </div>
 
     <!-- ===== PARTITE APERTE ===== -->
-    <div id="prenotazioni" class="tab-content">
+    <div id="incassi" class="tab-content">
       <div class="section">
         <div class="section-title">Scontrini e Rimborsi</div>
         <div class="diag-nota">
@@ -814,7 +844,21 @@
       // I due tab nuovi si caricano da soli alla prima apertura: chiedere anche
       // un click su "Aggiorna" per vedere qualcosa è un passaggio a vuoto.
       if (tabName === 'rubrica' && !rubricaCache.length) caricaRubrica();
-      if (tabName === 'prenotazioni' && !partiteCache) caricaPartiteAperte();
+      if (tabName === 'incassi' && !partiteCache) caricaPartiteAperte();
+    }
+
+    /**
+     * Sotto-tab dentro Chiusure (Consulta / Diagnostica).
+     * Cerca i pannelli SOLO dentro il tab che li contiene: un
+     * querySelectorAll globale su '.sotto-content' spegnerebbe anche
+     * eventuali sotto-tab di altre sezioni aggiunte in futuro.
+     */
+    function mostraSottoTab(nome) {
+      const contenitore = event.currentTarget.closest('.tab-content');
+      contenitore.querySelectorAll('.sottotab').forEach(t => t.classList.remove('active'));
+      contenitore.querySelectorAll('.sotto-content').forEach(t => t.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      document.getElementById(nome).classList.add('active');
     }
 
     // ===== DIAGNOSTICA CHIUSURE =====
