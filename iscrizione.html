@@ -247,7 +247,8 @@
       <div class="campo">
         <label for="cellulare" id="labelCellulare">Cellulare</label>
         <input type="tel" id="cellulare" name="cellulare" autocomplete="tel"
-               inputmode="tel" maxlength="25" placeholder="347 1234567">
+               inputmode="numeric" maxlength="15" placeholder="3471234567"
+               oninput="soloCifre(this)">
       </div>
 
       <!-- Honeypot -->
@@ -329,6 +330,31 @@
           if (i === tentativi - 1) throw error;
           await new Promise(r => setTimeout(r, 800 * Math.pow(2, i)));
         }
+      }
+    }
+
+    /**
+     * Il campo cellulare accetta solo cifre: niente +, spazi, punti o barre.
+     * Si filtra mentre si scrive invece di rifiutare dopo, così chi incolla un
+     * numero copiato dalla rubrica del telefono ("+39 347 123 4567") lo vede
+     * ripulito subito e non deve rifarlo a mano.
+     *
+     * Il 39 iniziale si toglie solo se dietro resta un cellulare italiano
+     * plausibile — stessa regola del server, che è comunque l'ultima parola.
+     */
+    function soloCifre(campo) {
+      const posizione = campo.selectionStart;
+      const prima = campo.value;
+      let cifre = prima.replace(/\D/g, '');
+      if (cifre.slice(0, 2) === '39' && /^3\d{8,9}$/.test(cifre.slice(2))) {
+        cifre = cifre.slice(2);
+      }
+      if (cifre !== prima) {
+        campo.value = cifre;
+        // Il cursore va riportato dove stava, scalato di quanto si è tolto
+        const tolti = prima.length - cifre.length;
+        const nuova = Math.max(0, posizione - tolti);
+        campo.setSelectionRange(nuova, nuova);
       }
     }
 
