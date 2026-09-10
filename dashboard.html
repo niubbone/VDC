@@ -229,6 +229,20 @@
       background: #f4e4c1; color: #2c1810; font-size: 1em; font-family: inherit;
     }
     .rub-toolbar input[type="search"] { min-width: 260px; flex: 1; }
+    /* I pulsanti della barra rubrica sono comandi di contorno, non l'azione
+       principale della pagina: col .btn pieno (15px 30px, 1.1em, bordo da 3px)
+       "Nuovo" pesava quanto il titolo della sezione e la riga sfondava di lato.
+       Qui si allineano ai campi che stanno loro accanto — stessa altezza,
+       stesso spessore di bordo — e restano leggibili perché il Rye è grande di
+       suo. Vale anche per la riga di sotto (import, cartoncini QR), che è la
+       stessa famiglia di comandi e deve avere lo stesso peso. */
+    .rub-toolbar .btn, .rub-azioni .btn {
+      padding: 9px 16px; font-size: 0.9em; border-width: 2px;
+      box-shadow: 0 3px 0 #3d1f0f;
+    }
+    .rub-azioni {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px;
+    }
     .rub-contatori { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
     .rub-pill {
       background: #f4e4c1; border: 2px solid #6b4423; border-radius: 20px;
@@ -601,7 +615,7 @@
           <button class="btn btn-terziario" onclick="esportaRubrica(false)">📋 Export completo</button>
         </div>
         <div class="rub-contatori" id="rubContatori"></div>
-        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <div class="rub-azioni">
           <button class="btn btn-terziario" onclick="anteprimaImportRubrica()">
             🔄 Importa clienti dallo storico prenotazioni
           </button>

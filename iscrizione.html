@@ -233,7 +233,7 @@
           <input type="text" id="nome" name="nome" autocomplete="given-name" maxlength="80" required>
         </div>
         <div class="campo">
-          <label for="cognome">Cognome</label>
+          <label for="cognome">Cognome *</label>
           <input type="text" id="cognome" name="cognome" autocomplete="family-name" maxlength="80" required>
         </div>
       </div>
@@ -395,7 +395,11 @@
       };
 
       // Controlli lato client: stessi del server, qui solo per rispondere subito.
-      if (!dati.nome) return mostraErrore('Scrivi almeno il tuo nome.');
+      // Nome E cognome: il cognome è ciò che distingue due persone della stessa
+      // famiglia, che spesso lasciano la stessa email o lo stesso numero. Senza,
+      // la seconda iscrizione finirebbe sulla scheda della prima.
+      if (!dati.nome) return mostraErrore('Scrivi il tuo nome.');
+      if (!dati.cognome) return mostraErrore('Scrivi anche il tuo cognome.');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(dati.email)) {
         return mostraErrore('Controlla l\'indirizzo email: non sembra valido.');
       }
