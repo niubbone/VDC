@@ -82,11 +82,31 @@
        scorrimento orizzontale. Servono flex-wrap E min-width: 0. */
     .tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
     .tab {
-      flex: 1 1 150px; min-width: 0; padding: 15px;
+      flex: 1 1 150px; min-width: 0; padding: 12px 8px;
       background: linear-gradient(145deg, #a67c52 0%, #8b6644 100%);
       color: #f4e4c1; border: 3px solid #6b4423; border-radius: 10px; cursor: pointer;
-      font-weight: 700; font-family: 'Rye'; text-align: center; transition: all 0.3s;
+      text-align: center; transition: all 0.3s;
+
+      /* Stesso carattere del titolo "Quartier Generale", più piccolo.
+         font-weight resta 400: Pirata One ha un solo peso, e chiedere il
+         grassetto lo fa ingrassare in modo sintetico dal browser — proprio
+         l'effetto impastato che rendeva illeggibile il Rye di prima. */
+      font-family: 'Pirata One', cursive;
+      font-weight: 400;
+      font-size: 1.35em;
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+
+      /* Icona SOPRA, etichetta SOTTO, sempre e per tutti.
+         Prima erano affiancate e andavano a capo solo quando il nome era
+         troppo lungo per la colonna: da qui l'incoerenza fra un tab e
+         l'altro. Impilarle per costruzione toglie di mezzo la variabile,
+         a qualunque larghezza di finestra. */
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
     }
+    .tab-icona { font-size: 1.05em; line-height: 1; }
+    .tab-testo { white-space: nowrap; }
     .tab.active { background: linear-gradient(145deg, #e8b873 0%, #c89858 100%); color: #2c1810; }
     .tab-content {
       display: none; background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
@@ -359,11 +379,13 @@
       .header h1 { font-size: 1.5em; }
 
       /* Sei tab su due colonne: si vedono tutti, nessuno da cercare
-         scorrendo di lato. */
+         scorrendo di lato. Il font-size è in em di Pirata One, che rende
+         più piccolo di un carattere di testo a parità di misura: sotto
+         l'1em diventa illeggibile. */
       .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .tab {
-        padding: 12px 6px; font-size: 0.82em; border-width: 2px;
-        border-radius: 8px; line-height: 1.25;
+        padding: 10px 6px; font-size: 1.1em; border-width: 2px;
+        border-radius: 8px;
       }
 
       .tab-content { padding: 16px; border-width: 3px; }
@@ -403,15 +425,27 @@
   
   <div class="container">
     <div class="tabs">
-      <div class="tab active" onclick="mostraTab('consultazione')">🔎 Consultazione</div>
-      <div class="tab" onclick="mostraTab('versamento')">💰 Versamenti</div>
-      <div class="tab" onclick="mostraTab('statistiche')">📊 Statistiche</div>
-      <div class="tab" onclick="mostraTab('diagnostica')">🩺 Diagnostica</div>
-      <div class="tab" onclick="mostraTab('rubrica')">👥 Rubrica</div>
-      <div class="tab" onclick="mostraTab('partite')">🧾 Partite Aperte</div>
+      <div class="tab active" onclick="mostraTab('chiusure')">
+        <span class="tab-icona">🔎</span><span class="tab-testo">Chiusure</span>
+      </div>
+      <div class="tab" onclick="mostraTab('versamento')">
+        <span class="tab-icona">💰</span><span class="tab-testo">Versamenti</span>
+      </div>
+      <div class="tab" onclick="mostraTab('statistiche')">
+        <span class="tab-icona">📊</span><span class="tab-testo">Statistiche</span>
+      </div>
+      <div class="tab" onclick="mostraTab('diagnostica')">
+        <span class="tab-icona">🩺</span><span class="tab-testo">Diagnostica</span>
+      </div>
+      <div class="tab" onclick="mostraTab('rubrica')">
+        <span class="tab-icona">👥</span><span class="tab-testo">Rubrica</span>
+      </div>
+      <div class="tab" onclick="mostraTab('prenotazioni')">
+        <span class="tab-icona">🧾</span><span class="tab-testo">Prenotazioni</span>
+      </div>
     </div>
     
-    <div id="consultazione" class="tab-content active">
+    <div id="chiusure" class="tab-content active">
       <div class="section">
         <div class="section-title">Consulta Chiusure - Periodo</div>
         <div class="form-row">
@@ -553,7 +587,7 @@
     </div>
 
     <!-- ===== PARTITE APERTE ===== -->
-    <div id="partite" class="tab-content">
+    <div id="prenotazioni" class="tab-content">
       <div class="section">
         <div class="section-title">Scontrini e Rimborsi</div>
         <div class="diag-nota">
@@ -769,13 +803,18 @@
     function mostraTab(tabName) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
+
+      // currentTarget, NON target: da quando il tab contiene <span> per icona
+      // ed etichetta, `target` è lo span che si è colpito col dito e la classe
+      // "active" finirebbe su quello, lasciando il tab spento.
+      // currentTarget è sempre l'elemento che porta l'onclick.
+      event.currentTarget.classList.add('active');
       document.getElementById(tabName).classList.add('active');
 
       // I due tab nuovi si caricano da soli alla prima apertura: chiedere anche
       // un click su "Aggiorna" per vedere qualcosa è un passaggio a vuoto.
       if (tabName === 'rubrica' && !rubricaCache.length) caricaRubrica();
-      if (tabName === 'partite' && !partiteCache) caricaPartiteAperte();
+      if (tabName === 'prenotazioni' && !partiteCache) caricaPartiteAperte();
     }
 
     // ===== DIAGNOSTICA CHIUSURE =====
