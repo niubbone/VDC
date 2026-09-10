@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vecchia Dogana — Iscriviti agli eventi</title>
+
+  <meta name="description" content="Iscriviti per ricevere gli inviti alle degustazioni e agli eventi della Vecchia Dogana.">
+  <meta name="theme-color" content="#14283c">
+  <meta name="robots" content="noindex">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background:
+        linear-gradient(rgba(20, 40, 60, 0.55), rgba(20, 40, 60, 0.55)),
+        linear-gradient(160deg, #2c1810 0%, #4a2c18 45%, #14283c 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      color: #f4e4c1;
+      padding: 24px 16px 48px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .foglio {
+      width: 100%;
+      max-width: 520px;
+      background: linear-gradient(160deg, rgba(44, 24, 16, 0.94) 0%, rgba(30, 18, 12, 0.96) 100%);
+      border: 3px solid #6b4423;
+      border-radius: 14px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+    }
+
+    .intestazione {
+      text-align: center;
+      padding: 30px 22px 22px;
+      background: linear-gradient(145deg, rgba(107, 68, 35, 0.55) 0%, rgba(60, 36, 20, 0.55) 100%);
+      border-bottom: 2px solid #6b4423;
+    }
+    .intestazione h1 {
+      font-family: 'Pirata One', cursive;
+      font-size: 2.5em;
+      color: #e8b873;
+      line-height: 1.05;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
+    }
+    .intestazione .sottotitolo {
+      margin-top: 10px;
+      font-size: 1em;
+      color: #d4a574;
+      line-height: 1.5;
+    }
+
+    form { padding: 24px 22px 28px; }
+
+    .campo { margin-bottom: 18px; }
+    .campo label {
+      display: block;
+      font-family: 'Rye', cursive;
+      font-size: 0.92em;
+      color: #e8b873;
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+    .campo input[type="text"],
+    .campo input[type="email"],
+    .campo input[type="tel"] {
+      width: 100%;
+      padding: 13px 14px;
+      border: 2px solid #6b4423;
+      border-radius: 8px;
+      background: #f4e4c1;
+      color: #2c1810;
+      font-size: 1.05em;
+      font-family: 'Georgia', serif;
+    }
+    .campo input:focus {
+      outline: none;
+      border-color: #e8b873;
+      box-shadow: 0 0 0 3px rgba(232, 184, 115, 0.28);
+    }
+    .campo input:disabled { background: #d9cbb0; color: #6b5c48; }
+    .aiuto { font-size: 0.82em; color: #b89b78; margin-top: 5px; line-height: 1.4; }
+
+    .riga { display: flex; gap: 12px; }
+    .riga .campo { flex: 1; }
+
+    .blocco-consensi {
+      background: rgba(244, 228, 193, 0.07);
+      border: 2px solid rgba(107, 68, 35, 0.85);
+      border-radius: 10px;
+      padding: 16px 16px 6px;
+      margin: 22px 0 18px;
+    }
+    .blocco-consensi h2 {
+      font-family: 'Rye', cursive;
+      font-size: 1em;
+      color: #e8b873;
+      margin-bottom: 12px;
+    }
+
+    .consenso {
+      display: flex;
+      gap: 11px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+      cursor: pointer;
+      line-height: 1.45;
+      font-size: 0.94em;
+    }
+    .consenso input[type="checkbox"] {
+      width: 21px; height: 21px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      accent-color: #c89858;
+      cursor: pointer;
+    }
+    .consenso .testo strong { color: #e8b873; }
+    .consenso .nota { display: block; font-size: 0.86em; color: #b89b78; margin-top: 3px; }
+
+    .privacy-box {
+      border-top: 1px solid rgba(107, 68, 35, 0.8);
+      padding-top: 14px;
+      margin-top: 4px;
+    }
+    .privacy-box a { color: #e8b873; text-decoration: underline; }
+
+    .btn-invia {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      font-family: 'Rye', cursive;
+      font-size: 1.15em;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(200, 152, 88, 0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-invia:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(200, 152, 88, 0.55); }
+    .btn-invia:disabled { opacity: 0.55; cursor: wait; transform: none; }
+
+    .messaggio {
+      padding: 14px 16px;
+      border-radius: 9px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+      font-size: 0.95em;
+      display: none;
+    }
+    .messaggio.attivo { display: block; }
+    .messaggio.errore { background: #ffdada; border: 2px solid #b71c1c; color: #7a1414; }
+
+    /* Schermata di conferma: sostituisce il form, non ci si torna per sbaglio */
+    .conferma { display: none; padding: 40px 26px 46px; text-align: center; }
+    .conferma.attiva { display: block; }
+    .conferma .icona { font-size: 3.6em; margin-bottom: 14px; }
+    .conferma h2 {
+      font-family: 'Pirata One', cursive;
+      font-size: 2em;
+      color: #e8b873;
+      margin-bottom: 12px;
+    }
+    .conferma p { line-height: 1.6; color: #d4a574; margin-bottom: 10px; }
+
+    /* Honeypot: invisibile a chi legge, compilato dai bot. Fuori dallo schermo
+       e non "display:none", che alcuni bot riconoscono e saltano. */
+    .trappola {
+      position: absolute;
+      left: -9999px;
+      width: 1px; height: 1px;
+      overflow: hidden;
+    }
+
+    .piede {
+      text-align: center;
+      padding: 16px 20px 22px;
+      font-size: 0.82em;
+      color: #8b7355;
+      border-top: 1px solid rgba(107, 68, 35, 0.6);
+      line-height: 1.5;
+    }
+    .piede a { color: #b89b78; }
+
+    @media (max-width: 420px) {
+      .riga { flex-direction: column; gap: 0; }
+      .intestazione h1 { font-size: 2.1em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="foglio">
+    <div class="intestazione">
+      <h1>Vecchia Dogana</h1>
+      <div class="sottotitolo">
+        Degustazioni, serate e novità della cantina.<br>
+        Lasciaci i tuoi contatti: ti avvisiamo noi.
+      </div>
+    </div>
+
+    <form id="formIscrizione" novalidate>
+      <div class="messaggio errore" id="messaggio"></div>
+
+      <div class="riga">
+        <div class="campo">
+          <label for="nome">Nome *</label>
+          <input type="text" id="nome" name="nome" autocomplete="given-name" maxlength="80" required>
+        </div>
+        <div class="campo">
+          <label for="cognome">Cognome</label>
+          <input type="text" id="cognome" name="cognome" autocomplete="family-name" maxlength="80">
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="email">Email *</label>
+        <input type="email" id="email" name="email" autocomplete="email"
+               inputmode="email" maxlength="254" required>
+      </div>
+
+      <div class="campo">
+        <label for="cellulare">Cellulare</label>
+        <input type="tel" id="cellulare" name="cellulare" autocomplete="tel"
+               inputmode="tel" maxlength="25" placeholder="347 1234567">
+        <div class="aiuto" id="aiutoCellulare">Facoltativo — serve solo se vuoi gli avvisi su WhatsApp.</div>
+      </div>
+
+      <!-- Honeypot -->
+      <div class="trappola" aria-hidden="true">
+        <label for="sito">Non compilare questo campo</label>
+        <input type="text" id="sito" name="sito" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="blocco-consensi">
+        <h2>Come vuoi essere avvisato?</h2>
+
+        <label class="consenso">
+          <input type="checkbox" id="newsletter">
+          <span class="testo">
+            <strong>Newsletter via email</strong>
+            <span class="nota">Inviti alle degustazioni e alle serate. Poche email, nessuno spam.</span>
+          </span>
+        </label>
+
+        <label class="consenso">
+          <input type="checkbox" id="whatsapp">
+          <span class="testo">
+            <strong>Avvisi su WhatsApp</strong>
+            <span class="nota">Messaggi solo per gli eventi. Richiede il numero di cellulare.</span>
+          </span>
+        </label>
+
+        <div class="privacy-box">
+          <label class="consenso">
+            <input type="checkbox" id="privacy">
+            <span class="testo">
+              Ho letto l'<a href="privacy.html" target="_blank" rel="noopener">informativa privacy</a>
+              e acconsento al trattamento dei miei dati per le finalità indicate.
+              <span class="nota">Puoi cancellarti quando vuoi, con un messaggio o una parola al banco.</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-invia" id="btnInvia">🍷 Iscrivimi</button>
+    </form>
+
+    <div class="conferma" id="conferma">
+      <div class="icona">🍷</div>
+      <h2 id="confermaTitolo">Ci siamo!</h2>
+      <p id="confermaTesto">Ti abbiamo aggiunto alla lista. Al prossimo evento ti scriviamo noi.</p>
+      <p style="font-size:0.88em; color:#8b7355;">Puoi chiudere questa pagina.</p>
+    </div>
+
+    <div class="piede">
+      Vecchia Dogana · PEREIRA S.R.L. · <a href="privacy.html">Informativa privacy</a><br>
+      Per cancellarti scrivi a
+      <a href="mailto:ordini@vecchiadoganabologna.it" id="emailTitolare">ordini@vecchiadoganabologna.it</a>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
+
+    // Testo esatto che l'utente ha accettato: viene inviato e archiviato nel
+    // registro Consensi. Se cambia la formulazione, cambia anche la versione
+    // dell'informativa lato backend (VERSIONE_INFORMATIVA in APIrubrica.js).
+    const TESTO_CONSENSO = "Ho letto l'informativa privacy e acconsento al trattamento dei miei dati per le finalità indicate.";
+
+    const $ = id => document.getElementById(id);
+
+    // Stesso fetch difensivo delle altre pagine: Apps Script ha cold-start da
+    // qualche secondo, e qui davanti c'è un cliente in piedi col telefono.
+    async function fetchConRetry(url, options, tentativi = 3, timeoutMs = 20000) {
+      for (let i = 0; i < tentativi; i++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const res = await fetch(url, { ...options, signal: controller.signal });
+          clearTimeout(timeoutId);
+          return res;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          if (i === tentativi - 1) throw error;
+          await new Promise(r => setTimeout(r, 800 * Math.pow(2, i)));
+        }
+      }
+    }
+
+    function mostraErrore(testo) {
+      const box = $('messaggio');
+      box.textContent = '⚠️ ' + testo;
+      box.classList.add('attivo');
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function nascondiErrore() {
+      $('messaggio').classList.remove('attivo');
+    }
+
+    // Il cellulare diventa obbligatorio solo se si sceglie WhatsApp: dirlo
+    // prima evita di far scoprire il vincolo dopo aver premuto invia.
+    function aggiornaVincoloCellulare() {
+      const serve = $('whatsapp').checked;
+      $('aiutoCellulare').textContent = serve
+        ? 'Obbligatorio per gli avvisi WhatsApp.'
+        : 'Facoltativo — serve solo se vuoi gli avvisi su WhatsApp.';
+    }
+    $('whatsapp').addEventListener('change', aggiornaVincoloCellulare);
+
+    $('formIscrizione').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      nascondiErrore();
+
+      const dati = {
+        nome: $('nome').value.trim(),
+        cognome: $('cognome').value.trim(),
+        email: $('email').value.trim(),
+        cellulare: $('cellulare').value.trim(),
+        newsletter: $('newsletter').checked,
+        whatsapp: $('whatsapp').checked,
+        privacy: $('privacy').checked,
+        trappola: $('sito').value,
+        testoConsenso: TESTO_CONSENSO
+      };
+
+      // Controlli lato client: stessi del server, qui solo per rispondere subito.
+      if (!dati.nome) return mostraErrore('Scrivi almeno il tuo nome.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(dati.email)) {
+        return mostraErrore('Controlla l\'indirizzo email: non sembra valido.');
+      }
+      if (!dati.newsletter && !dati.whatsapp) {
+        return mostraErrore('Scegli almeno un modo per essere avvisato: email o WhatsApp.');
+      }
+      if (dati.whatsapp && !dati.cellulare) {
+        return mostraErrore('Per gli avvisi su WhatsApp serve il numero di cellulare.');
+      }
+      if (!dati.privacy) {
+        return mostraErrore('Per iscriverti devi dichiarare di aver letto l\'informativa privacy.');
+      }
+
+      const btn = $('btnInvia');
+      btn.disabled = true;
+      btn.textContent = '⏳ Un attimo...';
+
+      try {
+        const res = await fetchConRetry(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'iscriviDaLanding', dati: dati })
+        });
+        const esito = JSON.parse(await res.text());
+
+        if (esito.errore) {
+          btn.disabled = false;
+          btn.textContent = '🍷 Iscrivimi';
+          return mostraErrore(esito.errore);
+        }
+
+        if (esito.giaIscritto) {
+          $('confermaTitolo').textContent = 'Bentornato!';
+          $('confermaTesto').textContent = esito.messaggio;
+        }
+        $('formIscrizione').style.display = 'none';
+        $('conferma').classList.add('attiva');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      } catch (error) {
+        btn.disabled = false;
+        btn.textContent = '🍷 Iscrivimi';
+        mostraErrore('Non siamo riusciti a raggiungere il server. Controlla la connessione e riprova.');
+      }
+    });
+  </script>
+</body>
+</html>

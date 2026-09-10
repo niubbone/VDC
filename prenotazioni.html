@@ -535,7 +535,76 @@
     .badge-confermato { background: #90ee90; color: #2c5f2d; }
     .badge-attesa { background: #ffeb3b; color: #f57f17; }
     .badge-annullato { background: #ff5252; color: #b71c1c; }
-    
+    .badge-no_show { background: #ff9800; color: #6d3c00; }
+    .badge-completato { background: #90caf9; color: #0d47a1; }
+
+    /* Badge del pagamento: secondo asse, accanto a quello della prenotazione */
+    .pagamento-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 5px;
+      font-size: 0.8em; font-weight: 700; margin-top: 8px; margin-left: 6px;
+      border: 1px dashed rgba(0,0,0,0.25);
+    }
+    .pag-non_pagato { background: #eceff1; color: #455a64; }
+    .pag-parziale { background: #ffe0b2; color: #e65100; }
+    .pag-pagato_cassa { background: #c8e6c9; color: #1b5e20; }
+    .pag-pagato_online { background: #b3e5fc; color: #01579b; }
+    .pag-rimborso_da_emettere { background: #ffcdd2; color: #b71c1c; }
+    .pag-rimborsato { background: #d7ccc8; color: #4e342e; }
+    .pag-omaggio { background: #f0f4c3; color: #827717; }
+    .pag-scontrino-manca {
+      background: #fff3cd; color: #8a6d00; border: 1px solid #e0a800;
+      display: inline-block; padding: 2px 8px; border-radius: 5px;
+      font-size: 0.75em; font-weight: 700; margin-left: 6px;
+    }
+
+    /* Banner di caricamento fallito */
+    .banner-errore-caricamento {
+      display: none;
+      background: #ffdada; border: 3px solid #b71c1c; border-radius: 10px;
+      color: #7a1414; padding: 14px 18px; margin: 0 auto 16px;
+      max-width: 1400px; line-height: 1.5; font-size: 0.94em;
+    }
+    .banner-errore-caricamento button {
+      background: #b71c1c; color: #fff; border: none; border-radius: 6px;
+      padding: 7px 16px; margin-left: 10px; cursor: pointer;
+      font-family: 'Rye', cursive; font-size: 0.9em;
+    }
+
+    /* Riepilogo economico dell'evento */
+    .riepilogo-economico {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+      margin: 0 0 20px 0;
+    }
+    .riep-voce {
+      background: rgba(244, 228, 193, 0.9); border: 2px solid #6b4423;
+      border-radius: 20px; padding: 6px 14px; font-size: 0.88em; color: #2c1810;
+    }
+    .riep-voce.allarme { background: #fff3cd; border-color: #e0a800; color: #6b5000; }
+
+    /* Autocomplete rubrica sul campo Cliente */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-lista {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+      background: #f4e4c1; border: 2px solid #6b4423; border-top: none;
+      border-radius: 0 0 8px 8px; max-height: 240px; overflow-y: auto;
+      display: none; box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    }
+    .autocomplete-lista.active { display: block; }
+    .autocomplete-voce {
+      padding: 10px 12px; cursor: pointer; border-bottom: 1px solid rgba(107,68,35,0.25);
+      color: #2c1810; font-size: 0.92em; line-height: 1.35;
+    }
+    .autocomplete-voce:last-child { border-bottom: none; }
+    .autocomplete-voce:hover, .autocomplete-voce.evidenziata { background: #e8b873; }
+    .autocomplete-voce .ac-nome { font-weight: 700; }
+    .autocomplete-voce .ac-dettagli { font-size: 0.85em; color: #5a4632; }
+    .cliente-collegato {
+      background: #d4edda; border: 1px solid #155724; color: #155724;
+      border-radius: 6px; padding: 6px 10px; margin-top: 6px;
+      font-size: 0.85em; display: none;
+    }
+    .cliente-collegato.active { display: block; }
+
     .prenotazione-azioni {
       display: flex;
       gap: 8px;
@@ -1198,6 +1267,14 @@
           <label>Descrizione Evento</label>
           <textarea id="inputDescrizioneEvento" placeholder="Dettagli evento, orari, info..." rows="3"></textarea>
         </div>
+
+        <div class="form-group">
+          <label>Prezzo per persona (€)</label>
+          <input type="number" id="inputPrezzoQuota" step="0.01" min="0" placeholder="es: 25,00">
+          <div style="font-size:0.82em; color:#d4a574; margin-top:4px;">
+            Se valorizzato, il dovuto delle prenotazioni si calcola da solo.
+          </div>
+        </div>
       </div>
       
       <!-- CAMPI PRENOTAZIONE (visibili di default) -->
@@ -1220,9 +1297,16 @@
         
         <div class="form-group" id="campoCliente">
           <label id="labelCliente">Cliente *</label>
-          <input type="text" id="inputCliente" placeholder="Nome cliente o gruppo" required>
+          <div class="autocomplete-wrap">
+            <input type="text" id="inputCliente" placeholder="Nome cliente o gruppo"
+                   autocomplete="off" required
+                   oninput="cercaInRubrica()" onkeydown="navigaAutocomplete(event)">
+            <div class="autocomplete-lista" id="autocompleteLista"></div>
+          </div>
+          <div class="cliente-collegato" id="clienteCollegato"></div>
+          <input type="hidden" id="inputClienteId">
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label>Telefono</label>
@@ -1245,15 +1329,102 @@
         </div>
         
         <div class="form-group" id="campoStato">
-          <label>Stato</label>
+          <label>Stato prenotazione <span style="font-weight:400; font-size:0.85em;">(è venuto?)</span></label>
           <select id="inputStato">
             <option value="confermato">✅ Confermato</option>
             <option value="attesa">⏳ In attesa</option>
             <option value="annullato">❌ Annullato</option>
+            <option value="no_show">👻 No-show (non si è presentato)</option>
+            <option value="completato">🏁 Completato</option>
           </select>
         </div>
+
+        <!-- ===== PAGAMENTO ===== -->
+        <div id="sezionePagamento" style="border-top:2px solid rgba(107,68,35,0.35); margin-top:18px; padding-top:14px;">
+          <div style="font-family:'Pirata One',cursive; font-size:1.3em; color:#e8b873; margin-bottom:10px;">
+            💶 Pagamento
+          </div>
+
+          <div class="form-group">
+            <label>Stato pagamento <span style="font-weight:400; font-size:0.85em;">(ha pagato?)</span></label>
+            <select id="inputStatoPagamento" onchange="aggiornaCampiPagamento()">
+              <option value="non_pagato">⬜ Non pagato</option>
+              <option value="pagato_cassa">💵 Pagato in cassa</option>
+              <option value="pagato_online">💳 Pagato online</option>
+              <option value="parziale">🟠 Parziale (alcune quote)</option>
+              <option value="rimborso_da_emettere">💸 Rimborso da emettere</option>
+              <option value="rimborsato">✔️ Rimborsato</option>
+              <option value="omaggio">🎁 Omaggio</option>
+            </select>
+          </div>
+
+          <div class="form-row" id="rigaImporti">
+            <div class="form-group">
+              <label>Dovuto (€)</label>
+              <input type="number" id="inputImportoDovuto" step="0.01" min="0" placeholder="0,00">
+            </div>
+            <div class="form-group">
+              <label>Incassato (€)</label>
+              <input type="number" id="inputImportoPagato" step="0.01" min="0" placeholder="0,00">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="campoQuotePagate">
+              <label>Quote pagate</label>
+              <input type="number" id="inputQuotePagate" min="0" placeholder="es: 4 su 5">
+            </div>
+            <div class="form-group" id="campoMetodo">
+              <label>Metodo</label>
+              <select id="inputMetodoPagamento">
+                <option value="">—</option>
+                <option value="cassa">Contanti/POS in cassa</option>
+                <option value="online">Online</option>
+                <option value="satispay">Satispay</option>
+                <option value="bonifico">Bonifico</option>
+                <option value="buono">Buono</option>
+                <option value="misto">Misto</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" id="campoScontrino">
+            <label style="cursor:pointer;">
+              <input type="checkbox" id="inputScontrinato" style="width:auto; margin-right:8px;">
+              🧾 Scontrino già emesso
+            </label>
+            <div style="font-size:0.82em; color:#d4a574; margin-top:4px;">
+              Finché non è spuntato, la prenotazione resta nella checklist
+              <strong>Partite Aperte</strong> del Quartier Generale.
+            </div>
+          </div>
+
+          <div id="campiRimborso" style="display:none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label id="labelRimborsoImporto">Importo rimborso (€)</label>
+                <input type="number" id="inputRimborsoImporto" step="0.01" min="0" placeholder="0,00">
+              </div>
+              <div class="form-group">
+                <label>Data erogazione</label>
+                <input type="date" id="inputRimborsoData">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Come è avvenuto</label>
+              <input type="text" id="inputRimborsoModalita"
+                     placeholder="es: contanti in cassa, storno online, bonifico">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Note pagamento</label>
+            <textarea id="inputNotePagamento" rows="2"
+                      placeholder="es: pagate 4 quote su 5, la quinta salda in cassa"></textarea>
+          </div>
+        </div>
       </div>
-      
+
       <div class="modal-buttons">
         <button class="btn-modal btn-annulla" onclick="chiudiModal()">✕ Annulla</button>
         <button class="btn-modal btn-salva" onclick="salvaPrenotazioneEvento()" id="btnSalva">💾 Salva</button>
@@ -1304,7 +1475,9 @@
           <div class="contatore-evento-numero" id="eventoContatoreNumero">0</div>
           <div class="contatore-evento-label">👥 Persone Confermate</div>
         </div>
-        
+
+        <div class="riepilogo-economico" id="riepilogoEconomico" style="display:none;"></div>
+
         <div class="prenotazioni-evento-header">
           <h3>Prenotazioni Evento</h3>
           <button class="btn-nuova" onclick="mostraModalPrenotazioneEvento()">➕ Aggiungi</button>
@@ -1352,6 +1525,40 @@
       return age < CACHE_MEMORIA_DURATION;
     }
     
+    /**
+     * Banner di caricamento fallito.
+     *
+     * Serve a distinguere "non ci sono eventi" da "non sono riuscito a
+     * leggerli": senza, un calendario vuoto per un guasto è identico a un
+     * calendario vuoto perché non c'è nulla, e non c'è modo di accorgersene.
+     */
+    function mostraErroreCaricamento(errPren, errEventi) {
+      let box = document.getElementById('bannerErroreCaricamento');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'bannerErroreCaricamento';
+        box.className = 'banner-errore-caricamento';
+        const contenitore = document.querySelector('.calendario-container') || document.body;
+        contenitore.parentNode.insertBefore(box, contenitore);
+      }
+      const mancanti = [errPren && 'le prenotazioni', errEventi && 'gli eventi'].filter(Boolean).join(' e ');
+      box.innerHTML = `
+        <strong>⚠️ Non sono riuscito a caricare ${mancanti}.</strong>
+        Quello che vedi può essere incompleto: <em>non fidarti di un giorno che sembra vuoto</em>.
+        <button onclick="ricaricaDopoErrore()">🔄 Riprova</button>`;
+      box.style.display = 'block';
+    }
+
+    function nascondiErroreCaricamento() {
+      const box = document.getElementById('bannerErroreCaricamento');
+      if (box) box.style.display = 'none';
+    }
+
+    function ricaricaDopoErrore() {
+      invalidaCacheMemoria();
+      caricaPrenotazioni();
+    }
+
     function salvaCacheMemoria(pren, evt) {
       cacheMemoria = {
         prenotazioni: pren,
@@ -1655,27 +1862,36 @@
           callAPI('getEventi')
         ]);
         
-        if (resultPren.prenotazioni) {
+        // ⚠️ L'ERRORE VA CONTROLLATO PER PRIMO.
+        // Il backend, in caso di guaio, risponde `{eventi: [], errore: '...'}`:
+        // un array vuoto è truthy, quindi `if (resultEventi.eventi)` prendeva il
+        // ramo del successo e l'errore non veniva nemmeno letto. Un cold-start di
+        // Apps Script si presentava così come "nessun evento", indistinguibile dal
+        // caso normale — e finiva pure in cache, quindi il calendario restava
+        // senza degustazioni finché la cache non scadeva.
+        const errPren = resultPren.errore;
+        const errEventi = resultEventi.errore;
+
+        if (!errPren && Array.isArray(resultPren.prenotazioni)) {
           prenotazioni = resultPren.prenotazioni;
-        } else if (resultPren.errore) {
-          console.error('Errore API prenotazioni:', resultPren.errore);
-          prenotazioni = [];
         }
-        
-        if (resultEventi.eventi) {
+        if (!errEventi && Array.isArray(resultEventi.eventi)) {
           eventi = resultEventi.eventi;
-        } else if (resultEventi.errore) {
-          console.error('Errore API eventi:', resultEventi.errore);
-          eventi = [];
         }
-        
-        // ⚡ Salva in cache memoria
-        salvaCacheMemoria(prenotazioni, eventi);
-        
+
+        if (errPren || errEventi) {
+          console.error('Errore API:', { prenotazioni: errPren, eventi: errEventi });
+          // Niente cache: un caricamento parziale non deve diventare la verità
+          // per i prossimi minuti.
+          mostraErroreCaricamento(errPren, errEventi);
+        } else {
+          nascondiErroreCaricamento();
+          salvaCacheMemoria(prenotazioni, eventi);
+        }
+
       } catch (error) {
         console.error('Errore caricamento:', error);
-        prenotazioni = [];
-        eventi = [];
+        mostraErroreCaricamento(error.message, error.message);
       }
       
       // Genera calendario comunque (anche se vuoto)
@@ -1770,7 +1986,10 @@
       if (eventiGiorno.length > 0) {
         eventiGiorno.forEach(evento => {
           // Conta prenotazioni per questo evento
-          const prenotazioniEvento = prenotazioni.filter(p => p.evento_id === evento.id && p.stato !== 'annullato');
+          // Un no-show non è una persona attesa: chi non si è presentato non
+          // deve gonfiare il conteggio dei posti occupati come un annullato.
+          const prenotazioniEvento = prenotazioni.filter(p =>
+            p.evento_id === evento.id && p.stato !== 'annullato' && p.stato !== 'no_show');
           const totalePersone = prenotazioniEvento.reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
           
           container.innerHTML += `
@@ -1803,9 +2022,7 @@
               </div>
               ${pren.persone ? `<div class="prenotazione-dettagli">🧑‍🤝‍🧑 ${pren.persone} ${pren.persone === 1 ? 'persona' : 'persone'}</div>` : ''}
               ${pren.note ? `<div class="prenotazione-note">📝 ${pren.note}</div>` : ''}
-              <span class="prenotazione-badge ${badgeClass}">
-                ${pren.stato === 'confermato' ? '✅ Confermato' : pren.stato === 'attesa' ? '⏳ In attesa' : '❌ Annullato'}
-              </span>
+              <span class="prenotazione-badge ${badgeClass}">${etichettaStato(pren.stato)}</span>${badgePagamento(pren)}
               <div class="prenotazione-azioni">
                 <button class="btn-azione btn-modifica" onclick="modificaPrenotazione('${pren.id}')">✏️ Modifica</button>
                 <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')">🗑️ Elimina</button>
@@ -1854,11 +2071,14 @@
       document.getElementById('inputPersone').value = '2';
       document.getElementById('inputNote').value = '';
       document.getElementById('inputStato').value = 'confermato';
-      
+      resetCampiPagamento();
+      scollegaCliente(true);
+
       // Reset campi evento
       document.getElementById('inputNomeEvento').value = '';
       document.getElementById('inputDescrizioneEvento').value = '';
-      
+      document.getElementById('inputPrezzoQuota').value = '';
+
       // Mostra prenotazione, nascondi evento
       document.getElementById('campiEvento').style.display = 'none';
       document.getElementById('campiPrenotazione').style.display = 'block';
@@ -1886,7 +2106,9 @@
       document.getElementById('inputPersone').value = pren.persone || 2;
       document.getElementById('inputNote').value = pren.note || '';
       document.getElementById('inputStato').value = pren.stato;
-      
+      popolaCampiPagamento(pren);
+      mostraCollegamentoCliente(pren);
+
       // Nascondi link evento e mostra solo campi prenotazione
       document.getElementById('campiEvento').style.display = 'none';
       document.getElementById('campiPrenotazione').style.display = 'block';
@@ -1938,9 +2160,12 @@
       modalitaModifica = false;
       document.getElementById('campiEvento').style.display = 'none';
       document.getElementById('campiPrenotazione').style.display = 'block';
+      document.getElementById('sezionePagamento').style.display = 'block';
       document.getElementById('linkCreaEvento').style.display = 'block';
       document.getElementById('tipoToggle').style.display = 'none';
-      
+      chiudiAutocomplete();
+      scollegaCliente(false);
+
       // Nascondi pulsante elimina evento se esiste
       const btnElimina = document.getElementById('btnEliminaEvento');
       if (btnElimina) {
@@ -1948,6 +2173,263 @@
       }
     }
     
+    // =====================================================================
+    // ===== RUBRICA: RICONOSCIMENTO CLIENTE ===============================
+    // =====================================================================
+    // Scrivendo il nome nel campo Cliente si cerca in rubrica. Scegliendo una
+    // voce si collega la prenotazione a quella scheda (clienteId) e si
+    // riempiono telefono ed email. Se non si sceglie nulla la prenotazione si
+    // salva come sempre: il collegamento lo crea poi il backend dai recapiti.
+
+    let timerRicerca = null;
+    let risultatiRubrica = [];
+    let voceEvidenziata = -1;
+
+    function cercaInRubrica() {
+      const q = document.getElementById('inputCliente').value.trim();
+
+      // Cambiare il nome a mano scollega: la scheda collegata deve sempre
+      // corrispondere a quello che c'è scritto nel campo.
+      scollegaCliente(false);
+
+      clearTimeout(timerRicerca);
+      if (q.length < 2) return chiudiAutocomplete();
+
+      // Debounce: si cerca quando smette di scrivere, non a ogni tasto.
+      timerRicerca = setTimeout(async () => {
+        try {
+          const r = await callAPI('cercaClienti', { query: q, limite: 8 });
+          if (r.errore || !r.clienti || !r.clienti.length) return chiudiAutocomplete();
+          // Nel frattempo può aver continuato a scrivere: risultati vecchi via.
+          if (document.getElementById('inputCliente').value.trim() !== q) return;
+          risultatiRubrica = r.clienti;
+          renderAutocomplete();
+        } catch (e) {
+          chiudiAutocomplete();  // la rubrica è un aiuto, non un requisito
+        }
+      }, 300);
+    }
+
+    function renderAutocomplete() {
+      const box = document.getElementById('autocompleteLista');
+      voceEvidenziata = -1;
+      box.innerHTML = risultatiRubrica.map((c, i) => `
+        <div class="autocomplete-voce" data-indice="${i}" onclick="selezionaClienteRubrica(${i})">
+          <div class="ac-nome">${escapeHtmlPren(c.nomeCompleto)}</div>
+          <div class="ac-dettagli">
+            ${escapeHtmlPren(c.email || 'nessuna email')}
+            ${c.cellulare ? ' · ' + escapeHtmlPren(c.cellulare) : ''}
+            ${c.eventiPartecipati ? ' · 🍷 ' + c.eventiPartecipati + (c.eventiPartecipati === 1 ? ' evento' : ' eventi') : ''}
+          </div>
+        </div>`).join('');
+      box.classList.add('active');
+    }
+
+    function chiudiAutocomplete() {
+      document.getElementById('autocompleteLista').classList.remove('active');
+      risultatiRubrica = [];
+      voceEvidenziata = -1;
+    }
+
+    function navigaAutocomplete(e) {
+      const box = document.getElementById('autocompleteLista');
+      if (!box.classList.contains('active')) return;
+
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        voceEvidenziata += (e.key === 'ArrowDown' ? 1 : -1);
+        if (voceEvidenziata < 0) voceEvidenziata = risultatiRubrica.length - 1;
+        if (voceEvidenziata >= risultatiRubrica.length) voceEvidenziata = 0;
+        box.querySelectorAll('.autocomplete-voce').forEach((v, i) => {
+          v.classList.toggle('evidenziata', i === voceEvidenziata);
+        });
+      } else if (e.key === 'Enter' && voceEvidenziata >= 0) {
+        e.preventDefault();
+        selezionaClienteRubrica(voceEvidenziata);
+      } else if (e.key === 'Escape') {
+        chiudiAutocomplete();
+      }
+    }
+
+    function selezionaClienteRubrica(indice) {
+      const c = risultatiRubrica[indice];
+      if (!c) return;
+
+      document.getElementById('inputCliente').value = c.nomeCompleto;
+      document.getElementById('inputClienteId').value = c.id;
+      // I recapiti già noti non si sovrascrivono con quelli in rubrica se
+      // l'operatore ne ha appena scritto uno diverso apposta.
+      if (c.email && !document.getElementById('inputEmail').value.trim()) {
+        document.getElementById('inputEmail').value = c.email;
+      }
+      if (c.cellulare && !document.getElementById('inputTelefono').value.trim()) {
+        document.getElementById('inputTelefono').value = c.cellulare;
+      }
+
+      const box = document.getElementById('clienteCollegato');
+      box.innerHTML = `✅ Collegato alla rubrica` +
+        (c.eventiPartecipati ? ` — già a ${c.eventiPartecipati} ${c.eventiPartecipati === 1 ? 'evento' : 'eventi'}` : ' — primo evento') +
+        ` <a href="#" onclick="scollegaCliente(true); return false;" style="color:#155724;">scollega</a>`;
+      box.classList.add('active');
+
+      chiudiAutocomplete();
+    }
+
+    function scollegaCliente(azzeraTesto) {
+      document.getElementById('inputClienteId').value = '';
+      document.getElementById('clienteCollegato').classList.remove('active');
+      if (azzeraTesto) chiudiAutocomplete();
+    }
+
+    /** In modifica: mostra se la prenotazione è già agganciata a una scheda. */
+    function mostraCollegamentoCliente(pren) {
+      const box = document.getElementById('clienteCollegato');
+      document.getElementById('inputClienteId').value = pren.clienteId || '';
+      if (pren.clienteId) {
+        box.innerHTML = '✅ Collegato alla rubrica ' +
+          '<a href="#" onclick="scollegaCliente(true); return false;" style="color:#155724;">scollega</a>';
+        box.classList.add('active');
+      } else {
+        box.classList.remove('active');
+      }
+    }
+
+    function escapeHtmlPren(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Un click fuori chiude la tendina, altrimenti resta aperta sopra il form.
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.autocomplete-wrap')) chiudiAutocomplete();
+    });
+
+    // =====================================================================
+    // ===== PAGAMENTO NEL MODAL ===========================================
+    // =====================================================================
+
+    const ETICHETTE_PAGAMENTO = {
+      non_pagato: '⬜ Non pagato',
+      parziale: '🟠 Parziale',
+      pagato_cassa: '💵 Cassa',
+      pagato_online: '💳 Online',
+      rimborso_da_emettere: '💸 Da rimborsare',
+      rimborsato: '✔️ Rimborsato',
+      omaggio: '🎁 Omaggio'
+    };
+
+    function resetCampiPagamento() {
+      document.getElementById('inputStatoPagamento').value = 'non_pagato';
+      document.getElementById('inputMetodoPagamento').value = '';
+      document.getElementById('inputImportoDovuto').value = '';
+      document.getElementById('inputImportoPagato').value = '';
+      document.getElementById('inputQuotePagate').value = '';
+      document.getElementById('inputScontrinato').checked = false;
+      document.getElementById('inputRimborsoImporto').value = '';
+      document.getElementById('inputRimborsoData').value = '';
+      document.getElementById('inputRimborsoModalita').value = '';
+      document.getElementById('inputNotePagamento').value = '';
+      aggiornaCampiPagamento();
+    }
+
+    function popolaCampiPagamento(pren) {
+      document.getElementById('inputStatoPagamento').value = pren.statoPagamento || 'non_pagato';
+      document.getElementById('inputMetodoPagamento').value = pren.metodoPagamento || '';
+      document.getElementById('inputImportoDovuto').value = pren.importoDovuto || '';
+      document.getElementById('inputImportoPagato').value = pren.importoPagato || '';
+      document.getElementById('inputQuotePagate').value = pren.quotePagate || '';
+      document.getElementById('inputScontrinato').checked = !!pren.scontrinato;
+      document.getElementById('inputRimborsoImporto').value = pren.rimborsoImporto || '';
+      document.getElementById('inputRimborsoData').value = pren.rimborsoData || '';
+      document.getElementById('inputRimborsoModalita').value = pren.rimborsoModalita || '';
+      document.getElementById('inputNotePagamento').value = pren.notePagamento || '';
+      aggiornaCampiPagamento();
+    }
+
+    /**
+     * Mostra solo i campi che lo stato scelto rende sensati: un "non pagato"
+     * non ha modalità di rimborso da compilare, un "omaggio" non ha importi.
+     */
+    function aggiornaCampiPagamento() {
+      const stato = document.getElementById('inputStatoPagamento').value;
+      const conRimborso = ['rimborso_da_emettere', 'rimborsato'].includes(stato);
+      const conImporti = stato !== 'non_pagato' && stato !== 'omaggio';
+
+      document.getElementById('campiRimborso').style.display = conRimborso ? 'block' : 'none';
+      document.getElementById('campoQuotePagate').style.display = stato === 'parziale' ? 'block' : 'none';
+      document.getElementById('rigaImporti').style.display = conImporti ? 'flex' : 'none';
+      document.getElementById('campoScontrino').style.display =
+        (stato === 'pagato_online' || stato === 'parziale') ? 'block' : 'none';
+
+      // Il metodo si preimposta seguendo lo stato, ma resta modificabile:
+      // serve solo a non far ridigitare l'ovvio.
+      const metodo = document.getElementById('inputMetodoPagamento');
+      if (!metodo.value) {
+        if (stato === 'pagato_cassa') metodo.value = 'cassa';
+        if (stato === 'pagato_online') metodo.value = 'online';
+      }
+    }
+
+    function leggiCampiPagamento() {
+      const stato = document.getElementById('inputStatoPagamento').value;
+      return {
+        statoPagamento: stato,
+        metodoPagamento: document.getElementById('inputMetodoPagamento').value,
+        importoDovuto: document.getElementById('inputImportoDovuto').value,
+        importoPagato: document.getElementById('inputImportoPagato').value,
+        quotePagate: document.getElementById('inputQuotePagate').value,
+        scontrinato: document.getElementById('inputScontrinato').checked,
+        rimborsoImporto: document.getElementById('inputRimborsoImporto').value,
+        rimborsoData: document.getElementById('inputRimborsoData').value,
+        rimborsoModalita: document.getElementById('inputRimborsoModalita').value,
+        notePagamento: document.getElementById('inputNotePagamento').value.trim()
+      };
+    }
+
+    /**
+     * Controlli prima del salvataggio. Non bloccano il lavoro se non sono
+     * certezze: bloccano solo le combinazioni che renderebbero il dato
+     * inservibile a distanza di mesi.
+     */
+    function validaPagamento() {
+      const p = leggiCampiPagamento();
+      if (p.statoPagamento === 'rimborsato' && !p.rimborsoData) {
+        return 'Per segnare il rimborso come erogato serve la data in cui è avvenuto.';
+      }
+      if (p.statoPagamento === 'rimborsato' && !p.rimborsoModalita.trim()) {
+        return 'Indica come è avvenuto il rimborso: fra qualche mese è l\'unica cosa che conta.';
+      }
+      if (p.statoPagamento === 'parziale' && !Number(p.quotePagate)) {
+        return 'Un pagamento parziale ha bisogno del numero di quote pagate.';
+      }
+      return null;
+    }
+
+    /** Badge del pagamento accanto a quello dello stato, nelle liste. */
+    function badgePagamento(pren) {
+      const stato = pren.statoPagamento;
+      if (!stato || stato === 'non_pagato') return '';
+
+      let html = `<span class="pagamento-badge pag-${stato}">${ETICHETTE_PAGAMENTO[stato] || stato}` +
+        (Number(pren.importoPagato) ? ` ${Number(pren.importoPagato).toFixed(2).replace('.', ',')}€` : '') +
+        `</span>`;
+
+      const daScontrinare = (stato === 'pagato_online' ||
+        ['online', 'satispay', 'bonifico'].includes(String(pren.metodoPagamento).toLowerCase()));
+      if (daScontrinare && !pren.scontrinato && Number(pren.importoPagato) > 0) {
+        html += `<span class="pag-scontrino-manca">🧾 da scontrinare</span>`;
+      }
+      return html;
+    }
+
+    function etichettaStato(stato) {
+      return ({
+        confermato: '✅ Confermato', attesa: '⏳ In attesa', annullato: '❌ Annullato',
+        no_show: '👻 No-show', completato: '🏁 Completato'
+      })[stato] || stato;
+    }
+
     // ========== GESTIONE TIPO NEL MODAL ==========
     function switchToEvento() {
       tipoCorrente = 'evento';
@@ -1956,7 +2438,8 @@
       document.getElementById('campiPrenotazione').style.display = 'none';
       document.getElementById('linkCreaEvento').style.display = 'none';
       document.getElementById('btnSalva').textContent = '💾 Crea Evento';
-      
+      chiudiAutocomplete();
+
       // Mantieni data selezionata
       document.getElementById('inputData').value = giornoSelezionato;
     }
@@ -1973,7 +2456,9 @@
         document.getElementById('campoOrarioArrivo').style.display = 'none';
         document.getElementById('campoCliente').style.display = 'none';
         document.getElementById('campoStato').style.display = 'none';
+        document.getElementById('sezionePagamento').style.display = 'none';
         document.getElementById('btnSalva').textContent = '💾 Crea Evento';
+        chiudiAutocomplete();
       } else {
         document.getElementById('btnTipoPrenotazione').classList.add('active');
         document.getElementById('btnTipoEvento').classList.remove('active');
@@ -1983,6 +2468,7 @@
         document.getElementById('campoOrarioArrivo').style.display = 'none';
         document.getElementById('campoCliente').style.display = 'block';
         document.getElementById('campoStato').style.display = 'block';
+        document.getElementById('sezionePagamento').style.display = 'block';
         document.getElementById('btnSalva').textContent = '💾 Salva';
       }
     }
@@ -2003,14 +2489,63 @@
       
       // Carica prenotazioni evento
       const prenotazioniEvento = prenotazioni.filter(p => p.evento_id === id);
-      const totalePersone = prenotazioniEvento.filter(p => p.stato !== 'annullato').reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
+      const totalePersone = prenotazioniEvento
+        .filter(p => p.stato !== 'annullato' && p.stato !== 'no_show')
+        .reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
       
       document.getElementById('eventoContatoreNumero').textContent = totalePersone;
-      
+
       mostraPrenotazioniEvento(prenotazioniEvento);
-      
+      mostraRiepilogoEconomico(prenotazioniEvento);
+
       // Mostra pannello
       document.getElementById('pannelloEventoGestione').classList.add('active');
+    }
+
+    /**
+     * Riepilogo dei soldi dell'evento, calcolato dalle prenotazioni già in
+     * memoria: nessuna chiamata in più, e i numeri restano coerenti con la
+     * lista che si sta guardando.
+     */
+    function mostraRiepilogoEconomico(prenotazioniEvento) {
+      const box = document.getElementById('riepilogoEconomico');
+      if (!box) return;
+
+      const r = { dovuto: 0, incassato: 0, cassa: 0, online: 0, daScontrinare: 0, rimborsi: 0, noShow: 0 };
+      prenotazioniEvento.forEach(p => {
+        const stato = p.statoPagamento || 'non_pagato';
+        r.dovuto += Number(p.importoDovuto) || 0;
+        r.incassato += Number(p.importoPagato) || 0;
+        if (stato === 'pagato_cassa') r.cassa += Number(p.importoPagato) || 0;
+        if (stato === 'pagato_online') r.online += Number(p.importoPagato) || 0;
+        if (stato === 'rimborso_da_emettere') r.rimborsi += Number(p.rimborsoImporto) || Number(p.importoPagato) || 0;
+        if (p.stato === 'no_show') r.noShow++;
+
+        const telematico = stato === 'pagato_online' ||
+          ['online', 'satispay', 'bonifico'].includes(String(p.metodoPagamento).toLowerCase());
+        if (telematico && !p.scontrinato && Number(p.importoPagato) > 0) {
+          r.daScontrinare += Number(p.importoPagato) || 0;
+        }
+      });
+
+      const eur = n => (Number(n) || 0).toFixed(2).replace('.', ',') + '€';
+      const voce = (etichetta, valore, allarme) =>
+        `<span class="riep-voce${allarme ? ' allarme' : ''}">${etichetta} <strong>${valore}</strong></span>`;
+
+      // Le voci a zero non si mostrano: un riepilogo pieno di zeri nasconde
+      // le due o tre cifre che contano davvero.
+      const voci = [
+        voce('Atteso', eur(r.dovuto)),
+        voce('Incassato', eur(r.incassato)),
+        r.cassa ? voce('💵 cassa', eur(r.cassa)) : '',
+        r.online ? voce('💳 online', eur(r.online)) : '',
+        r.daScontrinare ? voce('🧾 da scontrinare', eur(r.daScontrinare), true) : '',
+        r.rimborsi ? voce('💸 da rimborsare', eur(r.rimborsi), true) : '',
+        r.noShow ? voce('👻 no-show', r.noShow, true) : ''
+      ].filter(Boolean).join('');
+
+      box.innerHTML = voci;
+      box.style.display = (r.dovuto || r.incassato || r.noShow) ? 'flex' : 'none';
     }
     
     function mostraPrenotazioniEvento(prenotazioniEvento) {
@@ -2040,7 +2575,8 @@
         if (pren.telefono) {
           dettagliHtml += `<span>📞 ${pren.telefono}</span>`;
         }
-        dettagliHtml += `<span class="${badgeClass}">${pren.stato === 'confermato' ? '✅ Confermato' : pren.stato === 'attesa' ? '⏳ In attesa' : '❌ Annullato'}</span>`;
+        dettagliHtml += `<span class="${badgeClass}">${etichettaStato(pren.stato)}</span>`;
+        dettagliHtml += badgePagamento(pren);
         dettagliHtml += '</div>';
         
         container.innerHTML += `
@@ -2079,7 +2615,16 @@
       document.getElementById('inputPersone').value = '2';
       document.getElementById('inputNote').value = '';
       document.getElementById('inputStato').value = 'confermato';
-      
+      resetCampiPagamento();
+      scollegaCliente(true);
+
+      // Se l'evento ha un prezzo per quota, il dovuto si calcola da solo:
+      // 2 persone × 25€ = 50€, senza doverlo rifare a mente ogni volta.
+      if (eventoCorrente && Number(eventoCorrente.prezzoQuota)) {
+        document.getElementById('inputImportoDovuto').value =
+          (Number(eventoCorrente.prezzoQuota) * 2).toFixed(2);
+      }
+
       // Mostra solo campi prenotazione (no evento)
       document.getElementById('campiEvento').style.display = 'none';
       document.getElementById('campiPrenotazione').style.display = 'block';
@@ -2107,7 +2652,9 @@
       document.getElementById('inputPersone').value = pren.persone || '2';
       document.getElementById('inputNote').value = pren.note || '';
       document.getElementById('inputStato').value = pren.stato;
-      
+      popolaCampiPagamento(pren);
+      mostraCollegamentoCliente(pren);
+
       document.getElementById('campiEvento').style.display = 'none';
       document.getElementById('campiPrenotazione').style.display = 'block';
       document.getElementById('linkCreaEvento').style.display = 'none';
@@ -2139,7 +2686,8 @@
           const result = await callAPI('creaEvento', {
             nome: nome,
             data: data,
-            descrizione: descrizione
+            descrizione: descrizione,
+            prezzoQuota: document.getElementById('inputPrezzoQuota').value
           });
           
           hideLoading();
@@ -2165,19 +2713,27 @@
           email: document.getElementById('inputEmail').value,
           persone: parseInt(document.getElementById('inputPersone').value) || 0,
           note: document.getElementById('inputNote').value,
-          stato: document.getElementById('inputStato').value
+          stato: document.getElementById('inputStato').value,
+          clienteId: document.getElementById('inputClienteId').value,
+          pagamento: leggiCampiPagamento()
         };
-        
+
         // Aggiungi evento_id se siamo in gestione evento
         if (eventoCorrente) {
           prenotazione.evento_id = eventoCorrente.id;
         }
-        
+
         if (!prenotazione.data || !prenotazione.cliente) {
           alert('⚠️ Data e Cliente sono obbligatori!');
           return;
         }
-        
+
+        const erroreP = validaPagamento();
+        if (erroreP) {
+          alert('⚠️ ' + erroreP);
+          return;
+        }
+
         showLoading(modalitaModifica ? 'Aggiornamento...' : 'Salvataggio...');
         
         let result;
@@ -2228,6 +2784,7 @@
       document.getElementById('inputNomeEvento').value = eventoCorrente.nome;
       document.getElementById('inputData').value = eventoCorrente.data;
       document.getElementById('inputDescrizioneEvento').value = eventoCorrente.descrizione || '';
+      document.getElementById('inputPrezzoQuota').value = eventoCorrente.prezzoQuota || '';
       
       // Mostra campi evento
       document.getElementById('campiEvento').style.display = 'block';
@@ -2270,7 +2827,8 @@
         id: eventoCorrente.id,
         nome: nome,
         data: data,
-        descrizione: descrizione
+        descrizione: descrizione,
+        prezzoQuota: document.getElementById('inputPrezzoQuota').value
       });
       
       hideLoading();

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cartoncini QR — Vecchia Dogana</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #3a2416;
+      padding: 24px 16px 48px;
+      color: #f4e4c1;
+    }
+
+    .istruzioni {
+      max-width: 800px;
+      margin: 0 auto 26px;
+      background: rgba(244, 228, 193, 0.1);
+      border: 2px solid #6b4423;
+      border-radius: 10px;
+      padding: 18px 20px;
+      line-height: 1.6;
+      font-size: 0.94em;
+    }
+    .istruzioni h1 {
+      font-family: 'Pirata One', cursive;
+      font-size: 1.8em;
+      color: #e8b873;
+      margin-bottom: 10px;
+    }
+    .istruzioni code {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.92em;
+      color: #e8b873;
+      word-break: break-all;
+    }
+    .btn-stampa {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 12px 26px;
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      border: 2px solid #6b4423;
+      border-radius: 8px;
+      font-family: 'Rye', cursive;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    .foglio-stampa {
+      max-width: 800px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .cartoncino {
+      background: #f4e4c1;
+      border: 2px dashed #a8845c;
+      border-radius: 10px;
+      padding: 22px 18px 20px;
+      text-align: center;
+      color: #2c1810;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 340px;
+    }
+    .cartoncino h2 {
+      font-family: 'Pirata One', cursive;
+      font-size: 1.9em;
+      color: #6b4423;
+      line-height: 1.05;
+    }
+    .cartoncino .occhiello {
+      font-family: 'Rye', cursive;
+      font-size: 0.72em;
+      letter-spacing: 1.5px;
+      color: #8b6644;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .cartoncino img {
+      width: 165px;
+      height: 165px;
+      margin: 12px 0 10px;
+    }
+    .cartoncino .invito {
+      font-size: 0.9em;
+      line-height: 1.45;
+      color: #4a2c18;
+    }
+    .cartoncino .invito strong { color: #6b4423; }
+    .cartoncino .piede {
+      font-size: 0.68em;
+      color: #8b6644;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+
+    @media print {
+      /* In stampa spariscono istruzioni e sfondo: resta solo il foglio dei
+         cartoncini, con i bordi tratteggiati che fanno da linea di taglio. */
+      body { background: #fff; padding: 0; color: #000; }
+      .istruzioni { display: none; }
+      .foglio-stampa { max-width: none; gap: 0; }
+      .cartoncino {
+        border-radius: 0;
+        min-height: 48vh;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      @page { size: A4 portrait; margin: 8mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="istruzioni">
+    <h1>Cartoncini con QR</h1>
+    <p>
+      Quattro cartoncini per foglio A4, da tagliare lungo il tratteggio e lasciare
+      sui tavoli o al banco. Il QR porta a
+      <code>https://niubbone.github.io/VDC/iscrizione.html</code>.
+    </p>
+    <p style="margin-top:10px;">
+      <strong>Prima di stamparne una risma:</strong> completa i dati del titolare in
+      <code>privacy.html</code> e prova a inquadrare il codice col telefono.
+      Il QR punta a un indirizzo fisso, quindi resta valido anche se cambi il
+      testo della pagina — ma non se ne cambi il nome del file.
+    </p>
+    <button class="btn-stampa" onclick="window.print()">🖨️ Stampa</button>
+  </div>
+
+  <div class="foglio-stampa">
+    <!-- I quattro cartoncini sono identici: si duplica il markup invece di
+         generarlo in JS perché la pagina deve stampare anche senza script. -->
+    <div class="cartoncino">
+      <div>
+        <div class="occhiello">Vecchia Dogana</div>
+        <h2>Degustazioni<br>&amp; Serate</h2>
+      </div>
+      <img src="./assets/qr/iscrizione-qr.svg" alt="QR code per iscriversi agli eventi della Vecchia Dogana">
+      <div>
+        <div class="invito">
+          Inquadra il codice e lascia i tuoi contatti:<br>
+          <strong>ti avvisiamo noi</strong> del prossimo evento.
+        </div>
+        <div class="piede">Nessuno spam. Ti cancelli quando vuoi.</div>
+      </div>
+    </div>
+
+    <div class="cartoncino">
+      <div>
+        <div class="occhiello">Vecchia Dogana</div>
+        <h2>Degustazioni<br>&amp; Serate</h2>
+      </div>
+      <img src="./assets/qr/iscrizione-qr.svg" alt="QR code per iscriversi agli eventi della Vecchia Dogana">
+      <div>
+        <div class="invito">
+          Inquadra il codice e lascia i tuoi contatti:<br>
+          <strong>ti avvisiamo noi</strong> del prossimo evento.
+        </div>
+        <div class="piede">Nessuno spam. Ti cancelli quando vuoi.</div>
+      </div>
+    </div>
+
+    <div class="cartoncino">
+      <div>
+        <div class="occhiello">Vecchia Dogana</div>
+        <h2>Degustazioni<br>&amp; Serate</h2>
+      </div>
+      <img src="./assets/qr/iscrizione-qr.svg" alt="QR code per iscriversi agli eventi della Vecchia Dogana">
+      <div>
+        <div class="invito">
+          Inquadra il codice e lascia i tuoi contatti:<br>
+          <strong>ti avvisiamo noi</strong> del prossimo evento.
+        </div>
+        <div class="piede">Nessuno spam. Ti cancelli quando vuoi.</div>
+      </div>
+    </div>
+
+    <div class="cartoncino">
+      <div>
+        <div class="occhiello">Vecchia Dogana</div>
+        <h2>Degustazioni<br>&amp; Serate</h2>
+      </div>
+      <img src="./assets/qr/iscrizione-qr.svg" alt="QR code per iscriversi agli eventi della Vecchia Dogana">
+      <div>
+        <div class="invito">
+          Inquadra il codice e lascia i tuoi contatti:<br>
+          <strong>ti avvisiamo noi</strong> del prossimo evento.
+        </div>
+        <div class="piede">Nessuno spam. Ti cancelli quando vuoi.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -75,9 +75,15 @@
       }
     }
     .container { max-width: 1200px; margin: 0 auto; }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    /* I tab vanno a capo invece di sfondare la pagina.
+       Con sei voci, `flex: 1` da solo non basta: un elemento flex non si
+       restringe sotto la propria larghezza minima di contenuto, quindi la
+       barra restava larga ~700px e trascinava l'intera schermata in
+       scorrimento orizzontale. Servono flex-wrap E min-width: 0. */
+    .tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
     .tab {
-      flex: 1; padding: 15px; background: linear-gradient(145deg, #a67c52 0%, #8b6644 100%);
+      flex: 1 1 150px; min-width: 0; padding: 15px;
+      background: linear-gradient(145deg, #a67c52 0%, #8b6644 100%);
       color: #f4e4c1; border: 3px solid #6b4423; border-radius: 10px; cursor: pointer;
       font-weight: 700; font-family: 'Rye'; text-align: center; transition: all 0.3s;
     }
@@ -164,7 +170,48 @@
       background: rgba(255,255,255,0.6); border-left: 5px solid #6b4423;
       padding: 10px 14px; margin-bottom: 15px; font-size: 0.92em; line-height: 1.45; color: #2c1810;
     }
-    
+
+    /* RUBRICA E PARTITE APERTE */
+    .btn-terziario { background: linear-gradient(145deg, #8b6644 0%, #6b4423 100%); color: #f4e4c1; }
+    .btn-pericolo { background: linear-gradient(145deg, #c0392b 0%, #922b21 100%); color: #fff; }
+    .btn-mini {
+      padding: 5px 10px; font-size: 0.82em; border: none; border-radius: 6px;
+      cursor: pointer; font-family: 'Rye', cursive; margin-right: 4px;
+    }
+    .rub-toolbar {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px;
+    }
+    .rub-toolbar input[type="search"], .rub-toolbar select {
+      padding: 9px 12px; border: 2px solid #6b4423; border-radius: 6px;
+      background: #f4e4c1; color: #2c1810; font-size: 1em; font-family: inherit;
+    }
+    .rub-toolbar input[type="search"] { min-width: 260px; flex: 1; }
+    .rub-contatori { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+    .rub-pill {
+      background: #f4e4c1; border: 2px solid #6b4423; border-radius: 20px;
+      padding: 5px 14px; font-size: 0.88em; color: #2c1810; font-weight: 600;
+    }
+    .badge-stato {
+      display: inline-block; padding: 2px 9px; border-radius: 12px;
+      font-size: 0.78em; font-weight: 700; white-space: nowrap;
+    }
+    .badge-attivo { background: #d4edda; color: #155724; border: 1px solid #155724; }
+    .badge-da_completare { background: #fff3cd; color: #856404; border: 1px solid #856404; }
+    .badge-disiscritto { background: #e2e3e5; color: #494f54; border: 1px solid #494f54; }
+    .badge-si { background: #d4edda; color: #155724; border: 1px solid #155724; }
+    .badge-no { background: #f8d7da; color: #721c24; border: 1px solid #721c24; }
+    .rub-riga-cliccabile { cursor: pointer; }
+    .rub-riga-cliccabile:hover { background: #ecd9ae; }
+    .rub-storico { font-size: 0.86em; line-height: 1.5; }
+    .rub-storico li { margin-bottom: 4px; }
+    .pa-gruppo { margin-bottom: 26px; }
+    .pa-vuoto {
+      background: #d4edda; border: 2px solid #155724; border-radius: 8px;
+      padding: 12px 14px; color: #155724; font-weight: 600;
+    }
+    .pa-check { width: 18px; height: 18px; cursor: pointer; }
+    .importo { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
     /* LOADING OVERLAY */
     .loading-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -310,7 +357,34 @@
       }
       .header { flex-direction: column; gap: 10px; text-align: center; }
       .header h1 { font-size: 1.5em; }
+
+      /* Sei tab su due colonne: si vedono tutti, nessuno da cercare
+         scorrendo di lato. */
+      .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .tab {
+        padding: 12px 6px; font-size: 0.82em; border-width: 2px;
+        border-radius: 8px; line-height: 1.25;
+      }
+
+      .tab-content { padding: 16px; border-width: 3px; }
+      .section { padding: 14px; }
+      .section-title { font-size: 1.2em; }
+
+      /* La barra della rubrica: campi a piena larghezza invece di una riga
+         che non ci sta. Il min-width: 260px del campo di ricerca sfondava
+         gli schermi stretti. */
+      .rub-toolbar { flex-direction: column; align-items: stretch; }
+      .rub-toolbar input[type="search"] { min-width: 0; width: 100%; }
+      .rub-toolbar select, .rub-toolbar .btn { width: 100%; }
+
+      .modal-content { padding: 18px; width: 95%; }
+      .modal-buttons { flex-wrap: wrap; }
+      .modal-buttons .btn-modal { flex: 1 1 140px; }
     }
+
+    /* Rete di sicurezza: nessun elemento deve poter allargare la pagina.
+       Le tabelle larghe hanno già il loro contenitore che scorre. */
+    html, body { max-width: 100%; overflow-x: hidden; }
   </style>
 </head>
 <body>
@@ -333,6 +407,8 @@
       <div class="tab" onclick="mostraTab('versamento')">💰 Versamenti</div>
       <div class="tab" onclick="mostraTab('statistiche')">📊 Statistiche</div>
       <div class="tab" onclick="mostraTab('diagnostica')">🩺 Diagnostica</div>
+      <div class="tab" onclick="mostraTab('rubrica')">👥 Rubrica</div>
+      <div class="tab" onclick="mostraTab('partite')">🧾 Partite Aperte</div>
     </div>
     
     <div id="consultazione" class="tab-content active">
@@ -427,8 +503,197 @@
       </div>
       <div id="risultatoDiagnostica"></div>
     </div>
+
+    <!-- ===== RUBRICA CLIENTI ===== -->
+    <div id="rubrica" class="tab-content">
+      <div class="section">
+        <div class="section-title">Rubrica Clienti</div>
+        <div class="diag-nota">
+          L'anagrafica unica del locale. Lo <strong>storico eventi</strong> non è un dato a sé:
+          si ricava dalle prenotazioni collegate, quindi è sempre allineato.
+          <br>
+          Hanno il consenso newsletter i clienti <strong>importati dallo storico</strong>
+          (attribuito in sede di import) e chi si è <strong>iscritto dal QR</strong>.
+          Chi entra creando una nuova prenotazione <strong>no</strong>: per quello serve
+          spuntarlo a mano qui o farlo passare dalla landing.
+        </div>
+        <div class="rub-toolbar">
+          <input type="search" id="rubRicerca" placeholder="Cerca per nome, email o cellulare..."
+                 oninput="filtraRubrica()">
+          <select id="rubFiltroStato" onchange="filtraRubrica()">
+            <option value="">Tutti gli stati</option>
+            <option value="attivo">Attivi</option>
+            <option value="da_completare">Da completare</option>
+            <option value="disiscritto">Disiscritti</option>
+          </select>
+          <select id="rubFiltroConsenso" onchange="filtraRubrica()">
+            <option value="">Tutti i contatti</option>
+            <option value="newsletter">Solo consenso newsletter</option>
+            <option value="whatsapp">Solo consenso WhatsApp</option>
+            <option value="senza">Senza consenso marketing</option>
+          </select>
+          <button class="btn btn-primary" onclick="apriModalCliente()">➕ Nuovo</button>
+          <button class="btn btn-secondary" onclick="esportaRubrica(true)">📤 Export newsletter</button>
+          <button class="btn btn-terziario" onclick="esportaRubrica(false)">📋 Export completo</button>
+        </div>
+        <div class="rub-contatori" id="rubContatori"></div>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn-terziario" onclick="anteprimaImportRubrica()">
+            🔄 Importa clienti dallo storico prenotazioni
+          </button>
+          <a href="qr-card.html" target="_blank" rel="noopener" class="btn btn-terziario"
+             style="text-decoration:none; display:inline-block;">
+            🔗 Cartoncini QR iscrizione
+          </a>
+          <a href="iscrizione.html" target="_blank" rel="noopener"
+             style="color:#6b4423; font-size:0.88em;">apri la landing</a>
+        </div>
+      </div>
+      <div id="risultatoRubrica"></div>
+    </div>
+
+    <!-- ===== PARTITE APERTE ===== -->
+    <div id="partite" class="tab-content">
+      <div class="section">
+        <div class="section-title">Scontrini e Rimborsi</div>
+        <div class="diag-nota">
+          Tutto quello che è rimasto in sospeso sull'incassato: i pagamenti online
+          <strong>ancora da scontrinare</strong> e i <strong>rimborsi dovuti</strong> e non
+          ancora erogati. Una voce sparisce da qui solo quando la si chiude.
+          Il <strong>buono</strong> non è una categoria a parte: è uno dei modi in cui un
+          rimborso viene erogato, e si sceglie al momento di confermarlo.
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Dal <span style="font-weight:400; font-size:0.85em;">(vuoto = dall'inizio)</span>:</label>
+            <input type="date" id="paDa">
+          </div>
+          <div class="form-group">
+            <label>Al <span style="font-weight:400; font-size:0.85em;">(vuoto = a oggi)</span>:</label>
+            <input type="date" id="paA">
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button class="btn btn-primary" onclick="caricaPartiteAperte()">🧾 Aggiorna</button>
+          </div>
+        </div>
+      </div>
+      <div id="risultatoPartite"></div>
+    </div>
   </div>
-  
+
+  <!-- MODAL SCHEDA CLIENTE -->
+  <div id="modalCliente" class="modal">
+    <div class="modal-content">
+      <h2 id="modalClienteTitolo">👤 Nuovo Cliente</h2>
+      <input type="hidden" id="cliId">
+
+      <div class="modal-section">
+        <div class="modal-section-title">Anagrafica</div>
+        <div class="modal-form-row">
+          <div class="form-group">
+            <label>Nome *</label>
+            <input type="text" id="cliNome" placeholder="Mario">
+          </div>
+          <div class="form-group">
+            <label>Cognome</label>
+            <input type="text" id="cliCognome" placeholder="Rossi">
+          </div>
+        </div>
+        <div class="modal-form-row">
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="cliEmail" placeholder="mario.rossi@email.com">
+          </div>
+          <div class="form-group">
+            <label>Cellulare</label>
+            <input type="tel" id="cliCellulare" placeholder="347 1234567">
+          </div>
+        </div>
+        <div class="modal-form-row full">
+          <div class="form-group">
+            <label>Note</label>
+            <textarea id="cliNote" rows="2" placeholder="Allergie, preferenze, come vi conoscete..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">Consensi</div>
+        <div class="diag-nota" style="margin-bottom:10px;">
+          Spuntare qui equivale a dichiarare che il cliente ha dato il consenso
+          <strong>a voce o per iscritto</strong>. La modifica finisce nel registro Consensi
+          con data e ora. Nel dubbio, lasciare le caselle vuote e far usare il QR.
+        </div>
+        <label style="display:block; margin-bottom:8px; cursor:pointer;">
+          <input type="checkbox" id="cliNewsletter"> 📧 Newsletter via email
+        </label>
+        <label style="display:block; margin-bottom:8px; cursor:pointer;">
+          <input type="checkbox" id="cliWhatsapp"> 💬 Avvisi WhatsApp
+        </label>
+        <label style="display:block; cursor:pointer;">
+          <input type="checkbox" id="cliDisiscritto"> 🚫 Disiscritto (non contattare)
+        </label>
+      </div>
+
+      <div id="cliStoricoBox"></div>
+      <div id="cliMessaggio"></div>
+
+      <div class="modal-buttons">
+        <button class="btn-modal btn-annulla" onclick="chiudiModalCliente()">✕ Annulla</button>
+        <button class="btn-modal btn-pericolo" id="cliBtnElimina" onclick="eliminaClienteCorrente()"
+                style="display:none;">🗑️ Elimina</button>
+        <button class="btn-modal btn-salva" onclick="salvaClienteModal()">💾 Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFERMA RIMBORSO -->
+  <div id="modalRimborso" class="modal">
+    <div class="modal-content" style="max-width:520px;">
+      <h2>💸 Conferma Rimborso Erogato</h2>
+      <input type="hidden" id="rimbId">
+      <div id="rimbIntestazione" class="diag-nota"></div>
+
+      <div class="modal-form-row">
+        <div class="form-group">
+          <label>Importo rimborsato (€) *</label>
+          <input type="number" id="rimbImporto" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>Data erogazione *</label>
+          <input type="date" id="rimbData">
+        </div>
+      </div>
+      <div class="modal-form-row full">
+        <div class="form-group">
+          <label>Come è avvenuto *</label>
+          <select id="rimbModalita">
+            <option value="">— scegli —</option>
+            <option value="contanti in cassa">Contanti in cassa</option>
+            <option value="storno online">Storno sul pagamento online</option>
+            <option value="bonifico">Bonifico</option>
+            <option value="satispay">Satispay</option>
+            <option value="buono">Convertito in buono</option>
+            <option value="altro">Altro (specificare nelle note)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-form-row full">
+        <div class="form-group">
+          <label>Note</label>
+          <textarea id="rimbNote" rows="2"
+                    placeholder="es: restituiti in contanti la sera stessa, firma di ricevuta"></textarea>
+        </div>
+      </div>
+      <div id="rimbMessaggio"></div>
+
+      <div class="modal-buttons">
+        <button class="btn-modal btn-annulla" onclick="chiudiModalRimborso()">✕ Annulla</button>
+        <button class="btn-modal btn-salva" onclick="salvaConfermaRimborso()">✔️ Conferma erogato</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
     
@@ -506,6 +771,11 @@
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       event.target.classList.add('active');
       document.getElementById(tabName).classList.add('active');
+
+      // I due tab nuovi si caricano da soli alla prima apertura: chiedere anche
+      // un click su "Aggiorna" per vedere qualcosa è un passaggio a vuoto.
+      if (tabName === 'rubrica' && !rubricaCache.length) caricaRubrica();
+      if (tabName === 'partite' && !partiteCache) caricaPartiteAperte();
     }
 
     // ===== DIAGNOSTICA CHIUSURE =====
@@ -1133,8 +1403,501 @@
         alert('⚠️ Errore: ' + error.message);
       }
     }
+
+    // =====================================================================
+    // ===== RUBRICA CLIENTI ===============================================
+    // =====================================================================
+
+    // La rubrica intera sta in memoria dopo il primo caricamento: sono decine di
+    // record, e filtrare in locale evita una chiamata a GAS a ogni tasto premuto.
+    let rubricaCache = [];
+
+    const ETICHETTE_STATO_CLIENTE = {
+      attivo: 'Attivo', da_completare: 'Da completare', disiscritto: 'Disiscritto'
+    };
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function euro(n) {
+      return (Number(n) || 0).toFixed(2).replace('.', ',') + ' €';
+    }
+
+    async function caricaRubrica() {
+      showLoading('Carico la rubrica...');
+      try {
+        const r = await callAPI('getRubrica', {});
+        hideLoading();
+        if (r.errore) {
+          document.getElementById('risultatoRubrica').innerHTML =
+            `<div class="message error">⚠️ ${esc(r.errore)}</div>`;
+          return;
+        }
+        rubricaCache = r.clienti || [];
+        renderContatoriRubrica(r);
+        filtraRubrica();
+      } catch (error) {
+        hideLoading();
+        document.getElementById('risultatoRubrica').innerHTML =
+          `<div class="message error">⚠️ ${esc(error.message)}</div>`;
+      }
+    }
+
+    function renderContatoriRubrica(r) {
+      // Il primo numero è quello che uscirà dall'export, non quello delle
+      // caselle spuntate: se differiscono lo si dice, invece di lasciar
+      // scoprire lo scarto al momento dell'invio.
+      const senzaEmail = r.conConsensoNewsletter - r.conNewsletter;
+      document.getElementById('rubContatori').innerHTML = `
+        <span class="rub-pill">👥 ${r.totale} contatti</span>
+        <span class="rub-pill">📧 ${r.conNewsletter} raggiungibili via newsletter</span>
+        ${senzaEmail > 0
+          ? `<span class="rub-pill" title="Hanno il consenso ma non hanno un'email: restano fuori dall'export">⚠️ ${senzaEmail} col consenso ma senza email</span>`
+          : ''}
+        <span class="rub-pill">💬 ${r.conWhatsapp} con consenso WhatsApp</span>
+        <span class="rub-pill">📝 ${r.daCompletare} da completare</span>`;
+    }
+
+    function filtraRubrica() {
+      const q = document.getElementById('rubRicerca').value.trim().toLowerCase();
+      const stato = document.getElementById('rubFiltroStato').value;
+      const consenso = document.getElementById('rubFiltroConsenso').value;
+
+      let lista = rubricaCache;
+      if (q) {
+        // Sul telefono si confrontano le sole cifre, così "347 123" trova
+        // "+393471234567". Ma solo se la ricerca contiene almeno tre cifre:
+        // altrimenti la stringa vuota è contenuta in tutto e il filtro non filtra.
+        const cifre = q.replace(/\D/g, '');
+        lista = lista.filter(c =>
+          (c.nomeCompleto || '').toLowerCase().includes(q) ||
+          (c.email || '').toLowerCase().includes(q) ||
+          (cifre.length >= 3 && String(c.cellulare || '').replace(/\D/g, '').includes(cifre)));
+      }
+      if (stato) lista = lista.filter(c => c.stato === stato);
+      if (consenso === 'newsletter') lista = lista.filter(c => c.newsletter);
+      if (consenso === 'whatsapp') lista = lista.filter(c => c.whatsapp);
+      if (consenso === 'senza') lista = lista.filter(c => !c.newsletter && !c.whatsapp);
+
+      renderTabellaRubrica(lista);
+    }
+
+    function renderTabellaRubrica(lista) {
+      const box = document.getElementById('risultatoRubrica');
+      if (!lista.length) {
+        box.innerHTML = `<div class="section"><div class="diag-nota">
+          Nessun contatto corrisponde ai filtri. Se la rubrica è vuota, usa
+          <strong>Importa clienti dallo storico prenotazioni</strong>.
+        </div></div>`;
+        return;
+      }
+
+      const righe = lista.map(c => `
+        <tr class="rub-riga-cliccabile" onclick="apriModalCliente('${esc(c.id)}')">
+          <td><strong>${esc(c.nomeCompleto || '(senza nome)')}</strong></td>
+          <td>${esc(c.email) || '<em style="color:#8b6644;">manca</em>'}</td>
+          <td>${esc(c.cellulare)}</td>
+          <td><span class="badge-stato badge-${esc(c.stato)}">${ETICHETTE_STATO_CLIENTE[c.stato] || esc(c.stato)}</span></td>
+          <td style="text-align:center;"><span class="badge-stato ${c.newsletter ? 'badge-si' : 'badge-no'}">${c.newsletter ? 'SÌ' : 'no'}</span></td>
+          <td style="text-align:center;"><span class="badge-stato ${c.whatsapp ? 'badge-si' : 'badge-no'}">${c.whatsapp ? 'SÌ' : 'no'}</span></td>
+          <td style="text-align:center;">${c.eventiPartecipati}</td>
+          <td>${esc(c.ultimoEvento)}</td>
+          <td><button class="btn-mini btn-secondary" onclick="event.stopPropagation(); apriModalCliente('${esc(c.id)}')">✏️</button></td>
+        </tr>`).join('');
+
+      box.innerHTML = `
+        <div class="section">
+          <div class="section-title">${lista.length} contatti</div>
+          <div class="diag-wrap"><div class="diag-scroll">
+            <table class="diag-tabella">
+              <thead><tr>
+                <th>Nome</th><th>Email</th><th>Cellulare</th><th>Stato</th>
+                <th>News</th><th>WA</th><th>Eventi</th><th>Ultimo</th><th></th>
+              </tr></thead>
+              <tbody>${righe}</tbody>
+            </table>
+          </div></div>
+        </div>`;
+    }
+
+    // ----- Scheda cliente -----
+
+    function apriModalCliente(id) {
+      const nuovo = !id;
+      const c = nuovo ? null : rubricaCache.find(x => x.id === id);
+
+      document.getElementById('modalClienteTitolo').textContent =
+        nuovo ? '👤 Nuovo Cliente' : '✏️ Scheda Cliente';
+      document.getElementById('cliId').value = nuovo ? '' : id;
+      document.getElementById('cliNome').value = c ? c.nome : '';
+      document.getElementById('cliCognome').value = c ? c.cognome : '';
+      document.getElementById('cliEmail').value = c ? c.email : '';
+      document.getElementById('cliCellulare').value = c ? c.cellulare : '';
+      document.getElementById('cliNote').value = c ? c.note : '';
+      document.getElementById('cliNewsletter').checked = c ? c.newsletter : false;
+      document.getElementById('cliWhatsapp').checked = c ? c.whatsapp : false;
+      document.getElementById('cliDisiscritto').checked = c ? c.stato === 'disiscritto' : false;
+      document.getElementById('cliBtnElimina').style.display = nuovo ? 'none' : 'inline-block';
+      document.getElementById('cliMessaggio').innerHTML = '';
+      document.getElementById('cliStoricoBox').innerHTML = c ? storicoHtml(c) : '';
+
+      document.getElementById('modalCliente').classList.add('active');
+    }
+
+    function storicoHtml(c) {
+      const eventi = c.eventi || [];
+      const voci = eventi.length
+        ? eventi.map(e => `<li>
+             <strong>${esc(e.data)}</strong> — ${esc(e.evento)}
+             · ${e.persone} ${e.persone === 1 ? 'persona' : 'persone'}
+             ${e.statoPagamento && e.statoPagamento !== 'non_pagato'
+               ? ' · <em>' + esc(String(e.statoPagamento).replace(/_/g, ' ')) + '</em>' : ''}
+           </li>`).join('')
+        : '<li><em>Nessuna partecipazione registrata.</em></li>';
+
+      const provenienza = {
+        landing_qr: 'iscritto dal QR', import_storico: 'importato dalle prenotazioni',
+        prenotazione: 'creato da una prenotazione', manuale: 'inserito a mano'
+      }[c.fonte] || esc(c.fonte);
+
+      return `
+        <div class="modal-section">
+          <div class="modal-section-title">Storico eventi (${eventi.length})</div>
+          <ul class="rub-storico">${voci}</ul>
+          <div style="margin-top:10px; font-size:0.84em; color:#5a4632;">
+            Origine: ${provenienza}${c.dataConsenso ? ' · consenso del ' + esc(c.dataConsenso) : ''}
+          </div>
+        </div>`;
+    }
+
+    function chiudiModalCliente() {
+      document.getElementById('modalCliente').classList.remove('active');
+    }
+
+    async function salvaClienteModal() {
+      const id = document.getElementById('cliId').value;
+      const disiscritto = document.getElementById('cliDisiscritto').checked;
+      const cliente = {
+        nome: document.getElementById('cliNome').value.trim(),
+        cognome: document.getElementById('cliCognome').value.trim(),
+        email: document.getElementById('cliEmail').value.trim(),
+        cellulare: document.getElementById('cliCellulare').value.trim(),
+        note: document.getElementById('cliNote').value.trim(),
+        // Un disiscritto non ha consensi attivi, qualunque cosa dicano le caselle.
+        newsletter: !disiscritto && document.getElementById('cliNewsletter').checked,
+        whatsapp: !disiscritto && document.getElementById('cliWhatsapp').checked,
+        stato: disiscritto ? 'disiscritto' : ''
+      };
+
+      if (!cliente.nome && !cliente.cognome) {
+        return mostraMessaggioModal('cliMessaggio', 'Il nome è obbligatorio', true);
+      }
+      if (!cliente.email && !cliente.cellulare) {
+        return mostraMessaggioModal('cliMessaggio', 'Serve almeno un recapito: email o cellulare', true);
+      }
+
+      showLoading('Salvo...');
+      try {
+        const r = id
+          ? await callAPI('modificaCliente', { id: id, cliente: cliente })
+          : await callAPI('salvaCliente', { cliente: cliente });
+        hideLoading();
+
+        if (r.errore) return mostraMessaggioModal('cliMessaggio', r.errore, true);
+
+        chiudiModalCliente();
+        await caricaRubrica();
+      } catch (error) {
+        hideLoading();
+        mostraMessaggioModal('cliMessaggio', error.message, true);
+      }
+    }
+
+    async function eliminaClienteCorrente() {
+      const id = document.getElementById('cliId').value;
+      const c = rubricaCache.find(x => x.id === id);
+      if (!c) return;
+
+      const avviso = (c.eventiPartecipati > 0)
+        ? `\n\nHa ${c.eventiPartecipati} partecipazioni: le prenotazioni restano nel foglio, perdono solo il collegamento alla scheda.`
+        : '';
+      if (!confirm(`Eliminare "${c.nomeCompleto}" dalla rubrica?${avviso}\n\nLa riga del registro Consensi resta: è la prova del trattamento e va conservata.`)) return;
+
+      showLoading('Elimino...');
+      try {
+        const r = await callAPI('eliminaCliente', { id: id });
+        hideLoading();
+        if (r.errore) return mostraMessaggioModal('cliMessaggio', r.errore, true);
+        chiudiModalCliente();
+        await caricaRubrica();
+      } catch (error) {
+        hideLoading();
+        mostraMessaggioModal('cliMessaggio', error.message, true);
+      }
+    }
+
+    function mostraMessaggioModal(idBox, testo, errore) {
+      document.getElementById(idBox).innerHTML =
+        `<div class="message ${errore ? 'error' : 'success'}">${errore ? '⚠️' : '✅'} ${esc(testo)}</div>`;
+    }
+
+    // ----- Export -----
+
+    async function esportaRubrica(soloConsenso) {
+      showLoading('Preparo il file...');
+      try {
+        const r = await callAPI('exportRubrica', { opzioni: { soloConsenso: soloConsenso } });
+        hideLoading();
+        if (r.errore) return alert('⚠️ ' + r.errore);
+        if (!r.righe) {
+          return alert(soloConsenso
+            ? 'Nessun contatto ha il consenso newsletter: non c\'è niente da esportare.\n\nIl consenso si raccoglie dalla landing col QR.'
+            : 'La rubrica è vuota.');
+        }
+
+        // BOM UTF-8: senza, Excel apre il CSV in ANSI e sfascia gli accenti.
+        const blob = new Blob(['﻿' + r.csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = r.nomeFile;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        alert(`✅ Esportati ${r.righe} contatti in ${r.nomeFile}` +
+          (soloConsenso ? '\n\nPronto per l\'import in Mailchimp.' : ''));
+      } catch (error) {
+        hideLoading();
+        alert('⚠️ ' + error.message);
+      }
+    }
+
+    // ----- Import dallo storico -----
+
+    async function anteprimaImportRubrica() {
+      showLoading('Analizzo lo storico...');
+      try {
+        const r = await callAPI('importaRubricaDaPrenotazioni', { dryRun: true });
+        hideLoading();
+        if (r.errore) return alert('⚠️ ' + r.errore);
+
+        const conferma = confirm(
+          `ANTEPRIMA — non è stato scritto nulla.\n\n` +
+          `• Nuovi clienti da creare: ${r.nuoviClienti}\n` +
+          `• Di questi, con email e quindi esportabili: ${r.conNewsletter}\n` +
+          `• Prenotazioni da collegare: ${r.prenotazioniCollegate}\n` +
+          `• Saltati (nessun recapito): ${r.saltati}\n\n` +
+          `I clienti importati entrano con il CONSENSO NEWSLETTER ATTIVO e finiranno ` +
+          `nell'export per Mailchimp. Il registro Consensi annota che il consenso è ` +
+          `stato attribuito qui, non raccolto dall'interessato.\n\n` +
+          `Procedo con l'import?`);
+        if (!conferma) return;
+
+        showLoading('Importo...');
+        const esito = await callAPI('importaRubricaDaPrenotazioni', { dryRun: false });
+        hideLoading();
+        if (esito.errore) return alert('⚠️ ' + esito.errore);
+        alert('✅ ' + esito.messaggio);
+        await caricaRubrica();
+      } catch (error) {
+        hideLoading();
+        alert('⚠️ ' + error.message);
+      }
+    }
+
+    // =====================================================================
+    // ===== PARTITE APERTE ================================================
+    // =====================================================================
+
+    let partiteCache = null;
+
+    async function caricaPartiteAperte() {
+      const filtro = {
+        dal: document.getElementById('paDa').value || '',
+        al: document.getElementById('paA').value || ''
+      };
+      showLoading('Cerco le partite aperte...');
+      try {
+        const r = await callAPI('getPartiteAperte', { filtro: filtro });
+        hideLoading();
+        if (r.errore) {
+          document.getElementById('risultatoPartite').innerHTML =
+            `<div class="message error">⚠️ ${esc(r.errore)}</div>`;
+          return;
+        }
+        partiteCache = r;
+        renderPartiteAperte(r);
+      } catch (error) {
+        hideLoading();
+        document.getElementById('risultatoPartite').innerHTML =
+          `<div class="message error">⚠️ ${esc(error.message)}</div>`;
+      }
+    }
+
+    function renderPartiteAperte(r) {
+      const t = r.totali;
+      document.getElementById('risultatoPartite').innerHTML = `
+        <div class="section">
+          <div class="rub-contatori">
+            <span class="rub-pill">🧾 ${t.daScontrinare} da scontrinare · ${euro(t.importoDaScontrinare)}</span>
+            <span class="rub-pill">💸 ${t.rimborsi} rimborsi dovuti · ${euro(t.importoRimborsi)}</span>
+          </div>
+        </div>
+        ${sezioneScontrini(r.daScontrinare)}
+        ${sezioneRimborsi(r.rimborsi)}`;
+    }
+
+    function sezioneScontrini(lista) {
+      if (!lista.length) {
+        return `<div class="section pa-gruppo"><div class="section-title">🧾 Da scontrinare</div>
+          <div class="pa-vuoto">✅ Nessun pagamento online in attesa di scontrino.</div></div>`;
+      }
+      const righe = lista.map(p => `
+        <tr>
+          <td style="text-align:center;">
+            <input type="checkbox" class="pa-check" value="${esc(p.id)}" data-scontrino>
+          </td>
+          <td>${esc(p.data)}</td>
+          <td><strong>${esc(p.cliente)}</strong></td>
+          <td>${esc(p.evento)}</td>
+          <td style="text-align:center;">${p.quotePagate || p.persone}</td>
+          <td class="importo">${euro(p.importoPagato)}</td>
+          <td>${esc(String(p.metodoPagamento || 'online'))}</td>
+        </tr>`).join('');
+
+      return `
+        <div class="section pa-gruppo">
+          <div class="section-title">🧾 Da scontrinare (${lista.length})</div>
+          <div class="diag-wrap"><div class="diag-scroll">
+            <table class="diag-tabella">
+              <thead><tr>
+                <th style="width:40px;"><input type="checkbox" class="pa-check" onclick="spuntaTutti(this)"></th>
+                <th>Data</th><th>Cliente</th><th>Evento</th><th>Quote</th><th>Importo</th><th>Metodo</th>
+              </tr></thead>
+              <tbody>${righe}</tbody>
+            </table>
+          </div></div>
+          <div class="form-row" style="margin-top:12px; align-items:flex-end;">
+            <div class="form-group">
+              <label>Data di emissione:</label>
+              <input type="date" id="paDataScontrino">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn btn-primary" onclick="segnaSelezionatiScontrinati()">
+                ✔️ Segna selezionati come scontrinati
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function sezioneRimborsi(lista) {
+      if (!lista.length) {
+        return `<div class="section pa-gruppo"><div class="section-title">💸 Rimborsi da erogare</div>
+          <div class="pa-vuoto">✅ Nessun rimborso in sospeso.</div></div>`;
+      }
+      const righe = lista.map(p => `
+        <tr>
+          <td>${esc(p.data)}</td>
+          <td><strong>${esc(p.cliente)}</strong></td>
+          <td>${esc(p.evento)}</td>
+          <td class="importo">${euro(p.rimborsoImporto)}</td>
+          <td>${esc(p.notePagamento)}</td>
+          <td><button class="btn-mini btn-primary"
+                onclick="apriModalRimborso('${esc(p.id)}')">💸 Conferma</button></td>
+        </tr>`).join('');
+
+      return `
+        <div class="section pa-gruppo">
+          <div class="section-title">💸 Rimborsi da erogare (${lista.length})</div>
+          <div class="diag-wrap"><div class="diag-scroll">
+            <table class="diag-tabella">
+              <thead><tr><th>Data</th><th>Cliente</th><th>Evento</th><th>Importo</th><th>Note</th><th></th></tr></thead>
+              <tbody>${righe}</tbody>
+            </table>
+          </div></div>
+        </div>`;
+    }
+
+    function spuntaTutti(master) {
+      document.querySelectorAll('input[data-scontrino]').forEach(c => { c.checked = master.checked; });
+    }
+
+    async function segnaSelezionatiScontrinati() {
+      const ids = Array.from(document.querySelectorAll('input[data-scontrino]:checked')).map(c => c.value);
+      if (!ids.length) return alert('Seleziona almeno una riga.');
+
+      const data = document.getElementById('paDataScontrino').value;
+      if (!confirm(`Segnare ${ids.length} ${ids.length === 1 ? 'scontrino' : 'scontrini'} come emessi?\n\nUna volta segnato non si torna indietro dall'app.`)) return;
+
+      showLoading('Aggiorno...');
+      try {
+        const r = await callAPI('segnaScontrinati', { ids: ids, dataScontrino: data });
+        hideLoading();
+        if (r.errore) return alert('⚠️ ' + r.errore);
+        alert('✅ ' + r.messaggio);
+        await caricaPartiteAperte();
+      } catch (error) {
+        hideLoading();
+        alert('⚠️ ' + error.message);
+      }
+    }
+
+    function apriModalRimborso(id) {
+      const p = (partiteCache.rimborsi || []).find(x => x.id === id);
+      if (!p) return;
+
+      document.getElementById('rimbId').value = id;
+      document.getElementById('rimbIntestazione').innerHTML =
+        `<strong>${esc(p.cliente)}</strong> — ${esc(p.evento)} del ${esc(p.data)}<br>
+         Aveva pagato ${euro(p.importoPagato)}${p.notePagamento ? ' · ' + esc(p.notePagamento) : ''}`;
+      document.getElementById('rimbImporto').value = (Number(p.rimborsoImporto) || 0).toFixed(2);
+      document.getElementById('rimbData').valueAsDate = new Date();
+      document.getElementById('rimbModalita').value = '';
+      document.getElementById('rimbNote').value = '';
+      document.getElementById('rimbMessaggio').innerHTML = '';
+
+      document.getElementById('modalRimborso').classList.add('active');
+    }
+
+    function chiudiModalRimborso() {
+      document.getElementById('modalRimborso').classList.remove('active');
+    }
+
+    async function salvaConfermaRimborso() {
+      const modalita = document.getElementById('rimbModalita').value;
+      const data = document.getElementById('rimbData').value;
+      if (!modalita) return mostraMessaggioModal('rimbMessaggio', 'Indica come è avvenuto il rimborso', true);
+      if (!data) return mostraMessaggioModal('rimbMessaggio', 'Indica la data di erogazione', true);
+
+      showLoading('Confermo...');
+      try {
+        const r = await callAPI('confermaRimborso', {
+          id: document.getElementById('rimbId').value,
+          dettagli: {
+            importo: document.getElementById('rimbImporto').value,
+            data: data,
+            modalita: modalita,
+            note: document.getElementById('rimbNote').value.trim()
+          }
+        });
+        hideLoading();
+        if (r.errore) return mostraMessaggioModal('rimbMessaggio', r.errore, true);
+        chiudiModalRimborso();
+        await caricaPartiteAperte();
+      } catch (error) {
+        hideLoading();
+        mostraMessaggioModal('rimbMessaggio', error.message, true);
+      }
+    }
+
   </script>
-  
+
   <script>
   const RELOAD_KEY = 'sw_reloading';
   if ('serviceWorker' in navigator) {
