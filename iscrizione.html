@@ -11,13 +11,20 @@
 
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
   <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
-  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    /* Pirata One su tutta la pagina. È un carattere da titoli e rende più
+       piccolo di un carattere da testo a parità di misura: tutti i corpi qui
+       sotto sono alzati di conseguenza, altrimenti risulterebbe minuto.
+       font-weight resta 400 ovunque — ha un solo peso, e il grassetto
+       finto del browser lo impasta. */
     body {
-      font-family: 'Georgia', serif;
+      font-family: 'Pirata One', cursive;
+      font-weight: 400;
+      font-size: 18px;
       background:
         linear-gradient(rgba(20, 40, 60, 0.55), rgba(20, 40, 60, 0.55)),
         linear-gradient(160deg, #2c1810 0%, #4a2c18 45%, #14283c 100%);
@@ -65,11 +72,10 @@
     .campo { margin-bottom: 18px; }
     .campo label {
       display: block;
-      font-family: 'Rye', cursive;
-      font-size: 0.92em;
+      font-size: 1.1em;
       color: #e8b873;
       margin-bottom: 6px;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
     }
     .campo input[type="text"],
     .campo input[type="email"],
@@ -80,8 +86,9 @@
       border-radius: 8px;
       background: #f4e4c1;
       color: #2c1810;
-      font-size: 1.05em;
-      font-family: 'Georgia', serif;
+      font-size: 1.25em;
+      font-family: 'Pirata One', cursive;
+      letter-spacing: 0.5px;
     }
     .campo input:focus {
       outline: none;
@@ -89,7 +96,6 @@
       box-shadow: 0 0 0 3px rgba(232, 184, 115, 0.28);
     }
     .campo input:disabled { background: #d9cbb0; color: #6b5c48; }
-    .aiuto { font-size: 0.82em; color: #b89b78; margin-top: 5px; line-height: 1.4; }
 
     .riga { display: flex; gap: 12px; }
     .riga .campo { flex: 1; }
@@ -102,10 +108,10 @@
       margin: 22px 0 18px;
     }
     .blocco-consensi h2 {
-      font-family: 'Rye', cursive;
-      font-size: 1em;
+      font-size: 1.15em;
       color: #e8b873;
       margin-bottom: 12px;
+      letter-spacing: 0.5px;
     }
 
     .consenso {
@@ -115,7 +121,7 @@
       margin-bottom: 14px;
       cursor: pointer;
       line-height: 1.45;
-      font-size: 0.94em;
+      font-size: 1.08em;
     }
     .consenso input[type="checkbox"] {
       width: 21px; height: 21px;
@@ -125,7 +131,7 @@
       cursor: pointer;
     }
     .consenso .testo strong { color: #e8b873; }
-    .consenso .nota { display: block; font-size: 0.86em; color: #b89b78; margin-top: 3px; }
+    .consenso .nota { display: block; font-size: 0.95em; color: #b89b78; margin-top: 3px; }
 
     .privacy-box {
       border-top: 1px solid rgba(107, 68, 35, 0.8);
@@ -141,9 +147,8 @@
       border-radius: 10px;
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
       color: #2c1810;
-      font-family: 'Rye', cursive;
-      font-size: 1.15em;
-      font-weight: 700;
+      font-size: 1.45em;
+      letter-spacing: 1px;
       cursor: pointer;
       box-shadow: 0 5px 14px rgba(200, 152, 88, 0.4);
       transition: transform 0.15s, box-shadow 0.15s;
@@ -156,7 +161,7 @@
       border-radius: 9px;
       margin-bottom: 18px;
       line-height: 1.5;
-      font-size: 0.95em;
+      font-size: 1.05em;
       display: none;
     }
     .messaggio.attivo { display: block; }
@@ -186,7 +191,7 @@
     .piede {
       text-align: center;
       padding: 16px 20px 22px;
-      font-size: 0.82em;
+      font-size: 0.95em;
       color: #8b7355;
       border-top: 1px solid rgba(107, 68, 35, 0.6);
       line-height: 1.5;
@@ -204,8 +209,8 @@
     <div class="intestazione">
       <h1>Vecchia Dogana</h1>
       <div class="sottotitolo">
-        Degustazioni, serate e novità della cantina.<br>
-        Lasciaci i tuoi contatti: ti avvisiamo noi.
+        Degustazioni, eventi, serate e novità.<br>
+        Lasciaci i tuoi contatti, ti avvisiamo noi.
       </div>
     </div>
 
@@ -230,10 +235,9 @@
       </div>
 
       <div class="campo">
-        <label for="cellulare">Cellulare</label>
+        <label for="cellulare" id="labelCellulare">Cellulare</label>
         <input type="tel" id="cellulare" name="cellulare" autocomplete="tel"
                inputmode="tel" maxlength="25" placeholder="347 1234567">
-        <div class="aiuto" id="aiutoCellulare">Facoltativo — serve solo se vuoi gli avvisi su WhatsApp.</div>
       </div>
 
       <!-- Honeypot -->
@@ -280,7 +284,7 @@
       <div class="icona">🍷</div>
       <h2 id="confermaTitolo">Ci siamo!</h2>
       <p id="confermaTesto">Ti abbiamo aggiunto alla lista. Al prossimo evento ti scriviamo noi.</p>
-      <p style="font-size:0.88em; color:#8b7355;">Puoi chiudere questa pagina.</p>
+      <p style="font-size:1em; color:#8b7355;">Puoi chiudere questa pagina.</p>
     </div>
 
     <div class="piede">
@@ -329,13 +333,12 @@
       $('messaggio').classList.remove('attivo');
     }
 
-    // Il cellulare diventa obbligatorio solo se si sceglie WhatsApp: dirlo
-    // prima evita di far scoprire il vincolo dopo aver premuto invia.
+    // Il cellulare diventa obbligatorio solo se si sceglie WhatsApp, e lo dice
+    // con l'asterisco — la stessa convenzione degli altri campi. Prima c'era
+    // una riga di testo sotto il campo, che ripeteva a parole quello che
+    // l'assenza dell'asterisco già dichiara.
     function aggiornaVincoloCellulare() {
-      const serve = $('whatsapp').checked;
-      $('aiutoCellulare').textContent = serve
-        ? 'Obbligatorio per gli avvisi WhatsApp.'
-        : 'Facoltativo — serve solo se vuoi gli avvisi su WhatsApp.';
+      $('labelCellulare').textContent = $('whatsapp').checked ? 'Cellulare *' : 'Cellulare';
     }
     $('whatsapp').addEventListener('change', aggiornaVincoloCellulare);
 
