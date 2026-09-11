@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vecchia Dogana — Anteprima icone</title>
+  <meta name="robots" content="noindex">
+
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+  <!-- Versione fissata: un "latest" cambierebbe le icone sotto i piedi -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+  <style>
+    :root {
+      --scuro: #2c1810;
+      --legno: #6b4423;
+      --legno-chiaro: #8b6644;
+      --oro: #e8b873;
+      --oro-cupo: #c89858;
+      --crema: #f4e4c1;
+      --sabbia: #d4a574;
+      --verde: #1e5631;
+      --rosso: #b71c1c;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background:
+        linear-gradient(rgba(20, 40, 60, 0.55), rgba(20, 40, 60, 0.55)),
+        url('./assets/images/SfondoVD.png'),
+        linear-gradient(160deg, #2c1810 0%, #4a2c18 45%, #14283c 100%);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      min-height: 100vh;
+      color: var(--crema);
+      padding: 24px 16px 60px;
+      line-height: 1.5;
+    }
+
+    .foglio { max-width: 1100px; margin: 0 auto; }
+
+    h1 {
+      font-family: 'Pirata One', cursive;
+      font-size: 2.8em;
+      color: var(--oro);
+      text-align: center;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+      line-height: 1.1;
+    }
+    .sottotitolo { text-align: center; color: var(--sabbia); margin-bottom: 26px; }
+
+    section {
+      background: rgba(38, 21, 13, 0.92);
+      border: 3px solid var(--legno);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 12px 34px rgba(0,0,0,0.6);
+    }
+    h2 {
+      font-family: 'Pirata One', cursive;
+      font-size: 1.9em;
+      color: var(--oro);
+      border-bottom: 2px solid var(--legno);
+      padding-bottom: 8px;
+      margin-bottom: 14px;
+    }
+    h3 { font-family: 'Pirata One', cursive; font-size: 1.35em; color: var(--oro); margin: 20px 0 10px; }
+    p { margin-bottom: 12px; }
+    .nota {
+      background: rgba(244, 228, 193, 0.08);
+      border-left: 5px solid var(--oro-cupo);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.94em;
+    }
+    code {
+      font-family: 'Consolas', 'Menlo', monospace;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(232,184,115,0.25);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.88em;
+      color: var(--oro);
+    }
+
+    /* ── esito del controllo automatico ── */
+    #verdetto {
+      border-radius: 10px; padding: 14px 18px; margin-bottom: 18px;
+      font-size: 1.02em; border: 2px solid;
+    }
+    #verdetto.ok { background: rgba(30,86,49,0.35); border-color: #2e8b57; color: #b8e6c4; }
+    #verdetto.guai { background: rgba(183,28,28,0.3); border-color: var(--rosso); color: #ffc9c9; }
+
+    /* ── tabella inventario ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+    th, td { border-bottom: 1px solid rgba(107,68,35,0.7); padding: 9px 10px; text-align: left; vertical-align: middle; }
+    th { color: var(--oro); font-weight: 700; border-bottom: 2px solid var(--legno); white-space: nowrap; }
+    tbody tr:hover { background: rgba(244,228,193,0.05); }
+    .col-emoji { font-size: 1.5em; width: 60px; text-align: center; }
+    .col-nuova { width: 62px; text-align: center; font-size: 1.45em; color: var(--oro); }
+    .col-nuova.mancante { color: var(--rosso); }
+    td.dove { color: var(--sabbia); font-size: 0.88em; }
+    .badge-x {
+      display: inline-block; background: var(--rosso); color: #fff;
+      border-radius: 4px; padding: 0 6px; font-size: 0.72em; margin-left: 6px;
+      font-family: 'Georgia', serif; vertical-align: middle;
+    }
+
+    /* ── segnaposto da disegnare ── */
+    .griglia-segnaposto {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 14px; margin-top: 12px;
+    }
+    .segnaposto {
+      border: 2px dashed var(--oro-cupo);
+      border-radius: 10px; padding: 16px 12px; text-align: center;
+      background: rgba(244,228,193,0.05);
+    }
+    .segnaposto .buco {
+      height: 62px; display: flex; align-items: center; justify-content: center;
+      font-size: 2.2em; color: rgba(232,184,115,0.45); margin-bottom: 8px;
+    }
+    .segnaposto .nome { color: var(--oro); font-weight: 700; }
+    .segnaposto .spiega { font-size: 0.83em; color: var(--sabbia); margin-top: 4px; }
+
+    /* ── laboratorio dimensioni/contrasto ── */
+    .provini { display: flex; gap: 26px; flex-wrap: wrap; }
+    .provino {
+      flex: 1 1 320px; border-radius: 10px; padding: 16px; border: 2px solid var(--legno);
+    }
+    .provino.su-scuro { background: linear-gradient(145deg, #26150d 0%, #1a0f0a 100%); color: var(--oro); }
+    .provino.su-crema { background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%); color: var(--scuro); }
+    .provino h4 { font-family: 'Pirata One', cursive; font-size: 1.2em; margin-bottom: 10px; }
+    .riga-misure { display: flex; align-items: baseline; gap: 20px; margin-bottom: 10px; flex-wrap: wrap; }
+    .riga-misure span { display: inline-flex; align-items: baseline; gap: 6px; }
+    .riga-misure small { font-size: 0.6em; opacity: 0.65; font-family: 'Georgia', serif; }
+
+    /* ── finto modal prenotazione ── */
+    .finto-modal {
+      background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
+      border: 4px solid var(--legno);
+      border-radius: 15px; padding: 24px; max-width: 520px; margin: 0 auto;
+      color: var(--scuro); font-family: 'Georgia', serif;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+    .finto-modal .titolo {
+      font-family: 'Pirata One', cursive; font-size: 1.8em; text-align: center; margin-bottom: 18px;
+    }
+    .fm-toggle { display: flex; gap: 10px; margin-bottom: 16px; }
+    .fm-toggle button {
+      flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer;
+      font-family: 'Pirata One', cursive; font-size: 1.15em;
+      background: rgba(107,68,35,0.2); color: var(--scuro);
+    }
+    .fm-toggle button.attivo { background: linear-gradient(145deg, #8b6644 0%, #6b4423 100%); color: var(--crema); }
+    .fm-gruppo { margin-bottom: 13px; }
+    .fm-gruppo label { display: block; font-weight: 700; margin-bottom: 5px; }
+    .fm-gruppo input, .fm-gruppo select {
+      width: 100%; padding: 10px; border: 2px solid #8b4513; border-radius: 8px;
+      font-family: 'Georgia', serif; font-size: 1em; background: #fff; color: var(--scuro);
+    }
+    .fm-sezione-pagamento {
+      border-top: 2px solid rgba(107,68,35,0.35); margin-top: 18px; padding-top: 14px;
+    }
+    .fm-sezione-pagamento .intestazione {
+      font-family: 'Pirata One', cursive; font-size: 1.3em; color: var(--verde); margin-bottom: 10px;
+    }
+    .fm-pulsanti { display: flex; gap: 10px; margin-top: 20px; }
+    .fm-pulsanti button {
+      flex: 1; padding: 12px; border: 2px solid; border-radius: 8px; cursor: pointer;
+      font-family: 'Pirata One', cursive; font-size: 1.1em;
+    }
+    .fm-annulla { background: linear-gradient(145deg, #c0392b 0%, #922b21 100%); color: #fff; border-color: #7b241c; }
+    .fm-salva { background: linear-gradient(145deg, #27ae60 0%, #1e8449 100%); color: #fff; border-color: var(--verde); }
+
+    /* ── finta barra rubrica ── */
+    .finta-rubrica {
+      background: rgba(244,228,193,0.5); border: 2px dashed var(--legno);
+      border-radius: 10px; padding: 16px; color: var(--scuro);
+    }
+    .fr-barra { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .fr-barra input, .fr-barra select {
+      padding: 9px 12px; border: 2px solid var(--legno); border-radius: 6px;
+      background: var(--crema); color: var(--scuro); font-family: 'Georgia', serif; font-size: 1em;
+    }
+    .fr-barra input { flex: 1; min-width: 200px; }
+    .fr-barra button {
+      padding: 9px 16px; border: 2px solid #3d1f0f; border-radius: 8px; cursor: pointer;
+      font-family: 'Rye', cursive; font-size: 0.9em; font-weight: 700;
+      box-shadow: 0 3px 0 #3d1f0f; color: #fff;
+    }
+    .fr-nuovo { background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); }
+    .fr-export { background: linear-gradient(145deg, #4682b4 0%, #1e5a8a 100%); }
+    .fr-terzo { background: linear-gradient(145deg, #8b6644 0%, #6b4423 100%); color: var(--crema); }
+
+    .confronto-coppia { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 10px; }
+    .confronto-coppia > div { flex: 1 1 300px; }
+    .etichetta-prima, .etichetta-dopo {
+      font-family: 'Pirata One', cursive; font-size: 1.15em; margin-bottom: 8px;
+    }
+    .etichetta-prima { color: #bda07e; }
+    .etichetta-dopo { color: var(--oro); }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 2em; }
+      section { padding: 15px; }
+      .col-emoji, .col-nuova { width: 44px; }
+      td.dove { display: none; }
+      th.dove { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="foglio">
+
+  <h1>Anteprima icone</h1>
+  <div class="sottotitolo">Vecchia Dogana — pagina di prova, non collegata a nulla</div>
+
+  <section>
+    <h2>Che cos'è questa pagina</h2>
+    <p>
+      Un campione per decidere se sostituire le emoji dell'app con un set di icone vero.
+      <strong>Non tocca nessuna pagina viva</strong>: nessun collegamento porta qui, e se la
+      proposta non convince basta cancellare questo file.
+    </p>
+    <div class="nota">
+      <strong>Perché cambiare.</strong> Nelle sette pagine ci sono <strong>414 icone, 75 diverse</strong>.
+      Duecentodieci non sono nemmeno emoji: sono simboli Unicode degli anni '90
+      (⚠ ✏ ⚓ ☠ ✔ ⚖) che Windows pesca da un font di ripiego qualsiasi, con peso e linea
+      di base diversi dal testo attorno. Ecco perché su certi PC si vedono male, e perché
+      cambia da macchina a macchina. Le icone qui sotto sono un carattere tipografico:
+      vengono disegnate allo stesso modo ovunque e <strong>prendono il colore dal CSS</strong>,
+      quindi finalmente oro sul fondo scuro e marrone sul crema.
+    </div>
+    <div id="verdetto">Controllo dei nomi in corso…</div>
+  </section>
+
+  <section>
+    <h2>L'inventario, una accanto all'altra</h2>
+    <p>A sinistra quello che c'è oggi, a destra la proposta. Il numero è quante volte ricorre nell'app.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Oggi</th>
+          <th>Proposta</th>
+          <th>Nome</th>
+          <th>Usi</th>
+          <th class="dove">Dove / perché</th>
+        </tr>
+      </thead>
+      <tbody id="tabellaIcone"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Le cinque da disegnare</h2>
+    <p>
+      Font Awesome Free non ha forziere, cannocchiale, bandiera pirata né tricorno: sono icone
+      a pagamento. Sono anche quelle che darebbero più carattere, quindi vanno disegnate —
+      è qui che serve Recraft.
+    </p>
+    <div class="nota">
+      <strong>Cosa chiedere a Recraft.</strong> <em>SVG vero</em> (non un PNG dentro un file
+      <code>.svg</code>), <strong>tinta unita</strong> senza sfumature, tratto di spessore
+      uniforme, disegno leggibile dentro un quadrato di 24px. E soprattutto: <strong>tutte e
+      cinque nella stessa sessione, con lo stesso stile</strong>. Se lo spessore del tratto non
+      combacia con quello di Font Awesome l'occhio se ne accorge subito, anche senza saper dire
+      perché.
+    </div>
+    <div class="griglia-segnaposto" id="segnaposti"></div>
+  </section>
+
+  <section>
+    <h2>In contesto: il modal prenotazione</h2>
+    <p>Le stesse icone al loro posto, sul crema del modal. È qui che si giudica davvero.</p>
+    <div class="finto-modal">
+      <div class="titolo"><i class="fa-solid fa-scroll"></i> Nuova Prenotazione</div>
+
+      <div class="fm-toggle">
+        <button class="attivo"><i class="fa-solid fa-scroll"></i> Prenotazione</button>
+        <button><i class="fa-solid fa-wine-glass"></i> Evento</button>
+      </div>
+
+      <div class="fm-gruppo">
+        <label><i class="fa-solid fa-user"></i> Cliente *</label>
+        <input type="text" value="Alessio Barbieri" readonly>
+      </div>
+
+      <div class="fm-gruppo">
+        <label><i class="fa-solid fa-calendar-days"></i> Data e ora</label>
+        <input type="text" value="20 novembre 2026 — 19:30" readonly>
+      </div>
+
+      <div class="fm-gruppo">
+        <label>Stato prenotazione</label>
+        <select>
+          <option>Confermato</option>
+        </select>
+      </div>
+
+      <div class="fm-sezione-pagamento">
+        <div class="intestazione"><i class="fa-solid fa-money-bill-wave"></i> Pagamento</div>
+        <div class="fm-gruppo">
+          <label>Stato pagamento</label>
+          <select>
+            <option>Pagato in cassa</option>
+          </select>
+        </div>
+        <div class="fm-gruppo">
+          <label><i class="fa-solid fa-receipt"></i> Scontrino già emesso</label>
+          <input type="text" value="sì — 11/09/2026" readonly>
+        </div>
+      </div>
+
+      <div class="fm-pulsanti">
+        <button class="fm-annulla"><i class="fa-solid fa-xmark"></i> Annulla</button>
+        <button class="fm-salva"><i class="fa-solid fa-floppy-disk"></i> Salva</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>In contesto: la barra della rubrica</h2>
+    <div class="confronto-coppia">
+      <div>
+        <div class="etichetta-prima">Oggi</div>
+        <div class="finta-rubrica">
+          <div class="fr-barra">
+            <input type="search" placeholder="Cerca per nome, email o cellulare...">
+            <button class="fr-nuovo">➕ Nuovo</button>
+            <button class="fr-export">📤 Export newsletter</button>
+            <button class="fr-terzo">🔄 Importa</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="etichetta-dopo">Proposta</div>
+        <div class="finta-rubrica">
+          <div class="fr-barra">
+            <input type="search" placeholder="Cerca per nome, email o cellulare...">
+            <button class="fr-nuovo"><i class="fa-solid fa-plus"></i> Nuovo</button>
+            <button class="fr-export"><i class="fa-solid fa-file-export"></i> Export newsletter</button>
+            <button class="fr-terzo"><i class="fa-solid fa-rotate"></i> Importa</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Misure e contrasto</h2>
+    <p>
+      La stessa icona alle dimensioni in cui compare nell'app, sui due fondi che l'app usa.
+      Serve a scoprire quale diventa una macchia quando è piccola.
+    </p>
+    <div class="provini">
+      <div class="provino su-scuro">
+        <h4>Su fondo scuro (oro)</h4>
+        <div id="misureScuro"></div>
+      </div>
+      <div class="provino su-crema">
+        <h4>Su fondo crema (marrone)</h4>
+        <div id="misureCrema"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Se si va avanti, una cosa da non dimenticare</h2>
+    <p>
+      Il service worker mette in cache <code>woff2</code>, <code>ttf</code> e <code>svg</code>,
+      ma <strong>non i <code>.css</code></strong>: quelli vanno sempre in rete. Con un foglio di
+      stile di icone, <strong>offline le icone sparirebbero tutte</strong> — il font sarebbe in
+      cache ma il CSS che lo aggancia no. Va aggiunta una riga alla regola di cache, e
+      Font Awesome va ospitato in casa invece che sul CDN, così non dipende da un servizio
+      esterno per funzionare al banco.
+    </p>
+  </section>
+
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════════
+  // L'INVENTARIO
+  // ═══════════════════════════════════════════════════════════════
+  // usi = occorrenze contate nelle 7 pagine dell'app.
+  const ICONE = [
+    ['⚠',  'fa-triangle-exclamation', 65, 'avvisi ovunque'],
+    ['✅',  'fa-circle-check',         29, 'esito positivo'],
+    ['⭐',  'fa-star',                 21, 'evidenza, preferiti'],
+    ['🍷',  'fa-wine-glass',           17, 'eventi e degustazioni'],
+    ['💸',  'fa-money-bill-wave',      15, 'versamenti, rimborsi'],
+    ['💾',  'fa-floppy-disk',          13, 'salva'],
+    ['✏',  'fa-feather-pointed',      13, 'modifica — penna d\'oca, non la matita da ufficio'],
+    ['❌',  'fa-circle-xmark',         12, 'annullato'],
+    ['📝',  'fa-scroll',               12, 'nuova prenotazione — pergamena, registro di bordo'],
+    ['⚡',  'fa-bolt',                 12, 'spese rapide'],
+    ['⚓',  'fa-anchor',               12, 'intestazioni di sezione'],
+    ['🗑',  'fa-trash',                11, 'elimina'],
+    ['🏴',  'fa-skull-crossbones',     10, 'marchio, intestazioni'],
+    ['☠',  'fa-skull-crossbones',     10, 'marchio (stessa icona di 🏴)'],
+    ['🔄',  'fa-rotate',                9, 'ricarica, importa'],
+    ['🧾',  'fa-receipt',               9, 'scontrini'],
+    ['💰',  'fa-sack-dollar',           7, 'incassi — il sacco del bottino'],
+    ['➕',  'fa-plus',                  7, 'nuovo'],
+    ['📜',  'fa-scroll',                6, 'manuale, registro'],
+    ['✕',  'fa-xmark',                 6, 'chiudi'],
+    ['💵',  'fa-money-bill',            6, 'contanti'],
+    ['📊',  'fa-chart-column',          5, 'statistiche'],
+    ['👥',  'fa-users',                 5, 'rubrica'],
+    ['⏳',  'fa-hourglass-half',        5, 'in attesa'],
+    ['📅',  'fa-calendar-days',         4, 'calendario'],
+    ['👤',  'fa-user',                  4, 'cliente'],
+    ['✔',  'fa-check',                 4, 'confermato'],
+    ['💳',  'fa-credit-card',           4, 'pagamento online'],
+    ['📋',  'fa-clipboard-list',        3, 'export completo'],
+    ['🎩',  'fa-crown',                 3, 'area titolari — la piu\' incerta, vedi sotto'],
+    ['🔍',  'fa-binoculars',            3, 'cerca — il cannocchiale'],
+    ['📒',  'fa-book',                  3, 'registri'],
+    ['📦',  'fa-box',                   3, 'cache, pacchetti'],
+    ['🎵',  'fa-music',                 3, 'suono attivo'],
+    ['🔇',  'fa-volume-xmark',          3, 'suono spento'],
+    ['👻',  'fa-ghost',                 3, 'no-show'],
+    ['⚖',  'fa-scale-balanced',        2, 'quadratura di cassa'],
+    ['📴',  'fa-plug-circle-xmark',     2, 'offline'],
+    ['🩺',  'fa-stethoscope',           2, 'diagnostica'],
+    ['📤',  'fa-file-export',           2, 'export newsletter'],
+    ['→',  'fa-arrow-right',           3, 'avanti'],
+    ['◄',  'fa-arrow-left',            2, 'indietro']
+  ];
+
+  const DA_DISEGNARE = [
+    ['Forziere',      'il bottino: incassi, versamenti, partite aperte'],
+    ['Cannocchiale',  'cerca e diagnostica — piu\' in tema del mirino'],
+    ['Bandiera pirata', 'il marchio dell\'app, in testa a ogni pagina'],
+    ['Tricorno',      'area titolari: oggi 🎩, e il cappello di FA non convince'],
+    ['Timone',        'il Quartier Generale — governare la barca']
+  ];
+
+  const $ = id => document.getElementById(id);
+
+  // ── tabella ──────────────────────────────────────────────────
+  $('tabellaIcone').innerHTML = ICONE.map(([emoji, classe, usi, dove]) => `
+    <tr>
+      <td class="col-emoji">${emoji}</td>
+      <td class="col-nuova" data-classe="${classe}"><i class="fa-solid ${classe}"></i></td>
+      <td><code>${classe}</code></td>
+      <td>${usi}</td>
+      <td class="dove">${dove}</td>
+    </tr>`).join('');
+
+  // ── segnaposti ───────────────────────────────────────────────
+  $('segnaposti').innerHTML = DA_DISEGNARE.map(([nome, spiega]) => `
+    <div class="segnaposto">
+      <div class="buco"><i class="fa-solid fa-pen-ruler"></i></div>
+      <div class="nome">${nome}</div>
+      <div class="spiega">${spiega}</div>
+    </div>`).join('');
+
+  // ── laboratorio misure ───────────────────────────────────────
+  const PROVA = ['fa-anchor', 'fa-wine-glass', 'fa-scroll', 'fa-feather-pointed',
+                 'fa-sack-dollar', 'fa-skull-crossbones', 'fa-triangle-exclamation', 'fa-receipt'];
+  const MISURE = [14, 16, 20, 28];
+  const righeMisure = MISURE.map(px => `
+    <div class="riga-misure">
+      <small>${px}px</small>
+      ${PROVA.map(c => `<span style="font-size:${px}px"><i class="fa-solid ${c}"></i></span>`).join('')}
+    </div>`).join('');
+  $('misureScuro').innerHTML = righeMisure;
+  $('misureCrema').innerHTML = righeMisure;
+
+  // ═══════════════════════════════════════════════════════════════
+  // CONTROLLO AUTOMATICO DEI NOMI
+  // ═══════════════════════════════════════════════════════════════
+  //
+  // Un nome sbagliato non dà errore: Font Awesome disegna il vuoto, e l'icona
+  // sparisce senza dire niente. Qui si misura la larghezza di un glifo
+  // deliberatamente inesistente e si confronta con quella di ognuno: chi ha la
+  // stessa larghezza del nulla, è nulla.
+  function controllaNomi() {
+    const metro = document.createElement('i');
+    metro.className = 'fa-solid fa-questo-nome-non-esiste-davvero';
+    metro.style.cssText = 'position:absolute;left:-9999px;font-size:32px;';
+    document.body.appendChild(metro);
+    const larghezzaDelNulla = metro.getBoundingClientRect().width;
+    metro.remove();
+
+    const mancanti = [];
+    document.querySelectorAll('.col-nuova').forEach(cella => {
+      const icona = cella.querySelector('i');
+      const larghezza = icona.getBoundingClientRect().width;
+      if (Math.abs(larghezza - larghezzaDelNulla) < 0.5 || larghezza === 0) {
+        cella.classList.add('mancante');
+        cella.insertAdjacentHTML('beforeend', '<span class="badge-x">manca</span>');
+        mancanti.push(cella.dataset.classe);
+      }
+    });
+
+    const box = $('verdetto');
+    if (!mancanti.length) {
+      box.className = 'ok';
+      box.innerHTML = '<strong>Tutti i ' + ICONE.length + ' nomi esistono in Font Awesome Free.</strong> ' +
+        'Nessun riquadro vuoto: la mappatura regge.';
+    } else {
+      box.className = 'guai';
+      box.innerHTML = '<strong>' + mancanti.length + ' nomi su ' + ICONE.length +
+        ' non esistono in Font Awesome Free</strong> (segnati in rosso nella tabella): <code>' +
+        mancanti.join('</code> <code>') + '</code>. Vanno sostituiti o disegnati.';
+    }
+  }
+
+  // Il controllo ha senso solo a font caricato: prima, ogni glifo è largo zero.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => setTimeout(controllaNomi, 120));
+  } else {
+    window.addEventListener('load', () => setTimeout(controllaNomi, 600));
+  }
+</script>
+</body>
+</html>
