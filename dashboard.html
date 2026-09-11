@@ -204,6 +204,30 @@
       font-size: 1.25em; font-family: 'Pirata One', cursive; cursor: pointer;
       transition: all 0.3s; box-shadow: 0 4px 0 #3d1f0f;
     }
+    /* Prima l'unico pulsante che reagiva al passaggio del mouse era Porto:
+       gli altri erano inerti. Stessa risposta per tutti — si solleva e
+       l'ombra si allunga al passaggio, si schiaccia sotto il dito. L'ombra
+       piatta sotto il bordo e' quella che rende il gesto credibile: sale a
+       6px quando si alza, scende a 1px quando si preme. */
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #3d1f0f, 0 8px 12px rgba(0, 0, 0, 0.35);
+      filter: brightness(1.08);
+    }
+    .btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #3d1f0f, 0 2px 5px rgba(0, 0, 0, 0.4);
+      filter: brightness(0.96);
+    }
+    /* I pulsantini della rubrica hanno un'ombra piu' bassa: il salto va
+       ridimensionato, o si staccano dalla riga. */
+    .rub-toolbar .btn:hover, .rub-azioni .btn:hover {
+      box-shadow: 0 5px 0 #3d1f0f, 0 7px 10px rgba(0, 0, 0, 0.3);
+    }
+    .rub-toolbar .btn:active, .rub-azioni .btn:active {
+      box-shadow: 0 1px 0 #3d1f0f, 0 2px 4px rgba(0, 0, 0, 0.35);
+    }
+
     .btn-primary { background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); color: white; }
     .btn-secondary { background: linear-gradient(145deg, #4682b4 0%, #1e5a8a 100%); color: white; }
     .dettaglio-box {
@@ -287,6 +311,8 @@
     .rub-azioni {
       display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px;
     }
+    .rub-acapo { flex-basis: 100%; height: 0; margin: 0; }
+
     .rub-contatori { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
     .rub-pill {
       background: #f4e4c1; border: 2px solid #6b4423; border-radius: 20px;
@@ -638,7 +664,7 @@
             <input type="date" id="versAData">
           </div>
           <div style="display:flex; align-items:flex-end;">
-            <button class="btn btn-secondary" onclick="calcolaVersamento()"><svg class="ico"><use href="#i-locked-chest"></use></svg> Calcola</button>
+            <button class="btn btn-primary" onclick="calcolaVersamento()"><svg class="ico"><use href="#i-locked-chest"></use></svg> Calcola</button>
           </div>
         </div>
       </div>
@@ -701,15 +727,20 @@
             <option value="senza">Senza consenso marketing</option>
           </select>
           <button class="btn btn-primary" onclick="apriModalCliente()"><svg class="ico"><use href="#i-plus"></use></svg> Nuovo</button>
+          <!-- Interruzione di riga in un contenitore flex: un elemento di
+               larghezza piena e altezza zero spinge a capo cio' che segue,
+               senza occupare spazio. I due export stanno cosi' su una riga
+               loro, separati dai filtri e dal Nuovo. -->
+          <div class="rub-acapo"></div>
           <button class="btn btn-secondary" onclick="esportaRubrica(true)"><svg class="ico"><use href="#i-fa-file-export"></use></svg> Export newsletter</button>
-          <button class="btn btn-terziario" onclick="esportaRubrica(false)"><svg class="ico"><use href="#i-papers"></use></svg> Export completo</button>
+          <button class="btn btn-secondary" onclick="esportaRubrica(false)"><svg class="ico"><use href="#i-papers"></use></svg> Export completo</button>
         </div>
         <div class="rub-contatori" id="rubContatori"></div>
         <div class="rub-azioni">
-          <button class="btn btn-terziario" onclick="anteprimaImportRubrica()">
+          <button class="btn btn-primary" onclick="anteprimaImportRubrica()">
             <svg class="ico"><use href="#i-cycle"></use></svg> Importa clienti dallo storico prenotazioni
           </button>
-          <a href="qr-card.html" target="_blank" rel="noopener" class="btn btn-terziario"
+          <a href="qr-card.html" target="_blank" rel="noopener" class="btn btn-primary"
              style="text-decoration:none; display:inline-block;">
             <svg class="ico"><use href="#i-ticket"></use></svg> Cartoncini QR iscrizione
           </a>
@@ -2188,7 +2219,7 @@
       <div class="modal-section">
         <div class="modal-section-title"><svg class="ico"><use href="#i-fa-receipt"></use></svg> Spese</div>
         <div id="listaSpese"></div>
-        <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="aggiungiSpesaModal()">
+        <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="aggiungiSpesaModal()">
           <svg class="ico"><use href="#i-plus"></use></svg> Aggiungi Spesa
         </button>
       </div>

@@ -495,8 +495,8 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      width: 2em;
-      height: 2em;
+      width: 3.2em;
+      height: 3.2em;
       background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22%25231e5a8a%22%20d%3D%22M90.53%2023c-18.345%200-36.688%207.002-50.686%2021-27.996%2027.996-27.994%2073.38%200%20101.375%2021.776%2021.776%2054.08%2026.603%2080.53%2014.5l53.69%2053.688c-21.425%2019.696-44%2038.257-67.44%2055.937l30.126%2030.125c18.734-22.545%2037.953-44.474%2057.844-65.53l169.594%20169.593c-51.845%2040.444-120.866%2053.838-192.813%2042.562L173%20424.906%2072.47%20404.47l95.405%2088.405%201.97-26c86.593%2036.97%20177.603%2034.61%20241.343-11.75l63.062%2021.313-21.47-63.594c44.61-63.62%2046.408-153.412%209.908-238.875l26.03-1.97-88.406-95.375%2020.438%20100.53%2021.344-1.624c11.278%2071.983-2.168%20141.017-42.656%20192.876l-169.782-169.75c21.075-20.34%2042.93-39.665%2065.78-57.72l-30.123-30.124c-17.015%2024.154-35.673%2046.66-55.688%2067.813l-53.97-53.97C167.834%2098.183%20163.032%2065.814%20141.22%2044c-14-13.998-32.343-21-50.69-21zm0%2027.03c11.434.002%2022.872%204.34%2031.595%2013.064%2017.447%2017.447%2017.446%2045.742%200%2063.187-17.446%2017.447-45.71%2017.447-63.156%200-17.447-17.444-17.448-45.74%200-63.186C67.69%2054.37%2079.097%2050.03%2090.53%2050.03z%22%2F%3E%3C%2Fsvg%3E") no-repeat center / contain;
       opacity: 0.2;
     }
@@ -547,11 +547,16 @@
       margin-top: 8px;
     }
     
-    .badge-confermato { background: #90ee90; color: #2c5f2d; }
-    .badge-attesa { background: #ffeb3b; color: #f57f17; }
-    .badge-annullato { background: #ff5252; color: #b71c1c; }
-    .badge-no_show { background: #ff9800; color: #6d3c00; }
-    .badge-completato { background: #90caf9; color: #0d47a1; }
+    .badge-confermato, .badge-attesa, .badge-annullato,
+    .badge-no_show, .badge-completato {
+      background: rgba(255, 255, 255, 0.35);
+      border: 2px solid currentColor;
+    }
+    .badge-confermato { color: #1e5f2d; }
+    .badge-attesa     { color: #5f3d00; }
+    .badge-annullato  { color: #9b1c1c; }
+    .badge-no_show    { color: #7a3e00; }
+    .badge-completato { color: #15457e; }
 
     /* Badge del pagamento: secondo asse, accanto a quello della prenotazione */
     .pagamento-badge {
@@ -559,15 +564,20 @@
       font-size: 0.8em; font-weight: 700; margin-top: 8px; margin-left: 6px;
       border: 1px dashed rgba(0,0,0,0.25);
     }
-    .pag-non_pagato { background: #eceff1; color: #455a64; }
-    .pag-parziale { background: #ffe0b2; color: #e65100; }
-    .pag-pagato_cassa { background: #c8e6c9; color: #1b5e20; }
-    .pag-pagato_online { background: #b3e5fc; color: #01579b; }
-    .pag-rimborso_da_emettere { background: #ffcdd2; color: #b71c1c; }
-    .pag-rimborsato { background: #d7ccc8; color: #4e342e; }
-    .pag-omaggio { background: #f0f4c3; color: #827717; }
+    .pag-non_pagato, .pag-parziale, .pag-pagato_cassa, .pag-pagato_online,
+    .pag-rimborso_da_emettere, .pag-rimborsato, .pag-omaggio {
+      background: rgba(255, 255, 255, 0.35);
+      border: 2px solid currentColor;
+    }
+    .pag-non_pagato           { color: #3f4b52; }
+    .pag-parziale             { color: #8a4300; }
+    .pag-pagato_cassa         { color: #1b5e20; }
+    .pag-pagato_online        { color: #01579b; }
+    .pag-rimborso_da_emettere { color: #9b1c1c; }
+    .pag-rimborsato           { color: #4e342e; }
+    .pag-omaggio              { color: #5c5710; }
     .pag-scontrino-manca {
-      background: #fff3cd; color: #8a6d00; border: 1px solid #e0a800;
+      background: rgba(255, 255, 255, 0.35); color: #8a4300; border: 2px solid currentColor;
       display: inline-block; padding: 2px 8px; border-radius: 5px;
       font-size: 0.75em; font-weight: 700; margin-left: 6px;
     }
@@ -1003,7 +1013,7 @@
     
     .pannello-evento-titolo h2 {
       font-family: 'Pirata One';
-      font-size: 2em;
+      font-size: 2.8em;
       color: #f4e4c1;
       margin: 0 0 5px 0;
       text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.4);
@@ -1129,9 +1139,9 @@
     }
     
     .prenotazione-evento-cliente {
-      font-size: 1.3em;
+      font-size: 1.35em;
       font-weight: 700;
-      color: #ffd700;
+      color: #6e1d2b;
     }
     
     .prenotazione-evento-persone {
@@ -1161,11 +1171,11 @@
     }
     
     .prenotazione-evento-note {
-      background: rgba(212, 165, 116, 0.1);
-      border-left: 3px solid #d4a574;
+      background: rgba(255, 255, 255, 0.22);
+      border-left: 3px solid #6e1d2b;
       padding: 10px 15px;
       margin: 10px 0;
-      color: #d4a574;
+      color: #2c1810;
       font-size: 0.95em;
       border-radius: 5px;
     }
@@ -1264,7 +1274,7 @@
   <symbol id="i-three-friends" viewBox="0 0 512 512"><path fill="currentColor" d="M389 40.84c18.5 0 35 18.79 35 44.03 0 25.33-16.5 44.03-35 44.03s-35-18.7-35-44.03c0-25.24 16.5-44.03 35-44.03zm-132.9 0c18.4 0 35 18.79 35 44.03 0 25.33-16.6 44.03-35 44.03-18.5 0-35.1-18.7-35.1-44.03 0-25.24 16.6-44.03 35.1-44.03zm-133 0c18.5 0 35 18.79 35 44.03 0 25.33-16.5 44.03-35 44.03s-35.09-18.7-35.09-44.03c0-25.24 16.59-44.03 35.09-44.03zm133 109.06c64 2 118 2 182.8 4.2 30.9 17.8 45.2 109 44.3 140.7l-17.6 17.7c-7.7-42.8-17.4-99.9-33.5-112.6v87.6l4.1 183.7H414l-16.7-184.7h-18l-16.7 184.7h-22.3l4.2-183.7-8-88.5h-29.3l-7.2 88.2 4.2 183.7h-22.3l-16.8-184.7h-18l-16.8 184.7h-22.2l4.2-183.7L205 199h-29.3l-8 88.5 4.2 183.7h-22.3l-16.7-184.7h-18L98.01 471.2h-22.2l4.2-183.7v-87.6c-16.2 12.7-25.9 69.8-33.6 112.6l-17.6-17.7c-.9-31.7 13.5-122.9 44.3-140.7 64.99-2.2 118.99-2.2 182.99-4.2z"/></symbol>
   <symbol id="i-trash-can" viewBox="0 0 512 512"><path fill="currentColor" d="M199 103v50h-78v30h270v-30h-78v-50H199zm18 18h78v32h-78v-32zm-79.002 80l30.106 286h175.794l30.104-286H137.998zm62.338 13.38l.64 8.98 16 224 .643 8.976-17.956 1.283-.64-8.98-16-224-.643-8.976 17.956-1.283zm111.328 0l17.955 1.284-.643 8.977-16 224-.64 8.98-17.956-1.284.643-8.977 16-224 .64-8.98zM247 215h18v242h-18V215z"/></symbol>
   <symbol id="i-wine-glass" viewBox="0 0 512 512"><path fill="currentColor" d="M148.97 22.47l-6.25.093-2.564 6.156c-13.235 37.556-21.28 79-21.28 118.093 0 53.777 14.848 93.17 39.874 118.875 18.945 19.458 43.36 30.696 70.156 35 17.09 48.115 16.085 101.005-2.562 148.687-30.555 5.118-60.254 18.273-86.313 39.5h231.22c-26.066-21.23-55.75-34.384-86.313-39.5-18.667-47.734-19.62-100.686-2.468-148.844 26.58-4.382 50.84-15.552 69.75-34.842 25.184-25.692 40.186-65.08 40.186-118.875 0-39.093-8.045-80.537-21.28-118.094l-2.188-6.25h-219.97zm6.75 18.686h199.843c7.25 21.815 12.64 44.904 15.593 67.72h-231.03c2.953-22.816 8.344-45.905 15.593-67.72zm-17.47 86.406h234.78c.45 6.49.69 12.912.69 19.25 0 50.357-13.716 84.26-34.845 105.813-21.13 21.554-50.295 31.406-83.53 31.406-33.238 0-62.247-9.863-83.22-31.405s-34.563-55.437-34.563-105.813c0-6.338.24-12.76.688-19.25z"/></symbol>
-  <symbol id="i-fa-clock" viewBox="0 0 512 512"><path d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></symbol>
+  <symbol id="i-fa-clock-contorno" viewBox="0 0 512 512"><path d="M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0A256 256 0 1 0 0 256zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></symbol>
   <symbol id="i-fa-circle-check" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></symbol>
   <symbol id="i-fa-circle-xmark" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></symbol>
   <symbol id="i-fa-credit-card" viewBox="0 0 576 512"><path d="M64 32C28.7 32 0 60.7 0 96l0 32 576 0 0-32c0-35.3-28.7-64-64-64L64 32zM576 224L0 224 0 416c0 35.3 28.7 64 64 64l448 0c35.3 0 64-28.7 64-64l0-192zM112 352l64 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-64 0c-8.8 0-16-7.2-16-16s7.2-16 16-16zm112 16c0-8.8 7.2-16 16-16l128 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-128 0c-8.8 0-16-7.2-16-16z"/></symbol>
@@ -1434,7 +1444,7 @@
         <!-- ===== PAGAMENTO ===== -->
         <div id="sezionePagamento" style="border-top:2px solid rgba(107,68,35,0.35); margin-top:18px; padding-top:14px;">
           <div style="font-family:'Pirata One',cursive; font-size:1.3em; color:#1e5631; margin-bottom:10px;">
-            <svg class="ico"><use href="#i-cash"></use></svg> Pagamento
+            <svg class="ico"><use href="#i-banknote"></use></svg> Pagamento
           </div>
 
           <div class="form-group">
@@ -2300,7 +2310,7 @@
           const badgeClass = `badge-${pren.stato}`;
           container.innerHTML += `
             <div class="prenotazione-card">
-              <div class="prenotazione-ora"><svg class="ico"><use href="#i-fa-clock"></use></svg> ${pren.ora || 'Orario da definire'}</div>
+              <div class="prenotazione-ora"><svg class="ico"><use href="#i-fa-clock-contorno"></use></svg> ${pren.ora || 'Orario da definire'}</div>
               <div class="prenotazione-info">
                 <div class="prenotazione-cliente">${pren.cliente}</div>
                 ${pren.telefono ? `<div class="prenotazione-dettagli"><svg class="ico"><use href="#i-phone"></use></svg> ${pren.telefono}</div>` : ''}
@@ -2876,7 +2886,7 @@
         
         let dettagliHtml = '<div class="prenotazione-evento-dettagli">';
         if (pren.ora) {
-          dettagliHtml += `<span><svg class="ico"><use href="#i-fa-clock"></use></svg> ${pren.ora}</span>`;
+          dettagliHtml += `<span><svg class="ico"><use href="#i-fa-clock-contorno"></use></svg> ${pren.ora}</span>`;
         }
         if (pren.telefono) {
           dettagliHtml += `<span><svg class="ico"><use href="#i-phone"></use></svg> ${pren.telefono}</span>`;
