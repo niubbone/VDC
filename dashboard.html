@@ -14,7 +14,9 @@
   <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/icon-16x16.png">
   <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
   
-  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+  <!-- Solo Pirata One: il Rye e stato tolto dal Quartier Generale (11/09/2026),
+       era un carattere pesante che faceva sembrare sottili le icone accanto. -->
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -38,7 +40,7 @@
       cursor: pointer;
       font-weight: bold;
       font-size: 1em;
-      font-family: 'Rye', cursive;
+      font-family: 'Georgia', serif;
       box-shadow: 
         0 5px 0 #6b3410,
         0 7px 10px rgba(0,0,0,0.6),
@@ -120,7 +122,7 @@
       padding: 8px 20px; border-radius: 8px; cursor: pointer;
       background: rgba(244, 228, 193, 0.35);
       border: 2px solid rgba(107, 68, 35, 0.55);
-      color: #4a2c18; font-family: 'Rye', cursive; font-size: 0.88em;
+      color: #4a2c18; font-family: 'Georgia', serif; font-size: 0.88em; font-weight: 700;
       transition: all 0.2s; white-space: nowrap;
     }
     .sottotab:hover { background: rgba(244, 228, 193, 0.6); }
@@ -141,7 +143,8 @@
       margin-bottom: 20px; border: 2px dashed #6b4423;
     }
     .section-title {
-      font-family: 'Rye'; font-size: 1.5em; color: #2c1810; margin-bottom: 15px;
+      font-family: 'Georgia', serif; font-size: 1.5em; font-weight: 700;
+      color: #2c1810; margin-bottom: 15px;
       padding-bottom: 10px; border-bottom: 3px solid #8b4513;
     }
     .form-row {
@@ -165,15 +168,20 @@
     .crediti-icone a { color: rgba(244, 228, 193, 0.75); }
 
     .ico {
-      width: 1em; height: 1em;
+      /* 1.15em e non 1em: un'icona piena occupa meno "nero" di una lettera
+         alla stessa misura nominale, e accanto al testo sembra piu' leggera
+         di quanto sia. Un filo piu' grande la rimette in equilibrio senza
+         che si noti come un ingrandimento. Il grassetto non esiste per un
+         SVG pieno: la leva sono la misura e il colore. */
+      width: 1.15em; height: 1.15em;
       fill: currentColor;
-      vertical-align: -0.125em;
+      vertical-align: -0.19em;
       flex-shrink: 0;
     }
 
     .btn {
       padding: 15px 30px; border: 3px solid #3d1f0f; border-radius: 8px;
-      font-size: 1.1em; font-weight: 700; font-family: 'Rye'; cursor: pointer;
+      font-size: 1.1em; font-weight: 700; font-family: 'Georgia', serif; cursor: pointer;
       transition: all 0.3s; box-shadow: 0 4px 0 #3d1f0f;
     }
     .btn-primary { background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); color: white; }
@@ -235,7 +243,7 @@
     .btn-pericolo { background: linear-gradient(145deg, #c0392b 0%, #922b21 100%); color: #fff; }
     .btn-mini {
       padding: 5px 10px; font-size: 0.82em; border: none; border-radius: 6px;
-      cursor: pointer; font-family: 'Rye', cursive; margin-right: 4px;
+      cursor: pointer; font-family: 'Georgia', serif; margin-right: 4px;
     }
     .rub-toolbar {
       display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px;
@@ -249,8 +257,8 @@
        principale della pagina: col .btn pieno (15px 30px, 1.1em, bordo da 3px)
        "Nuovo" pesava quanto il titolo della sezione e la riga sfondava di lato.
        Qui si allineano ai campi che stanno loro accanto — stessa altezza,
-       stesso spessore di bordo — e restano leggibili perché il Rye è grande di
-       suo. Vale anche per la riga di sotto (import, cartoncini QR), che è la
+       stesso spessore di bordo. Vale anche per la riga di sotto (import,
+       cartoncini QR), che è la
        stessa famiglia di comandi e deve avere lo stesso peso. */
     .rub-toolbar .btn, .rub-azioni .btn {
       padding: 9px 16px; font-size: 0.9em; border-width: 2px;
@@ -326,7 +334,7 @@
       margin-bottom: 15px; border: 2px dashed #6b4423;
     }
     .modal-section-title {
-      font-family: 'Rye'; font-size: 1.2em; color: #2c1810;
+      font-family: 'Georgia', serif; font-size: 1.2em; font-weight: 700; color: #2c1810;
       margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #8b4513;
     }
     .modal-form-row {
@@ -367,7 +375,7 @@
     .modal-buttons button {
       flex: 1; padding: 15px; border: 3px solid #3d1f0f;
       border-radius: 8px; font-size: 1.1em; font-weight: 700;
-      font-family: 'Rye'; cursor: pointer; transition: all 0.3s;
+      font-family: 'Georgia', serif; cursor: pointer; transition: all 0.3s;
     }
     .btn-salva {
       background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); color: white;
