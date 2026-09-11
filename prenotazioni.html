@@ -1009,9 +1009,14 @@
       text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.4);
     }
     
+    /* Il sottotitolo e la data sotto il nome dell'evento: l'oro chiaro su
+       questo fondo faceva 1,4 di contrasto. Il nome sopra resta crema perche'
+       e' a 2em e ha l'ombra che lo stacca; qui sotto il testo e' piccolo e
+       deve solo leggersi. */
     .pannello-evento-titolo p {
-      color: #e8b873;
-      font-size: 1.1em;
+      color: #3d1f0f;
+      font-family: 'Georgia', serif;
+      font-size: 1em;
       margin: 0;
     }
     
@@ -1039,9 +1044,9 @@
     }
     
     .btn-modifica-evento {
-      background: linear-gradient(145deg, rgba(232, 184, 115, 0.4) 0%, rgba(200, 152, 88, 0.4) 100%);
-      color: #ffd700;
-      border: 2px solid #d4a574;
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
+      color: #2c1810;
+      border: 2px solid #8b4513;
       padding: 10px 20px;
       border-radius: 8px;
       cursor: pointer;
@@ -1140,7 +1145,7 @@
     }
     
     .prenotazione-evento-dettagli {
-      color: #e8b873;
+      color: #2c1810;
       font-size: 1em;
       margin-bottom: 8px;
       display: flex;
@@ -1547,7 +1552,7 @@
         <div class="pannello-evento-titolo">
           <h2 id="eventoGestioneNome">Nome Evento</h2>
           <p id="eventoGestioneData">Data</p>
-          <p id="eventoGestioneDescrizione" style="color: #d4a574; margin-top: 10px;"></p>
+          <p id="eventoGestioneDescrizione" style="color: #3d1f0f; margin-top: 10px;"></p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
           <button class="btn-modifica-evento" onclick="apriModalModificaEvento()" title="Modifica Evento">
