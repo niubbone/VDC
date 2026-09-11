@@ -976,15 +976,20 @@
       box-shadow: 0 3px 8px rgba(0,0,0,0.3);
     }
     
+    /* Stessa coppia del pannello evento: il nome in crema, la descrizione in
+       bordeaux e nello stesso carattere, cosi' la card e il pannello che si
+       apre cliccandola parlano la stessa lingua. */
     .evento-giorno-descrizione {
-      color: #f4e4c1;
-      font-size: 0.9em;
+      font-family: 'Pirata One', cursive;
+      font-size: 1.15em;
+      color: #6e1d2b;
+      text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.22);
+      line-height: 1.15;
       margin-bottom: 10px;
-      opacity: 0.9;
     }
     
     .evento-giorno-cta {
-      color: #d4a574;
+      color: #2c1810;
       font-size: 0.9em;
       font-weight: 600;
       text-align: right;
@@ -1464,7 +1469,7 @@
         <div class="form-group">
           <label>Prezzo per persona (€)</label>
           <input type="number" id="inputPrezzoQuota" step="0.01" min="0" placeholder="es: 25,00">
-          <div style="font-size:0.82em; color:#d4a574; margin-top:4px;">
+          <div style="font-size:0.86em; color:#6b4423; margin-top:4px;">
             Se valorizzato, il dovuto delle prenotazioni si calcola da solo.
           </div>
         </div>
@@ -1587,7 +1592,7 @@
               <input type="checkbox" id="inputScontrinato" style="width:auto; margin-right:8px;">
               <svg class="ico"><use href="#i-fa-receipt"></use></svg> Scontrino già emesso
             </label>
-            <div style="font-size:0.82em; color:#d4a574; margin-top:4px;">
+            <div style="font-size:0.86em; color:#6b4423; margin-top:4px;">
               Finché non è spuntato, la prenotazione resta nella checklist
               <strong>Partite Aperte</strong> del Quartier Generale.
             </div>
@@ -1627,21 +1632,20 @@
       <!-- Pulsante Crea Evento -->
       <div id="linkCreaEvento" style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(107, 68, 35, 0.3);">
         <button onclick="switchToEvento()" style="
-          background: linear-gradient(145deg, rgba(232, 184, 115, 0.3) 0%, rgba(200, 152, 88, 0.3) 100%);
+          background: linear-gradient(145deg, #9aa9b4 0%, #7a8a97 100%);
           color: #2c1810;
-          border: 2px solid #d4a574;
+          border: 2px solid #5c6a74;
           padding: 12px 25px;
           border-radius: 8px;
           cursor: pointer;
           font-family: 'Pirata One', cursive;
           font-size: 1.15em;
-          font-weight: 600;
           transition: all 0.3s;
-          box-shadow: 0 3px 8px rgba(212, 165, 116, 0.3);
+          box-shadow: 0 3px 8px rgba(44, 24, 16, 0.3);
           width: 100%;
-        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 12px rgba(212, 165, 116, 0.5)'"
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 8px rgba(212, 165, 116, 0.3)'">
-          <svg class="ico"><use href="#i-wine-glass"></use></svg> Crea Evento/Degustazione
+        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 14px rgba(44, 24, 16, 0.45)'"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 8px rgba(44, 24, 16, 0.3)'">
+          <svg class="ico"><use href="#i-wine-glass"></use></svg> Crea Evento / Degustazione
         </button>
       </div>
     </div>
