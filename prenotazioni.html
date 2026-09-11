@@ -495,12 +495,23 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      width: 3.2em;
-      height: 3.2em;
+      width: 4.4em;
+      height: 4.4em;
       background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22%25231e5a8a%22%20d%3D%22M90.53%2023c-18.345%200-36.688%207.002-50.686%2021-27.996%2027.996-27.994%2073.38%200%20101.375%2021.776%2021.776%2054.08%2026.603%2080.53%2014.5l53.69%2053.688c-21.425%2019.696-44%2038.257-67.44%2055.937l30.126%2030.125c18.734-22.545%2037.953-44.474%2057.844-65.53l169.594%20169.593c-51.845%2040.444-120.866%2053.838-192.813%2042.562L173%20424.906%2072.47%20404.47l95.405%2088.405%201.97-26c86.593%2036.97%20177.603%2034.61%20241.343-11.75l63.062%2021.313-21.47-63.594c44.61-63.62%2046.408-153.412%209.908-238.875l26.03-1.97-88.406-95.375%2020.438%20100.53%2021.344-1.624c11.278%2071.983-2.168%20141.017-42.656%20192.876l-169.782-169.75c21.075-20.34%2042.93-39.665%2065.78-57.72l-30.123-30.124c-17.015%2024.154-35.673%2046.66-55.688%2067.813l-53.97-53.97C167.834%2098.183%20163.032%2065.814%20141.22%2044c-14-13.998-32.343-21-50.69-21zm0%2027.03c11.434.002%2022.872%204.34%2031.595%2013.064%2017.447%2017.447%2017.446%2045.742%200%2063.187-17.446%2017.447-45.71%2017.447-63.156%200-17.447-17.444-17.448-45.74%200-63.186C67.69%2054.37%2079.097%2050.03%2090.53%2050.03z%22%2F%3E%3C%2Fsvg%3E") no-repeat center / contain;
       opacity: 0.2;
     }
     
+    /* Tre righe a due voci: orario e stato, nome e persone, telefono e note.
+       Su schermo stretto si impilano invece di stringersi. */
+    .pren-riga {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
     .prenotazione-ora {
       font-size: 1.3em;
       font-weight: 700;
@@ -540,7 +551,8 @@
     
     .prenotazione-badge {
       display: inline-block;
-      padding: 6px 14px;
+      padding: 7px 16px;
+      line-height: 1.35;
       border-radius: 5px;
       font-size: 0.8em;
       font-weight: 700;
@@ -558,7 +570,7 @@
 
     /* Badge del pagamento: secondo asse, accanto a quello della prenotazione */
     .pagamento-badge {
-      display: inline-block; padding: 6px 14px; border-radius: 5px;
+      display: inline-block; padding: 7px 16px; border-radius: 5px; line-height: 1.35;
       font-size: 0.8em; font-weight: 700; margin-top: 8px; margin-left: 6px;
       border: 1px dashed rgba(0,0,0,0.25);
     }
@@ -576,7 +588,7 @@
     .pag-omaggio              { color: #5c5710; }
     .pag-scontrino-manca {
       background: rgba(255, 255, 255, 0.35); color: #8a4300; border: 2px solid currentColor;
-      padding: 6px 12px;
+      padding: 7px 14px; line-height: 1.35;
       display: inline-block; padding: 2px 8px; border-radius: 5px;
       font-size: 0.75em; font-weight: 700; margin-left: 6px;
     }
@@ -741,8 +753,16 @@
       margin-right: 0.3em;
     }
     .ico-sola { margin-right: 0; }
+    /* Dentro un chip l'icona va rimpicciolita: .ico vale 1.35em, ma qui il
+       testo e' a 0.8em, quindi il disegno risultava piu' alto della riga e
+       andava a sbattere contro il bordo. Nessun padding poteva bastare. */
     .prenotazione-badge .ico, .pagamento-badge .ico,
-    .pag-scontrino-manca .ico { margin-right: 0.45em; }
+    .pag-scontrino-manca .ico {
+      width: 1.05em;
+      height: 1.05em;
+      vertical-align: -0.16em;
+      margin-right: 0.5em;
+    }
     .ruota-dx { transform: rotate(90deg); }
     .ruota-sx { transform: rotate(-90deg); }
 
@@ -857,6 +877,11 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
       filter: brightness(1.08);
+    }
+    /* I due comandi del pannello evento hanno gia' un'ombra propria: senza
+       questo, al passaggio del mouse le due ombre si sommavano. */
+    .btn-chiudi-pannello:hover, .btn-modifica-evento:hover {
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
     }
     .btn-modal:active, .btn-azione:active,
     .btn-chiudi-pannello:active, .btn-modifica-evento:active {
@@ -1031,7 +1056,7 @@
     .pannello-evento-titolo h2 {
       font-family: 'Pirata One';
       font-size: 2.8em;
-      color: #f4e4c1;
+      color: #6e1d2b;
       margin: 0 0 5px 0;
       text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.4);
     }
@@ -1048,8 +1073,8 @@
     .evento-sottotitolo {
       font-family: 'Pirata One', cursive;
       font-size: 1.5em;
-      color: #f4e4c1;
-      text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.4);
+      color: #6e1d2b;
+      text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.22);
       line-height: 1.1;
       margin-bottom: 6px !important;
     }
@@ -1062,14 +1087,14 @@
     .btn-chiudi-pannello {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
       color: #2c1810;
-      padding: 12px 25px;
-      border: 3px solid #3d1f0f;
+      border: 2px solid #8b4513;
+      padding: 10px 20px;
       border-radius: 8px;
       cursor: pointer;
       font-family: 'Pirata One', cursive;
-      font-size: 1.15em;
-      box-shadow: 0 4px 0 #3d1f0f;
-      transition: all 0.2s;
+      font-size: 1.1em;
+      transition: all 0.3s;
+      box-shadow: 0 3px 8px rgba(212, 165, 116, 0.3);
     }
     
     .btn-chiudi-pannello:hover {
@@ -2338,14 +2363,18 @@
           const badgeClass = `badge-${pren.stato}`;
           container.innerHTML += `
             <div class="prenotazione-card">
-              <div class="prenotazione-ora"><svg class="ico"><use href="#i-fa-clock-contorno"></use></svg> ${pren.ora || 'Orario da definire'}</div>
-              <div class="prenotazione-info">
-                <div class="prenotazione-cliente">${pren.cliente}</div>
-                ${pren.telefono ? `<div class="prenotazione-dettagli"><svg class="ico"><use href="#i-phone"></use></svg> ${pren.telefono}</div>` : ''}
+              <div class="pren-riga">
+                <div class="prenotazione-ora"><svg class="ico"><use href="#i-fa-clock-contorno"></use></svg> ${pren.ora || 'Orario da definire'}</div>
+                <span class="prenotazione-badge ${badgeClass}">${etichettaStato(pren.stato)}</span>
               </div>
-              ${pren.persone ? `<div class="prenotazione-dettagli"><svg class="ico"><use href="#i-three-friends"></use></svg> ${pren.persone} ${pren.persone === 1 ? 'persona' : 'persone'}</div>` : ''}
-              ${pren.note ? `<div class="prenotazione-note"><svg class="ico"><use href="#i-fa-receipt"></use></svg> ${pren.note}</div>` : ''}
-              <span class="prenotazione-badge ${badgeClass}">${etichettaStato(pren.stato)}</span>${badgePagamento(pren)}
+              <div class="pren-riga">
+                <div class="prenotazione-cliente">${pren.cliente}</div>
+                ${pren.persone ? `<div class="prenotazione-dettagli"><svg class="ico"><use href="#i-three-friends"></use></svg> ${pren.persone} ${pren.persone === 1 ? 'persona' : 'persone'}</div>` : ''}
+              </div>
+              <div class="pren-riga">
+                ${pren.telefono ? `<div class="prenotazione-dettagli"><svg class="ico"><use href="#i-phone"></use></svg> ${pren.telefono}</div>` : '<span></span>'}
+                ${pren.note ? `<div class="prenotazione-note"><svg class="ico"><use href="#i-fa-receipt"></use></svg> ${pren.note}</div>` : ''}
+              </div>
               <div class="prenotazione-azioni">
                 <button class="btn-azione btn-modifica" onclick="modificaPrenotazione('${pren.id}')"><svg class="ico"><use href="#i-quill"></use></svg> Modifica</button>
                 <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')"><svg class="ico"><use href="#i-trash-can"></use></svg> Elimina</button>
@@ -2415,6 +2444,7 @@
     function modificaPrenotazione(id) {
       const pren = prenotazioni.find(p => p.id === id);
       if (!pren) return;
+      aggiornaVisibilitaPagamento(pren);
       
       modalitaModifica = true;
       idPrenotazioneModifica = id;
@@ -2483,7 +2513,7 @@
       modalitaModifica = false;
       document.getElementById('campiEvento').style.display = 'none';
       document.getElementById('campiPrenotazione').style.display = 'block';
-      document.getElementById('sezionePagamento').style.display = 'block';
+      aggiornaVisibilitaPagamento();
       document.getElementById('linkCreaEvento').style.display = 'block';
       document.getElementById('tipoToggle').style.display = 'none';
       chiudiAutocomplete();
@@ -2718,6 +2748,20 @@
       }
     }
 
+    /**
+     * I pagamenti riguardano SOLO gli eventi: una prenotazione normale si
+     * salda in cassa e basta, e chiedere stato, importi e scontrino per un
+     * tavolo di due persone e' lavoro inutile a ogni salvataggio.
+     *
+     * Il blocco compare quindi solo se la prenotazione appartiene a un evento:
+     * o la si sta creando dal pannello di un evento (eventoCorrente), o si sta
+     * modificando una prenotazione che un evento ce l'ha gia'.
+     */
+    function aggiornaVisibilitaPagamento(pren) {
+      const diEvento = !!eventoCorrente || !!(pren && pren.evento_id);
+      document.getElementById('sezionePagamento').style.display = diEvento ? 'block' : 'none';
+    }
+
     function leggiCampiPagamento() {
       const stato = document.getElementById('inputStatoPagamento').value;
       return {
@@ -2815,7 +2859,7 @@
         document.getElementById('campoOrarioArrivo').style.display = 'none';
         document.getElementById('campoCliente').style.display = 'block';
         document.getElementById('campoStato').style.display = 'block';
-        document.getElementById('sezionePagamento').style.display = 'block';
+        aggiornaVisibilitaPagamento();
         document.getElementById('btnSalva').textContent = '💾 Salva';
       }
     }
@@ -2922,7 +2966,6 @@
         if (pren.telefono) {
           dettagliHtml += `<span><svg class="ico"><use href="#i-phone"></use></svg> ${pren.telefono}</span>`;
         }
-        dettagliHtml += `<span class="${badgeClass}">${etichettaStato(pren.stato)}</span>`;
         dettagliHtml += badgePagamento(pren);
         dettagliHtml += '</div>';
         
@@ -2930,10 +2973,11 @@
           <div class="prenotazione-evento-card">
             <div class="prenotazione-evento-top">
               <div class="prenotazione-evento-cliente"><svg class="ico"><use href="#i-person"></use></svg> ${pren.cliente}</div>
+              <span class="prenotazione-badge ${badgeClass}">${etichettaStato(pren.stato)}</span>
               <div class="prenotazione-evento-persone">${persone} <svg class="ico ico-sola"><use href="#i-three-friends"></use></svg></div>
             </div>
             ${dettagliHtml}
-            ${pren.note ? `<div class="prenotazione-evento-note"><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> ${pren.note}</div>` : ''}
+            ${pren.note ? `<div class="prenotazione-evento-note"><svg class="ico"><use href="#i-fa-receipt"></use></svg> ${pren.note}</div>` : ''}
             <div class="prenotazione-azioni" style="margin-top: 12px;">
               <button class="btn-azione btn-modifica" onclick="modificaPrenotazioneEvento('${pren.id}')"><svg class="ico"><use href="#i-quill"></use></svg> Modifica</button>
               <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')"><svg class="ico"><use href="#i-trash-can"></use></svg> Elimina</button>
