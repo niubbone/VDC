@@ -170,15 +170,33 @@
     .crediti-icone a { color: rgba(244, 228, 193, 0.75); }
 
     .ico {
-      /* 1.15em e non 1em: un'icona piena occupa meno "nero" di una lettera
-         alla stessa misura nominale, e accanto al testo sembra piu' leggera
-         di quanto sia. Un filo piu' grande la rimette in equilibrio senza
-         che si noti come un ingrandimento. Il grassetto non esiste per un
-         SVG pieno: la leva sono la misura e il colore. */
-      width: 1.3em; height: 1.3em;
+      /* Piu' grande di 1em perche' un'icona piena occupa meno "nero" di una
+         lettera alla stessa misura nominale, e accanto al testo sembra piu'
+         leggera di quanto sia. Il grassetto non esiste per un SVG pieno: le
+         leve sono la misura, il colore e lo spazio attorno. */
+      width: 1.35em; height: 1.35em;
       fill: currentColor;
-      vertical-align: -0.26em;
+      vertical-align: -0.28em;
       flex-shrink: 0;
+
+      /* Il respiro a destra e' la meta' del lavoro. Nei tab l'icona sta SOPRA
+         l'etichetta e si legge bene perche' ha una riga tutta sua; in linea
+         con l'etichetta a fianco, con un solo spazio normale fra le due, si
+         attacca alla parola e perde di forza. Un margine esplicito, che non
+         collassa e non dipende dalla larghezza dello spazio del carattere,
+         le ridà il respiro che ha nei tab. */
+      margin-right: 0.3em;
+    }
+
+    /* Icona senza etichetta accanto: niente margine, o sballa il centraggio. */
+    .ico-sola { margin-right: 0; }
+
+    /* Nella testata l'etichetta e' Pirata One a 2em, con maiuscole molto alte:
+       un'icona proporzionata al resto della pagina, li', sembra una miniatura. */
+    .header h1 .ico {
+      width: 1.7em; height: 1.7em;
+      vertical-align: -0.4em;
+      margin-right: 0.2em;
     }
 
     .btn {
@@ -535,19 +553,19 @@
   <div class="container">
     <div class="tabs">
       <div class="tab active" onclick="mostraTab('chiusure')">
-        <span class="tab-icona"><svg class="ico"><use href="#i-spyglass"></use></svg></span><span class="tab-testo">Chiusure</span>
+        <span class="tab-icona"><svg class="ico ico-sola"><use href="#i-spyglass"></use></svg></span><span class="tab-testo">Chiusure</span>
       </div>
       <div class="tab" onclick="mostraTab('versamento')">
-        <span class="tab-icona"><svg class="ico"><use href="#i-locked-chest"></use></svg></span><span class="tab-testo">Versamenti</span>
+        <span class="tab-icona"><svg class="ico ico-sola"><use href="#i-locked-chest"></use></svg></span><span class="tab-testo">Versamenti</span>
       </div>
       <div class="tab" onclick="mostraTab('statistiche')">
-        <span class="tab-icona"><svg class="ico"><use href="#i-fa-chart-column"></use></svg></span><span class="tab-testo">Statistiche</span>
+        <span class="tab-icona"><svg class="ico ico-sola"><use href="#i-fa-chart-column"></use></svg></span><span class="tab-testo">Statistiche</span>
       </div>
       <div class="tab" onclick="mostraTab('rubrica')">
-        <span class="tab-icona"><svg class="ico"><use href="#i-three-friends"></use></svg></span><span class="tab-testo">Rubrica</span>
+        <span class="tab-icona"><svg class="ico ico-sola"><use href="#i-three-friends"></use></svg></span><span class="tab-testo">Rubrica</span>
       </div>
       <div class="tab" onclick="mostraTab('incassi')">
-        <span class="tab-icona"><svg class="ico"><use href="#i-fa-receipt"></use></svg></span><span class="tab-testo">Incassi</span>
+        <span class="tab-icona"><svg class="ico ico-sola"><use href="#i-fa-receipt"></use></svg></span><span class="tab-testo">Incassi</span>
       </div>
     </div>
     
@@ -1179,7 +1197,7 @@
               <div style="position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2em;" 
                    onclick="modificaChiusura('${c.data}')" 
                    title="Modifica chiusura">
-                <svg class="ico"><use href="#i-quill"></use></svg>
+                <svg class="ico ico-sola"><use href="#i-quill"></use></svg>
               </div>
               <h4>${c.giornoSettimana}<br>${c.data}</h4>
               
@@ -1437,7 +1455,7 @@
             <input type="number" step="0.01" value="${spesa.importo || 0}" 
                    onchange="aggiornaSpesa(${index}, 'importo', this.value); calcolaDiscrepanzaModal();">
           </div>
-          <button class="btn-remove-spesa" onclick="rimuoviSpesa(${index})"><svg class="ico"><use href="#i-trash-can"></use></svg></button>
+          <button class="btn-remove-spesa" onclick="rimuoviSpesa(${index})"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
         `;
         container.appendChild(div);
       });
@@ -1458,7 +1476,7 @@
             <input type="number" step="0.01" value="0" 
                    onchange="aggiornaSpesa(${index}, 'importo', this.value); calcolaDiscrepanzaModal();">
           </div>
-          <button class="btn-remove-spesa" onclick="rimuoviSpesa(${index})"><svg class="ico"><use href="#i-trash-can"></use></svg></button>
+          <button class="btn-remove-spesa" onclick="rimuoviSpesa(${index})"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
         `;
         container.appendChild(div);
       }
@@ -1696,7 +1714,7 @@
           <td style="text-align:center;"><span class="badge-stato ${c.whatsapp ? 'badge-si' : 'badge-no'}">${c.whatsapp ? 'SÌ' : 'no'}</span></td>
           <td style="text-align:center;">${c.eventiPartecipati}</td>
           <td>${esc(c.ultimoEvento)}</td>
-          <td><button class="btn-mini btn-secondary" onclick="event.stopPropagation(); apriModalCliente('${esc(c.id)}')"><svg class="ico"><use href="#i-quill"></use></svg></button></td>
+          <td><button class="btn-mini btn-secondary" onclick="event.stopPropagation(); apriModalCliente('${esc(c.id)}')"><svg class="ico ico-sola"><use href="#i-quill"></use></svg></button></td>
         </tr>`).join('');
 
       box.innerHTML = `
