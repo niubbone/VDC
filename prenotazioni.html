@@ -716,7 +716,13 @@
       display: flex;
     }
     
+    /* Nei modal si legge e si compila, non si fa scenografia: il Rye e' un
+       carattere da insegna e su un modulo fitto di etichette stanca. Georgia
+       per il testo, Pirata One tenuto dove serve carattere e le parole sono
+       poche e grandi: intestazione e pulsanti, che lo dichiarano per conto
+       loro qui sotto. */
     .modal-content {
+      font-family: 'Georgia', serif;
       background: linear-gradient(145deg, #f4e4c1 0%, #e6d9c5 100%);
       border: 4px solid #6b4423;
       border-radius: 15px;
@@ -754,7 +760,9 @@
       padding: 10px;
       border: 2px solid #8b4513;
       border-radius: 8px;
-      font-family: 'Rye';
+      /* input, select e textarea NON ereditano font-family dal contenitore:
+         senza questa riga resterebbero nel carattere del browser. */
+      font-family: 'Georgia', serif;
       font-size: 1em;
       background: white;
       color: #2c1810;
@@ -1128,14 +1136,16 @@
       border: 2px solid #d4a574;
     }
     
+    /* Prenotazione / Evento: due pulsanti, e i pulsanti del modal restano
+       in Pirata One. */
     .toggle-btn {
       flex: 1;
       padding: 12px 20px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      font-family: 'Rye', cursive;
-      font-size: 1em;
+      font-family: 'Pirata One', cursive;
+      font-size: 1.15em;
       font-weight: 600;
       transition: all 0.3s;
       background: transparent;
@@ -1330,24 +1340,24 @@
         </div>
         
         <div class="form-group" id="campoStato">
-          <label>Stato prenotazione <span style="font-weight:400; font-size:0.85em;">(è venuto?)</span></label>
+          <label>Stato prenotazione</label>
           <select id="inputStato">
             <option value="confermato">✅ Confermato</option>
             <option value="attesa">⏳ In attesa</option>
             <option value="annullato">❌ Annullato</option>
-            <option value="no_show">👻 No-show (non si è presentato)</option>
+            <option value="no_show">👻 No-show</option>
             <option value="completato">🏁 Completato</option>
           </select>
         </div>
 
         <!-- ===== PAGAMENTO ===== -->
         <div id="sezionePagamento" style="border-top:2px solid rgba(107,68,35,0.35); margin-top:18px; padding-top:14px;">
-          <div style="font-family:'Pirata One',cursive; font-size:1.3em; color:#e8b873; margin-bottom:10px;">
+          <div style="font-family:'Pirata One',cursive; font-size:1.3em; color:#1e5631; margin-bottom:10px;">
             💶 Pagamento
           </div>
 
           <div class="form-group">
-            <label>Stato pagamento <span style="font-weight:400; font-size:0.85em;">(ha pagato?)</span></label>
+            <label>Stato pagamento</label>
             <select id="inputStatoPagamento" onchange="aggiornaCampiPagamento()">
               <option value="non_pagato">⬜ Non pagato</option>
               <option value="pagato_cassa">💵 Pagato in cassa</option>
@@ -1440,8 +1450,8 @@
           padding: 12px 25px;
           border-radius: 8px;
           cursor: pointer;
-          font-family: 'Rye', cursive;
-          font-size: 1em;
+          font-family: 'Pirata One', cursive;
+          font-size: 1.15em;
           font-weight: 600;
           transition: all 0.3s;
           box-shadow: 0 3px 8px rgba(212, 165, 116, 0.3);
