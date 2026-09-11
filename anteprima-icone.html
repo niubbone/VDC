@@ -325,8 +325,8 @@
     <div class="nota" style="border-left-color:#4682b4;">
       <strong>La scelta fatta l'11/09/2026: game-icons ovunque, tranne sette.</strong>
       Restano in Font Awesome <code>circle-check</code>, <code>circle-xmark</code>,
-      <code>bolt</code>, <code>receipt</code>, <code>xmark</code>, <code>credit-card</code> e
-      <code>file-export</code>. Hanno una cosa in comune: sono comandi d'interfaccia — conferma,
+      <code>bolt</code>, <code>receipt</code>, <code>xmark</code>, <code>credit-card</code>,
+      <code>file-export</code> e <code>chart-column</code>. Hanno una cosa in comune: sono comandi d'interfaccia — conferma,
       annulla, chiudi, scontrino, carta, esporta — dove un glifo piatto dice la cosa in modo
       più netto, mentre il disegno dettagliato non aggiunge niente e alle misure piccole
       toglie. Due delle sette, <em>scontrino</em> e <em>carta</em>, erano esattamente i
@@ -593,7 +593,10 @@
   // compromessi segnalati piu' sopra: la scelta li risolve.
   const RESTANO_FA = new Set([
     'fa-circle-check', 'fa-circle-xmark', 'fa-bolt', 'fa-receipt',
-    'fa-xmark', 'fa-credit-card', 'fa-file-export'
+    'fa-xmark', 'fa-credit-card', 'fa-file-export',
+    // aggiunta l'11/09/2026 vedendo il Quartier Generale dal vivo: il grafico
+    // a barre di game-icons ha il tratto fine e alle misure della UI si perde.
+    'fa-chart-column'
   ]);
 
   const CANDIDATI = [
