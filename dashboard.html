@@ -228,6 +228,21 @@
       box-shadow: 0 1px 0 #3d1f0f, 0 2px 4px rgba(0, 0, 0, 0.35);
     }
 
+    /* Salva, Annulla, Elimina e i pulsantini della rubrica non hanno l'ombra
+       piatta sotto il bordo: il sollevarsi e' reso da un'ombra morbida che si
+       allunga, invece che da uno zoccolo che cresce. */
+    .modal-buttons button:hover, .btn-mini:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+      filter: brightness(1.08);
+    }
+    .modal-buttons button:active, .btn-mini:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+      filter: brightness(0.96);
+    }
+    .btn-mini { transition: all 0.2s; }
+
     .btn-primary { background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); color: white; }
     .btn-secondary { background: linear-gradient(145deg, #4682b4 0%, #1e5a8a 100%); color: white; }
     .dettaglio-box {
