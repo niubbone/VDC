@@ -109,6 +109,18 @@
     .ruota-dx { transform: rotate(90deg); }
     .ruota-sx { transform: rotate(-90deg); }
     .col-gi .vuoto { color: rgba(244,228,193,0.28); font-size: 1.1em; }
+    .col-scelta {
+      width: 92px; text-align: center; color: var(--oro); font-size: 1.45em;
+      background: rgba(232,184,115,0.07); border-left: 2px solid rgba(232,184,115,0.3);
+      border-right: 2px solid rgba(232,184,115,0.3);
+    }
+    .famiglia {
+      display: inline-block; font-family: 'Georgia', serif; font-size: 0.42em;
+      font-weight: 700; letter-spacing: 0.5px; border-radius: 3px;
+      padding: 1px 4px; margin-left: 6px; vertical-align: middle;
+    }
+    .famiglia.fa { background: #4682b4; color: #fff; }
+    .famiglia.gi-tag { background: var(--legno-chiaro); color: var(--crema); }
     td.dove { color: var(--sabbia); font-size: 0.88em; }
     .badge-x {
       display: inline-block; background: var(--rosso); color: #fff;
@@ -310,6 +322,18 @@
       vengono disegnate allo stesso modo ovunque e <strong>prendono il colore dal CSS</strong>,
       quindi finalmente oro sul fondo scuro e marrone sul crema.
     </div>
+    <div class="nota" style="border-left-color:#4682b4;">
+      <strong>La scelta fatta l'11/09/2026: game-icons ovunque, tranne sette.</strong>
+      Restano in Font Awesome <code>circle-check</code>, <code>circle-xmark</code>,
+      <code>bolt</code>, <code>receipt</code>, <code>xmark</code>, <code>credit-card</code> e
+      <code>file-export</code>. Hanno una cosa in comune: sono comandi d'interfaccia — conferma,
+      annulla, chiudi, scontrino, carta, esporta — dove un glifo piatto dice la cosa in modo
+      più netto, mentre il disegno dettagliato non aggiunge niente e alle misure piccole
+      toglie. Due delle sette, <em>scontrino</em> e <em>carta</em>, erano esattamente i
+      compromessi segnalati qui sotto: la scelta li risolve da sé.
+      Nella tabella la colonna <strong>Scelta</strong> mostra il risultato, con l'etichetta
+      della famiglia da cui viene.
+    </div>
     <div id="verdetto">Controllo dei nomi in corso…</div>
   </section>
 
@@ -322,6 +346,7 @@
           <th>Oggi</th>
           <th>Font&nbsp;Awesome</th>
           <th>Game-icons</th>
+          <th>Scelta</th>
           <th>Nome</th>
           <th>Usi</th>
           <th class="dove">Dove / perché</th>
@@ -379,23 +404,27 @@
   </section>
 
   <section>
-    <h2>In contesto: il modal prenotazione</h2>
-    <p>Le stesse icone al loro posto, sul crema del modal. È qui che si giudica davvero.</p>
+    <h2>Il risultato finale: il modal prenotazione</h2>
+    <p>
+      Il <strong>mix definitivo</strong> al suo posto, sul crema del modal: game-icons per
+      l'ambiente, Font Awesome per i sette comandi d'interfaccia. Lo scontrino e la X di
+      Annulla sono Font Awesome, tutto il resto no. È qui che si giudica davvero.
+    </p>
     <div class="finto-modal">
-      <div class="titolo"><i class="fa-solid fa-scroll"></i> Nuova Prenotazione</div>
+      <div class="titolo"><svg class="gi "><use href="#gi-scroll-unfurled"></use></svg> Nuova Prenotazione</div>
 
       <div class="fm-toggle">
-        <button class="attivo"><i class="fa-solid fa-scroll"></i> Prenotazione</button>
-        <button><i class="fa-solid fa-wine-glass"></i> Evento</button>
+        <button class="attivo"><svg class="gi "><use href="#gi-scroll-unfurled"></use></svg> Prenotazione</button>
+        <button><svg class="gi "><use href="#gi-wine-glass"></use></svg> Evento</button>
       </div>
 
       <div class="fm-gruppo">
-        <label><i class="fa-solid fa-user"></i> Cliente *</label>
+        <label><svg class="gi "><use href="#gi-person"></use></svg> Cliente *</label>
         <input type="text" value="Alessio Barbieri" readonly>
       </div>
 
       <div class="fm-gruppo">
-        <label><i class="fa-solid fa-calendar-days"></i> Data e ora</label>
+        <label><svg class="gi "><use href="#gi-calendar"></use></svg> Data e ora</label>
         <input type="text" value="20 novembre 2026 — 19:30" readonly>
       </div>
 
@@ -407,7 +436,7 @@
       </div>
 
       <div class="fm-sezione-pagamento">
-        <div class="intestazione"><i class="fa-solid fa-money-bill-wave"></i> Pagamento</div>
+        <div class="intestazione"><svg class="gi "><use href="#gi-cash"></use></svg> Pagamento</div>
         <div class="fm-gruppo">
           <label>Stato pagamento</label>
           <select>
@@ -422,7 +451,7 @@
 
       <div class="fm-pulsanti">
         <button class="fm-annulla"><i class="fa-solid fa-xmark"></i> Annulla</button>
-        <button class="fm-salva"><i class="fa-solid fa-floppy-disk"></i> Salva</button>
+        <button class="fm-salva"><svg class="gi "><use href="#gi-save"></use></svg> Salva</button>
       </div>
     </div>
   </section>
@@ -442,13 +471,13 @@
         </div>
       </div>
       <div>
-        <div class="etichetta-dopo">Proposta</div>
+        <div class="etichetta-dopo">Il mix finale</div>
         <div class="finta-rubrica">
           <div class="fr-barra">
             <input type="search" placeholder="Cerca per nome, email o cellulare...">
-            <button class="fr-nuovo"><i class="fa-solid fa-plus"></i> Nuovo</button>
+            <button class="fr-nuovo"><svg class="gi "><use href="#gi-plus"></use></svg> Nuovo</button>
             <button class="fr-export"><i class="fa-solid fa-file-export"></i> Export newsletter</button>
-            <button class="fr-terzo"><i class="fa-solid fa-rotate"></i> Importa</button>
+            <button class="fr-terzo"><svg class="gi "><use href="#gi-cycle"></use></svg> Importa</button>
           </div>
         </div>
       </div>
@@ -553,6 +582,20 @@
 
   // Candidati da game-icons.net (CC BY 3.0). Autore indicato: la licenza
   // richiede l'attribuzione, e va riportata anche nell'app se si adottano.
+  // ═══════════════════════════════════════════════════════════════
+  // LA SCELTA: game-icons ovunque, tranne queste sette
+  // ═══════════════════════════════════════════════════════════════
+  // Scelte dall'utente guardando l'anteprima (11/09/2026). Sono quasi tutte
+  // icone "da interfaccia" piuttosto che d'ambiente — conferma, annulla,
+  // chiudi, scontrino, carta, export — dove il glifo piatto di Font Awesome
+  // dice la cosa in modo piu' netto e il disegno dettagliato non aggiunge
+  // niente. Notare che due delle sette (scontrino e carta) erano proprio i
+  // compromessi segnalati piu' sopra: la scelta li risolve.
+  const RESTANO_FA = new Set([
+    'fa-circle-check', 'fa-circle-xmark', 'fa-bolt', 'fa-receipt',
+    'fa-xmark', 'fa-credit-card', 'fa-file-export'
+  ]);
+
   const CANDIDATI = [
     ['gi-locked-chest',        'Forziere',         'lorc',       'incassi, versamenti, partite aperte'],
     ['gi-spyglass',            'Cannocchiale',     'lorc',       'cerca e diagnostica'],
@@ -572,6 +615,9 @@
       <td class="col-gi">${gi
         ? `<svg class="gi ${giCls || ''}"><use href="#${gi}"></use></svg>`
         : '<span class="vuoto">&mdash;</span>'}</td>
+      <td class="col-scelta">${RESTANO_FA.has(classe)
+        ? `<i class="fa-solid ${classe}"></i><span class="famiglia fa">FA</span>`
+        : `<svg class="gi ${giCls || ''}"><use href="#${gi}"></use></svg><span class="famiglia gi-tag">GI</span>`}</td>
       <td><code>${classe}</code></td>
       <td>${usi}</td>
       <td class="dove">${dove}</td>
