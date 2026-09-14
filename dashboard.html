@@ -21,16 +21,30 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Georgia', serif;
-      background: linear-gradient(rgba(20,40,60,0.7), rgba(20,40,60,0.7));
+      /* La velatura blu stava sopra il nulla: sotto ci va il banco, l'unica
+         delle tre immagini non ancora usata. Il gradiente resta come ultimo
+         strato, cosi' se il PNG non arriva la pagina non finisce su bianco. */
+      background:
+        linear-gradient(rgba(20, 40, 60, 0.7), rgba(20, 40, 60, 0.7)),
+        url('./assets/images/banco.png'),
+        linear-gradient(160deg, #2c1810 0%, #4a2c18 45%, #14283c 100%);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
       min-height: 100vh; padding: 20px;
     }
+    /* Stessa barra del Registro delle Prenotazioni: blu notte con bordo e
+       titolo in oro. Il legno era l'unico pezzo dell'app a usarlo cosi'. */
     .header {
-      background: linear-gradient(145deg, #8b4513 0%, #654321 100%);
-      color: #f4e4c1; padding: 20px; border-radius: 10px; margin-bottom: 20px;
-      border: 3px solid #3d1f0f; display: flex; justify-content: space-between;
+      background: rgba(35, 55, 80, 0.85);
+      color: #d4a574; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+      border: 3px solid #d4a574; display: flex; justify-content: space-between;
       align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    .header h1 { font-family: 'Pirata One'; font-size: 2em; text-shadow: 2px 2px 0 rgba(0,0,0,0.5); }
+    .header h1 {
+      font-family: 'Pirata One'; font-size: 2em; color: #d4a574;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.5); margin: 0;
+    }
     .btn-home {
       background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
       color: #2c1810;
@@ -75,7 +89,7 @@
         gap: 5px;
       }
     }
-    .container { max-width: 1200px; margin: 0 auto; }
+    .container { max-width: 1400px; margin: 0 auto; }
     /* I tab vanno a capo invece di sfondare la pagina.
        Con sei voci, `flex: 1` da solo non basta: un elemento flex non si
        restringe sotto la propria larghezza minima di contenuto, quindi la
@@ -193,6 +207,23 @@
 
     /* Nella testata l'etichetta e' Pirata One a 2em, con maiuscole molto alte:
        un'icona proporzionata al resto della pagina, li', sembra una miniatura. */
+    /* La bandiera pirata del pulsante Porto riempie il 94% del suo riquadro:
+       non era piccola, era SOTTILE — teschio e sciabole sono disegnati con
+       tratti fini che a misura di pulsante si perdono. Qui si fa due cose:
+       si ingrandisce, e si ingrossa il disegno con un contorno dello stesso
+       colore. `paint-order: stroke fill` mette il contorno SOTTO il
+       riempimento, quindi il risultato e' la stessa sagoma un po' piu' carnosa
+       invece di un bordo appiccicato sopra. E' l'unico modo di "mettere in
+       grassetto" un SVG pieno. */
+    .btn-home .ico {
+      width: 1.75em;
+      height: 1.75em;
+      vertical-align: -0.44em;
+      stroke: currentColor;
+      stroke-width: 12;
+      paint-order: stroke fill;
+    }
+
     .header h1 .ico {
       /* 2.1em e non 1.7 come altrove: em misura il RIQUADRO dell'icona, non il
          disegno dentro. Misurato, il tricorno riempie il 67% dell'altezza del
@@ -200,7 +231,7 @@
          parita' di em arrivava un quarto piu' basso. 1.7 x 0.83 / 0.67 = 2.1. */
       width: 2.1em; height: 2.1em;
       vertical-align: -0.52em;
-      margin-right: 0.16em;
+      margin-right: 0.34em;
     }
 
     .btn {

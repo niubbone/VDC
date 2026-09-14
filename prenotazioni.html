@@ -756,6 +756,23 @@
     .ruota-dx { transform: rotate(90deg); }
     .ruota-sx { transform: rotate(-90deg); }
 
+    /* La bandiera pirata del pulsante Porto riempie il 94% del suo riquadro:
+       non era piccola, era SOTTILE — teschio e sciabole sono disegnati con
+       tratti fini che a misura di pulsante si perdono. Qui si fa due cose:
+       si ingrandisce, e si ingrossa il disegno con un contorno dello stesso
+       colore. `paint-order: stroke fill` mette il contorno SOTTO il
+       riempimento, quindi il risultato e' la stessa sagoma un po' piu' carnosa
+       invece di un bordo appiccicato sopra. E' l'unico modo di "mettere in
+       grassetto" un SVG pieno. */
+    .btn-home .ico {
+      width: 1.75em;
+      height: 1.75em;
+      vertical-align: -0.44em;
+      stroke: currentColor;
+      stroke-width: 12;
+      paint-order: stroke fill;
+    }
+
     .header h1 .ico {
       width: 1.7em; height: 1.7em;
       vertical-align: -0.4em;
