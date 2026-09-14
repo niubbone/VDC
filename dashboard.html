@@ -24,25 +24,32 @@
       /* La velatura blu stava sopra il nulla: sotto ci va il banco, l'unica
          delle tre immagini non ancora usata. Il gradiente resta come ultimo
          strato, cosi' se il PNG non arriva la pagina non finisce su bianco. */
+      /* Lo stesso sfondo della home, con la stessa velatura, ma ancorato a
+         SINISTRA invece che al centro: l'immagine ha il suo fuoco sulla destra
+         e centrandola la parte buona — le botti e la brocca — restava fuori.
+         banco.png e' stata scartata: e' 211x378, a schermo intero andava
+         ingrandita di sette volte e mezzo, e ripetuta a misura naturale il
+         motivo si riconosceva otto volte per tre. SfondoVD e' 1360x614, cioe'
+         una volta e mezzo: resta nitida. */
       background:
-        linear-gradient(rgba(20, 40, 60, 0.30), rgba(20, 40, 60, 0.30)),
-        url('./assets/images/banco.png'),
-        linear-gradient(160deg, #2c1810 0%, #4a2c18 45%, #14283c 100%);
+        linear-gradient(rgba(20, 40, 60, 0.40), rgba(20, 40, 60, 0.40)),
+        url('./assets/images/SfondoVD.png');
       background-size: cover;
-      background-position: center;
+      background-position: left center;
       background-attachment: fixed;
       min-height: 100vh; padding: 20px;
     }
-    /* Stessa barra del Registro delle Prenotazioni: blu notte con bordo e
-       titolo in oro. Il legno era l'unico pezzo dell'app a usarlo cosi'. */
+    /* Il legno di prima, ma semitrasparente: ora sotto c'e' un'immagine, e
+       una barra piena la coprirebbe e basta. Dal Registro sono state prese le
+       misure, non i colori. */
     .header {
-      background: rgba(35, 55, 80, 0.85);
-      color: #d4a574; padding: 20px; border-radius: 10px; margin-bottom: 20px;
-      border: 3px solid #d4a574; display: flex; justify-content: space-between;
+      background: linear-gradient(145deg, rgba(139, 69, 19, 0.82) 0%, rgba(101, 67, 33, 0.82) 100%);
+      color: #f4e4c1; padding: 20px; border-radius: 10px; margin-bottom: 20px;
+      border: 3px solid #3d1f0f; display: flex; justify-content: space-between;
       align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     .header h1 {
-      font-family: 'Pirata One'; font-size: 2em; color: #d4a574;
+      font-family: 'Pirata One'; font-size: 2em; color: #f4e4c1;
       text-shadow: 2px 2px 0 rgba(0,0,0,0.5); margin: 0;
     }
     .btn-home {
