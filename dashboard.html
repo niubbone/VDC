@@ -399,6 +399,44 @@
     .pa-check { width: 18px; height: 18px; cursor: pointer; }
     .importo { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
+    /* CRESCITA DELLA RUBRICA — colonne impilate in HTML, nessuna libreria.
+       I tre colori sono validati sulla pergamena #f4e4c1 (tutti >= 3:1, coppie
+       distinguibili anche con daltonismo): è lo sfondo del riquadro, e deve
+       restare OPACO perché il controllo valga — la .section è semitrasparente
+       sopra la foto della cantina. */
+    .cr-riquadro {
+      background: #f4e4c1; border: 2px solid #6b4423; border-radius: 8px;
+      padding: 14px 14px 6px; position: relative;
+    }
+    .cr-legenda { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.88em; color: #2c1810; margin-bottom: 6px; }
+    .cr-legenda span { display: inline-flex; align-items: center; gap: 6px; }
+    .cr-campione { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+    .cr-grafico { display: flex; }
+    .cr-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; border-radius: 4px; outline: none; }
+    .cr-col:hover, .cr-col:focus { background: rgba(107,68,35,0.08); }
+    .cr-area {
+      height: 150px; padding-top: 18px; width: 100%; box-sizing: border-box;
+      display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+      border-bottom: 1px solid #b89f74;
+    }
+    .cr-val { font-size: 0.8em; font-weight: 700; color: #2c1810; line-height: 16px; flex-shrink: 0; }
+    .cr-barra {
+      width: 60%; max-width: 24px; flex-shrink: 0; display: flex; flex-direction: column-reverse;
+      gap: 2px; border-radius: 4px 4px 0 0; overflow: hidden;
+    }
+    .cr-seg { min-height: 3px; }
+    .cr-asse {
+      font-size: 0.72em; color: #5a4632; height: 20px; line-height: 20px;
+      white-space: nowrap; font-variant-numeric: tabular-nums;
+    }
+    .cr-tip {
+      position: absolute; transform: translate(-50%, -100%); z-index: 5; pointer-events: none;
+      background: #2c1810; color: #f4e4c1; font-size: 0.82em; padding: 6px 10px;
+      border-radius: 6px; white-space: nowrap;
+    }
+    .cr-nota { font-size: 0.85em; color: #5a4632; margin-top: 10px; line-height: 1.45; }
+    .cr-dettagli summary { cursor: pointer; font-weight: 700; color: #2c1810; margin-top: 14px; }
+
     /* LOADING OVERLAY */
     .loading-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -808,6 +846,7 @@
              style="color:#6b4423; font-size:0.88em;">apri la landing</a>
         </div>
       </div>
+      <div id="rubCrescita"></div>
       <div id="risultatoRubrica"></div>
     </div>
 
@@ -1786,6 +1825,7 @@
         }
         rubricaCache = r.clienti || [];
         renderContatoriRubrica(r);
+        renderCrescitaRubrica();
         filtraRubrica();
       } catch (error) {
         hideLoading();
@@ -1807,6 +1847,219 @@
           : ''}
         <span class="rub-pill"><svg class="ico"><use href="#i-chat-bubble"></use></svg> ${r.conWhatsapp} con consenso WhatsApp</span>
         <span class="rub-pill"><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> ${r.daCompletare} da completare</span>`;
+    }
+
+    // ----- Crescita della rubrica -----
+    // Report leggero sul ritmo con cui entrano i contatti. Si calcola tutto da
+    // rubricaCache: getRubrica restituisce già fonte e data di creazione di
+    // ogni scheda, quindi nessuna chiamata in più al server.
+    //
+    // L'import dallo storico resta FUORI dal grafico: è stato un colpo solo, il
+    // punto di partenza, e una colonna da trenta schiaccerebbe a zero tutte le
+    // settimane vere. Lo si dice in una nota sotto.
+
+    const FONTI_CRESCITA = [
+      { chiave: 'landing_qr', etichetta: 'Landing QR', icona: 'i-ticket', colore: '#256abf' },
+      { chiave: 'prenotazione', etichetta: 'Prenotazioni', icona: 'i-calendar', colore: '#c4521f' },
+      { chiave: 'manuale', etichetta: 'A mano', icona: 'i-quill', colore: '#15875e' }
+    ];
+    const SETTIMANE_CRESCITA = 12;
+    const GIORNO_MS = 864e5;
+
+    /** Giorno di creazione (mezzanotte locale) da "yyyy-MM-dd HH:mm"; null se manca. */
+    function dataCreazione(c) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(c.creato || ''));
+      return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+    }
+
+    /** Fonti sconosciute o vuote (schede scritte a mano sul foglio) valgono "a mano". */
+    function fonteCrescita(c) {
+      if (c.fonte === 'import_storico') return 'import_storico';
+      return FONTI_CRESCITA.some(f => f.chiave === c.fonte) ? c.fonte : 'manuale';
+    }
+
+    function lunediDi(d) {
+      const l = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      l.setDate(l.getDate() - (l.getDay() + 6) % 7);
+      return l;
+    }
+
+    /**
+     * Conteggi per settimana (da lunedì) e per fonte, dalla settimana in cui è
+     * nata la rubrica fino a quella corrente, al massimo le ultime dodici.
+     * `oggi` si passa solo dalle prove.
+     */
+    function calcolaCrescitaRubrica(clienti, oggi) {
+      oggi = oggi || new Date();
+      const giorno = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate());
+      const lunediCorrente = lunediDi(giorno);
+
+      // Si parte dalla settimana della scheda più vecchia: dodici colonne vuote
+      // prima che la rubrica esistesse direbbero "nessuna crescita", ed è falso.
+      const date = clienti.map(dataCreazione).filter(Boolean);
+      const primaData = date.length ? new Date(Math.min.apply(null, date)) : giorno;
+      // Math.round e non floor: col cambio dell'ora una settimana dura 7 giorni
+      // meno un'ora, e floor la conterebbe come la precedente.
+      const settimaneDallInizio = Math.round((lunediCorrente - lunediDi(primaData)) / GIORNO_MS / 7) + 1;
+      const n = Math.max(1, Math.min(SETTIMANE_CRESCITA, settimaneDallInizio));
+
+      const settimane = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const inizio = new Date(lunediCorrente);
+        inizio.setDate(lunediCorrente.getDate() - 7 * i);
+        const conteggi = {};
+        FONTI_CRESCITA.forEach(f => { conteggi[f.chiave] = 0; });
+        settimane.push({ inizio: inizio, conteggi: conteggi, totale: 0 });
+      }
+
+      const indietro = giorni => { const d = new Date(giorno); d.setDate(giorno.getDate() - giorni + 1); return d; };
+      const da7 = indietro(7);
+      const da30 = indietro(30);
+      const out = {
+        settimane: settimane, ultimi7: 0, ultimi30: 0, perFonte30: {},
+        importati: 0, dataImport: null, senzaData: 0, recenti: []
+      };
+      FONTI_CRESCITA.forEach(f => { out.perFonte30[f.chiave] = 0; });
+
+      clienti.forEach(c => {
+        const data = dataCreazione(c);
+        const fonte = fonteCrescita(c);
+        if (fonte === 'import_storico') {
+          out.importati++;
+          if (data && (!out.dataImport || data < out.dataImport)) out.dataImport = data;
+          return;
+        }
+        if (!data) { out.senzaData++; return; }
+        out.recenti.push({ cliente: c, fonte: fonte });
+        if (data > giorno) return;
+        if (data >= da7) out.ultimi7++;
+        if (data >= da30) { out.ultimi30++; out.perFonte30[fonte]++; }
+        const indice = Math.floor(Math.round((data - settimane[0].inizio) / GIORNO_MS) / 7);
+        if (indice >= 0 && indice < settimane.length) {
+          settimane[indice].conteggi[fonte]++;
+          settimane[indice].totale++;
+        }
+      });
+
+      out.recenti.sort((a, b) => String(b.cliente.creato).localeCompare(String(a.cliente.creato)));
+      out.recenti = out.recenti.slice(0, 10);
+      out.totaleGrafico = settimane.reduce((s, x) => s + x.totale, 0);
+      return out;
+    }
+
+    function renderCrescitaRubrica() {
+      const box = document.getElementById('rubCrescita');
+      const cr = calcolaCrescitaRubrica(rubricaCache);
+      const fmt = d => d.getDate() + '/' + (d.getMonth() + 1);
+      const n = cr.settimane.length;
+      const max = Math.max(1, ...cr.settimane.map(s => s.totale));
+      const media = (cr.totaleGrafico / n).toFixed(1).replace('.', ',');
+
+      const colonne = cr.settimane.map((s, i) => {
+        const fine = new Date(s.inizio);
+        fine.setDate(s.inizio.getDate() + 6);
+        const dettaglio = FONTI_CRESCITA.filter(f => s.conteggi[f.chiave])
+          .map(f => s.conteggi[f.chiave] + ' ' + f.etichetta).join(', ');
+        const tip = `${fmt(s.inizio)}–${fmt(fine)}: ` +
+          (s.totale ? `${s.totale} ${s.totale === 1 ? 'nuovo' : 'nuovi'} (${dettaglio})` : 'nessun nuovo contatto');
+        const segmenti = FONTI_CRESCITA.filter(f => s.conteggi[f.chiave]).map(f =>
+          `<div class="cr-seg" style="flex:${s.conteggi[f.chiave]} 1 0; background:${f.colore};"></div>`).join('');
+        // Con molte colonne l'etichetta dell'asse va a settimane alterne, e
+        // l'ultima — quella in corso — resta sempre scritta.
+        const conData = n <= 6 || (n - 1 - i) % 2 === 0;
+        return `
+          <div class="cr-col" tabindex="0" data-tip="${esc(tip)}" aria-label="${esc(tip)}">
+            <div class="cr-area">
+              ${s.totale ? `<span class="cr-val">${s.totale}</span>` : ''}
+              <div class="cr-barra" style="height:${s.totale / max * 100}%;">${segmenti}</div>
+            </div>
+            <div class="cr-asse">${conData ? fmt(s.inizio) : ''}</div>
+          </div>`;
+      }).join('');
+
+      const legenda = FONTI_CRESCITA.map(f => `
+        <span><i class="cr-campione" style="background:${f.colore};"></i>
+          <svg class="ico"><use href="#${f.icona}"></use></svg> ${f.etichetta} · ${cr.perFonte30[f.chiave]} in 30 giorni</span>`).join('');
+
+      const grafico = cr.totaleGrafico
+        ? `<div class="cr-riquadro">
+             <div class="cr-legenda">${legenda}</div>
+             <div class="cr-grafico">${colonne}</div>
+             <div class="cr-tip" hidden></div>
+           </div>`
+        : `<div class="diag-nota">Nessun contatto nuovo ${n > 1 ? `nelle ultime ${n} settimane` : 'questa settimana'}:
+             quando qualcuno si iscrive dal QR o arriva da una prenotazione, compare qui.</div>`;
+
+      const note = [];
+      if (cr.importati) {
+        const d = cr.dataImport;
+        note.push(`Non compaiono nel grafico i <strong>${cr.importati}</strong> contatti importati dallo storico` +
+          (d ? ` il ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}` : '') +
+          ': sono il punto di partenza della rubrica, non crescita.');
+      }
+      if (cr.senzaData) {
+        note.push(`${cr.senzaData} ${cr.senzaData === 1 ? 'scheda non ha' : 'schede non hanno'} la data di creazione e non si possono collocare.`);
+      }
+      note.push('La settimana in corso è parziale.');
+
+      const righe = cr.recenti.map(x => {
+        const c = x.cliente;
+        const f = FONTI_CRESCITA.find(v => v.chiave === x.fonte);
+        return `
+          <tr class="rub-riga-cliccabile" onclick="apriModalCliente('${esc(c.id)}')">
+            <td style="white-space:nowrap;">${esc(String(c.creato).replace(/^(\d{4})-(\d{2})-(\d{2})/, '$3/$2/$1'))}</td>
+            <td><strong>${esc(c.nomeCompleto || '(senza nome)')}</strong></td>
+            <td style="white-space:nowrap;"><i class="cr-campione" style="background:${f.colore};"></i> ${f.etichetta}</td>
+            <td>${esc(c.email || c.cellulare)}</td>
+          </tr>`;
+      }).join('');
+
+      box.innerHTML = `
+        <div class="section">
+          <div class="section-title">Crescita della rubrica</div>
+          <div class="rub-contatori">
+            <span class="rub-pill"><svg class="ico"><use href="#i-fa-chart-line"></use></svg> +${cr.ultimi7} negli ultimi 7 giorni</span>
+            <span class="rub-pill">+${cr.ultimi30} negli ultimi 30 giorni</span>
+            <span class="rub-pill">circa ${media} a settimana ${n > 1 ? `(ultime ${n} settimane)` : '(questa settimana)'}</span>
+          </div>
+          ${grafico}
+          <div class="cr-nota">${note.join(' ')}</div>
+          ${righe ? `
+          <details class="cr-dettagli">
+            <summary>Ultimi ${cr.recenti.length} arrivati</summary>
+            <div class="diag-wrap"><div class="diag-scroll">
+              <table class="diag-tabella">
+                <thead><tr><th>Creato</th><th>Nome</th><th>Da dove</th><th>Recapito</th></tr></thead>
+                <tbody>${righe}</tbody>
+              </table>
+            </div></div>
+          </details>` : ''}
+        </div>`;
+
+      // Tooltip al passaggio, al tocco e col tasto Tab: il bersaglio è l'intera
+      // colonna, non la sola barra, che nelle settimane magre è alta tre pixel.
+      const riquadro = box.querySelector('.cr-riquadro');
+      if (!riquadro) return;
+      const tipBox = riquadro.querySelector('.cr-tip');
+      const mostra = col => {
+        tipBox.textContent = col.dataset.tip;
+        tipBox.hidden = false;
+        const r = riquadro.getBoundingClientRect();
+        const c = col.getBoundingClientRect();
+        const cima = col.querySelector('.cr-barra').getBoundingClientRect().top;
+        const meta = tipBox.offsetWidth / 2;
+        const x = Math.max(meta + 4, Math.min(r.width - meta - 4, c.left - r.left + c.width / 2));
+        tipBox.style.left = x + 'px';
+        tipBox.style.top = (cima - r.top - 20) + 'px';
+      };
+      const nascondi = () => { tipBox.hidden = true; };
+      riquadro.querySelectorAll('.cr-col').forEach(col => {
+        col.addEventListener('mouseenter', () => mostra(col));
+        col.addEventListener('focus', () => mostra(col));
+        col.addEventListener('click', () => mostra(col));
+        col.addEventListener('mouseleave', nascondi);
+        col.addEventListener('blur', nascondi);
+      });
     }
 
     function filtraRubrica() {
