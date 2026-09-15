@@ -437,6 +437,50 @@
     .cr-nota { font-size: 0.85em; color: #5a4632; margin-top: 10px; line-height: 1.45; }
     .cr-dettagli summary { cursor: pointer; font-weight: 700; color: #2c1810; margin-top: 14px; }
 
+    /* CONFRONTO PERIODI — stesse regole del grafico della rubrica: riquadro
+       opaco #f4e4c1 (.cr-riquadro) e colori validati su quello. Le serie sono
+       gli anni, in ordine cronologico, al massimo quattro: i quattro colori
+       reggono tutti >= 3:1 e le coppie vicine si distinguono anche con
+       daltonismo. Colonne affiancate con 2px di stacco, asse con tre tacche. */
+    .cf-etichetta { font-weight: 700; color: #2c1810; margin-top: 4px; }
+    .cf-etichetta span { font-weight: 400; color: #5a4632; font-size: 0.9em; }
+    .cf-scelte { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 14px; }
+    .cf-scelta {
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+      background: #f4e4c1; border: 2px solid #6b4423; border-radius: 20px;
+      padding: 5px 12px; font-size: 0.9em; color: #2c1810;
+    }
+    .cf-scelta input { width: 16px; height: 16px; margin: 0; accent-color: #6b4423; }
+    .cf-metrica { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 4px; }
+    .cf-grafico-box { margin-top: 14px; }
+    .cf-titolo-grafico { font-weight: 700; color: #2c1810; margin-bottom: 6px; }
+    .cf-piano { display: grid; grid-template-columns: auto 1fr; grid-template-rows: 180px auto; column-gap: 8px; margin-top: 8px; }
+    .cf-scala {
+      display: flex; flex-direction: column; justify-content: space-between; text-align: right;
+      font-size: 0.72em; color: #5a4632; font-variant-numeric: tabular-nums;
+    }
+    .cf-scala span { line-height: 0; white-space: nowrap; }
+    .cf-area { position: relative; }
+    .cf-griglia {
+      position: absolute; inset: 0; pointer-events: none;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .cf-griglia i { display: block; height: 1px; background: #dcc79e; }
+    .cf-griglia i:last-child { background: #b89f74; }
+    .cf-gruppi { position: absolute; inset: 0; display: flex; }
+    .cf-gruppo-col { flex: 1; min-width: 0; display: flex; align-items: flex-end; justify-content: center; gap: 2px; padding: 0 3%; }
+    .cf-barra-hit { flex: 0 1 24px; height: 100%; display: flex; align-items: flex-end; outline: none; border-radius: 4px 4px 0 0; }
+    .cf-barra-hit:hover, .cf-barra-hit:focus { background: rgba(107,68,35,0.08); }
+    .cf-barra { width: 100%; border-radius: 4px 4px 0 0; }
+    .cf-assi { grid-column: 2; display: flex; }
+    .cf-assi span { flex: 1; min-width: 0; text-align: center; font-size: 0.78em; color: #5a4632; padding-top: 4px; }
+    /* .diag-tabella td allinea a sinistra e pesa più di .importo da solo */
+    .diag-tabella td.importo { text-align: right; }
+    .cf-delta { font-weight: 700; white-space: nowrap; }
+    .cf-su { color: #1e6b34; }
+    .cf-giu { color: #a32d24; }
+    .cf-pari { color: #5a4632; }
+
     /* LOADING OVERLAY */
     .loading-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -794,6 +838,34 @@
         </div>
       </div>
       <div id="risultatoStatistiche"></div>
+
+      <!-- Confronto dello stesso periodo in anni diversi (15/09/2026) -->
+      <div class="section">
+        <div class="section-title">Confronto periodi</div>
+        <div class="diag-nota">
+          Lo stesso periodo in anni diversi, con la differenza in percentuale rispetto all'anno prima.
+          Il periodo può scavalcare l'anno: <strong>da dicembre a gennaio</strong> vuol dire dicembre
+          di un anno e gennaio del successivo. Si possono tenere solo alcuni giorni della settimana,
+          per esempio giovedì e venerdì. L'incasso è il <strong>Report Prodotti</strong>, come nelle
+          statistiche del mese.
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Dal mese:</label>
+            <select id="cfMeseDa" onchange="aggiornaAnniConfronto()"></select>
+          </div>
+          <div class="form-group">
+            <label>Al mese:</label>
+            <select id="cfMeseA" onchange="aggiornaAnniConfronto()"></select>
+          </div>
+        </div>
+        <div class="cf-etichetta">Anni da confrontare <span>(fino a 4)</span></div>
+        <div class="cf-scelte" id="cfAnni"></div>
+        <div class="cf-etichetta">Giorni della settimana</div>
+        <div class="cf-scelte" id="cfGiorni"></div>
+        <button class="btn btn-primary" onclick="confrontaPeriodi()"><svg class="ico"><use href="#i-fa-chart-column"></use></svg> Confronta</button>
+      </div>
+      <div id="risultatoConfronto"></div>
     </div>
 
     <!-- ===== RUBRICA CLIENTI ===== -->
@@ -1572,6 +1644,349 @@
         alert('⚠️ Errore: ' + error.message);
       }
     }
+
+    // =====================================================================
+    // ===== CONFRONTO PERIODI =============================================
+    // =====================================================================
+    // Lo stesso periodo in anni diversi: dicembre–gennaio 2024/25 contro
+    // 2025/26, oppure giovedì e venerdì di giugno–agosto in tre estati.
+    //
+    // Il server restituisce gli incassi giorno per giorno (getIncassiPeriodi,
+    // una lettura per foglio mese); filtro per giorno della settimana, somme,
+    // medie e percentuali si fanno qui. I periodi già letti restano in memoria,
+    // così cambiare i giorni o la misura non richiede altre chiamate — tranne
+    // il periodo che contiene oggi, che può ancora cambiare.
+
+    const MESI_BREVI = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+    const MESI_CONFRONTO = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+    const GIORNI_BREVI = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];   // indice = getDay()
+    const ORDINE_GIORNI = [1, 2, 3, 4, 5, 6, 0];
+    // Validati sulla pergamena #f4e4c1: tutti >= 3:1, coppie vicine distinguibili
+    // anche con daltonismo. Per questo gli anni si fermano a quattro.
+    const COLORI_CONFRONTO = ['#256abf', '#c4521f', '#15875e', '#7a4fb8'];
+    const MAX_ANNI_CONFRONTO = 4;
+    const PRIMO_ANNO_CONFRONTO = 2023;
+
+    const cacheConfronto = new Map();
+    let confrontoCorrente = null;
+
+    function dataIsoConfronto(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    /**
+     * Il periodo che parte a `meseDa` dell'anno `anno` (mesi 1-12). Se `meseA`
+     * viene prima di `meseDa` il periodo finisce l'anno dopo: dic→gen.
+     */
+    function periodoConfronto(anno, meseDa, meseA) {
+      const annoFine = meseA < meseDa ? anno + 1 : anno;
+      const ultimoGiorno = new Date(annoFine, meseA, 0).getDate();
+      const p2 = n => String(n).padStart(2, '0');
+      let etichetta;
+      if (annoFine !== anno) etichetta = `${MESI_BREVI[meseDa - 1]} ${anno} – ${MESI_BREVI[meseA - 1]} ${annoFine}`;
+      else if (meseDa === meseA) etichetta = `${MESI_BREVI[meseDa - 1]} ${anno}`;
+      else etichetta = `${MESI_BREVI[meseDa - 1]}–${MESI_BREVI[meseA - 1]} ${anno}`;
+      const mesi = [];
+      let a = anno, m = meseDa;
+      while (true) {
+        mesi.push({ anno: a, mese: m });
+        if (a === annoFine && m === meseA) break;
+        if (++m > 12) { m = 1; a++; }
+      }
+      return {
+        anno: anno, etichetta: etichetta, mesi: mesi,
+        da: `${anno}-${p2(meseDa)}-01`, a: `${annoFine}-${p2(meseA)}-${p2(ultimoGiorno)}`
+      };
+    }
+
+    /** Variazione percentuale; null se la base è zero e non c'è niente da confrontare. */
+    function variazionePct(base, valore) {
+      return base > 0 ? (valore - base) / base * 100 : null;
+    }
+
+    /**
+     * Somme e medie di ogni periodo, tenendo solo i giorni della settimana
+     * scelti, e la variazione rispetto al periodo prima (quindi all'anno prima:
+     * i periodi arrivano in ordine cronologico). `oggi` si passa dalle prove.
+     */
+    function aggregaConfronto(periodi, risposte, giorniScelti, oggi) {
+      const oggiStr = dataIsoConfronto(oggi || new Date());
+      const riassunto = lista => {
+        const totale = lista.reduce((s, g) => s + (Number(g.incasso) || 0), 0);
+        return { totale: totale, giorni: lista.length, media: lista.length ? totale / lista.length : 0 };
+      };
+      const righe = periodi.map((p, i) => {
+        const r = risposte[i] || {};
+        const giorni = (r.giorni || []).filter(g => giorniScelti.indexOf(g.giornoSettimana) !== -1);
+        const perMese = p.mesi.map(m => {
+          const prefisso = `${m.anno}-${String(m.mese).padStart(2, '0')}-`;
+          return riassunto(giorni.filter(g => g.data.indexOf(prefisso) === 0));
+        });
+        const perGiorno = {};
+        giorniScelti.forEach(d => { perGiorno[d] = riassunto(giorni.filter(g => g.giornoSettimana === d)); });
+        return Object.assign(riassunto(giorni), {
+          etichetta: p.etichetta,
+          perMese: perMese,
+          perGiorno: perGiorno,
+          inCorso: p.da <= oggiStr && oggiStr <= p.a,
+          futuro: p.da > oggiStr,
+          mesiMancanti: r.mesiMancanti || [],
+          errore: r.errore || ''
+        });
+      });
+      righe.forEach((x, i) => {
+        // Un periodo non ancora iniziato non è "-100%": non c'è ancora niente.
+        const prec = !x.futuro && righe[i - 1];
+        x.deltaTotale = prec ? variazionePct(prec.totale, x.totale) : null;
+        x.deltaMedia = prec ? variazionePct(prec.media, x.media) : null;
+      });
+      return righe;
+    }
+
+    /** Tetto "tondo" dell'asse: 1, 2, 2,5 o 5 per una potenza di dieci. */
+    function tettoAsse(max) {
+      if (!(max > 0)) return 0;
+      const p = Math.pow(10, Math.floor(Math.log10(max)));
+      return [1, 2, 2.5, 5, 10].find(m => m * p >= max) * p;
+    }
+
+    function euroIntero(v) {
+      return Math.round(v).toLocaleString('it-IT') + ' €';
+    }
+
+    function euroAsse(v) {
+      return v >= 1000
+        ? (v / 1000).toLocaleString('it-IT', { maximumFractionDigits: 1 }) + 'k €'
+        : Math.round(v) + ' €';
+    }
+
+    /** Freccia e segno oltre al colore: la direzione non si affida al solo verde/rosso. */
+    function deltaHtml(d) {
+      if (d === null) return '<span class="cf-pari">—</span>';
+      if (Math.abs(d) < 0.05) return '<span class="cf-delta cf-pari">= 0,0 %</span>';
+      const testo = (d > 0 ? '+' : '') + d.toFixed(1).replace('.', ',') + ' %';
+      return d > 0
+        ? `<span class="cf-delta cf-su">▲ ${testo}</span>`
+        : `<span class="cf-delta cf-giu">▼ ${testo}</span>`;
+    }
+
+    function inizializzaConfronto() {
+      if (!document.getElementById('cfMeseDa')) return;
+      const oggi = new Date();
+      const opzioni = MESI_CONFRONTO.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+      ['cfMeseDa', 'cfMeseA'].forEach(id => {
+        const s = document.getElementById(id);
+        s.innerHTML = opzioni;
+        s.value = String(oggi.getMonth() + 1);
+      });
+      document.getElementById('cfGiorni').innerHTML = ORDINE_GIORNI.map(d =>
+        `<label class="cf-scelta"><input type="checkbox" value="${d}" checked> ${GIORNI_BREVI[d]}</label>`).join('');
+      aggiornaAnniConfronto([oggi.getFullYear() - 1, oggi.getFullYear()]);
+    }
+
+    /** Ridisegna le caselle degli anni con l'etichetta del periodo scelto, conservando le spunte. */
+    function aggiornaAnniConfronto(preselezione) {
+      const box = document.getElementById('cfAnni');
+      const scelti = Array.isArray(preselezione)
+        ? preselezione
+        : Array.from(box.querySelectorAll('input:checked')).map(i => +i.value);
+      const meseDa = +document.getElementById('cfMeseDa').value;
+      const meseA = +document.getElementById('cfMeseA').value;
+      let html = '';
+      for (let a = PRIMO_ANNO_CONFRONTO; a <= new Date().getFullYear(); a++) {
+        html += `<label class="cf-scelta"><input type="checkbox" value="${a}" ${scelti.indexOf(a) !== -1 ? 'checked' : ''}
+          onchange="limitaAnniConfronto(this)"> ${periodoConfronto(a, meseDa, meseA).etichetta}</label>`;
+      }
+      box.innerHTML = html;
+    }
+
+    function limitaAnniConfronto(casella) {
+      if (document.querySelectorAll('#cfAnni input:checked').length > MAX_ANNI_CONFRONTO) {
+        casella.checked = false;
+        alert(`⚠️ Al massimo ${MAX_ANNI_CONFRONTO} anni per confronto: oltre, il grafico non si legge più.`);
+      }
+    }
+
+    async function confrontaPeriodi() {
+      const meseDa = +document.getElementById('cfMeseDa').value;
+      const meseA = +document.getElementById('cfMeseA').value;
+      const anni = Array.from(document.querySelectorAll('#cfAnni input:checked')).map(i => +i.value).sort((a, b) => a - b);
+      const giorniScelti = Array.from(document.querySelectorAll('#cfGiorni input:checked')).map(i => +i.value);
+      const box = document.getElementById('risultatoConfronto');
+
+      if (!anni.length) { alert('⚠️ Scegli almeno un anno'); return; }
+      if (!giorniScelti.length) { alert('⚠️ Scegli almeno un giorno della settimana'); return; }
+
+      const periodi = anni.map(a => periodoConfronto(a, meseDa, meseA));
+      const oggiStr = dataIsoConfronto(new Date());
+      const chiave = p => p.da + '|' + p.a;
+      const daChiedere = periodi.filter(p =>
+        !cacheConfronto.has(chiave(p)) || (p.da <= oggiStr && oggiStr <= p.a));
+
+      try {
+        if (daChiedere.length) {
+          showLoading('Confronto i periodi...');
+          const r = await callAPI('getIncassiPeriodi', { periodi: daChiedere.map(p => ({ da: p.da, a: p.a })) });
+          hideLoading();
+          // L'errore si guarda per primo: un elenco vuoto è comunque "truthy".
+          if (r.errore || !Array.isArray(r.periodi)) {
+            box.innerHTML = `<div class="message error"><svg class="ico"><use href="#i-hazard-sign"></use></svg> ${esc(r.errore || 'Risposta del server non valida')}</div>`;
+            return;
+          }
+          daChiedere.forEach((p, i) => cacheConfronto.set(chiave(p), r.periodi[i]));
+        }
+        const risposte = periodi.map(p => cacheConfronto.get(chiave(p)));
+        confrontoCorrente = { periodi: periodi, giorniScelti: giorniScelti, righe: aggregaConfronto(periodi, risposte, giorniScelti) };
+        renderConfronto();
+      } catch (error) {
+        hideLoading();
+        box.innerHTML = `<div class="message error"><svg class="ico"><use href="#i-hazard-sign"></use></svg> ${esc(error.message)}</div>`;
+      }
+    }
+
+    function renderConfronto() {
+      if (!confrontoCorrente) return;
+      const box = document.getElementById('risultatoConfronto');
+      const { righe, periodi, giorniScelti } = confrontoCorrente;
+      const scelta = document.querySelector('input[name="cfMetrica"]:checked');
+      const metrica = scelta ? scelta.value : 'totale';
+      const valoreDi = x => metrica === 'media' ? x.media : x.totale;
+      const formato = metrica === 'media' ? euro : euroIntero;
+      const nomeMetrica = metrica === 'media' ? 'media per giorno aperto' : 'incasso totale';
+
+      const giorniOrdinati = ORDINE_GIORNI.filter(d => giorniScelti.indexOf(d) !== -1);
+      const descrGiorni = giorniOrdinati.length === 7
+        ? 'tutti i giorni'
+        : giorniOrdinati.map(d => GIORNI_BREVI[d].toLowerCase()).join(', ');
+
+      const righeTabella = righe.map((x, i) => {
+        // "Incompleto" sta sulla riga e non solo nella nota in fondo: un mese
+        // mancante nel foglio gonfia la percentuale dell'anno dopo, e chi legge
+        // la tabella deve accorgersene lì.
+        const stato = x.errore ? ` <em>(${esc(x.errore)})</em>`
+          : x.futuro ? ' <em>(non ancora iniziato)</em>'
+          : x.mesiMancanti.length ? ' <em>(incompleto)</em>'
+          : x.inCorso ? ' <em>(in corso)</em>' : '';
+        return `
+          <tr>
+            <td style="white-space:nowrap;"><i class="cr-campione" style="background:${COLORI_CONFRONTO[i]};"></i> <strong>${esc(x.etichetta)}</strong>${stato}</td>
+            <td class="importo">${x.giorni}</td>
+            <td class="importo">${euroIntero(x.totale)}</td>
+            <td class="importo">${i ? deltaHtml(x.deltaTotale) : ''}</td>
+            <td class="importo">${x.giorni ? euro(x.media) : '—'}</td>
+            <td class="importo">${i ? deltaHtml(x.deltaMedia) : ''}</td>
+          </tr>`;
+      }).join('');
+
+      // Un grafico per ogni scomposizione che ha senso: per mese se il periodo
+      // ne ha più d'uno, per giorno della settimana se ne sono scelti almeno due.
+      const grafici = [];
+      if (periodi[0].mesi.length > 1) {
+        grafici.push(graficoConfronto(`Per mese · ${nomeMetrica}`,
+          periodi[0].mesi.map(m => MESI_BREVI[m.mese - 1]), righe,
+          (x, g) => valoreDi(x.perMese[g]), formato));
+      }
+      if (giorniOrdinati.length >= 2) {
+        grafici.push(graficoConfronto(`Per giorno della settimana · ${nomeMetrica}`,
+          giorniOrdinati.map(d => GIORNI_BREVI[d]), righe,
+          (x, g) => valoreDi(x.perGiorno[giorniOrdinati[g]]), formato));
+      }
+      if (!grafici.length) {
+        grafici.push(graficoConfronto(`Periodo intero · ${nomeMetrica}`, ['Periodo'], righe, x => valoreDi(x), formato));
+      }
+
+      const note = [];
+      righe.forEach(x => {
+        if (x.mesiMancanti.length) {
+          note.push(`<strong>${esc(x.etichetta)}</strong>: nel foglio mancano ${esc(x.mesiMancanti.join(', '))}, quei giorni non sono contati.`);
+        }
+      });
+      if (righe.some(x => x.inCorso)) {
+        note.push('Un periodo è ancora <strong>in corso</strong>: finché non si chiude il totale non è alla pari con gli anni prima, la media per giorno aperto regge meglio.');
+      }
+      note.push('Giorni aperti = giorni con un Report Prodotti registrato. La percentuale è rispetto alla riga sopra, cioè all\'anno prima; «—» quando quell\'anno non ha incassi.');
+
+      box.innerHTML = `
+        <div class="section">
+          <div class="section-title">Risultato del confronto</div>
+          <div class="diag-nota" style="margin-bottom:10px;">Incasso (Report Prodotti) · ${esc(descrGiorni)}</div>
+          <div class="diag-wrap"><div class="diag-scroll">
+            <table class="diag-tabella">
+              <thead><tr>
+                <th>Periodo</th><th>Giorni aperti</th><th>Incasso</th><th>vs anno prima</th>
+                <th>Media per giorno</th><th>vs anno prima</th>
+              </tr></thead>
+              <tbody>${righeTabella}</tbody>
+            </table>
+          </div></div>
+          <div class="cf-metrica">
+            <label class="cf-scelta"><input type="radio" name="cfMetrica" value="totale" ${metrica === 'totale' ? 'checked' : ''} onchange="renderConfronto()"> Incasso totale</label>
+            <label class="cf-scelta"><input type="radio" name="cfMetrica" value="media" ${metrica === 'media' ? 'checked' : ''} onchange="renderConfronto()"> Media per giorno aperto</label>
+          </div>
+          ${grafici.join('')}
+          <div class="cr-nota">${note.join(' ')}</div>
+        </div>`;
+
+      box.querySelectorAll('.cf-grafico-box').forEach(attivaTooltipConfronto);
+    }
+
+    /** Colonne affiancate: un gruppo per mese o giorno, una colonna per anno. */
+    function graficoConfronto(titolo, gruppi, righe, valore, formato) {
+      let max = 0;
+      righe.forEach(x => gruppi.forEach((_, g) => { max = Math.max(max, valore(x, g) || 0); }));
+      const tetto = tettoAsse(max);
+      const colonne = gruppi.map((et, g) => `
+        <div class="cf-gruppo-col">${righe.map((x, s) => {
+          const v = valore(x, g) || 0;
+          const tip = `${et} · ${x.etichetta}: ${formato(v)}`;
+          const altezza = v > 0 ? `max(2px, ${tetto ? v / tetto * 100 : 0}%)` : '0';
+          return `<div class="cf-barra-hit" tabindex="0" data-tip="${esc(tip)}" aria-label="${esc(tip)}"><div class="cf-barra" style="height:${altezza}; background:${COLORI_CONFRONTO[s]};"></div></div>`;
+        }).join('')}</div>`).join('');
+      // Con un anno solo la legenda ripeterebbe il titolo: la tabella lo nomina già.
+      const legenda = righe.length > 1
+        ? `<div class="cr-legenda">${righe.map((x, s) =>
+            `<span><i class="cr-campione" style="background:${COLORI_CONFRONTO[s]};"></i> ${esc(x.etichetta)}</span>`).join('')}</div>`
+        : '';
+      return `
+        <div class="cr-riquadro cf-grafico-box">
+          <div class="cf-titolo-grafico">${esc(titolo)}</div>
+          ${legenda}
+          <div class="cf-piano">
+            <div class="cf-scala"><span>${euroAsse(tetto)}</span><span>${euroAsse(tetto / 2)}</span><span>0 €</span></div>
+            <div class="cf-area">
+              <div class="cf-griglia"><i></i><i></i><i></i></div>
+              <div class="cf-gruppi">${colonne}</div>
+            </div>
+            <div class="cf-assi">${gruppi.map(et => `<span>${esc(et)}</span>`).join('')}</div>
+          </div>
+          <div class="cr-tip" hidden></div>
+        </div>`;
+    }
+
+    function attivaTooltipConfronto(riquadro) {
+      const tipBox = riquadro.querySelector('.cr-tip');
+      const mostra = hit => {
+        tipBox.textContent = hit.dataset.tip;
+        tipBox.hidden = false;
+        const r = riquadro.getBoundingClientRect();
+        const c = hit.getBoundingClientRect();
+        const cima = hit.querySelector('.cf-barra').getBoundingClientRect().top;
+        const meta = tipBox.offsetWidth / 2;
+        tipBox.style.left = Math.max(meta + 4, Math.min(r.width - meta - 4, c.left - r.left + c.width / 2)) + 'px';
+        tipBox.style.top = (cima - r.top - 6) + 'px';
+      };
+      const nascondi = () => { tipBox.hidden = true; };
+      riquadro.querySelectorAll('.cf-barra-hit').forEach(hit => {
+        hit.addEventListener('mouseenter', () => mostra(hit));
+        hit.addEventListener('focus', () => mostra(hit));
+        hit.addEventListener('click', () => mostra(hit));
+        hit.addEventListener('mouseleave', nascondi);
+        hit.addEventListener('blur', nascondi);
+      });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inizializzaConfronto);
+    else inizializzaConfronto();
     
     // FUNZIONI MODAL MODIFICA CHIUSURA
     let dataChiusuraCorrente = null;
