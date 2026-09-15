@@ -633,6 +633,7 @@
       font-size: 0.85em; display: none;
     }
     .cliente-collegato.active { display: block; }
+    .nota-campo { font-size: 0.8em; color: #5a4632; margin-top: 4px; }
 
     .prenotazione-azioni {
       display: flex;
@@ -1514,14 +1515,26 @@
           <input type="time" id="inputOrarioArrivo" placeholder="es: 19:30">
         </div>
         
+        <!-- Nome e cognome separati (15/09/2026): la scheda che nasce in rubrica
+             li prende come sono scritti, invece di indovinarli da un campo unico.
+             Ne basta uno dei due. -->
         <div class="form-group" id="campoCliente">
-          <label id="labelCliente">Cliente *</label>
           <div class="autocomplete-wrap">
-            <input type="text" id="inputCliente" placeholder="Nome cliente o gruppo"
-                   autocomplete="off" required
-                   oninput="cercaInRubrica()" onkeydown="navigaAutocomplete(event)">
+            <div class="form-row">
+              <div>
+                <label for="inputNome">Nome</label>
+                <input type="text" id="inputNome" placeholder="Mario" autocomplete="off"
+                       oninput="cercaInRubrica()" onkeydown="navigaAutocomplete(event)">
+              </div>
+              <div>
+                <label for="inputCognome">Cognome</label>
+                <input type="text" id="inputCognome" placeholder="Rossi" autocomplete="off"
+                       oninput="cercaInRubrica()" onkeydown="navigaAutocomplete(event)">
+              </div>
+            </div>
             <div class="autocomplete-lista" id="autocompleteLista"></div>
           </div>
+          <div class="nota-campo">Almeno uno dei due: per un gruppo basta il nome.</div>
           <div class="cliente-collegato" id="clienteCollegato"></div>
           <input type="hidden" id="inputClienteId">
         </div>
@@ -2510,7 +2523,8 @@
       document.getElementById('modalTitolo').textContent = '📝 Nuova Prenotazione';
       document.getElementById('inputData').value = giornoSelezionato;
       document.getElementById('inputOra').value = '19:00';
-      document.getElementById('inputCliente').value = '';
+      document.getElementById('inputNome').value = '';
+      document.getElementById('inputCognome').value = '';
       document.getElementById('inputTelefono').value = '';
       document.getElementById('inputEmail').value = '';
       document.getElementById('inputPersone').value = '2';
@@ -2549,7 +2563,9 @@
       document.getElementById('modalTitolo').textContent = '✏️ Modifica Prenotazione';
       document.getElementById('inputData').value = pren.data;
       document.getElementById('inputOra').value = pren.ora || '19:00';
-      document.getElementById('inputCliente').value = pren.cliente;
+      const nc = nomeCognomeDi(pren);
+      document.getElementById('inputNome').value = nc.nome;
+      document.getElementById('inputCognome').value = nc.cognome;
       document.getElementById('inputTelefono').value = pren.telefono || '';
       document.getElementById('inputEmail').value = pren.email || '';
       document.getElementById('inputPersone').value = pren.persone || 2;
@@ -2625,17 +2641,38 @@
     // =====================================================================
     // ===== RUBRICA: RICONOSCIMENTO CLIENTE ===============================
     // =====================================================================
-    // Scrivendo il nome nel campo Cliente si cerca in rubrica. Scegliendo una
-    // voce si collega la prenotazione a quella scheda (clienteId) e si
-    // riempiono telefono ed email. Se non si sceglie nulla la prenotazione si
-    // salva come sempre: il collegamento lo crea poi il backend dai recapiti.
+    // Scrivendo nome o cognome si cerca in rubrica. Scegliendo una voce si
+    // collega la prenotazione a quella scheda (clienteId) e si riempiono
+    // telefono ed email. Se non si sceglie nulla la prenotazione si salva come
+    // sempre: il collegamento lo crea poi il backend dai recapiti.
 
     let timerRicerca = null;
     let risultatiRubrica = [];
     let voceEvidenziata = -1;
 
+    /** "Nome Cognome" come finisce nella colonna Cliente del foglio. */
+    function testoCliente() {
+      return [
+        document.getElementById('inputNome').value.trim(),
+        document.getElementById('inputCognome').value.trim()
+      ].filter(Boolean).join(' ');
+    }
+
+    /**
+     * Nome e cognome da mostrare nel form. Le prenotazioni salvate prima del
+     * 15/09/2026 hanno solo il campo libero Cliente: si spezza come faceva il
+     * server (prima parola = nome), e l'operatore corregge se serve.
+     */
+    function nomeCognomeDi(pren) {
+      if (pren.nome || pren.cognome) {
+        return { nome: pren.nome || '', cognome: pren.cognome || '' };
+      }
+      const parti = String(pren.cliente || '').trim().split(/\s+/).filter(Boolean);
+      return { nome: parti[0] || '', cognome: parti.slice(1).join(' ') };
+    }
+
     function cercaInRubrica() {
-      const q = document.getElementById('inputCliente').value.trim();
+      const q = testoCliente();
 
       // Cambiare il nome a mano scollega: la scheda collegata deve sempre
       // corrispondere a quello che c'è scritto nel campo.
@@ -2650,7 +2687,7 @@
           const r = await callAPI('cercaClienti', { query: q, limite: 8 });
           if (r.errore || !r.clienti || !r.clienti.length) return chiudiAutocomplete();
           // Nel frattempo può aver continuato a scrivere: risultati vecchi via.
-          if (document.getElementById('inputCliente').value.trim() !== q) return;
+          if (testoCliente() !== q) return;
           risultatiRubrica = r.clienti;
           renderAutocomplete();
         } catch (e) {
@@ -2704,7 +2741,8 @@
       const c = risultatiRubrica[indice];
       if (!c) return;
 
-      document.getElementById('inputCliente').value = c.nomeCompleto;
+      document.getElementById('inputNome').value = c.nome || '';
+      document.getElementById('inputCognome').value = c.cognome || '';
       document.getElementById('inputClienteId').value = c.id;
       // I recapiti già noti non si sovrascrivono con quelli in rubrica se
       // l'operatore ne ha appena scritto uno diverso apposta.
@@ -3096,7 +3134,8 @@
       document.getElementById('modalTitolo').textContent = '➕ Nuova Prenotazione Evento';
       document.getElementById('inputData').value = eventoCorrente.data;
       document.getElementById('inputOra').value = '';
-      document.getElementById('inputCliente').value = '';
+      document.getElementById('inputNome').value = '';
+      document.getElementById('inputCognome').value = '';
       document.getElementById('inputTelefono').value = '';
       document.getElementById('inputEmail').value = '';
       document.getElementById('inputPersone').value = '2';
@@ -3136,7 +3175,9 @@
       document.getElementById('modalTitolo').textContent = '✏️ Modifica Prenotazione';
       document.getElementById('inputData').value = pren.data;
       document.getElementById('inputOra').value = pren.ora || '';
-      document.getElementById('inputCliente').value = pren.cliente;
+      const nc = nomeCognomeDi(pren);
+      document.getElementById('inputNome').value = nc.nome;
+      document.getElementById('inputCognome').value = nc.cognome;
       document.getElementById('inputTelefono').value = pren.telefono || '';
       document.getElementById('inputEmail').value = pren.email || '';
       document.getElementById('inputPersone').value = pren.persone || '2';
@@ -3198,7 +3239,11 @@
         const prenotazione = {
           data: document.getElementById('inputData').value,
           ora: document.getElementById('inputOra').value,
-          cliente: document.getElementById('inputCliente').value,
+          nome: document.getElementById('inputNome').value.trim(),
+          cognome: document.getElementById('inputCognome').value.trim(),
+          // Composto anche qui: se il backend in produzione fosse ancora quello
+          // di prima, legge questo e la prenotazione si salva comunque.
+          cliente: testoCliente(),
           telefono: document.getElementById('inputTelefono').value,
           email: document.getElementById('inputEmail').value,
           persone: parseInt(document.getElementById('inputPersone').value) || 0,
@@ -3214,7 +3259,7 @@
         }
 
         if (!prenotazione.data || !prenotazione.cliente) {
-          alert('⚠️ Data e Cliente sono obbligatori!');
+          alert('⚠️ Servono la data e almeno il nome o il cognome del cliente!');
           return;
         }
 
