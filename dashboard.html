@@ -839,8 +839,11 @@
       </div>
       <div id="risultatoStatistiche"></div>
 
-      <!-- Confronto dello stesso periodo in anni diversi (15/09/2026) -->
-      <div class="section">
+      <!-- Confronto dello stesso periodo in anni diversi (15/09/2026).
+           SPENTO: nel foglio gli incassi partono da novembre 2025 e non c'è
+           ancora nulla da confrontare. Si riaccende da CONFRONTO_PERIODI_ATTIVO
+           nello script, quando lo storico degli anni prima sarà importato. -->
+      <div class="section" id="sezioneConfronto" hidden>
         <div class="section-title">Confronto periodi</div>
         <div class="diag-nota">
           Lo stesso periodo in anni diversi, con la differenza in percentuale rispetto all'anno prima.
@@ -907,9 +910,6 @@
         </div>
         <div class="rub-contatori" id="rubContatori"></div>
         <div class="rub-azioni">
-          <button class="btn btn-primary" onclick="anteprimaImportRubrica()">
-            <svg class="ico"><use href="#i-cycle"></use></svg> Importa clienti dallo storico prenotazioni
-          </button>
           <a href="qr-card.html" target="_blank" rel="noopener" class="btn btn-primary"
              style="text-decoration:none; display:inline-block;">
             <svg class="ico"><use href="#i-ticket"></use></svg> Cartoncini QR iscrizione
@@ -1667,6 +1667,12 @@
     const MAX_ANNI_CONFRONTO = 4;
     const PRIMO_ANNO_CONFRONTO = 2023;
 
+    // Spento il 15/09/2026 per decisione dell'utente: nel foglio gli incassi
+    // partono da novembre 2025, e un confronto fra anni oggi mostrerebbe solo
+    // righe vuote. Tutto il resto è pronto e provato (MANUALE §1.5): per
+    // riaccenderlo basta true qui, dopo aver importato lo storico nei fogli mese.
+    const CONFRONTO_PERIODI_ATTIVO = false;
+
     const cacheConfronto = new Map();
     let confrontoCorrente = null;
 
@@ -1771,7 +1777,8 @@
     }
 
     function inizializzaConfronto() {
-      if (!document.getElementById('cfMeseDa')) return;
+      if (!CONFRONTO_PERIODI_ATTIVO || !document.getElementById('cfMeseDa')) return;
+      document.getElementById('sezioneConfronto').hidden = false;
       const oggi = new Date();
       const opzioni = MESI_CONFRONTO.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
       ['cfMeseDa', 'cfMeseA'].forEach(id => {
@@ -2408,7 +2415,9 @@
       const note = [];
       if (cr.importati) {
         const d = cr.dataImport;
-        note.push(`Non compaiono nel grafico i <strong>${cr.importati}</strong> contatti importati dallo storico` +
+        note.push((cr.importati === 1
+            ? 'Non compare nel grafico <strong>1</strong> contatto importato dallo storico'
+            : `Non compaiono nel grafico i <strong>${cr.importati}</strong> contatti importati dallo storico`) +
           (d ? ` il ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}` : '') +
           ': sono il punto di partenza della rubrica, non crescita.');
       }
@@ -2505,8 +2514,8 @@
       const box = document.getElementById('risultatoRubrica');
       if (!lista.length) {
         box.innerHTML = `<div class="section"><div class="diag-nota">
-          Nessun contatto corrisponde ai filtri. Se la rubrica è vuota, usa
-          <strong>Importa clienti dallo storico prenotazioni</strong>.
+          Nessun contatto corrisponde ai filtri. I clienti entrano in rubrica dalle
+          prenotazioni con un recapito, dalla landing del QR o col bottone <strong>Nuovo</strong>.
         </div></div>`;
         return;
       }
@@ -2689,39 +2698,6 @@
 
         alert(`✅ Esportati ${r.righe} contatti in ${r.nomeFile}` +
           (soloConsenso ? '\n\nPronto per l\'import in Mailchimp.' : ''));
-      } catch (error) {
-        hideLoading();
-        alert('⚠️ ' + error.message);
-      }
-    }
-
-    // ----- Import dallo storico -----
-
-    async function anteprimaImportRubrica() {
-      showLoading('Analizzo lo storico...');
-      try {
-        const r = await callAPI('importaRubricaDaPrenotazioni', { dryRun: true });
-        hideLoading();
-        if (r.errore) return alert('⚠️ ' + r.errore);
-
-        const conferma = confirm(
-          `ANTEPRIMA — non è stato scritto nulla.\n\n` +
-          `• Nuovi clienti da creare: ${r.nuoviClienti}\n` +
-          `• Di questi, con email e quindi esportabili: ${r.conNewsletter}\n` +
-          `• Prenotazioni da collegare: ${r.prenotazioniCollegate}\n` +
-          `• Saltati (nessun recapito): ${r.saltati}\n\n` +
-          `I clienti importati entrano con il CONSENSO NEWSLETTER ATTIVO e finiranno ` +
-          `nell'export per Mailchimp. Il registro Consensi annota che il consenso è ` +
-          `stato attribuito qui, non raccolto dall'interessato.\n\n` +
-          `Procedo con l'import?`);
-        if (!conferma) return;
-
-        showLoading('Importo...');
-        const esito = await callAPI('importaRubricaDaPrenotazioni', { dryRun: false });
-        hideLoading();
-        if (esito.errore) return alert('⚠️ ' + esito.errore);
-        alert('✅ ' + esito.messaggio);
-        await caricaRubrica();
       } catch (error) {
         hideLoading();
         alert('⚠️ ' + error.message);
