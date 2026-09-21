@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Pagina interna: fuori dai motori di ricerca. Il robots.txt non e'
+       utilizzabile qui, servirebbe alla radice del dominio. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Segnalazioni Vini</title>
+  <meta name="theme-color" content="#6b4423">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* L'attributo `hidden` da solo non basta: vale come `display: none` dal
+       foglio del browser, e qualunque regola di classe che dichiari un display
+       — qui `.btn { display: inline-flex }` — gli passa davanti. Senza questa
+       riga il bottone "Annulla" restava a vista anche fuori dalla modifica. */
+    [hidden] { display: none !important; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(160deg, #6b4423 0%, #4a2c18 100%);
+      min-height: 100vh;
+      padding: 16px;
+      color: #2c1810;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .header h1 {
+      font-family: 'Pirata One', cursive; font-size: 2em; color: #f4e4c1;
+      display: flex; align-items: center;
+    }
+    .btn-home {
+      background: rgba(244,228,193,0.15); color: #f4e4c1;
+      padding: 8px 16px; border: 2px solid rgba(244,228,193,0.45); border-radius: 8px;
+      text-decoration: none; font-family: 'Pirata One', cursive; font-size: 1.1em;
+      display: inline-flex; align-items: center;
+    }
+
+    /* Icone: sprite SVG inline. `<use href="esterno.svg#id">` non funziona su
+       Safari, quindi i simboli stanno dentro la pagina (MANUALE §9). */
+    .ico {
+      width: 1.3em; height: 1.3em; fill: currentColor;
+      vertical-align: -0.26em; flex-shrink: 0; margin-right: 0.3em;
+    }
+    .ico-sola { margin-right: 0; }
+    .chip .ico, .badge .ico { width: 1.05em; height: 1.05em; vertical-align: -0.16em; }
+
+    .section {
+      background: rgba(244,228,193,0.94); padding: 16px; border-radius: 10px;
+      border: 2px dashed #6b4423; margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: 'Pirata One', cursive; font-size: 1.5em; color: #2c1810;
+      margin-bottom: 12px; padding-bottom: 8px; border-bottom: 3px solid #8b4513;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .nota {
+      background: rgba(255,255,255,0.6); border-left: 5px solid #6b4423;
+      padding: 10px 14px; margin-bottom: 14px; font-size: 0.92em; line-height: 1.45;
+    }
+
+    label { display: block; font-weight: 700; margin-bottom: 6px; }
+    input[type="text"], input[type="search"], select, textarea {
+      width: 100%; padding: 10px; border: 2px solid #8b4513; border-radius: 8px;
+      /* I controlli di form NON ereditano font-family dal body */
+      font-family: 'Georgia', serif; font-size: 1em; background: #fff; color: #2c1810;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+
+    .scelte { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+      background: #f4e4c1; border: 2px solid #6b4423; border-radius: 20px;
+      padding: 6px 14px; font-size: 0.92em; font-weight: 700;
+    }
+    .chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .chip:has(input:checked) { background: #6b4423; color: #f4e4c1; }
+    .chip:focus-within { outline: 2px solid #2c1810; outline-offset: 2px; }
+
+    .riga-campi { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    @media (max-width: 640px) { .riga-campi { grid-template-columns: 1fr; } }
+
+    .btn {
+      padding: 10px 20px; border: 2px solid #3d1f0f; border-radius: 8px;
+      font-family: 'Pirata One', cursive; font-size: 1.15em; cursor: pointer;
+      display: inline-flex; align-items: center; box-shadow: 0 3px 0 #3d1f0f;
+    }
+    .btn-primario { background: linear-gradient(145deg, #2e7d32 0%, #1b5e20 100%); color: #f4e4c1; }
+    .btn-secondario { background: linear-gradient(145deg, #8b6644 0%, #6b4423 100%); color: #f4e4c1; }
+    .btn-mini {
+      padding: 5px 9px; border: none; border-radius: 6px; cursor: pointer;
+      background: #8b6644; color: #f4e4c1; margin-left: 4px;
+    }
+    .btn-mini.pericolo { background: #a32d24; }
+    .azioni { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+
+    .gruppo { margin-bottom: 18px; }
+    .gruppo-titolo {
+      font-weight: 700; color: #2c1810; border-bottom: 2px solid #b89f74;
+      padding-bottom: 4px; margin-bottom: 8px; display: flex; justify-content: space-between;
+    }
+    .voce {
+      display: flex; gap: 10px; align-items: flex-start;
+      background: #fff; border: 1px solid #b89f74; border-radius: 8px;
+      padding: 10px 12px; margin-bottom: 8px;
+    }
+    .voce.chiusa { background: #ece4d2; color: #5a4632; }
+    .voce.chiusa .voce-testo { text-decoration: line-through; }
+    .voce-corpo { flex: 1; min-width: 0; }
+    .voce-testo { line-height: 1.4; overflow-wrap: anywhere; }
+    .voce-sotto { font-size: 0.8em; color: #5a4632; margin-top: 4px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px; border-radius: 12px;
+      padding: 2px 9px; font-size: 0.78em; font-weight: 700; white-space: nowrap;
+    }
+    .badge-vino { background: #f3d9d9; color: #7a1f1f; border: 1px solid #7a1f1f; }
+    .badge-calice { background: #e2ecf7; color: #1b4a7a; border: 1px solid #1b4a7a; }
+    .badge-assortimento { background: #e3f0e3; color: #1e6b34; border: 1px solid #1e6b34; }
+    .badge-altro { background: #ece4d2; color: #5a4632; border: 1px solid #5a4632; }
+
+    .messaggio { padding: 12px; border-radius: 8px; font-weight: 700; text-align: center; margin-top: 12px; }
+    .messaggio.errore { background: #f8d7da; color: #7a1414; border: 2px solid #7a1414; }
+    .messaggio.ok { background: #d4edda; color: #155724; border: 2px solid #155724; }
+    .vuoto { color: #5a4632; font-style: italic; }
+
+    .velo {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none;
+      justify-content: center; align-items: center; z-index: 999; flex-direction: column;
+    }
+    .velo.attivo { display: flex; }
+    .girella {
+      width: 54px; height: 54px; border: 5px solid #e8b873;
+      border-top-color: transparent; border-radius: 50%; animation: gira 1s linear infinite;
+    }
+    @keyframes gira { to { transform: rotate(360deg); } }
+    .velo-testo { color: #e8b873; font-family: 'Pirata One', cursive; font-size: 1.4em; margin-top: 16px; }
+
+    /* Attribuzione obbligatoria: game-icons è CC BY 3.0, Font Awesome CC BY 4.0.
+       Va in fondo a ogni pagina che usa quelle icone (MANUALE §9). */
+    .crediti-icone {
+      text-align: center; color: rgba(244,228,193,0.65); font-size: 0.78em;
+      margin: 18px auto 6px; max-width: 900px;
+    }
+    .crediti-icone a { color: rgba(244,228,193,0.85); }
+  </style>
+</head>
+<body>
+
+<!-- ATTENZIONE: i-fa-circle-check e i-cycle sono scelte a runtime nel codice
+     (#${...}), quindi NON compaiono come riferimento letterale: uno spazzino
+     che cerca solo "#nome" le considera inutilizzate e le cancella. -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-wine-glass" viewBox="0 0 512 512"><path fill="currentColor" d="M148.97 22.47l-6.25.093-2.564 6.156c-13.235 37.556-21.28 79-21.28 118.093 0 53.777 14.848 93.17 39.874 118.875 18.945 19.458 43.36 30.696 70.156 35 17.09 48.115 16.085 101.005-2.562 148.687-30.555 5.118-60.254 18.273-86.313 39.5h231.22c-26.066-21.23-55.75-34.384-86.313-39.5-18.667-47.734-19.62-100.686-2.468-148.844 26.58-4.382 50.84-15.552 69.75-34.842 25.184-25.692 40.186-65.08 40.186-118.875 0-39.093-8.045-80.537-21.28-118.094l-2.188-6.25h-219.97zm6.75 18.686h199.843c7.25 21.815 12.64 44.904 15.593 67.72h-231.03c2.953-22.816 8.344-45.905 15.593-67.72zm-17.47 86.406h234.78c.45 6.49.69 12.912.69 19.25 0 50.357-13.716 84.26-34.845 105.813-21.13 21.554-50.295 31.406-83.53 31.406-33.238 0-62.247-9.863-83.22-31.405s-34.563-55.437-34.563-105.813c0-6.338.24-12.76.688-19.25z"/></symbol>
+      <symbol id="i-plus" viewBox="27 27 202 202"><path fill="currentColor" d="M119 64v55H64v18h55v55h18v-55h55v-18h-55V64h-18z"/></symbol>
+  <symbol id="i-quill" viewBox="0 0 512 512"><path fill="currentColor" d="M492.47 21.938c-82.74-.256-167.442 12.5-242.814 45.093 5.205 13.166 9.578 28.48 13.188 45.532C242.55 97.27 217.167 92.385 194.72 95.5c-46.22 28.432-87.13 66.305-119.44 115.594 25.193 7.756 51.57 22.81 72.845 43.844-31.87-7.045-68.907-5.895-99.188 3-13.743 28.688-25.008 60.48-33.343 95.687 128.71-30.668 130.522 3.514 50.75 140.438 16.877 12.614 42.182 13.77 61.906-1.563C134 267.936 231.43 326.246 254.188 354.562c14.288-40.59 34.77-82.54 62.906-126.468-17.29-14.667-39.21-24.838-63.813-32.375 25.364-5.256 50.91-10.928 74.126-11.22 6.482-.082 12.78.272 18.844 1.156 17.57-24.007 37.408-48.612 59.75-73.97-12.538-6.31-25.476-11.454-38.125-14.967 17.132-5.76 35.274-8.34 52.844-8.157 2.01.02 4.004.095 6 .187 20.07-21.708 41.927-43.976 65.75-66.813zM426.72 47.28C295.79 112.674 200.094 210.206 144.936 333.53 172.34 184.41 287.048 84.57 426.72 47.28z"/></symbol>
+  <symbol id="i-trash-can" viewBox="0 0 512 512"><path fill="currentColor" d="M199 103v50h-78v30h270v-30h-78v-50H199zm18 18h78v32h-78v-32zm-79.002 80l30.106 286h175.794l30.104-286H137.998zm62.338 13.38l.64 8.98 16 224 .643 8.976-17.956 1.283-.64-8.98-16-224-.643-8.976 17.956-1.283zm111.328 0l17.955 1.284-.643 8.977-16 224-.64 8.98-17.956-1.284.643-8.977 16-224 .64-8.98zM247 215h18v242h-18V215z"/></symbol>
+    <symbol id="i-cycle" viewBox="0 0 512 512"><path fill="currentColor" d="M252.314 19.957c-72.036.363-142.99 33.534-189.18 95.97-69.83 94.39-59.125 223.32 19.85 304.993l-37.238 50.332 151.22-22.613L174.35 297.42l-43.137 58.308c-44.08-54.382-47.723-133.646-4.16-192.53 30.676-41.466 77.863-63.504 125.758-63.753 16.344-.085 32.766 2.382 48.645 7.467l-6.963-46.55c-23.858-4.86-47.908-5.026-71.017-.997-59.232 7.322-113.994 39.918-148.157 91.215 35.65-65.89 103.774-105.918 176.043-107.744 1.673-.042 3.347-.063 5.023-.065 14.8-.01 29.748 1.596 44.597 4.905l48.608-7.268c-31.14-13.906-64.32-20.62-97.274-20.453zm212.93 22.055l-151.217 22.61 22.614 151.22 41.126-55.588c42.204 54.29 45.092 132.048 2.187 190.043-40.22 54.367-108.82 75.32-170.19 57.566l6.522 43.598c28.726 5.533 58.236 4.414 86.203-3.07 37.448-5.957 73.34-22.05 103.16-47.728-49.196 54.65-122.615 77.514-191.744 64.34l-55.8 8.344c99.03 43.7 218.402 14.77 285.51-75.938 69.13-93.445 59.34-220.743-17.483-302.53l39.114-52.866z"/></symbol>
+    <symbol id="i-fa-circle-xmark" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></symbol>
+  <symbol id="i-pirate-flag" viewBox="0 0 512 512"><path fill="currentColor" d="M256 31.203c-96 .797-117.377 76.692-79.434 135.133-6.397 6.534-10.344 15.886-.566 25.664 16 16 32 16 39.852 32.42h80.296C304 208 320 208 336 192c9.778-9.778 5.831-19.13-.566-25.664C373.377 107.896 352 32 256 31.203zm-42.146 101.049c.426-.003.862.007 1.306.03 28.404 1.442 40.84 59.718-10.83 51.095-10.412-1.738-17.355-50.963 9.524-51.125zm84.292 0c26.88.162 19.936 49.387 9.524 51.125C256 192 268.436 133.724 296.84 132.28c.444-.022.88-.032 1.306-.03zM32 144c7.406 88.586 64.475 175.544 156.623 236.797 17.959-7.251 35.767-15.322 50.424-23.877C180.254 319.737 104.939 255.465 32 144zm448 0C359.2 328.605 231.863 383.797 183.908 400.797c3.177 5.374 5.997 10.98 8.711 16.432 3.878 7.789 7.581 15.251 11.184 20.986A517.457 517.457 0 0 0 256 417.973l.168.076a884.617 884.617 0 0 0 9.652-4.65C391.488 353.263 471.156 249.79 480 144zm-224 27.725l20.074 40.15L256 199.328l-20.074 12.547L256 171.725zm-65.604 57.11l15.76 51.042s31.268 24.92 49.844 24.92 49.844-24.92 49.844-24.92l15.76-51.041-27.086 19.236-8.063 16.248S267.35 279.547 256 279.547c-11.35 0-30.455-15.227-30.455-15.227l-8.063-16.248-27.086-19.236zm-59.984 152.976c-.783-.02-1.574-.011-2.375.027l.856 17.978c6.36-.302 10.814 2.416 16.11 8.64 5.298 6.222 10.32 15.707 15.24 25.589 4.918 9.882 9.707 20.12 16.122 28.45 6.415 8.327 16.202 15.446 27.969 13.89l-2.36-17.844c-4.094.541-6.78-1.099-11.349-7.031-4.57-5.933-9.275-15.46-14.268-25.489-4.992-10.029-10.297-20.604-17.644-29.234-6.888-8.09-16.556-14.686-28.3-14.976zm251.176 0c-11.745.29-21.413 6.885-28.3 14.976-7.348 8.63-12.653 19.205-17.645 29.234-4.993 10.03-9.698 19.556-14.268 25.489-4.57 5.932-7.255 7.572-11.35 7.031l-2.359 17.844c11.767 1.556 21.554-5.563 27.969-13.89 6.415-8.33 11.204-18.568 16.123-28.45 4.919-9.882 9.94-19.367 15.238-25.59 5.297-6.223 9.75-8.941 16.111-8.639l.856-17.978a32.853 32.853 0 0 0-2.375-.027zm-55.928 18.107c-13.97 10.003-30.13 18.92-47.424 27.478a524.868 524.868 0 0 0 29.961 10.819c3.603-5.735 7.306-13.197 11.184-20.986 2.714-5.453 5.534-11.058 8.71-16.432-.77-.273-1.62-.586-2.43-.879zm-191.808 23.371l-27.67 10.352 7.904 31.771 36.424-11.707c-1.418-2.814-2.81-5.649-4.207-8.457-4.048-8.131-8.169-15.961-12.451-21.959zm244.296 0c-4.282 5.998-8.403 13.828-12.45 21.959-1.399 2.808-2.79 5.643-4.208 8.457l36.424 11.707 7.904-31.771-27.67-10.352zM78.271 435.438a9.632 9.632 0 0 0-1.32.12 6.824 6.824 0 0 0-1.217.313c-11.544 4.201-25.105 18.04-21.648 29.828 3.07 10.472 19.675 13.359 30.492 11.916 3.828-.51 8.415-3.761 12.234-7.086l-8.124-32.648c-3.238-1.285-7.214-2.528-10.417-2.443zm355.458 0c-3.203-.085-7.179 1.158-10.416 2.443l-8.125 32.648c3.819 3.325 8.406 6.576 12.234 7.086 10.817 1.443 27.422-1.444 30.492-11.916 3.457-11.788-10.104-25.627-21.648-29.828a6.824 6.824 0 0 0-1.217-.312 9.632 9.632 0 0 0-1.32-.122z"/></symbol>
+    <symbol id="i-fa-circle-check" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></symbol>
+</svg>
+
+<div class="velo" id="velo">
+  <div class="girella"></div>
+  <div class="velo-testo" id="veloTesto">Carico...</div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1><svg class="ico"><use href="#i-wine-glass"></use></svg> Segnalazioni</h1>
+    <a href="index.html" class="btn-home"><svg class="ico"><use href="#i-pirate-flag"></use></svg> Porto</a>
+  </div>
+
+  <div class="section">
+    <div class="section-title" id="titoloForm">Nuova segnalazione</div>
+    <div class="nota">
+      Quello che manca o che vale la pena valutare. Il <strong>fornitore</strong> è
+      facoltativo, ma se c'è le segnalazioni si raggruppano per lui — ed è così che
+      serviranno quando si compone l'ordine.
+    </div>
+
+    <div class="scelte" id="scelteCategoria"></div>
+
+    <label for="testo">Cosa manca o cosa serve</label>
+    <textarea id="testo" placeholder="es. Sta finendo il Gemma bianco · Manca un aromatico tra i calici"></textarea>
+
+    <div class="riga-campi">
+      <div>
+        <label for="fornitore">Fornitore (facoltativo)</label>
+        <input type="text" id="fornitore" list="elencoFornitori" autocomplete="off" placeholder="es. Gemma">
+        <datalist id="elencoFornitori"></datalist>
+      </div>
+    </div>
+
+    <div class="azioni">
+      <button class="btn btn-primario" id="btnSalva" onclick="salva()">
+        <svg class="ico"><use href="#i-plus"></use></svg> <span id="btnSalvaTesto">Aggiungi</span>
+      </button>
+      <button class="btn btn-secondario" id="btnAnnulla" onclick="annullaModifica()" hidden>
+        <svg class="ico"><use href="#i-fa-circle-xmark"></use></svg> Annulla
+      </button>
+    </div>
+    <div id="messaggio"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">
+      <span>Elenco</span>
+      <button class="btn btn-secondario" onclick="carica()" title="Ricarica">
+        <svg class="ico ico-sola"><use href="#i-cycle"></use></svg>
+      </button>
+    </div>
+    <div class="riga-campi" style="margin-top:0;">
+      <div>
+        <label for="cerca">Cerca</label>
+        <input type="search" id="cerca" placeholder="testo o fornitore..." oninput="disegna()">
+      </div>
+      <div>
+        <label for="filtroCategoria">Categoria</label>
+        <select id="filtroCategoria" onchange="disegna()">
+          <option value="">Tutte</option>
+        </select>
+      </div>
+    </div>
+    <div class="riga-campi">
+      <div>
+        <label for="filtroFornitore">Fornitore</label>
+        <select id="filtroFornitore" onchange="disegna()"><option value="">Tutti</option></select>
+      </div>
+      <div>
+        <label for="filtroStato">Stato</label>
+        <select id="filtroStato" onchange="disegna()">
+          <option value="aperte">Solo aperte</option>
+          <option value="tutte">Aperte e chiuse</option>
+          <option value="chiuse">Solo chiuse</option>
+        </select>
+      </div>
+    </div>
+    <div id="elenco" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<div class="crediti-icone">
+  Icone: <a href="https://game-icons.net/" target="_blank" rel="noopener">game-icons.net</a>
+  (Lorc, Delapouite, skoll) &mdash;
+  <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>,
+  e <a href="https://fontawesome.com/" target="_blank" rel="noopener">Font Awesome Free</a> &mdash;
+  <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.
+</div>
+
+<script>
+  // =====================================================================
+  // SEGNALAZIONI VINI
+  // =====================================================================
+  // Le scrive e le legge il titolare: niente campo "chi segnala". Il
+  // fornitore è testo libero con suggerimenti, non una chiave verso
+  // l'anagrafica vini, che sta in un altro progetto (MANUALE §6): qui non si
+  // aspetta la sua risposta per poter scrivere una riga.
+
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
+
+  // Niente icone sulle categorie: nel set del progetto c'è un solo calice e
+  // nessuna bottiglia, e riusare la spunta per "Calice" la confondeva col
+  // bottone "segna come risolta" della riga accanto. Bastano il colore del
+  // badge e la parola. Le icone restano sui comandi, dove dicono un'azione.
+  const CATEGORIE = [
+    { chiave: 'vino',         etichetta: 'Vino' },
+    { chiave: 'calice',       etichetta: 'Calice' },
+    { chiave: 'assortimento', etichetta: 'Assortimento' },
+    { chiave: 'altro',        etichetta: 'Altro' }
+  ];
+  const SENZA_FORNITORE = 'Senza fornitore';
+
+  let segnalazioni = [];
+  let fornitoriNoti = [];
+  let inModifica = null;
+
+  // ── Rete ────────────────────────────────────────────────────────────
+  // Stesse regole del resto del progetto (MANUALE §5.3 e §5.4): non si
+  // ritenta mai su una richiesta lenta — abortire il fetch non ferma il
+  // server — e si ritenta invece quando al posto del JSON arriva una pagina
+  // HTML, che è come Apps Script dice "sono freddo".
+  async function fetchConRetry(url, options, tentativi = 2, timeoutMs = 45000) {
+    for (let i = 0; i < tentativi; i++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        return res;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') throw error;
+        if (i === tentativi - 1) throw error;
+        await new Promise(r => setTimeout(r, 800 * Math.pow(2, i)));
+      }
+    }
+  }
+
+  async function chiediAlServer(azione, dati, tentativi = 3) {
+    let ultima = '';
+    for (let i = 0; i < tentativi; i++) {
+      const risposta = await fetchConRetry(API_URL, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: azione, ...dati })
+      });
+      ultima = await risposta.text();
+      try {
+        return JSON.parse(ultima);
+      } catch (e) {
+        console.warn(`[${azione}] risposta non-JSON al tentativo ${i + 1}/${tentativi}:`, ultima.slice(0, 150));
+        if (i < tentativi - 1) await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+      }
+    }
+    throw new Error('Il server ha risposto in modo inatteso. Di solito basta riprovare fra qualche secondo.');
+  }
+
+  // Dichiarata come funzione, non come costante: le pagine di prova la
+  // sostituiscono con dati finti per disegnare senza chiamare il server.
+  async function callAPI(azione, dati = {}) {
+    return chiediAlServer(azione, dati);
+  }
+
+  // ── Utilità ─────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function dataBreve(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+  }
+
+  function categoriaDi(chiave) {
+    return CATEGORIE.filter(c => c.chiave === chiave)[0] || CATEGORIE[3];
+  }
+
+  function mostraVelo(testo) {
+    document.getElementById('veloTesto').textContent = testo;
+    document.getElementById('velo').classList.add('attivo');
+  }
+  function nascondiVelo() { document.getElementById('velo').classList.remove('attivo'); }
+
+  function messaggio(testo, tipo) {
+    const box = document.getElementById('messaggio');
+    if (!testo) { box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="messaggio ${tipo}">${esc(testo)}</div>`;
+    if (tipo === 'ok') setTimeout(() => { box.innerHTML = ''; }, 2500);
+  }
+
+  /**
+   * Filtra e raggruppa per fornitore. Funzione pura: è quella che il banco di
+   * prova interroga (.test-segnalazioni-pagina.mjs).
+   */
+  function raggruppaSegnalazioni(lista, filtri) {
+    const q = String(filtri.cerca || '').trim().toLowerCase();
+    const filtrate = lista.filter(s => {
+      if (filtri.stato === 'aperte' && s.stato !== 'aperta') return false;
+      if (filtri.stato === 'chiuse' && s.stato !== 'chiusa') return false;
+      if (filtri.categoria && s.categoria !== filtri.categoria) return false;
+      if (filtri.fornitore && (s.fornitore || '') !== filtri.fornitore) return false;
+      if (q && (s.testo + ' ' + (s.fornitore || '')).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+    const gruppi = {};
+    filtrate.forEach(s => {
+      const chiave = (s.fornitore || '').trim() || SENZA_FORNITORE;
+      (gruppi[chiave] = gruppi[chiave] || []).push(s);
+    });
+    // I fornitori in ordine alfabetico; "Senza fornitore" sempre in fondo,
+    // perché è un contenitore, non un fornitore.
+    return Object.keys(gruppi)
+      .sort((a, b) => a === SENZA_FORNITORE ? 1 : b === SENZA_FORNITORE ? -1 : a.localeCompare(b, 'it'))
+      .map(nome => ({ fornitore: nome, voci: gruppi[nome] }));
+  }
+
+  // ── Disegno ─────────────────────────────────────────────────────────
+  function disegnaCategorie() {
+    document.getElementById('scelteCategoria').innerHTML = CATEGORIE.map((c, i) => `
+      <label class="chip">
+        <input type="radio" name="categoria" value="${c.chiave}" ${i === 0 ? 'checked' : ''}>
+        ${c.etichetta}
+      </label>`).join('');
+    document.getElementById('filtroCategoria').innerHTML =
+      '<option value="">Tutte</option>' +
+      CATEGORIE.map(c => `<option value="${c.chiave}">${c.etichetta}</option>`).join('');
+  }
+
+  function disegnaFornitori() {
+    const usati = [];
+    segnalazioni.forEach(s => {
+      const f = (s.fornitore || '').trim();
+      if (f && usati.indexOf(f) === -1) usati.push(f);
+    });
+    fornitoriNoti.forEach(f => { if (usati.indexOf(f) === -1) usati.push(f); });
+    usati.sort((a, b) => a.localeCompare(b, 'it'));
+    document.getElementById('elencoFornitori').innerHTML = usati.map(f => `<option value="${esc(f)}">`).join('');
+    const scelto = document.getElementById('filtroFornitore').value;
+    document.getElementById('filtroFornitore').innerHTML =
+      '<option value="">Tutti</option>' + usati.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+    document.getElementById('filtroFornitore').value = scelto;
+  }
+
+  function disegna() {
+    const gruppi = raggruppaSegnalazioni(segnalazioni, {
+      cerca: document.getElementById('cerca').value,
+      categoria: document.getElementById('filtroCategoria').value,
+      fornitore: document.getElementById('filtroFornitore').value,
+      stato: document.getElementById('filtroStato').value
+    });
+    const box = document.getElementById('elenco');
+    const aperte = segnalazioni.filter(s => s.stato === 'aperta').length;
+
+    if (!gruppi.length) {
+      box.innerHTML = `<p class="vuoto">${segnalazioni.length
+        ? 'Nessuna segnalazione con questi filtri.'
+        : 'Ancora nessuna segnalazione: la prima scrivila qui sopra.'}</p>`;
+      return;
+    }
+
+    box.innerHTML = `<p class="vuoto" style="margin-bottom:10px;">${aperte} apert${aperte === 1 ? 'a' : 'e'} in tutto</p>` +
+      gruppi.map(g => `
+        <div class="gruppo">
+          <div class="gruppo-titolo"><span>${esc(g.fornitore)}</span><span>${g.voci.length}</span></div>
+          ${g.voci.map(voce).join('')}
+        </div>`).join('');
+  }
+
+  function voce(s) {
+    const cat = categoriaDi(s.categoria);
+    return `
+      <div class="voce ${s.stato === 'chiusa' ? 'chiusa' : ''}">
+        <div class="voce-corpo">
+          <div class="voce-testo">${esc(s.testo)}</div>
+          <div class="voce-sotto">
+            <span class="badge badge-${esc(s.categoria)}">${cat.etichetta}</span>
+            · ${dataBreve(s.creato)}${s.stato === 'chiusa' ? ' · chiusa il ' + dataBreve(s.chiuso) : ''}
+          </div>
+        </div>
+        <div style="white-space:nowrap;">
+          <button class="btn-mini" onclick="cambiaStato('${esc(s.id)}', ${s.stato === 'aperta'})"
+                  title="${s.stato === 'aperta' ? 'Segna come risolta' : 'Riapri'}">
+            <svg class="ico ico-sola"><use href="#${s.stato === 'aperta' ? 'i-fa-circle-check' : 'i-cycle'}"></use></svg>
+          </button>
+          <button class="btn-mini" onclick="apriModifica('${esc(s.id)}')" title="Modifica">
+            <svg class="ico ico-sola"><use href="#i-quill"></use></svg>
+          </button>
+          <button class="btn-mini pericolo" onclick="elimina('${esc(s.id)}')" title="Elimina">
+            <svg class="ico ico-sola"><use href="#i-trash-can"></use></svg>
+          </button>
+        </div>
+      </div>`;
+  }
+
+  // ── Azioni ──────────────────────────────────────────────────────────
+  async function carica() {
+    mostraVelo('Carico le segnalazioni...');
+    try {
+      const r = await callAPI('getSegnalazioni');
+      nascondiVelo();
+      // L'errore si guarda per primo: un elenco vuoto è comunque "truthy".
+      if (r.errore) return messaggio(r.errore, 'errore');
+      segnalazioni = r.segnalazioni || [];
+      fornitoriNoti = r.fornitori || [];
+      disegnaFornitori();
+      disegna();
+    } catch (error) {
+      nascondiVelo();
+      messaggio(error.message, 'errore');
+    }
+  }
+
+  function datiForm() {
+    const scelta = document.querySelector('input[name="categoria"]:checked');
+    return {
+      categoria: scelta ? scelta.value : 'altro',
+      testo: document.getElementById('testo').value.trim(),
+      fornitore: document.getElementById('fornitore').value.trim()
+    };
+  }
+
+  async function salva() {
+    const dati = datiForm();
+    if (!dati.testo) return messaggio('Scrivi che cosa manca', 'errore');
+
+    mostraVelo(inModifica ? 'Aggiorno...' : 'Salvo...');
+    try {
+      const r = inModifica
+        ? await callAPI('modificaSegnalazione', { id: inModifica, segnalazione: dati })
+        : await callAPI('salvaSegnalazione', { segnalazione: dati });
+      nascondiVelo();
+      if (r.errore) return messaggio(r.errore, 'errore');
+      annullaModifica();
+      document.getElementById('testo').value = '';
+      messaggio(r.messaggio || 'Fatto', 'ok');
+      await carica();
+    } catch (error) {
+      nascondiVelo();
+      messaggio(error.message, 'errore');
+    }
+  }
+
+  function apriModifica(id) {
+    const s = segnalazioni.filter(x => x.id === id)[0];
+    if (!s) return;
+    inModifica = id;
+    document.getElementById('testo').value = s.testo;
+    document.getElementById('fornitore').value = s.fornitore || '';
+    const radio = document.querySelector(`input[name="categoria"][value="${s.categoria}"]`);
+    if (radio) radio.checked = true;
+    document.getElementById('titoloForm').textContent = 'Modifica segnalazione';
+    document.getElementById('btnSalvaTesto').textContent = 'Salva modifica';
+    document.getElementById('btnAnnulla').hidden = false;
+    document.getElementById('testo').focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function annullaModifica() {
+    inModifica = null;
+    document.getElementById('titoloForm').textContent = 'Nuova segnalazione';
+    document.getElementById('btnSalvaTesto').textContent = 'Aggiungi';
+    document.getElementById('btnAnnulla').hidden = true;
+  }
+
+  async function cambiaStato(id, chiudi) {
+    mostraVelo(chiudi ? 'Chiudo...' : 'Riapro...');
+    try {
+      const r = await callAPI('chiudiSegnalazione', { id: id, chiusa: chiudi });
+      nascondiVelo();
+      if (r.errore) return messaggio(r.errore, 'errore');
+      await carica();
+    } catch (error) {
+      nascondiVelo();
+      messaggio(error.message, 'errore');
+    }
+  }
+
+  async function elimina(id) {
+    const s = segnalazioni.filter(x => x.id === id)[0];
+    if (!confirm(`🗑️ Eliminare questa segnalazione?\n\n"${s ? s.testo : ''}"\n\nSe l'hai risolta conviene chiuderla, così resta la memoria.`)) return;
+    mostraVelo('Elimino...');
+    try {
+      const r = await callAPI('eliminaSegnalazione', { id: id });
+      nascondiVelo();
+      if (r.errore) return messaggio(r.errore, 'errore');
+      if (inModifica === id) annullaModifica();
+      await carica();
+    } catch (error) {
+      nascondiVelo();
+      messaggio(error.message, 'errore');
+    }
+  }
+
+  // Ctrl+Invio dal campo di testo salva, senza andare a cercare il bottone.
+  document.getElementById('testo').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); salva(); }
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  }
+
+  disegnaCategorie();
+  carica();
+</script>
+</body>
+</html>
