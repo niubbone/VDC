@@ -86,6 +86,28 @@
     .chip:has(input:checked) { background: #6b4423; color: #f4e4c1; }
     .chip:focus-within { outline: 2px solid #2c1810; outline-offset: 2px; }
 
+    /* Tendina dei fornitori: elenco chiuso con filtro mentre si scrive. Il
+       campo libero disperdeva — "Gemma", "gemma" e "Gemma Srl" facevano tre
+       gruppi — quindi un nome nuovo si accetta solo scegliendo la voce
+       "Nuovo fornitore" in fondo all'elenco. */
+    .combo { position: relative; }
+    .combo-lista {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+      background: #f4e4c1; border: 2px solid #6b4423; border-top: none;
+      border-radius: 0 0 8px 8px; max-height: 230px; overflow-y: auto;
+      display: none; box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    }
+    .combo-lista.aperta { display: block; }
+    .combo-voce {
+      padding: 9px 12px; cursor: pointer; color: #2c1810; font-size: 0.95em;
+      border-bottom: 1px solid rgba(107,68,35,0.25);
+    }
+    .combo-voce:last-child { border-bottom: none; }
+    .combo-voce:hover, .combo-voce.evidenziata { background: #e8b873; }
+    .combo-voce.nuovo { font-weight: 700; }
+    .combo-stato { font-size: 0.8em; color: #5a4632; margin-top: 4px; min-height: 1.1em; }
+    .combo-stato.da-scegliere { color: #a32d24; font-weight: 700; }
+
     .riga-campi { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
     @media (max-width: 640px) { .riga-campi { grid-template-columns: 1fr; } }
 
@@ -196,8 +218,15 @@
     <div class="riga-campi">
       <div>
         <label for="fornitore">Fornitore (facoltativo)</label>
-        <input type="text" id="fornitore" list="elencoFornitori" autocomplete="off" placeholder="es. Gemma">
-        <datalist id="elencoFornitori"></datalist>
+        <div class="combo">
+          <input type="text" id="fornitore" autocomplete="off" role="combobox"
+                 aria-expanded="false" aria-controls="listaFornitori" aria-autocomplete="list"
+                 placeholder="scrivi o scegli dall'elenco"
+                 oninput="filtraFornitori()" onfocus="filtraFornitori()"
+                 onkeydown="navigaFornitori(event)">
+          <div class="combo-lista" id="listaFornitori" role="listbox"></div>
+        </div>
+        <div class="combo-stato" id="statoFornitore"></div>
       </div>
     </div>
 
@@ -261,12 +290,23 @@
   // =====================================================================
   // SEGNALAZIONI VINI
   // =====================================================================
-  // Le scrive e le legge il titolare: niente campo "chi segnala". Il
-  // fornitore è testo libero con suggerimenti, non una chiave verso
-  // l'anagrafica vini, che sta in un altro progetto (MANUALE §6): qui non si
-  // aspetta la sua risposta per poter scrivere una riga.
+  // Le scrive e le legge il titolare: niente campo "chi segnala".
+  //
+  // Il FORNITORE è un elenco chiuso con filtro mentre si scrive: un nome nuovo
+  // si accetta solo scegliendo la voce "Nuovo fornitore" in fondo alla tendina.
+  // Il campo libero disperdeva — "Gemma", "gemma" e "Gemma Srl" facevano tre
+  // gruppi diversi — e il raggruppamento è tutto il senso di questo campo.
+  //
+  // L'elenco nasce da tre fonti: i fornitori già usati nelle segnalazioni,
+  // quelli che il server restituisce, e l'anagrafica vini — che sta in un altro
+  // progetto Apps Script (MANUALE §6) e quindi si chiede in sottofondo, con una
+  // copia locale che dura un giorno. Se non risponde, la pagina funziona lo
+  // stesso con i nomi già usati: non si aspetta mai quella risposta per scrivere.
 
   const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
+  const API_VINI = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
+  const CACHE_FORNITORI = 'vdc_fornitori_anagrafica';
+  const DURATA_CACHE_FORNITORI = 24 * 60 * 60 * 1000;
 
   // Niente icone sulle categorie: nel set del progetto c'è un solo calice e
   // nessuna bottiglia, e riusare la spunta per "Calice" la confondeva col
@@ -281,7 +321,11 @@
   const SENZA_FORNITORE = 'Senza fornitore';
 
   let segnalazioni = [];
-  let fornitoriNoti = [];
+  let fornitoriNoti = [];          // dal server, cioè già usati nelle segnalazioni
+  let fornitoriAnagrafica = [];    // dall'anagrafica vini, in sottofondo
+  let fornitoreScelto = '';        // vale solo se viene dalla tendina
+  let vociFornitore = [];
+  let voceFornitoreEvidenziata = -1;
   let inModifica = null;
 
   // ── Rete ────────────────────────────────────────────────────────────
@@ -398,19 +442,164 @@
       CATEGORIE.map(c => `<option value="${c.chiave}">${c.etichetta}</option>`).join('');
   }
 
+  // ── Fornitori: elenco chiuso con filtro ─────────────────────────────
+
+  /** Forma confrontabile di un nome: stessa regola del server (APIsegnalazioni.js). */
+  function normFornitoreNome(v) {
+    return String(v == null ? '' : v)
+      .normalize('NFD').replace(/\p{M}/gu, '')
+      .toLowerCase()
+      .replace(/\b(s\.?r\.?l\.?|s\.?p\.?a\.?|s\.?n\.?c\.?|s\.?a\.?s\.?)\b/g, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * Le voci della tendina per quello che si sta scrivendo. Funzione pura: è
+   * quella che il banco di prova interroga (.test-fornitori.mjs).
+   *
+   * La voce "nuovo" compare solo se si è scritto qualcosa che non corrisponde
+   * già, esattamente, a un fornitore noto: è il solo modo per introdurne uno.
+   */
+  function vociTendinaFornitori(elenco, query) {
+    const scritto = String(query || '').trim();
+    const chiave = normFornitoreNome(scritto);
+    const voci = elenco
+      .filter(n => !chiave || normFornitoreNome(n).indexOf(chiave) !== -1)
+      .map(n => ({ tipo: 'esistente', nome: n }));
+    const gia = elenco.some(n => normFornitoreNome(n) === chiave);
+    if (scritto && !gia) voci.push({ tipo: 'nuovo', nome: scritto });
+    return voci;
+  }
+
+  /** Fornitori noti, senza doppioni di grafia, in ordine alfabetico. */
+  function elencoFornitori() {
+    const noti = [];
+    const aggiungi = n => {
+      const nome = String(n || '').trim();
+      if (!nome) return;
+      if (!noti.some(x => normFornitoreNome(x) === normFornitoreNome(nome))) noti.push(nome);
+    };
+    segnalazioni.forEach(s => aggiungi(s.fornitore));
+    fornitoriNoti.forEach(aggiungi);
+    fornitoriAnagrafica.forEach(aggiungi);
+    return noti.sort((a, b) => a.localeCompare(b, 'it'));
+  }
+
   function disegnaFornitori() {
-    const usati = [];
-    segnalazioni.forEach(s => {
-      const f = (s.fornitore || '').trim();
-      if (f && usati.indexOf(f) === -1) usati.push(f);
-    });
-    fornitoriNoti.forEach(f => { if (usati.indexOf(f) === -1) usati.push(f); });
-    usati.sort((a, b) => a.localeCompare(b, 'it'));
-    document.getElementById('elencoFornitori').innerHTML = usati.map(f => `<option value="${esc(f)}">`).join('');
+    const noti = elencoFornitori();
     const scelto = document.getElementById('filtroFornitore').value;
     document.getElementById('filtroFornitore').innerHTML =
-      '<option value="">Tutti</option>' + usati.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+      '<option value="">Tutti</option>' + noti.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
     document.getElementById('filtroFornitore').value = scelto;
+  }
+
+  function filtraFornitori() {
+    // Scrivere a mano scollega la scelta fatta prima: il valore vale solo se
+    // viene dalla tendina, altrimenti il salvataggio si ferma e lo dice.
+    fornitoreScelto = '';
+    vociFornitore = vociTendinaFornitori(elencoFornitori(), document.getElementById('fornitore').value);
+    voceFornitoreEvidenziata = -1;
+    renderListaFornitori();
+    aggiornaStatoFornitore();
+  }
+
+  function renderListaFornitori() {
+    const box = document.getElementById('listaFornitori');
+    if (!vociFornitore.length) return chiudiListaFornitori();
+    // onmousedown invece di onclick: il click arriverebbe dopo il blur del
+    // campo, e la tendina si sarebbe già chiusa sotto il dito.
+    box.innerHTML = vociFornitore.map((v, i) => `
+      <div class="combo-voce ${v.tipo === 'nuovo' ? 'nuovo' : ''}" role="option" data-i="${i}"
+           onmousedown="event.preventDefault(); scegliFornitore(${i})">
+        ${v.tipo === 'nuovo' ? 'Nuovo fornitore: ' : ''}${esc(v.nome)}
+      </div>`).join('');
+    box.classList.add('aperta');
+    document.getElementById('fornitore').setAttribute('aria-expanded', 'true');
+  }
+
+  function chiudiListaFornitori() {
+    document.getElementById('listaFornitori').classList.remove('aperta');
+    document.getElementById('fornitore').setAttribute('aria-expanded', 'false');
+    voceFornitoreEvidenziata = -1;
+  }
+
+  function scegliFornitore(i) {
+    const v = vociFornitore[i];
+    if (!v) return;
+    fornitoreScelto = v.nome;
+    document.getElementById('fornitore').value = v.nome;
+    chiudiListaFornitori();
+    aggiornaStatoFornitore();
+  }
+
+  function navigaFornitori(e) {
+    const aperta = document.getElementById('listaFornitori').classList.contains('aperta');
+    if (e.key === 'Escape') return chiudiListaFornitori();
+    if (!aperta) { if (e.key === 'ArrowDown') filtraFornitori(); return; }
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      voceFornitoreEvidenziata += (e.key === 'ArrowDown' ? 1 : -1);
+      if (voceFornitoreEvidenziata < 0) voceFornitoreEvidenziata = vociFornitore.length - 1;
+      if (voceFornitoreEvidenziata >= vociFornitore.length) voceFornitoreEvidenziata = 0;
+      document.getElementById('listaFornitori').querySelectorAll('.combo-voce')
+        .forEach((v, i) => v.classList.toggle('evidenziata', i === voceFornitoreEvidenziata));
+    } else if (e.key === 'Enter') {
+      // Invio sceglie: la voce evidenziata, o l'unica rimasta a forza di filtrare.
+      if (voceFornitoreEvidenziata >= 0) { e.preventDefault(); scegliFornitore(voceFornitoreEvidenziata); }
+      else if (vociFornitore.length === 1) { e.preventDefault(); scegliFornitore(0); }
+    }
+  }
+
+  function aggiornaStatoFornitore() {
+    const scritto = document.getElementById('fornitore').value.trim();
+    const box = document.getElementById('statoFornitore');
+    const daScegliere = scritto && normFornitoreNome(scritto) !== normFornitoreNome(fornitoreScelto);
+    box.classList.toggle('da-scegliere', !!daScegliere);
+    box.textContent = !scritto
+      ? 'Facoltativo. Serve a raggruppare le segnalazioni.'
+      : daScegliere
+        ? 'Scegli una voce dall\'elenco, oppure "Nuovo fornitore".'
+        : 'Fornitore: ' + fornitoreScelto;
+  }
+
+  /**
+   * I fornitori dell'anagrafica vini, per avere la tendina già piena prima
+   * ancora della prima segnalazione. Chiamata in sottofondo e tenuta in copia
+   * locale per un giorno: è l'altro progetto, e non deve rallentare questo.
+   */
+  async function caricaFornitoriAnagrafica() {
+    try {
+      const salvato = JSON.parse(localStorage.getItem(CACHE_FORNITORI) || 'null');
+      if (salvato && Date.now() - salvato.quando < DURATA_CACHE_FORNITORI && (salvato.nomi || []).length) {
+        fornitoriAnagrafica = salvato.nomi;
+        disegnaFornitori();
+        return;
+      }
+    } catch (e) { /* copia illeggibile: si richiede */ }
+
+    try {
+      const risposta = await fetch(API_VINI, {
+        method: 'POST', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'getVini' }),
+        signal: AbortSignal.timeout(30000)
+      });
+      const dati = JSON.parse(await risposta.text());
+      const nomi = [];
+      (dati.vini || []).forEach(v => {
+        const f = String(v.fornitore || '').trim();
+        if (f && nomi.indexOf(f) === -1) nomi.push(f);
+      });
+      if (!nomi.length) return;
+      fornitoriAnagrafica = nomi;
+      localStorage.setItem(CACHE_FORNITORI, JSON.stringify({ quando: Date.now(), nomi: nomi }));
+      disegnaFornitori();
+    } catch (e) {
+      // Non è un guasto: si resta con i fornitori già usati.
+      console.warn('Elenco fornitori dall\'anagrafica non disponibile:', e.message);
+    }
   }
 
   function disegna() {
@@ -487,13 +676,23 @@
     return {
       categoria: scelta ? scelta.value : 'altro',
       testo: document.getElementById('testo').value.trim(),
-      fornitore: document.getElementById('fornitore').value.trim()
+      // Non quello che c'è scritto: quello che è stato SCELTO dalla tendina.
+      fornitore: fornitoreScelto.trim()
     };
   }
 
   async function salva() {
     const dati = datiForm();
     if (!dati.testo) return messaggio('Scrivi che cosa manca', 'errore');
+
+    // Un nome scritto ma non scelto non si salva: è il modo in cui lo stesso
+    // fornitore finirebbe in tre grafie diverse e i gruppi si sbriciolerebbero.
+    const scritto = document.getElementById('fornitore').value.trim();
+    if (scritto && normFornitoreNome(scritto) !== normFornitoreNome(fornitoreScelto)) {
+      document.getElementById('fornitore').focus();
+      filtraFornitori();
+      return messaggio('Scegli il fornitore dall\'elenco, oppure la voce "Nuovo fornitore"', 'errore');
+    }
 
     mostraVelo(inModifica ? 'Aggiorno...' : 'Salvo...');
     try {
@@ -518,6 +717,9 @@
     inModifica = id;
     document.getElementById('testo').value = s.testo;
     document.getElementById('fornitore').value = s.fornitore || '';
+    // Il fornitore salvato è già uno scelto: si riparte considerandolo tale.
+    fornitoreScelto = s.fornitore || '';
+    aggiornaStatoFornitore();
     const radio = document.querySelector(`input[name="categoria"][value="${s.categoria}"]`);
     if (radio) radio.checked = true;
     document.getElementById('titoloForm').textContent = 'Modifica segnalazione';
@@ -572,8 +774,16 @@
     navigator.serviceWorker.register('./service-worker.js').catch(() => {});
   }
 
+  // Un clic fuori chiude la tendina, altrimenti resta aperta sopra il modulo.
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.combo')) chiudiListaFornitori();
+  });
+
   disegnaCategorie();
+  aggiornaStatoFornitore();
   carica();
+  // In sottofondo, senza attendere: la pagina è già utilizzabile.
+  caricaFornitoriAnagrafica();
 </script>
 </body>
 </html>
