@@ -671,6 +671,9 @@
       document.getElementById('pinViniInput').value = '';
       document.getElementById('errorePinVini').style.display = 'none';
       document.getElementById('modalVini').classList.add('active');
+      // Il cursore nel campo, come fa l'Accesso Capitano: senza questa riga
+      // bisognava prima toccare il campo e poi scrivere il PIN.
+      document.getElementById('pinViniInput').focus();
     }
 
     function chiudiModalVini() {
