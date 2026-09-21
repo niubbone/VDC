@@ -233,7 +233,9 @@
 <div class="container">
   <div class="header">
     <h1><svg class="ico"><use href="#i-wine-glass"></use></svg> Segnalazioni</h1>
-    <a href="index.html" class="btn-home"><svg class="ico"><use href="#i-pirate-flag"></use></svg> Porto</a>
+    <!-- Si risale di un livello, al menu dei vini, non alla home secca: è la
+         stessa destinazione di gestione-vini.html e carta-vini.html. -->
+    <a href="index.html?menu=vini" class="btn-home"><svg class="ico"><use href="#i-pirate-flag"></use></svg> Porto</a>
   </div>
 
   <div class="section">
@@ -436,6 +438,29 @@
     if (!testo) { box.innerHTML = ''; return; }
     box.innerHTML = `<div class="messaggio ${tipo}">${esc(testo)}</div>`;
     if (tipo === 'ok') setTimeout(() => { box.innerHTML = ''; }, 2500);
+  }
+
+  /**
+   * L'errore detto in italiano.
+   *
+   * Il caso che si vede davvero è il timeout: Apps Script ogni tanto impiega
+   * 40-50 secondi (è latenza della piattaforma, non un guasto nostro — MANUALE
+   * §5.3), il fetch viene abortito e il browser alza un "signal is aborted
+   * without reason" che all'utente non dice niente.
+   *
+   * ⚠️ Su una SCRITTURA il timeout non vuol dire "non è successo": abortire il
+   * fetch non ferma il server, quindi la riga può essere stata scritta lo
+   * stesso. Per questo non si ritenta mai da soli e si invita a guardare
+   * l'elenco invece di rifare l'operazione, che creerebbe un doppione.
+   */
+  function erroreLeggibile(error, scrittura) {
+    const nome = error && error.name;
+    if (nome === 'AbortError' || nome === 'TimeoutError') {
+      return scrittura
+        ? 'Il server non ha risposto entro 45 secondi. L\'operazione può essere comunque andata a buon fine: guarda l\'elenco qui sotto prima di rifarla, altrimenti rischi un doppione.'
+        : 'Il server non ha risposto entro 45 secondi. Capita quando Google è lento: riprova fra qualche secondo con il tasto ricarica.';
+    }
+    return (error && error.message) ? error.message : 'Errore imprevisto';
   }
 
   /**
@@ -701,7 +726,8 @@
       disegna();
     } catch (error) {
       nascondiVelo();
-      messaggio(error.message, 'errore');
+      console.error('getSegnalazioni:', error);
+      messaggio(erroreLeggibile(error, false), 'errore');
     }
   }
 
@@ -741,7 +767,11 @@
       await carica();
     } catch (error) {
       nascondiVelo();
-      messaggio(error.message, 'errore');
+      console.error('salvataggio:', error);
+      messaggio(erroreLeggibile(error, true), 'errore');
+      // L'elenco si ricarica da solo: è il modo per vedere se la scrittura
+      // era comunque arrivata, senza rifarla al buio.
+      await carica();
     }
   }
 
@@ -779,7 +809,9 @@
       await carica();
     } catch (error) {
       nascondiVelo();
-      messaggio(error.message, 'errore');
+      console.error('cambio stato:', error);
+      messaggio(erroreLeggibile(error, true), 'errore');
+      await carica();
     }
   }
 
@@ -795,7 +827,9 @@
       await carica();
     } catch (error) {
       nascondiVelo();
-      messaggio(error.message, 'errore');
+      console.error('eliminazione:', error);
+      messaggio(erroreLeggibile(error, true), 'errore');
+      await carica();
     }
   }
 
