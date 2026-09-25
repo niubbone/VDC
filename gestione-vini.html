@@ -686,6 +686,9 @@
 
     function costoDist(i) { return i * 1.22; }
     function costoImport(i, ss) { return i + (ss||0); }
+    // Costo senza IVA, base dei ricarichi (il listino si divide per 1,1):
+    // distributori = imponibile (il 22% si detrae), import = imponibile + spese.
+    function costoNetto(i, ss) { return currentSheet==='DIST' ? i : costoImport(i, ss); }
     function tavoloAut(c, sh) {
       if (sh==='DIST') { if(c>=50) return c*1.8; if(c>=25) return c*2.2; if(c>15) return c*2.6; return c*3; }
       return c<=15 ? c*3+5 : c*2.6+5;
@@ -708,7 +711,8 @@
       const listino=parseFloat(document.getElementById('f-tavolo-listino').value)||0;
       if(!imp||!listino){['c-ric-x','c-ric-eur','c-asporto','c-nbott'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('c-margin-pct').textContent='—';document.getElementById('c-margin-bar').style.width='0%';return;}
       const costo=currentSheet==='DIST'?costoDist(imp):costoImport(imp,ss);
-      const lImp=listino/1.1, ricX=lImp/imp, ricEur=lImp-imp, margin=(ricEur/lImp)*100;
+      const netto=costoNetto(imp,ss);
+      const lImp=listino/1.1, ricX=lImp/netto, ricEur=lImp-netto, margin=(ricEur/lImp)*100;
       document.getElementById('c-ric-x').textContent=fmtX(ricX);
       document.getElementById('c-ric-eur').textContent=fmt(ricEur);
       document.getElementById('c-asporto').textContent=fmt(listino*0.7);
@@ -721,7 +725,8 @@
       const cal=parseFloat(document.getElementById('f-calice').value)||0;
       const div=parseFloat(document.getElementById('f-formato').value)||6.1;
       if(!imp||!cal){['cc-ric-x','cc-ric-eur','cc-costo','cc-margine'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('f-calice-ricavo').value='';return;}
-      const cc=imp/div, cImp=cal/1.1;
+      const ss=parseFloat(document.getElementById('f-ss').value)||0;
+      const cc=costoNetto(imp,ss)/div, cImp=cal/1.1;
       document.getElementById('cc-ric-x').textContent=fmtX(cImp/cc);
       document.getElementById('cc-ric-eur').textContent=fmt(cImp-cc);
       document.getElementById('cc-costo').textContent=fmt(cc);

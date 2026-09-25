@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Pagina interna: fuori dai motori di ricerca. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Degustazione</title>
+  <meta name="theme-color" content="#1e3c72">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    /* Stile dell'area vini (fondo blu, contenitore bianco): stessa stanza di
+       gestione-vini.html e segnalazioni.html (MANUALE §6). */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh; padding: 20px; color: #222;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    .header {
+      max-width: 1000px; margin: 0 auto 20px;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .header h1 {
+      font-family: 'Pirata One', cursive; color: #fff; font-size: 2.2em;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.4); display: flex; align-items: center;
+    }
+    .btn-home {
+      background: rgba(255,255,255,0.15); color: #fff; padding: 9px 20px;
+      border: 2px solid rgba(255,255,255,0.4); border-radius: 8px;
+      font-weight: bold; font-size: 0.95em; text-decoration: none;
+      transition: all 0.2s; backdrop-filter: blur(4px); display: inline-flex; align-items: center;
+    }
+    .btn-home:hover { background: rgba(255,255,255,0.25); }
+
+    /* Icone: sprite SVG inline (Safari non legge <use> su file esterni, MANUALE §9). */
+    .ico {
+      width: 1.3em; height: 1.3em; fill: currentColor;
+      vertical-align: -0.28em; flex-shrink: 0; margin-right: 0.3em;
+    }
+    .ico-sola { margin-right: 0; }
+    .header h1 .ico { width: 1em; height: 1em; vertical-align: -0.1em; }
+    .btn-home .ico {
+      width: 1.75em; height: 1.75em; vertical-align: -0.44em; margin-right: 0.34em;
+      stroke: currentColor; stroke-width: 12; paint-order: stroke fill;
+    }
+
+    .section {
+      background: rgba(255,255,255,0.97); border-radius: 20px;
+      padding: 28px; box-shadow: 0 10px 40px rgba(0,0,0,0.35); margin-bottom: 20px;
+    }
+    .section-title {
+      font-weight: bold; color: #2a5298; font-size: 0.95em;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #e0e8f8;
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .nota {
+      background: #f8faff; border: 2px solid #dce6f8; border-radius: 10px;
+      padding: 12px 14px; margin-bottom: 16px; font-size: 0.85em; line-height: 1.5; color: #555;
+    }
+    .nota strong { color: #2a5298; }
+
+    label {
+      display: block; font-weight: bold; font-size: 0.78em; color: #555;
+      text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px;
+    }
+    input[type="text"], input[type="search"], input[type="date"], select {
+      width: 100%; padding: 10px 12px; border: 2px solid #ddd; border-radius: 8px;
+      font-family: 'Arial', sans-serif; font-size: 0.95em;
+      background: #fff; color: #222; transition: border-color 0.2s;
+    }
+    input:focus, select:focus { outline: none; border-color: #2a5298; }
+    input.guida { border-color: #2a5298; background: #f0f4ff; font-weight: bold; }
+
+    .griglia { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+    .azioni { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+
+    .btn {
+      padding: 11px 20px; border-radius: 8px; border: none; cursor: pointer;
+      font-weight: bold; font-size: 0.88em; text-transform: uppercase; letter-spacing: 0.5px;
+      transition: all 0.2s; display: inline-flex; align-items: center;
+    }
+    .btn-primario {
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%); color: #fff;
+      box-shadow: 0 4px 12px rgba(42,82,152,0.3);
+    }
+    .btn-primario:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(42,82,152,0.45); }
+    .btn-secondario { background: #f0f4ff; color: #2a5298; border: 2px solid #c0cce8; }
+    .btn-secondario:hover { background: #dce6ff; }
+    .btn-pericolo { background: #fff0f0; color: #c0392b; border: 2px solid #f5c6cb; }
+    .btn-mini {
+      padding: 6px 10px; border-radius: 6px; cursor: pointer;
+      background: #fff0f0; color: #c0392b; border: 1px solid #f5c6cb;
+    }
+
+    /* Due modi di aggiungere un vino: dall'anagrafica o temporaneo. */
+    .schede { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .scheda {
+      padding: 7px 14px; border: 2px solid #ddd; border-radius: 20px; background: #f5f5f5;
+      color: #555; font-size: 0.85em; font-weight: bold; cursor: pointer;
+    }
+    .scheda.attiva { background: #2a5298; border-color: transparent; color: #fff; }
+
+    .risultati {
+      border: 2px solid #e0e8f8; border-radius: 10px; margin-top: 8px;
+      max-height: 260px; overflow-y: auto;
+    }
+    .risultato {
+      display: flex; justify-content: space-between; gap: 10px; align-items: center;
+      padding: 9px 12px; border-bottom: 1px solid #eef2fa; cursor: pointer; font-size: 0.9em;
+    }
+    .risultato:last-child { border-bottom: none; }
+    .risultato:hover { background: #dce6ff; }
+    .risultato small { color: #888; }
+    .risultato .prezzo { color: #2a5298; font-weight: bold; white-space: nowrap; }
+    .stato-elenco { font-size: 0.78em; color: #888; margin-top: 6px; }
+
+    /* Riga vino: bordo colorato come le schede di gestione-vini. */
+    .vino {
+      background: #fff; border: 1px solid #e0e8f8;
+      border-left: 5px solid var(--c, #2a5298); border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 10px;
+    }
+    .vino.t-DIST { --c: #2a5298; }
+    .vino.t-IMPORT { --c: #2a7a4a; }
+    .vino.temp { border-style: dashed; border-left-style: solid; }
+    .vino-testa { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .vino-nome { font-weight: bold; color: #1e3c72; overflow-wrap: anywhere; }
+    .badge {
+      display: inline-block; font-size: 0.72em; padding: 1px 8px; border-radius: 10px;
+      border: 1px solid var(--c); color: var(--c); margin-left: 6px; font-weight: normal; vertical-align: 1px;
+    }
+    .vino-campi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+    .vino-campi label { font-size: 0.7em; }
+    .vino-campi input { padding: 8px 10px; }
+    .vino-sotto { font-size: 0.8em; color: #666; margin-top: 8px; }
+    .vino-sotto b { color: #1e3c72; }
+
+    .avviso {
+      background: #fff6e5; border: 2px solid #f0c36d; color: #7a5200;
+      border-radius: 10px; padding: 10px 14px; margin-top: 14px; font-size: 0.88em;
+      display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    }
+
+    .conti { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 18px; }
+    .conto { background: #f8faff; border: 1px solid #dce6f8; border-radius: 10px; padding: 10px 12px; }
+    .conto .l { font-size: 0.72em; color: #777; text-transform: uppercase; letter-spacing: 0.3px; }
+    .conto .v { font-size: 1.2em; font-weight: bold; color: #1e3c72; margin-top: 3px; }
+    .conto.forte { background: #2a5298; border-color: #2a5298; }
+    .conto.forte .l { color: #dce6ff; }
+    .conto.forte .v { color: #fff; }
+    .conto.neg .v { color: #c0392b; }
+    .conto.forte.neg { background: #c0392b; border-color: #c0392b; }
+    .conto.forte.neg .v { color: #fff; }
+
+    .tabella-wrap { overflow-x: auto; margin-top: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+    th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid #eef2fa; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: #2a5298; font-size: 0.8em; text-transform: uppercase; }
+    tr.attuale td { background: #dce6ff; font-weight: bold; }
+    tr.oltre td { color: #aaa; }
+    td.neg { color: #c0392b; }
+
+    .vuoto { text-align: center; padding: 20px; color: #aaa; }
+
+    .velo {
+      position: fixed; inset: 0; background: rgba(30,60,114,0.75); z-index: 9999;
+      display: none; justify-content: center; align-items: center; flex-direction: column;
+    }
+    .velo.attivo { display: flex; }
+    .velo-ancora { font-size: 2.5em; margin-bottom: 12px; animation: gira 1s linear infinite; }
+    @keyframes gira { to { transform: rotate(360deg); } }
+    .velo-testo { color: #fff; font-family: 'Pirata One', cursive; font-size: 1.3em; letter-spacing: 1px; }
+
+    .crediti-icone {
+      text-align: center; color: rgba(255,255,255,0.6); font-size: 0.78em;
+      margin: 18px auto 6px; max-width: 1000px;
+    }
+    .crediti-icone a { color: rgba(255,255,255,0.8); }
+
+    #stampa { display: none; }
+
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .section { padding: 18px; border-radius: 14px; }
+      .header h1 { font-size: 1.6em; }
+      .vino-campi { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* PDF: si stampa solo il riepilogo, su fondo bianco. "Salva come PDF"
+       dal dialogo di stampa del browser. */
+    @media print {
+      @page { size: A4; margin: 14mm; }
+      body { background: #fff; padding: 0; font-size: 11pt; }
+      body > *:not(#stampa) { display: none !important; }
+      #stampa { display: block; color: #000; }
+      #stampa h1 { font-family: 'Pirata One', cursive; font-size: 24pt; color: #1e3c72; }
+      #stampa h2 { font-size: 11pt; text-transform: uppercase; color: #1e3c72; margin: 16px 0 6px; border-bottom: 1px solid #1e3c72; padding-bottom: 3px; }
+      #stampa .sotto { color: #555; margin-bottom: 8px; }
+      #stampa table { font-size: 9.5pt; }
+      #stampa th, #stampa td { border-bottom: 1px solid #ccc; padding: 4px 6px; }
+      #stampa tr.attuale td { background: #e6ecf8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      #stampa .nota-pdf { font-size: 8.5pt; color: #666; margin-top: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-wine-glass" viewBox="0 0 512 512"><path fill="currentColor" d="M148.97 22.47l-6.25.093-2.564 6.156c-13.235 37.556-21.28 79-21.28 118.093 0 53.777 14.848 93.17 39.874 118.875 18.945 19.458 43.36 30.696 70.156 35 17.09 48.115 16.085 101.005-2.562 148.687-30.555 5.118-60.254 18.273-86.313 39.5h231.22c-26.066-21.23-55.75-34.384-86.313-39.5-18.667-47.734-19.62-100.686-2.468-148.844 26.58-4.382 50.84-15.552 69.75-34.842 25.184-25.692 40.186-65.08 40.186-118.875 0-39.093-8.045-80.537-21.28-118.094l-2.188-6.25h-219.97zm6.75 18.686h199.843c7.25 21.815 12.64 44.904 15.593 67.72h-231.03c2.953-22.816 8.344-45.905 15.593-67.72zm-17.47 86.406h234.78c.45 6.49.69 12.912.69 19.25 0 50.357-13.716 84.26-34.845 105.813-21.13 21.554-50.295 31.406-83.53 31.406-33.238 0-62.247-9.863-83.22-31.405s-34.563-55.437-34.563-105.813c0-6.338.24-12.76.688-19.25z"/></symbol>
+<symbol id="i-plus" viewBox="27 27 202 202"><path fill="currentColor" d="M119 64v55H64v18h55v55h18v-55h55v-18h-55V64h-18z"/></symbol>
+<symbol id="i-trash-can" viewBox="0 0 512 512"><path fill="currentColor" d="M199 103v50h-78v30h270v-30h-78v-50H199zm18 18h78v32h-78v-32zm-79.002 80l30.106 286h175.794l30.104-286H137.998zm62.338 13.38l.64 8.98 16 224 .643 8.976-17.956 1.283-.64-8.98-16-224-.643-8.976 17.956-1.283zm111.328 0l17.955 1.284-.643 8.977-16 224-.64 8.98-17.956-1.284.643-8.977 16-224 .64-8.98zM247 215h18v242h-18V215z"/></symbol>
+<symbol id="i-pirate-flag" viewBox="0 0 512 512"><path fill="currentColor" d="M256 31.203c-96 .797-117.377 76.692-79.434 135.133-6.397 6.534-10.344 15.886-.566 25.664 16 16 32 16 39.852 32.42h80.296C304 208 320 208 336 192c9.778-9.778 5.831-19.13-.566-25.664C373.377 107.896 352 32 256 31.203zm-42.146 101.049c.426-.003.862.007 1.306.03 28.404 1.442 40.84 59.718-10.83 51.095-10.412-1.738-17.355-50.963 9.524-51.125zm84.292 0c26.88.162 19.936 49.387 9.524 51.125C256 192 268.436 133.724 296.84 132.28c.444-.022.88-.032 1.306-.03zM32 144c7.406 88.586 64.475 175.544 156.623 236.797 17.959-7.251 35.767-15.322 50.424-23.877C180.254 319.737 104.939 255.465 32 144zm448 0C359.2 328.605 231.863 383.797 183.908 400.797c3.177 5.374 5.997 10.98 8.711 16.432 3.878 7.789 7.581 15.251 11.184 20.986A517.457 517.457 0 0 0 256 417.973l.168.076a884.617 884.617 0 0 0 9.652-4.65C391.488 353.263 471.156 249.79 480 144zm-224 27.725l20.074 40.15L256 199.328l-20.074 12.547L256 171.725zm-65.604 57.11l15.76 51.042s31.268 24.92 49.844 24.92 49.844-24.92 49.844-24.92l15.76-51.041-27.086 19.236-8.063 16.248S267.35 279.547 256 279.547c-11.35 0-30.455-15.227-30.455-15.227l-8.063-16.248-27.086-19.236zm-59.984 152.976c-.783-.02-1.574-.011-2.375.027l.856 17.978c6.36-.302 10.814 2.416 16.11 8.64 5.298 6.222 10.32 15.707 15.24 25.589 4.918 9.882 9.707 20.12 16.122 28.45 6.415 8.327 16.202 15.446 27.969 13.89l-2.36-17.844c-4.094.541-6.78-1.099-11.349-7.031-4.57-5.933-9.275-15.46-14.268-25.489-4.992-10.029-10.297-20.604-17.644-29.234-6.888-8.09-16.556-14.686-28.3-14.976zm251.176 0c-11.745.29-21.413 6.885-28.3 14.976-7.348 8.63-12.653 19.205-17.645 29.234-4.993 10.03-9.698 19.556-14.268 25.489-4.57 5.932-7.255 7.572-11.35 7.031l-2.359 17.844c11.767 1.556 21.554-5.563 27.969-13.89 6.415-8.33 11.204-18.568 16.123-28.45 4.919-9.882 9.94-19.367 15.238-25.59 5.297-6.223 9.75-8.941 16.111-8.639l.856-17.978a32.853 32.853 0 0 0-2.375-.027zm-55.928 18.107c-13.97 10.003-30.13 18.92-47.424 27.478a524.868 524.868 0 0 0 29.961 10.819c3.603-5.735 7.306-13.197 11.184-20.986 2.714-5.453 5.534-11.058 8.71-16.432-.77-.273-1.62-.586-2.43-.879zm-191.808 23.371l-27.67 10.352 7.904 31.771 36.424-11.707c-1.418-2.814-2.81-5.649-4.207-8.457-4.048-8.131-8.169-15.961-12.451-21.959zm244.296 0c-4.282 5.998-8.403 13.828-12.45 21.959-1.399 2.808-2.79 5.643-4.208 8.457l36.424 11.707 7.904-31.771-27.67-10.352zM78.271 435.438a9.632 9.632 0 0 0-1.32.12 6.824 6.824 0 0 0-1.217.313c-11.544 4.201-25.105 18.04-21.648 29.828 3.07 10.472 19.675 13.359 30.492 11.916 3.828-.51 8.415-3.761 12.234-7.086l-8.124-32.648c-3.238-1.285-7.214-2.528-10.417-2.443zm355.458 0c-3.203-.085-7.179 1.158-10.416 2.443l-8.125 32.648c3.819 3.325 8.406 6.576 12.234 7.086 10.817 1.443 27.422-1.444 30.492-11.916 3.457-11.788-10.104-25.627-21.648-29.828a6.824 6.824 0 0 0-1.217-.312 9.632 9.632 0 0 0-1.32-.122z"/></symbol>
+</svg>
+
+<div class="velo" id="velo">
+  <div class="velo-ancora">⚓</div>
+  <div class="velo-testo" id="veloTesto">Carico...</div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1><svg class="ico"><use href="#i-wine-glass"></use></svg> Degustazione</h1>
+    <a href="index.html?menu=vini" class="btn-home"><svg class="ico"><use href="#i-pirate-flag"></use></svg> Porto</a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">La degustazione</div>
+    <div class="griglia">
+      <div><label for="nome">Nome</label><input type="text" id="nome" placeholder="Es. Riesling a confronto"></div>
+      <div><label for="data">Data</label><input type="date" id="data"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Vini</div>
+    <div class="schede">
+      <button class="scheda attiva" data-s="anagrafica">Dall'anagrafica</button>
+      <button class="scheda" data-s="temp">Temporaneo</button>
+    </div>
+
+    <div id="pannelloAnagrafica">
+      <input type="search" id="cerca" placeholder="Cerca per nome, fornitore..." autocomplete="off">
+      <div class="risultati" id="risultati" hidden></div>
+      <div class="stato-elenco" id="statoElenco"></div>
+    </div>
+
+    <div id="pannelloTemp" hidden>
+      <div class="griglia">
+        <div><label for="tNome">Vino</label><input type="text" id="tNome" placeholder="Nome del vino"></div>
+        <div><label for="tTipo">Acquisto</label>
+          <select id="tTipo">
+            <option value="DIST">Distributore (IVA 22% detraibile)</option>
+            <option value="IMPORT">Import (senza IVA)</option>
+          </select>
+        </div>
+        <div><label for="tImp">Imponibile bottiglia €</label><input type="text" id="tImp" inputmode="decimal" placeholder="0,00"></div>
+        <div id="wrapSpese" hidden><label for="tSpese">Spese logistiche €</label><input type="text" id="tSpese" inputmode="decimal" value="1,00"></div>
+      </div>
+      <div class="azioni">
+        <button class="btn btn-primario" id="btnTemp"><svg class="ico"><use href="#i-plus"></use></svg> Aggiungi</button>
+        <span class="stato-elenco" id="erroreTemp"></span>
+      </div>
+    </div>
+
+    <div id="elencoVini" style="margin-top:18px;"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Conti</div>
+    <div class="nota">
+      Il prezzo a persona è <strong>IVA compresa</strong> (10%, somministrazione). Il ricarico confronta
+      l'incasso <strong>senza IVA</strong> con il costo dei vini <strong>senza IVA</strong>: distributori
+      = imponibile, import = imponibile + spese. Scrivi il prezzo, oppure il ricarico che vuoi ottenere:
+      gli altri due campi si ricalcolano.
+    </div>
+    <div class="griglia">
+      <div><label for="persone">Persone</label><input type="text" id="persone" inputmode="numeric" placeholder="0"></div>
+      <div><label for="prezzo">Prezzo a persona € (IVA incl.)</label><input type="text" id="prezzo" inputmode="decimal" placeholder="0,00"></div>
+      <div><label for="ricX">Ricarico ×</label><input type="text" id="ricX" inputmode="decimal" placeholder="0,00"></div>
+      <div><label for="ricEur">Ricarico € (guadagno)</label><input type="text" id="ricEur" inputmode="decimal" placeholder="0,00"></div>
+    </div>
+
+    <div class="avviso" id="avviso" hidden>
+      <span id="avvisoTesto"></span>
+      <button class="btn btn-secondario" id="btnAdegua">Adegua le bottiglie</button>
+    </div>
+
+    <div class="conti" id="conti"></div>
+
+    <div class="tabella-wrap" id="tabellaPersone"></div>
+
+    <div class="azioni">
+      <button class="btn btn-primario" id="btnPdf">Scarica PDF</button>
+      <button class="btn btn-pericolo" id="btnNuova">Nuova degustazione</button>
+    </div>
+  </div>
+</div>
+
+<div class="crediti-icone">
+  Icone: <a href="https://game-icons.net/" target="_blank" rel="noopener">game-icons.net</a>
+  (Lorc, Delapouite, skoll) &mdash;
+  <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.
+</div>
+
+<div id="stampa"></div>
+
+<script>
+  // =====================================================================
+  // DEGUSTAZIONE — calcolatore, nessun dato sul server
+  // =====================================================================
+  // I vini si prendono dall'anagrafica WINE_COST (solo lettura, getVini) o si
+  // aggiungono al momento come temporanei. La degustazione resta come bozza
+  // su questo dispositivo e si esporta in PDF dal dialogo di stampa.
+  //
+  // IVA (decisione del titolare, 25/09/2026): costo e ricavo si confrontano
+  // entrambi SENZA IVA. Vendita = somministrazione al 10%, quindi incasso / 1,1.
+  // Distributori: il 22% d'acquisto si detrae, costo = imponibile.
+  // Import (UE, senza IVA): costo = imponibile + spese logistiche.
+  // Il costo IVA compresa si mostra solo come uscita di cassa.
+  // Ogni persona beve un calice di ogni vino.
+
+  const API_VINI = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
+  const CACHE_VINI = 'vdc_vini_degustazione';
+  const DURATA_CACHE_VINI = 24 * 60 * 60 * 1000;
+  const BOZZA = 'vdc_degustazione_bozza';
+  const IVA_VENDITA = 1.10;
+  const IVA_ACQUISTO = 1.22;
+  const CALICI_DEFAULT = 6;
+
+  let anagrafica = [];
+  let S = statoVuoto();
+
+  function statoVuoto() {
+    return { nome: '', data: '', vini: [], persone: 0, prezzo: 0, ricX: 0, ricEur: 0, guida: 'prezzo' };
+  }
+
+  // ── Utilità ─────────────────────────────────────────────────────────
+  function num(v) {
+    const n = parseFloat(String(v == null ? '' : v).replace(/\s/g, '').replace(',', '.'));
+    return isFinite(n) ? n : 0;
+  }
+  function euro(n) {
+    if (n == null || !isFinite(n)) return '—';
+    return '€ ' + n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function dec(n) {
+    return (n == null || !isFinite(n)) ? '' : n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false });
+  }
+  function per(n) { return (n == null || !isFinite(n)) ? '—' : n.toLocaleString('it-IT', { maximumFractionDigits: 2 }) + '×'; }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function $(id) { return document.getElementById(id); }
+
+  // ── Calcolo (funzioni pure) ─────────────────────────────────────────
+  function costoNetto(v) { return v.tipo === 'DIST' ? v.imp : v.imp + (v.ss || 0); }
+  function costoIvato(v) { return v.tipo === 'DIST' ? v.imp * IVA_ACQUISTO : v.imp + (v.ss || 0); }
+
+  function calcola(s) {
+    const costo = s.vini.reduce((t, v) => t + v.bott * costoNetto(v), 0);
+    const esborso = s.vini.reduce((t, v) => t + v.bott * costoIvato(v), 0);
+    const capienza = s.vini.length ? Math.min.apply(null, s.vini.map(v => Math.floor(v.bott * v.calici))) : 0;
+    const n = s.persone;
+    let prezzo = s.prezzo;
+    if (s.guida === 'x') prezzo = n > 0 ? costo * s.ricX * IVA_VENDITA / n : 0;
+    if (s.guida === 'eur') prezzo = n > 0 ? (costo + s.ricEur) * IVA_VENDITA / n : 0;
+    return Object.assign({ costo, esborso, capienza, prezzo }, conto(costo, prezzo, n));
+  }
+
+  function conto(costo, prezzo, n) {
+    const lordo = prezzo * n;
+    const netto = lordo / IVA_VENDITA;
+    return {
+      lordo, netto, iva: lordo - netto,
+      ricX: costo > 0 && netto > 0 ? netto / costo : null,
+      ricEur: netto - costo,
+      margine: netto > 0 ? (netto - costo) / netto : null,
+      costoPP: n > 0 ? costo / n : null,
+      pareggio: prezzo > 0 && costo > 0 ? Math.ceil(costo * IVA_VENDITA / prezzo - 1e-9) : null
+    };
+  }
+
+  // ── Bozza sul dispositivo ───────────────────────────────────────────
+  function salvaBozza() {
+    try { localStorage.setItem(BOZZA, JSON.stringify(S)); } catch (e) { /* niente spazio: si va avanti */ }
+  }
+  function caricaBozza() {
+    try {
+      const b = JSON.parse(localStorage.getItem(BOZZA) || 'null');
+      if (b && Array.isArray(b.vini)) S = Object.assign(statoVuoto(), b);
+    } catch (e) { /* bozza illeggibile: si riparte vuoti */ }
+  }
+
+  // ── Anagrafica vini (solo lettura) ──────────────────────────────────
+  async function caricaAnagrafica(forza) {
+    try {
+      const c = JSON.parse(localStorage.getItem(CACHE_VINI) || 'null');
+      if (!forza && c && Date.now() - c.quando < DURATA_CACHE_VINI && (c.vini || []).length) {
+        anagrafica = c.vini;
+        statoElenco(c.quando);
+        return;
+      }
+    } catch (e) { /* copia illeggibile: si richiede */ }
+
+    $('statoElenco').textContent = 'Carico l\'elenco dei vini...';
+    try {
+      const r = await fetch(API_VINI, {
+        method: 'POST', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'getVini' }),
+        signal: AbortSignal.timeout(45000)
+      });
+      const d = JSON.parse(await r.text());
+      if (!d.ok) throw new Error(d.error || 'risposta non valida');
+      anagrafica = (d.vini || []).map(v => ({
+        codice: v.codice, tipo: v.sheet === 'IMPORT' ? 'IMPORT' : 'DIST',
+        nome: v.vino, fornitore: v.fornitore || '',
+        imp: num(v.imponibile), ss: v.sheet === 'IMPORT' ? num(v.ss) : 0
+      }));
+      const quando = Date.now();
+      try { localStorage.setItem(CACHE_VINI, JSON.stringify({ quando, vini: anagrafica })); } catch (e) {}
+      statoElenco(quando);
+    } catch (e) {
+      $('statoElenco').innerHTML = 'Elenco vini non disponibile (' + esc(e.name === 'TimeoutError' ? 'il server non ha risposto' : e.message) +
+        '). Puoi aggiungere i vini come temporanei, oppure <a href="#" id="riprova">riprovare</a>.';
+      const a = $('riprova');
+      if (a) a.onclick = ev => { ev.preventDefault(); caricaAnagrafica(true); };
+    }
+    cerca();
+  }
+
+  function statoElenco(quando) {
+    const ore = Math.round((Date.now() - quando) / 3600000);
+    $('statoElenco').innerHTML = anagrafica.length + ' vini in anagrafica, aggiornati ' +
+      (ore < 1 ? 'da poco' : 'circa ' + ore + ' ore fa') + ' · <a href="#" id="aggiorna">aggiorna</a>';
+    $('aggiorna').onclick = ev => { ev.preventDefault(); caricaAnagrafica(true); };
+  }
+
+  function cerca() {
+    const q = $('cerca').value.trim().toLowerCase();
+    const box = $('risultati');
+    if (!q) { box.hidden = true; return; }
+    const trovati = anagrafica.filter(v => (v.nome + ' ' + v.fornitore).toLowerCase().includes(q)).slice(0, 40);
+    box.hidden = false;
+    box.innerHTML = trovati.length ? trovati.map(v => `
+      <div class="risultato" data-codice="${esc(v.codice)}">
+        <span>${esc(v.nome)} <small>· ${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}${v.fornitore ? ' · ' + esc(v.fornitore) : ''}</small></span>
+        <span class="prezzo">${euro(costoNetto(v))}</span>
+      </div>`).join('') : '<div class="vuoto">Nessun vino trovato</div>';
+  }
+
+  function aggiungiDaAnagrafica(codice) {
+    const v = anagrafica.find(x => String(x.codice) === String(codice));
+    if (!v) return;
+    S.vini.push({ id: 'v' + Date.now(), codice: v.codice, nome: v.nome, tipo: v.tipo, imp: v.imp, ss: v.ss,
+                  temp: false, bott: 1, calici: CALICI_DEFAULT });
+    $('cerca').value = '';
+    cerca();
+    aggiorna(true);
+  }
+
+  function aggiungiTemporaneo() {
+    const nome = $('tNome').value.trim();
+    const imp = num($('tImp').value);
+    const tipo = $('tTipo').value;
+    if (!nome || imp <= 0) { $('erroreTemp').textContent = 'Servono nome e imponibile.'; return; }
+    $('erroreTemp').textContent = '';
+    S.vini.push({ id: 'v' + Date.now(), codice: null, nome, tipo, imp,
+                  ss: tipo === 'IMPORT' ? num($('tSpese').value) : 0,
+                  temp: true, bott: 1, calici: CALICI_DEFAULT });
+    $('tNome').value = ''; $('tImp').value = '';
+    aggiorna(true);
+  }
+
+  // ── Disegno ─────────────────────────────────────────────────────────
+  function disegnaVini() {
+    const box = $('elencoVini');
+    if (!S.vini.length) { box.innerHTML = '<div class="vuoto">Nessun vino: aggiungine uno qui sopra.</div>'; return; }
+    box.innerHTML = S.vini.map(v => `
+      <div class="vino t-${v.tipo}${v.temp ? ' temp' : ''}" data-id="${v.id}">
+        <div class="vino-testa">
+          <div class="vino-nome">${esc(v.nome)}
+            <span class="badge">${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}${v.temp ? ' · temporaneo' : ''}</span>
+          </div>
+          <button class="btn-mini" data-azione="togli" title="Togli"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
+        </div>
+        <div class="vino-campi">
+          <div><label>Imponibile €</label><input type="text" inputmode="decimal" data-campo="imp" value="${dec(v.imp)}"></div>
+          <div ${v.tipo === 'IMPORT' ? '' : 'hidden'}><label>Spese €</label><input type="text" inputmode="decimal" data-campo="ss" value="${dec(v.ss)}"></div>
+          <div><label>Bottiglie</label><input type="text" inputmode="numeric" data-campo="bott" value="${v.bott}"></div>
+          <div><label>Calici / bott.</label><input type="text" inputmode="numeric" data-campo="calici" value="${v.calici}"></div>
+        </div>
+        <div class="vino-sotto" data-sotto></div>
+      </div>`).join('');
+    aggiornaSottoVini();
+  }
+
+  function aggiornaSottoVini() {
+    S.vini.forEach(v => {
+      const el = document.querySelector(`.vino[data-id="${v.id}"] [data-sotto]`);
+      if (!el) return;
+      el.innerHTML = `Costo bottiglia senza IVA <b>${euro(costoNetto(v))}</b>` +
+        (v.tipo === 'DIST' ? ` (con IVA ${euro(costoIvato(v))})` : '') +
+        ` · ${Math.floor(v.bott * v.calici)} calici · totale <b>${euro(v.bott * costoNetto(v))}</b>`;
+    });
+  }
+
+  function disegnaConti() {
+    const r = calcola(S);
+
+    // I due campi che non guidano mostrano il valore calcolato.
+    if (S.guida !== 'prezzo' && document.activeElement !== $('prezzo')) $('prezzo').value = r.prezzo > 0 ? dec(r.prezzo) : '';
+    if (S.guida !== 'x' && document.activeElement !== $('ricX')) $('ricX').value = r.ricX ? dec(r.ricX) : '';
+    if (S.guida !== 'eur' && document.activeElement !== $('ricEur')) $('ricEur').value = r.netto > 0 ? dec(r.ricEur) : '';
+    ['prezzo', 'ricX', 'ricEur'].forEach(id => $(id).classList.toggle('guida',
+      (id === 'prezzo' && S.guida === 'prezzo') || (id === 'ricX' && S.guida === 'x') || (id === 'ricEur' && S.guida === 'eur')));
+
+    const oltre = S.vini.length && S.persone > r.capienza;
+    $('avviso').hidden = !oltre;
+    if (oltre) {
+      const corti = S.vini.filter(v => Math.floor(v.bott * v.calici) < S.persone).map(v => v.nome);
+      $('avvisoTesto').textContent = `Con ${S.persone} persone i calici non bastano per: ${corti.join(', ')}.`;
+    }
+
+    const neg = r.netto > 0 && r.ricEur < 0;
+    const voci = [
+      ['Costo vini (senza IVA)', euro(r.costo)],
+      ['Costo per persona', euro(r.costoPP)],
+      ['Incasso (IVA incl.)', euro(r.lordo)],
+      ['Incasso senza IVA', euro(r.netto)],
+      ['IVA 10% da versare', euro(r.iva)],
+      ['Ricarico', per(r.ricX), 'forte' + (neg ? ' neg' : '')],
+      ['Guadagno', euro(r.netto > 0 ? r.ricEur : null), 'forte' + (neg ? ' neg' : '')],
+      ['Margine sull\'incasso', r.margine == null ? '—' : Math.round(r.margine * 100) + '%', neg ? 'neg' : ''],
+      ['Pareggio da', r.pareggio == null ? '—' : r.pareggio + (r.pareggio === 1 ? ' persona' : ' persone')],
+      ['Uscita di cassa (IVA incl.)', euro(r.esborso)]
+    ];
+    $('conti').innerHTML = voci.map(v => `<div class="conto ${v[2] || ''}"><div class="l">${v[0]}</div><div class="v">${v[1]}</div></div>`).join('');
+
+    $('tabellaPersone').innerHTML = tabellaPersone(r);
+  }
+
+  // Ricarico al variare delle persone, a prezzo fermo.
+  function righePersone(r) {
+    if (!(r.prezzo > 0) || !(r.costo > 0)) return [];
+    const n = S.persone || r.capienza || 10;
+    const da = Math.max(1, n - 5), a = n + 5;
+    const righe = [];
+    for (let k = da; k <= a; k++) righe.push(Object.assign({ k, oltre: S.vini.length && k > r.capienza }, conto(r.costo, r.prezzo, k)));
+    return righe;
+  }
+
+  function tabellaPersone(r) {
+    const righe = righePersone(r);
+    if (!righe.length) return '';
+    return `<table>
+      <thead><tr><th>Persone (a ${euro(r.prezzo)})</th><th>Incasso senza IVA</th><th>Ricarico</th><th>Guadagno</th></tr></thead>
+      <tbody>${righe.map(x => `<tr class="${x.k === S.persone ? 'attuale' : ''}${x.oltre ? ' oltre' : ''}">
+        <td>${x.k}${x.oltre ? ' · servono più bottiglie' : ''}</td><td>${euro(x.netto)}</td>
+        <td>${per(x.ricX)}</td><td class="${x.ricEur < 0 ? 'neg' : ''}">${euro(x.ricEur)}</td></tr>`).join('')}</tbody></table>`;
+  }
+
+  function aggiorna(ridisegnaVini) {
+    if (ridisegnaVini) disegnaVini(); else aggiornaSottoVini();
+    disegnaConti();
+    salvaBozza();
+  }
+
+  // ── PDF ─────────────────────────────────────────────────────────────
+  function preparaStampa() {
+    const r = calcola(S);
+    const data = S.data ? S.data.split('-').reverse().join('/') : '';
+    $('stampa').innerHTML = `
+      <h1>${esc(S.nome || 'Degustazione')}</h1>
+      <div class="sotto">Vecchia Dogana${data ? ' · ' + data : ''} · ${S.persone} persone · ${euro(r.prezzo)} a persona IVA incl.</div>
+      <h2>Vini</h2>
+      <table><thead><tr><th>Vino</th><th>Acquisto</th><th>Bottiglie</th><th>Calici/bott.</th><th>Costo bott. senza IVA</th><th>Totale</th></tr></thead>
+      <tbody>${S.vini.map(v => `<tr><td>${esc(v.nome)}${v.temp ? ' (temporaneo)' : ''}</td><td>${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}</td>
+        <td>${v.bott}</td><td>${v.calici}</td><td>${euro(costoNetto(v))}</td><td>${euro(v.bott * costoNetto(v))}</td></tr>`).join('')}</tbody></table>
+      <h2>Conti</h2>
+      <table><tbody>
+        <tr><td>Costo vini senza IVA</td><td>${euro(r.costo)}</td></tr>
+        <tr><td>Costo per persona</td><td>${euro(r.costoPP)}</td></tr>
+        <tr><td>Incasso IVA inclusa</td><td>${euro(r.lordo)}</td></tr>
+        <tr><td>Incasso senza IVA</td><td>${euro(r.netto)}</td></tr>
+        <tr><td>IVA 10% da versare</td><td>${euro(r.iva)}</td></tr>
+        <tr class="attuale"><td>Ricarico</td><td>${per(r.ricX)}</td></tr>
+        <tr class="attuale"><td>Guadagno</td><td>${euro(r.ricEur)}</td></tr>
+        <tr><td>Margine sull'incasso</td><td>${r.margine == null ? '—' : Math.round(r.margine * 100) + '%'}</td></tr>
+        <tr><td>Pareggio da</td><td>${r.pareggio == null ? '—' : r.pareggio + ' persone'}</td></tr>
+        <tr><td>Uscita di cassa per i vini (IVA incl.)</td><td>${euro(r.esborso)}</td></tr>
+      </tbody></table>
+      ${righePersone(r).length ? '<h2>Al variare delle persone</h2>' + tabellaPersone(r) : ''}
+      <div class="nota-pdf">Costo e incasso confrontati senza IVA: incasso / 1,10; distributori = imponibile, import = imponibile + spese logistiche.</div>`;
+  }
+
+  function scaricaPdf() {
+    preparaStampa();
+    const titolo = document.title;
+    document.title = 'Degustazione' + (S.nome ? ' - ' + S.nome : '') + (S.data ? ' ' + S.data : '');
+    window.print();
+    setTimeout(() => { document.title = titolo; }, 1000);
+  }
+
+  // ── Eventi ──────────────────────────────────────────────────────────
+  // Riporta lo stato nei campi (all'avvio e dopo "Nuova degustazione").
+  function riempiCampi() {
+    $('nome').value = S.nome; $('data').value = S.data;
+    $('persone').value = S.persone || '';
+    ['prezzo', 'ricX', 'ricEur'].forEach(id => { $(id).value = ''; });
+    if (S.guida === 'prezzo') $('prezzo').value = S.prezzo ? dec(S.prezzo) : '';
+    if (S.guida === 'x') $('ricX').value = S.ricX ? dec(S.ricX) : '';
+    if (S.guida === 'eur') $('ricEur').value = S.ricEur ? dec(S.ricEur) : '';
+  }
+
+  // Si chiama una volta sola: aggiunge ascoltatori che non vanno duplicati.
+  function collega() {
+    $('nome').oninput = () => { S.nome = $('nome').value; salvaBozza(); };
+    $('data').onchange = () => { S.data = $('data').value; salvaBozza(); };
+    $('persone').oninput = () => { S.persone = Math.max(0, Math.floor(num($('persone').value))); aggiorna(); };
+    $('prezzo').oninput = () => { S.guida = 'prezzo'; S.prezzo = num($('prezzo').value); aggiorna(); };
+    $('ricX').oninput = () => { S.guida = 'x'; S.ricX = num($('ricX').value); aggiorna(); };
+    $('ricEur').oninput = () => { S.guida = 'eur'; S.ricEur = num($('ricEur').value); aggiorna(); };
+    // Uscendo da un campo calcolato lo si riallinea al valore esatto.
+    ['prezzo', 'ricX', 'ricEur'].forEach(id => $(id).addEventListener('blur', () => disegnaConti()));
+
+    document.querySelectorAll('.scheda').forEach(b => b.onclick = () => {
+      document.querySelectorAll('.scheda').forEach(x => x.classList.toggle('attiva', x === b));
+      $('pannelloAnagrafica').hidden = b.dataset.s !== 'anagrafica';
+      $('pannelloTemp').hidden = b.dataset.s !== 'temp';
+    });
+    $('cerca').oninput = cerca;
+    $('risultati').onclick = e => { const r = e.target.closest('.risultato'); if (r) aggiungiDaAnagrafica(r.dataset.codice); };
+    $('tTipo').onchange = () => { $('wrapSpese').hidden = $('tTipo').value !== 'IMPORT'; };
+    $('btnTemp').onclick = aggiungiTemporaneo;
+
+    $('elencoVini').addEventListener('input', e => {
+      const campo = e.target.dataset.campo;
+      const riga = e.target.closest('.vino');
+      if (!campo || !riga) return;
+      const v = S.vini.find(x => x.id === riga.dataset.id);
+      if (!v) return;
+      const n = num(e.target.value);
+      v[campo] = (campo === 'bott' || campo === 'calici') ? Math.max(0, Math.floor(n)) : Math.max(0, n);
+      aggiorna();
+    });
+    $('elencoVini').addEventListener('click', e => {
+      const b = e.target.closest('[data-azione="togli"]');
+      if (!b) return;
+      const id = b.closest('.vino').dataset.id;
+      S.vini = S.vini.filter(x => x.id !== id);
+      aggiorna(true);
+    });
+
+    $('btnAdegua').onclick = () => {
+      S.vini.forEach(v => { if (v.calici > 0) v.bott = Math.max(v.bott, Math.ceil(S.persone / v.calici)); });
+      aggiorna(true);
+    };
+    $('btnPdf').onclick = scaricaPdf;
+
+    // Azzerare chiede un secondo tocco: niente confirm(), che nelle PWA è scomodo.
+    let armato = null;
+    $('btnNuova').onclick = () => {
+      if (!armato) {
+        $('btnNuova').textContent = 'Tocca ancora per azzerare';
+        armato = setTimeout(() => { armato = null; $('btnNuova').textContent = 'Nuova degustazione'; }, 4000);
+        return;
+      }
+      clearTimeout(armato); armato = null;
+      $('btnNuova').textContent = 'Nuova degustazione';
+      S = statoVuoto();
+      riempiCampi();
+      aggiorna(true);
+    };
+  }
+
+  caricaBozza();
+  riempiCampi();
+  collega();
+  aggiorna(true);
+  caricaAnagrafica(false);
+</script>
+</body>
+</html>
