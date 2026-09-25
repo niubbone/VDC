@@ -238,7 +238,13 @@
     <div class="griglia">
       <div><label for="nome">Nome</label><input type="text" id="nome" placeholder="Es. Riesling a confronto"></div>
       <div><label for="data">Data</label><input type="date" id="data"></div>
+      <div><label for="caliciBott">Calici per bottiglia</label><input type="text" id="caliciBott" inputmode="numeric"></div>
     </div>
+    <div class="schede" style="margin:10px 0 0;">
+      <button class="scheda" data-calici="6">Calice normale · 6</button>
+      <button class="scheda" data-calici="30">Assaggio 2,5 cl · 30</button>
+    </div>
+    <div class="stato-elenco">Vale per tutti i vini; sotto ogni vino puoi cambiarlo solo per quello.</div>
   </div>
 
   <div class="section">
@@ -341,7 +347,7 @@
   let S = statoVuoto();
 
   function statoVuoto() {
-    return { nome: '', data: '', vini: [], persone: 0, prezzo: 0, ricX: 0, ricEur: 0, guida: 'prezzo' };
+    return { nome: '', data: '', caliciBott: CALICI_DEFAULT, vini: [], persone: 0, prezzo: 0, ricX: 0, ricEur: 0, guida: 'prezzo' };
   }
 
   // ── Utilità ─────────────────────────────────────────────────────────
@@ -464,7 +470,7 @@
     const v = anagrafica.find(x => String(x.codice) === String(codice));
     if (!v) return;
     S.vini.push({ id: 'v' + Date.now(), codice: v.codice, nome: v.nome, tipo: v.tipo, imp: v.imp, ss: v.ss,
-                  temp: false, bott: 1, calici: CALICI_DEFAULT });
+                  temp: false, bott: 1, calici: S.caliciBott });
     $('cerca').value = '';
     cerca();
     aggiorna(true);
@@ -478,7 +484,7 @@
     $('erroreTemp').textContent = '';
     S.vini.push({ id: 'v' + Date.now(), codice: null, nome, tipo, imp,
                   ss: tipo === 'IMPORT' ? num($('tSpese').value) : 0,
-                  temp: true, bott: 1, calici: CALICI_DEFAULT });
+                  temp: true, bott: 1, calici: S.caliciBott });
     $('tNome').value = ''; $('tImp').value = '';
     aggiorna(true);
   }
@@ -499,7 +505,7 @@
           <div><label>Imponibile €</label><input type="text" inputmode="decimal" data-campo="imp" value="${dec(v.imp)}"></div>
           <div ${v.tipo === 'IMPORT' ? '' : 'hidden'}><label>Spese €</label><input type="text" inputmode="decimal" data-campo="ss" value="${dec(v.ss)}"></div>
           <div><label>Bottiglie</label><input type="text" inputmode="numeric" data-campo="bott" value="${v.bott}"></div>
-          <div><label>Calici / bott.</label><input type="text" inputmode="numeric" data-campo="calici" value="${v.calici}"></div>
+          <div><label>Calici da questa bott.</label><input type="text" inputmode="numeric" data-campo="calici" value="${v.calici}"></div>
         </div>
         <div class="vino-sotto" data-sotto></div>
       </div>`).join('');
@@ -618,14 +624,35 @@
   function riempiCampi() {
     $('nome').value = S.nome; $('data').value = S.data;
     $('persone').value = S.persone || '';
+    $('caliciBott').value = S.caliciBott || '';
+    evidenziaCalici();
     ['prezzo', 'ricX', 'ricEur'].forEach(id => { $(id).value = ''; });
     if (S.guida === 'prezzo') $('prezzo').value = S.prezzo ? dec(S.prezzo) : '';
     if (S.guida === 'x') $('ricX').value = S.ricX ? dec(S.ricX) : '';
     if (S.guida === 'eur') $('ricEur').value = S.ricEur ? dec(S.ricEur) : '';
   }
 
+  function evidenziaCalici() {
+    document.querySelectorAll('[data-calici]').forEach(b =>
+      b.classList.toggle('attiva', Number(b.dataset.calici) === S.caliciBott));
+  }
+
+  // Calici per bottiglia della degustazione: vale per tutti i vini presenti e
+  // per quelli che si aggiungono; sotto ogni vino si puo' poi cambiarlo.
+  function impostaCalici(n) {
+    S.caliciBott = Math.max(0, Math.floor(n));
+    S.vini.forEach(v => { v.calici = S.caliciBott; });
+    evidenziaCalici();
+    aggiorna(true);
+  }
+
   // Si chiama una volta sola: aggiunge ascoltatori che non vanno duplicati.
   function collega() {
+    $('caliciBott').oninput = () => impostaCalici(num($('caliciBott').value));
+    document.querySelectorAll('[data-calici]').forEach(b => b.onclick = () => {
+      $('caliciBott').value = b.dataset.calici;
+      impostaCalici(Number(b.dataset.calici));
+    });
     $('nome').oninput = () => { S.nome = $('nome').value; salvaBozza(); };
     $('data').onchange = () => { S.data = $('data').value; salvaBozza(); };
     $('persone').oninput = () => { S.persone = Math.max(0, Math.floor(num($('persone').value))); aggiorna(); };
@@ -635,8 +662,8 @@
     // Uscendo da un campo calcolato lo si riallinea al valore esatto.
     ['prezzo', 'ricX', 'ricEur'].forEach(id => $(id).addEventListener('blur', () => disegnaConti()));
 
-    document.querySelectorAll('.scheda').forEach(b => b.onclick = () => {
-      document.querySelectorAll('.scheda').forEach(x => x.classList.toggle('attiva', x === b));
+    document.querySelectorAll('.scheda[data-s]').forEach(b => b.onclick = () => {
+      document.querySelectorAll('.scheda[data-s]').forEach(x => x.classList.toggle('attiva', x === b));
       $('pannelloAnagrafica').hidden = b.dataset.s !== 'anagrafica';
       $('pannelloTemp').hidden = b.dataset.s !== 'temp';
     });
