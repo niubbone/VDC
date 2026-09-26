@@ -339,7 +339,12 @@
   // copia locale che dura un giorno. Se non risponde, la pagina funziona lo
   // stesso con i nomi già usati: non si aspetta mai quella risposta per scrivere.
 
-  const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
+  // Le segnalazioni non passano più da Apps Script (20-50 secondi nei giorni
+  // storti) ma da un piccolo PHP sull'hosting di studio-smart.it, con i dati in
+  // SQLite: ~100-150 ms. Stesse azioni, stesse risposte — sorgente in
+  // Hosting/api/vdc-segnalazioni.php (26/09/2026).
+  const API_URL = 'https://www.studio-smart.it/api/vdc-segnalazioni.php';
+  const TIMEOUT_MS = 20000;
   const API_VINI = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
   const CACHE_FORNITORI = 'vdc_fornitori_anagrafica';
   const DURATA_CACHE_FORNITORI = 24 * 60 * 60 * 1000;
@@ -369,7 +374,7 @@
   // ritenta mai su una richiesta lenta — abortire il fetch non ferma il
   // server — e si ritenta invece quando al posto del JSON arriva una pagina
   // HTML, che è come Apps Script dice "sono freddo".
-  async function fetchConRetry(url, options, tentativi = 2, timeoutMs = 45000) {
+  async function fetchConRetry(url, options, tentativi = 2, timeoutMs = TIMEOUT_MS) {
     for (let i = 0; i < tentativi; i++) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -443,10 +448,10 @@
   /**
    * L'errore detto in italiano.
    *
-   * Il caso che si vede davvero è il timeout: Apps Script ogni tanto impiega
-   * 40-50 secondi (è latenza della piattaforma, non un guasto nostro — MANUALE
-   * §5.3), il fetch viene abortito e il browser alza un "signal is aborted
-   * without reason" che all'utente non dice niente.
+   * Il caso da tradurre è il timeout: il fetch viene abortito e il browser
+   * alza un "signal is aborted without reason" che all'utente non dice niente.
+   * Con Apps Script capitava spesso (MANUALE §5.3); dall'hosting è raro, di
+   * solito vuol dire rete assente o debole.
    *
    * ⚠️ Su una SCRITTURA il timeout non vuol dire "non è successo": abortire il
    * fetch non ferma il server, quindi la riga può essere stata scritta lo
@@ -457,8 +462,8 @@
     const nome = error && error.name;
     if (nome === 'AbortError' || nome === 'TimeoutError') {
       return scrittura
-        ? 'Il server non ha risposto entro 45 secondi. L\'operazione può essere comunque andata a buon fine: guarda l\'elenco qui sotto prima di rifarla, altrimenti rischi un doppione.'
-        : 'Il server non ha risposto entro 45 secondi. Capita quando Google è lento: riprova fra qualche secondo con il tasto ricarica.';
+        ? 'Il server non ha risposto entro 20 secondi. L\'operazione può essere comunque andata a buon fine: guarda l\'elenco qui sotto prima di rifarla, altrimenti rischi un doppione.'
+        : 'Il server non ha risposto entro 20 secondi. Controlla la connessione e riprova con il tasto ricarica.';
     }
     return (error && error.message) ? error.message : 'Errore imprevisto';
   }
