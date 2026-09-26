@@ -537,6 +537,36 @@
   
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzcpybXvlL5Ge24NztvVL3Kz8Jhd3jRHWH0KZmZgKW9577DIqsvXUH7h2lN4ZkzldHisQ/exec';
+
+    // Il PIN dei titolari si verifica sull'hosting di studio-smart.it, non più
+    // su Apps Script (26/09/2026): per confrontare due stringhe si aspettavano
+    // secondi, a volte 20-50. Qui ~100 ms. Il PIN sta in un file sul server,
+    // fuori dal sito (Hosting/api/vdc-pin.php); dopo 5 errori di fila il server
+    // fa aspettare 10 minuti.
+    const PIN_URL = 'https://www.studio-smart.it/api/vdc-pin.php';
+
+    /** { valido } oppure { valido: false, bloccato: true, attesa: secondi }. */
+    async function verificaPINServer(pin) {
+      const risposta = await fetch(PIN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'verificaPIN', pin: pin }),
+        signal: AbortSignal.timeout(15000)
+      });
+      const r = await risposta.json();
+      if (r.errore) throw new Error(r.errore);
+      return r;
+    }
+
+    /** Il messaggio sotto il campo: codice errato, oppure quanto aspettare. */
+    function mostraErrorePIN(idBox, result) {
+      const box = document.getElementById(idBox);
+      box.textContent = result.bloccato
+        ? `⛔ Troppi tentativi: riprova tra ${Math.ceil(result.attesa / 60)} minuti.`
+        : '⚠️ Codice errato! Riprova.';
+      box.style.display = 'block';
+      setTimeout(() => box.style.display = 'none', result.bloccato ? 6000 : 3000);
+    }
     
     // Fetch con timeout + retry esponenziale: assorbe i glitch transitori di GAS
     // (cold-start, "Service invoked too many times") che altrimenti diventano errori visibili.
@@ -640,7 +670,7 @@
       document.getElementById('loadingOverlay').classList.add('active');
       
       try {
-        const result = await callAPI('verificaPIN', { pin: pin });
+        const result = await verificaPINServer(pin);
         
         // Nascondi spinner
         document.getElementById('loadingOverlay').classList.remove('active');
@@ -649,8 +679,7 @@
           sessionStorage.setItem('auth', 'titolare');
           window.location.href = 'dashboard.html';
         } else {
-          document.getElementById('errorePin').style.display = 'block';
-          setTimeout(() => document.getElementById('errorePin').style.display = 'none', 3000);
+          mostraErrorePIN('errorePin', result);
         }
       } catch (error) {
         // Nascondi spinner anche in caso di errore
@@ -698,15 +727,14 @@
       if (!pin) { alert('⚠️ Inserisci il codice segreto!'); return; }
       document.getElementById('loadingOverlay').classList.add('active');
       try {
-        const result = await callAPI('verificaPIN', { pin });
+        const result = await verificaPINServer(pin);
         document.getElementById('loadingOverlay').classList.remove('active');
         if (result.valido) {
           sessionStorage.setItem('auth', 'titolare');
           document.getElementById('pinViniSection').style.display = 'none';
           document.getElementById('viniMenu').style.display = 'block';
         } else {
-          document.getElementById('errorePinVini').style.display = 'block';
-          setTimeout(() => document.getElementById('errorePinVini').style.display = 'none', 3000);
+          mostraErrorePIN('errorePinVini', result);
         }
       } catch (error) {
         document.getElementById('loadingOverlay').classList.remove('active');
