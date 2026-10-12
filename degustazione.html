@@ -138,7 +138,48 @@
       display: inline-block; font-size: 0.72em; padding: 1px 8px; border-radius: 10px;
       border: 1px solid var(--c); color: var(--c); margin-left: 6px; font-weight: normal; vertical-align: 1px;
     }
-    .vino-campi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+    .vino-campi { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-top: 10px; }
+    .vino-campi select { padding: 8px 10px; }
+    .vino-campi select.manca { border-color: #f0c36d; background: #fff6e5; }
+
+    /* Ordine di servizio: numero e frecce, che sul telefono funzionano meglio del trascinamento. */
+    .vino-sx { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+    .ordine { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
+    .ordine b { color: #2a5298; font-size: 1.05em; min-width: 1.4em; text-align: center; }
+    .btn-freccia {
+      width: 30px; height: 24px; border-radius: 6px; border: 1px solid #c0cce8; background: #f0f4ff;
+      color: #2a5298; cursor: pointer; font-size: 0.8em; line-height: 1;
+    }
+    .btn-freccia:disabled { opacity: 0.3; cursor: default; }
+    .vino-dx { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+    /* Tipo del vino (classificazione della carta): pallino e riepilogo. */
+    .pallino { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--t, #bbb); margin-right: 6px; vertical-align: 0; }
+    .tipo-BIANCO   { --t: #d4b000; }
+    .tipo-ROSATO   { --t: #e07a8a; }
+    .tipo-ROSSO    { --t: #9b1c1c; }
+    .tipo-BOLLA    { --t: #2a8fbf; }
+    .tipo-SPECIALE { --t: #7a4fa0; }
+    .riepilogo-tipi { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .chip-tipo {
+      border: 2px solid var(--t, #ddd); border-radius: 20px; padding: 5px 12px;
+      font-size: 0.85em; font-weight: bold; color: #333; background: #fff;
+    }
+    .chip-tipo.zero { opacity: 0.4; }
+    .chip-tipo.manca { border-color: #f0c36d; background: #fff6e5; color: #7a5200; }
+
+    /* Archivio delle degustazioni salvate (hosting studio-smart.it). */
+    .stato-salva { font-size: 0.82em; color: #666; }
+    .stato-salva.sporca { color: #b36b00; font-weight: bold; }
+    .salvata {
+      display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap;
+      padding: 10px 12px; border: 1px solid #e0e8f8; border-radius: 10px; margin-bottom: 8px;
+    }
+    .salvata.attuale { border-color: #2a5298; background: #f0f4ff; }
+    .salvata-nome { font-weight: bold; color: #1e3c72; overflow-wrap: anywhere; }
+    .salvata small { color: #888; }
+    .salvata-azioni { display: flex; gap: 6px; }
+    .salvata-azioni .btn { padding: 7px 12px; font-size: 0.78em; }
     .vino-campi label { font-size: 0.7em; }
     .vino-campi input { padding: 8px 10px; }
     .vino-sotto { font-size: 0.8em; color: #666; margin-top: 8px; }
@@ -196,6 +237,8 @@
       .vino-campi { grid-template-columns: 1fr 1fr; }
     }
 
+    .btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
     /* PDF: si stampa solo il riepilogo, su fondo bianco. "Salva come PDF"
        dal dialogo di stampa del browser. */
     @media print {
@@ -234,17 +277,37 @@
   </div>
 
   <div class="section">
+    <div class="section-title">
+      <span>Degustazioni salvate</span>
+      <button class="btn btn-secondario" id="btnArchivio" style="padding:6px 12px;font-size:0.75em;">Mostra</button>
+    </div>
+    <div id="archivio" hidden>
+      <div id="elencoSalvate"><div class="vuoto">Carico...</div></div>
+    </div>
+    <div class="stato-elenco" id="statoArchivio"></div>
+  </div>
+
+  <div class="section">
     <div class="section-title">La degustazione</div>
     <div class="griglia">
       <div><label for="nome">Nome</label><input type="text" id="nome" placeholder="Es. Riesling a confronto"></div>
       <div><label for="data">Data</label><input type="date" id="data"></div>
       <div><label for="caliciBott">Calici per bottiglia</label><input type="text" id="caliciBott" inputmode="numeric"></div>
+      <div><label for="bottVino">Bottiglie per vino</label><input type="text" id="bottVino" inputmode="numeric"></div>
     </div>
     <div class="schede" style="margin:10px 0 0;">
       <button class="scheda" data-calici="6">Calice normale · 6</button>
       <button class="scheda" data-calici="25">Assaggio 2,5 cl · 25</button>
     </div>
-    <div class="stato-elenco">Vale per tutti i vini; sotto ogni vino puoi cambiarlo solo per quello.</div>
+    <div class="stato-elenco">Calici e bottiglie valgono per tutti i vini; sotto ogni vino puoi cambiarli solo per quello.</div>
+
+    <div class="riepilogo-tipi" id="riepilogoTipi"></div>
+
+    <div class="azioni">
+      <button class="btn btn-primario" id="btnSalva">Salva</button>
+      <button class="btn btn-secondario" id="btnSalvaCopia" hidden>Salva come nuova</button>
+      <span class="stato-salva" id="statoSalva"></span>
+    </div>
   </div>
 
   <div class="section">
@@ -263,6 +326,7 @@
     <div id="pannelloTemp" hidden>
       <div class="griglia">
         <div><label for="tNome">Vino</label><input type="text" id="tNome" placeholder="Nome del vino"></div>
+        <div><label for="tCat">Tipo</label><select id="tCat"></select></div>
         <div><label for="tTipo">Acquisto</label>
           <select id="tTipo">
             <option value="DIST">Distributore (IVA 22% detraibile)</option>
@@ -322,11 +386,18 @@
 
 <script>
   // =====================================================================
-  // DEGUSTAZIONE — calcolatore, nessun dato sul server
+  // DEGUSTAZIONE — calcolatore con archivio sull'hosting
   // =====================================================================
   // I vini si prendono dall'anagrafica WINE_COST (solo lettura, getVini) o si
   // aggiungono al momento come temporanei. La degustazione resta come bozza
-  // su questo dispositivo e si esporta in PDF dal dialogo di stampa.
+  // su questo dispositivo; col tasto Salva va nell'archivio su studio-smart.it
+  // (vdc-degustazioni.php), da cui si riapre, si modifica o si elimina.
+  // Si esporta in PDF dal dialogo di stampa.
+  //
+  // L'ordine dei vini nell'elenco e' l'ordine di servizio (frecce su/giu').
+  // Il tipo (bianco, rosato, rosso, bolla, speciale) e' la classificazione della
+  // carta: dall'anagrafica si ricava da Categoria carta (o, se manca, da
+  // Categoria costo), sui temporanei lo si sceglie.
   //
   // IVA (decisione del titolare, 25/09/2026): costo e ricavo si confrontano
   // entrambi SENZA IVA. Vendita = somministrazione al 10%, quindi incasso / 1,1.
@@ -336,18 +407,62 @@
   // Ogni persona beve un calice di ogni vino.
 
   const API_VINI = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
-  const CACHE_VINI = 'vdc_vini_degustazione';
+  const API_DEG = 'https://www.studio-smart.it/api/vdc-degustazioni.php';
+  // _v2: dal 12/10/2026 la copia porta anche il tipo del vino (prima no)
+  const CACHE_VINI = 'vdc_vini_degustazione_v2';
   const DURATA_CACHE_VINI = 24 * 60 * 60 * 1000;
   const BOZZA = 'vdc_degustazione_bozza';
   const IVA_VENDITA = 1.10;
   const IVA_ACQUISTO = 1.22;
   const CALICI_DEFAULT = 6;
+  const BOTT_DEFAULT = 1;
+
+  // Classificazione della carta (gestione-vini: I Bianchi, I Rosati, I Rossi, Le Bolle, I Vini Speciali)
+  const TIPI = [
+    { k: 'BIANCO',   uno: 'Bianco',   piu: 'Bianchi'  },
+    { k: 'ROSATO',   uno: 'Rosato',   piu: 'Rosati'   },
+    { k: 'ROSSO',    uno: 'Rosso',    piu: 'Rossi'    },
+    { k: 'BOLLA',    uno: 'Bolla',    piu: 'Bolle'    },
+    { k: 'SPECIALE', uno: 'Speciale', piu: 'Speciali' }
+  ];
+  function tipoDa(catCarta, catCosto) {
+    const c = String(catCarta || '').toLowerCase(), k = String(catCosto || '').toUpperCase();
+    if (c.includes('bianch')) return 'BIANCO';
+    if (c.includes('rosat')) return 'ROSATO';
+    if (c.includes('ross')) return 'ROSSO';
+    if (c.includes('boll')) return 'BOLLA';
+    if (c.includes('special')) return 'SPECIALE';
+    if (k.includes('BOLLICIN') || k.includes('CHAMPAGNE') || k.includes('SPUMANT') || k.includes('CAVA') || k.includes('PET NAT')) return 'BOLLA';
+    if (k.includes('SPECIAL')) return 'SPECIALE';
+    return '';                     // fermo fuori carta: bianco o rosso lo dice il titolare
+  }
+  function nomeTipo(k) { const t = TIPI.find(x => x.k === k); return t ? t.uno : 'Tipo da scegliere'; }
+  function opzioniTipo(sel) {
+    return '<option value="">— tipo —</option>' +
+      TIPI.map(t => `<option value="${t.k}"${t.k === sel ? ' selected' : ''}>${t.uno}</option>`).join('');
+  }
 
   let anagrafica = [];
+  let elencoSalvate = [];
   let S = statoVuoto();
 
   function statoVuoto() {
-    return { nome: '', data: '', caliciBott: CALICI_DEFAULT, vini: [], persone: 0, prezzo: 0, ricX: 0, ricEur: 0, guida: 'prezzo' };
+    return { nome: '', data: '', caliciBott: CALICI_DEFAULT, bottVino: BOTT_DEFAULT, vini: [],
+             persone: 0, prezzo: 0, ricX: 0, ricEur: 0, guida: 'prezzo',
+             idServer: null, salvataIl: '', firmaSalvata: '' };
+  }
+
+  // Il contenuto della degustazione, senza i dati dell'archivio: e' cio' che si salva,
+  // e la sua firma dice se ci sono modifiche non salvate.
+  function contenuto(s) {
+    const c = Object.assign({}, s);
+    delete c.idServer; delete c.salvataIl; delete c.firmaSalvata;
+    return c;
+  }
+  function firma(s) { return JSON.stringify(contenuto(s)); }
+  function sporca() {
+    if (S.idServer) return firma(S) !== S.firmaSalvata;
+    return S.vini.length > 0 || !!S.nome.trim();     // mai salvata: conta se c'e' qualcosa
   }
 
   // ── Utilità ─────────────────────────────────────────────────────────
@@ -415,6 +530,7 @@
       if (!forza && c && Date.now() - c.quando < DURATA_CACHE_VINI && (c.vini || []).length) {
         anagrafica = c.vini;
         statoElenco(c.quando);
+        completaTipi();
         return;
       }
     } catch (e) { /* copia illeggibile: si richiede */ }
@@ -432,11 +548,13 @@
       anagrafica = (d.vini || []).map(v => ({
         codice: v.codice, tipo: v.sheet === 'IMPORT' ? 'IMPORT' : 'DIST',
         nome: v.vino, fornitore: v.fornitore || '',
-        imp: num(v.imponibile), ss: v.sheet === 'IMPORT' ? num(v.ss) : 0
+        imp: num(v.imponibile), ss: v.sheet === 'IMPORT' ? num(v.ss) : 0,
+        cat: tipoDa(v.catCarta, v.catCosto)
       }));
       const quando = Date.now();
       try { localStorage.setItem(CACHE_VINI, JSON.stringify({ quando, vini: anagrafica })); } catch (e) {}
       statoElenco(quando);
+      completaTipi();
     } catch (e) {
       $('statoElenco').innerHTML = 'Elenco vini non disponibile (' + esc(e.name === 'TimeoutError' ? 'il server non ha risposto' : e.message) +
         '). Puoi aggiungere i vini come temporanei, oppure <a href="#" id="riprova">riprovare</a>.';
@@ -461,16 +579,28 @@
     box.hidden = false;
     box.innerHTML = trovati.length ? trovati.map(v => `
       <div class="risultato" data-codice="${esc(v.codice)}">
-        <span>${esc(v.nome)} <small>· ${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}${v.fornitore ? ' · ' + esc(v.fornitore) : ''}</small></span>
+        <span><span class="pallino tipo-${v.cat || ''}"></span>${esc(v.nome)} <small>${v.cat ? nomeTipo(v.cat) + ' · ' : ''}· ${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}${v.fornitore ? ' · ' + esc(v.fornitore) : ''}</small></span>
         <span class="prezzo">${euro(costoNetto(v))}</span>
       </div>`).join('') : '<div class="vuoto">Nessun vino trovato</div>';
+  }
+
+  // Vini della bozza o di una degustazione salvata prima che esistesse il tipo:
+  // quelli dall'anagrafica lo prendono da li', appena l'elenco e' disponibile.
+  function completaTipi() {
+    let cambiati = 0;
+    S.vini.forEach(v => {
+      if (v.cat || v.temp || v.codice == null) return;
+      const a = anagrafica.find(x => String(x.codice) === String(v.codice));
+      if (a && a.cat) { v.cat = a.cat; cambiati++; }
+    });
+    if (cambiati) aggiorna(true);
   }
 
   function aggiungiDaAnagrafica(codice) {
     const v = anagrafica.find(x => String(x.codice) === String(codice));
     if (!v) return;
     S.vini.push({ id: 'v' + Date.now(), codice: v.codice, nome: v.nome, tipo: v.tipo, imp: v.imp, ss: v.ss,
-                  temp: false, bott: 1, calici: S.caliciBott });
+                  cat: v.cat || '', temp: false, bott: S.bottVino, calici: S.caliciBott });
     $('cerca').value = '';
     cerca();
     aggiorna(true);
@@ -480,12 +610,13 @@
     const nome = $('tNome').value.trim();
     const imp = num($('tImp').value);
     const tipo = $('tTipo').value;
-    if (!nome || imp <= 0) { $('erroreTemp').textContent = 'Servono nome e imponibile.'; return; }
+    const cat = $('tCat').value;
+    if (!nome || imp <= 0 || !cat) { $('erroreTemp').textContent = 'Servono nome, tipo e imponibile.'; return; }
     $('erroreTemp').textContent = '';
-    S.vini.push({ id: 'v' + Date.now(), codice: null, nome, tipo, imp,
+    S.vini.push({ id: 'v' + Date.now(), codice: null, nome, tipo, imp, cat,
                   ss: tipo === 'IMPORT' ? num($('tSpese').value) : 0,
-                  temp: true, bott: 1, calici: S.caliciBott });
-    $('tNome').value = ''; $('tImp').value = '';
+                  temp: true, bott: S.bottVino, calici: S.caliciBott });
+    $('tNome').value = ''; $('tImp').value = ''; $('tCat').value = '';
     aggiorna(true);
   }
 
@@ -493,15 +624,26 @@
   function disegnaVini() {
     const box = $('elencoVini');
     if (!S.vini.length) { box.innerHTML = '<div class="vuoto">Nessun vino: aggiungine uno qui sopra.</div>'; return; }
-    box.innerHTML = S.vini.map(v => `
+    const ultimo = S.vini.length - 1;
+    box.innerHTML = S.vini.map((v, i) => `
       <div class="vino t-${v.tipo}${v.temp ? ' temp' : ''}" data-id="${v.id}">
         <div class="vino-testa">
-          <div class="vino-nome">${esc(v.nome)}
-            <span class="badge">${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}${v.temp ? ' · temporaneo' : ''}</span>
+          <div class="vino-sx">
+            <div class="ordine">
+              <button class="btn-freccia" data-azione="su" title="Prima" ${i === 0 ? 'disabled' : ''}>▲</button>
+              <b>${i + 1}</b>
+              <button class="btn-freccia" data-azione="giu" title="Dopo" ${i === ultimo ? 'disabled' : ''}>▼</button>
+            </div>
+            <div class="vino-nome"><span class="pallino tipo-${v.cat || ''}"></span>${esc(v.nome)}
+              <span class="badge">${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}${v.temp ? ' · temporaneo' : ''}</span>
+            </div>
           </div>
-          <button class="btn-mini" data-azione="togli" title="Togli"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
+          <div class="vino-dx">
+            <button class="btn-mini" data-azione="togli" title="Togli"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
+          </div>
         </div>
         <div class="vino-campi">
+          <div><label>Tipo</label><select data-campo="cat" class="${v.cat ? '' : 'manca'}">${opzioniTipo(v.cat)}</select></div>
           <div><label>Imponibile €</label><input type="text" inputmode="decimal" data-campo="imp" value="${dec(v.imp)}"></div>
           <div ${v.tipo === 'IMPORT' ? '' : 'hidden'}><label>Spese €</label><input type="text" inputmode="decimal" data-campo="ss" value="${dec(v.ss)}"></div>
           <div><label>Bottiglie</label><input type="text" inputmode="numeric" data-campo="bott" value="${v.bott}"></div>
@@ -577,10 +719,157 @@
         <td>${per(x.ricX)}</td><td class="${x.ricEur < 0 ? 'neg' : ''}">${euro(x.ricEur)}</td></tr>`).join('')}</tbody></table>`;
   }
 
+  // Quanti vini per tipo: serve a equilibrare la degustazione.
+  function contaTipi(vini) {
+    const n = {};
+    vini.forEach(v => { const k = v.cat || ''; n[k] = (n[k] || 0) + 1; });
+    return n;
+  }
+  function testoTipi(vini) {
+    const n = contaTipi(vini);
+    const parti = TIPI.filter(t => n[t.k]).map(t => n[t.k] + ' ' + (n[t.k] === 1 ? t.uno.toLowerCase() : t.piu.toLowerCase()));
+    if (n['']) parti.push(n[''] + ' senza tipo');
+    return parti.join(' · ');
+  }
+  function disegnaRiepilogo() {
+    const box = $('riepilogoTipi');
+    if (!S.vini.length) { box.innerHTML = ''; return; }
+    const n = contaTipi(S.vini);
+    box.innerHTML = `<span class="chip-tipo">${S.vini.length} ${S.vini.length === 1 ? 'vino' : 'vini'}</span>` +
+      TIPI.map(t => `<span class="chip-tipo tipo-${t.k}${n[t.k] ? '' : ' zero'}"><span class="pallino"></span>${n[t.k] || 0} ${n[t.k] === 1 ? t.uno : t.piu}</span>`).join('') +
+      (n[''] ? `<span class="chip-tipo manca">${n['']} senza tipo</span>` : '');
+  }
+
   function aggiorna(ridisegnaVini) {
     if (ridisegnaVini) disegnaVini(); else aggiornaSottoVini();
+    disegnaRiepilogo();
     disegnaConti();
     salvaBozza();
+    mostraStatoSalva();
+  }
+
+  // ── Archivio sull'hosting (vdc-degustazioni.php) ────────────────────
+  async function chiamaArchivio(action, corpo) {
+    const r = await fetch(API_DEG, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action }, corpo || {})),
+      signal: AbortSignal.timeout(20000)
+    });
+    const d = JSON.parse(await r.text());
+    if (d.errore) throw new Error(d.errore);
+    return d;
+  }
+  function erroreRete(e) { return e.name === 'TimeoutError' ? 'il server non ha risposto' : e.message; }
+  function quandoIt(s) {               // «2026-10-12 18:40» → «12/10/2026 18:40»
+    if (!s) return '';
+    const [d, h] = s.split(' ');
+    return d.split('-').reverse().join('/') + (h ? ' ' + h : '');
+  }
+
+  function mostraStatoSalva() {
+    const el = $('statoSalva');
+    const sp = sporca();
+    $('btnSalvaCopia').hidden = !S.idServer;
+    $('btnSalva').textContent = S.idServer ? 'Salva modifiche' : 'Salva';
+    el.classList.toggle('sporca', sp);
+    if (!S.idServer) el.textContent = sp ? 'Non ancora salvata nell\'archivio' : '';
+    else el.textContent = sp ? 'Modifiche non salvate' : 'Salvata il ' + quandoIt(S.salvataIl);
+  }
+
+  async function salva(comeNuova) {
+    if (!S.vini.length && !S.nome.trim()) { $('statoSalva').textContent = 'Niente da salvare: aggiungi un nome o un vino.'; return; }
+    const b1 = $('btnSalva'), b2 = $('btnSalvaCopia');
+    b1.disabled = b2.disabled = true;
+    $('statoSalva').textContent = 'Salvo...';
+    try {
+      const d = await chiamaArchivio('salvaDegustazione',
+        { id: comeNuova ? '' : (S.idServer || ''), degustazione: contenuto(S) });
+      S.idServer = d.id; S.salvataIl = d.aggiornato; S.firmaSalvata = firma(S);
+      salvaBozza();
+      mostraStatoSalva();
+      caricaElenco();
+    } catch (e) {
+      $('statoSalva').classList.add('sporca');
+      $('statoSalva').textContent = 'Non salvata (' + erroreRete(e) + '): la bozza resta su questo dispositivo, riprova.';
+    } finally {
+      b1.disabled = b2.disabled = false;
+    }
+  }
+
+  async function caricaElenco() {
+    try {
+      const d = await chiamaArchivio('elencoDegustazioni');
+      elencoSalvate = d.degustazioni || [];
+      $('statoArchivio').textContent = elencoSalvate.length
+        ? elencoSalvate.length + (elencoSalvate.length === 1 ? ' degustazione salvata' : ' degustazioni salvate') : 'Nessuna degustazione salvata.';
+    } catch (e) {
+      $('statoArchivio').textContent = 'Archivio non raggiungibile (' + erroreRete(e) + ').';
+    }
+    disegnaElenco();
+  }
+
+  function disegnaElenco() {
+    const box = $('elencoSalvate');
+    if (!elencoSalvate.length) { box.innerHTML = '<div class="vuoto">Nessuna degustazione salvata.</div>'; return; }
+    box.innerHTML = elencoSalvate.map(g => `
+      <div class="salvata${g.id === S.idServer ? ' attuale' : ''}" data-id="${esc(g.id)}">
+        <div>
+          <div class="salvata-nome">${esc(g.nome || 'Senza nome')}${g.id === S.idServer ? ' <small>· aperta ora</small>' : ''}</div>
+          <small>${g.data ? quandoIt(g.data) + ' · ' : ''}${g.n_vini} ${g.n_vini == 1 ? 'vino' : 'vini'}${g.persone ? ' · ' + g.persone + ' persone' : ''} · modificata il ${quandoIt(g.aggiornato)}</small>
+        </div>
+        <div class="salvata-azioni">
+          <button class="btn btn-secondario" data-azione="apri">Apri</button>
+          <button class="btn btn-pericolo" data-azione="elimina">Elimina</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // Azioni a doppio tocco (niente confirm(), scomodo nelle PWA): il primo tocco arma
+  // il pulsante e ne cambia la scritta, il secondo entro 4 secondi esegue.
+  function doppioTocco(btn, testoArmato, esegui) {
+    if (!btn.dataset.armato) {
+      btn.dataset.armato = '1';
+      btn.dataset.testo = btn.textContent;
+      btn.textContent = testoArmato;
+      setTimeout(() => { if (btn.dataset.armato) { delete btn.dataset.armato; btn.textContent = btn.dataset.testo; } }, 4000);
+      return;
+    }
+    delete btn.dataset.armato;
+    btn.textContent = btn.dataset.testo;
+    esegui();
+  }
+
+  async function apri(id, btn) {
+    btn.disabled = true;
+    try {
+      const d = await chiamaArchivio('getDegustazione', { id });
+      const g = d.degustazione;
+      S = Object.assign(statoVuoto(), g.dati || {});
+      S.idServer = g.id; S.salvataIl = g.aggiornato; S.firmaSalvata = firma(S);
+      riempiCampi();
+      aggiorna(true);
+      completaTipi();
+      disegnaElenco();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      $('statoArchivio').textContent = 'Non riesco ad aprirla (' + erroreRete(e) + ').';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function elimina(id, btn) {
+    btn.disabled = true;
+    try {
+      await chiamaArchivio('eliminaDegustazione', { id });
+      // Quella aperta resta sullo schermo come bozza, ma non e' piu' nell'archivio.
+      if (S.idServer === id) { S.idServer = null; S.salvataIl = ''; S.firmaSalvata = ''; salvaBozza(); mostraStatoSalva(); }
+      await caricaElenco();
+    } catch (e) {
+      $('statoArchivio').textContent = 'Non riesco a eliminarla (' + erroreRete(e) + ').';
+      btn.disabled = false;
+    }
   }
 
   // ── PDF ─────────────────────────────────────────────────────────────
@@ -590,9 +879,10 @@
     $('stampa').innerHTML = `
       <h1>${esc(S.nome || 'Degustazione')}</h1>
       <div class="sotto">Vecchia Dogana${data ? ' · ' + data : ''} · ${S.persone} persone · ${euro(r.prezzo)} a persona IVA incl.</div>
-      <h2>Vini</h2>
-      <table><thead><tr><th>Vino</th><th>Acquisto</th><th>Bottiglie</th><th>Calici/bott.</th><th>Costo bott. senza IVA</th><th>Totale</th></tr></thead>
-      <tbody>${S.vini.map(v => `<tr><td>${esc(v.nome)}${v.temp ? ' (temporaneo)' : ''}</td><td>${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}</td>
+      <h2>Vini, in ordine di servizio</h2>
+      <div class="sotto">${testoTipi(S.vini)}</div>
+      <table><thead><tr><th>Vino</th><th>Tipo</th><th>Acquisto</th><th>Bottiglie</th><th>Calici/bott.</th><th>Costo bott. senza IVA</th><th>Totale</th></tr></thead>
+      <tbody>${S.vini.map((v, i) => `<tr><td>${i + 1}. ${esc(v.nome)}${v.temp ? ' (temporaneo)' : ''}</td><td>${v.cat ? nomeTipo(v.cat) : '—'}</td><td>${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}</td>
         <td>${v.bott}</td><td>${v.calici}</td><td>${euro(costoNetto(v))}</td><td>${euro(v.bott * costoNetto(v))}</td></tr>`).join('')}</tbody></table>
       <h2>Conti</h2>
       <table><tbody>
@@ -625,6 +915,7 @@
     $('nome').value = S.nome; $('data').value = S.data;
     $('persone').value = S.persone || '';
     $('caliciBott').value = S.caliciBott || '';
+    $('bottVino').value = S.bottVino || '';
     evidenziaCalici();
     ['prezzo', 'ricX', 'ricEur'].forEach(id => { $(id).value = ''; });
     if (S.guida === 'prezzo') $('prezzo').value = S.prezzo ? dec(S.prezzo) : '';
@@ -646,15 +937,50 @@
     aggiorna(true);
   }
 
+  // Bottiglie per vino: come i calici, vale per tutti i vini presenti e per i nuovi.
+  function impostaBottiglie(n) {
+    S.bottVino = Math.max(0, Math.floor(n));
+    S.vini.forEach(v => { v.bott = S.bottVino; });
+    aggiorna(true);
+  }
+
+  function sposta(id, verso) {
+    const i = S.vini.findIndex(x => x.id === id), j = i + verso;
+    if (i < 0 || j < 0 || j >= S.vini.length) return;
+    [S.vini[i], S.vini[j]] = [S.vini[j], S.vini[i]];
+    aggiorna(true);
+    // il vino resta sotto il dito: lo si riporta in vista dopo il ridisegno
+    const el = document.querySelector(`.vino[data-id="${id}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
   // Si chiama una volta sola: aggiunge ascoltatori che non vanno duplicati.
   function collega() {
+    $('tCat').innerHTML = opzioniTipo('');
     $('caliciBott').oninput = () => impostaCalici(num($('caliciBott').value));
+    $('bottVino').oninput = () => impostaBottiglie(num($('bottVino').value));
+    $('btnSalva').onclick = () => salva(false);
+    $('btnSalvaCopia').onclick = () => salva(true);
+    $('btnArchivio').onclick = () => {
+      const a = $('archivio');
+      a.hidden = !a.hidden;
+      $('btnArchivio').textContent = a.hidden ? 'Mostra' : 'Nascondi';
+      if (!a.hidden) caricaElenco();
+    };
+    $('elencoSalvate').addEventListener('click', e => {
+      const b = e.target.closest('[data-azione]');
+      if (!b || b.disabled) return;
+      const id = b.closest('.salvata').dataset.id;
+      if (b.dataset.azione === 'elimina') doppioTocco(b, 'Tocca ancora', () => elimina(id, b));
+      else if (sporca() && id !== S.idServer) doppioTocco(b, 'Perdi le modifiche?', () => apri(id, b));
+      else apri(id, b);
+    });
     document.querySelectorAll('[data-calici]').forEach(b => b.onclick = () => {
       $('caliciBott').value = b.dataset.calici;
       impostaCalici(Number(b.dataset.calici));
     });
-    $('nome').oninput = () => { S.nome = $('nome').value; salvaBozza(); };
-    $('data').onchange = () => { S.data = $('data').value; salvaBozza(); };
+    $('nome').oninput = () => { S.nome = $('nome').value; salvaBozza(); mostraStatoSalva(); };
+    $('data').onchange = () => { S.data = $('data').value; salvaBozza(); mostraStatoSalva(); };
     $('persone').oninput = () => { S.persone = Math.max(0, Math.floor(num($('persone').value))); aggiorna(); };
     $('prezzo').oninput = () => { S.guida = 'prezzo'; S.prezzo = num($('prezzo').value); aggiorna(); };
     $('ricX').oninput = () => { S.guida = 'x'; S.ricX = num($('ricX').value); aggiorna(); };
@@ -678,14 +1004,24 @@
       if (!campo || !riga) return;
       const v = S.vini.find(x => x.id === riga.dataset.id);
       if (!v) return;
+      if (campo === 'cat') {
+        v.cat = e.target.value;
+        e.target.classList.toggle('manca', !v.cat);
+        riga.querySelector('.pallino').className = 'pallino tipo-' + v.cat;
+        aggiorna();
+        return;
+      }
       const n = num(e.target.value);
       v[campo] = (campo === 'bott' || campo === 'calici') ? Math.max(0, Math.floor(n)) : Math.max(0, n);
       aggiorna();
     });
     $('elencoVini').addEventListener('click', e => {
-      const b = e.target.closest('[data-azione="togli"]');
-      if (!b) return;
+      const b = e.target.closest('[data-azione]');
+      if (!b || b.disabled) return;
       const id = b.closest('.vino').dataset.id;
+      if (b.dataset.azione === 'su') return sposta(id, -1);
+      if (b.dataset.azione === 'giu') return sposta(id, 1);
+      if (b.dataset.azione !== 'togli') return;
       S.vini = S.vini.filter(x => x.id !== id);
       aggiorna(true);
     });
@@ -709,6 +1045,7 @@
       S = statoVuoto();
       riempiCampi();
       aggiorna(true);
+      disegnaElenco();
     };
   }
 
@@ -717,6 +1054,7 @@
   collega();
   aggiorna(true);
   caricaAnagrafica(false);
+  caricaElenco();
 </script>
 </body>
 </html>
