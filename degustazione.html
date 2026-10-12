@@ -142,15 +142,22 @@
     .vino-campi select { padding: 8px 10px; }
     .vino-campi select.manca { border-color: #f0c36d; background: #fff6e5; }
 
-    /* Ordine di servizio: numero e frecce, che sul telefono funzionano meglio del trascinamento. */
+    /* Ordine di servizio: si trascina dalla maniglia ⋮⋮ col numero, come la carta dei calici.
+       Solo la maniglia ha touch-action:none: il resto della scheda fa scorrere la pagina. */
     .vino-sx { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
-    .ordine { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
-    .ordine b { color: #2a5298; font-size: 1.05em; min-width: 1.4em; text-align: center; }
-    .btn-freccia {
-      width: 30px; height: 24px; border-radius: 6px; border: 1px solid #c0cce8; background: #f0f4ff;
-      color: #2a5298; cursor: pointer; font-size: 0.8em; line-height: 1;
+    .ordine {
+      display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
+      min-width: 34px; padding: 4px 2px; border-radius: 8px; background: #f0f4ff;
+      cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
     }
-    .btn-freccia:disabled { opacity: 0.3; cursor: default; }
+    .ordine b { color: #2a5298; font-size: 1.05em; min-width: 1.4em; text-align: center; }
+    .ordine .maniglia { color: #999; font-size: 1.1em; line-height: 1; letter-spacing: -2px; }
+    .vino.trascinato {
+      position: relative; z-index: 5; opacity: 0.92; cursor: grabbing;
+      box-shadow: 0 8px 24px rgba(30, 60, 114, 0.25);
+    }
+    .vino.trascinato .ordine { cursor: grabbing; background: #dce6ff; }
+    .vino.trascinato .maniglia { color: #2a5298; }
     .vino-dx { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
     /* Tipo del vino (classificazione della carta): pallino e riepilogo. */
@@ -394,7 +401,7 @@
   // (vdc-degustazioni.php), da cui si riapre, si modifica o si elimina.
   // Si esporta in PDF dal dialogo di stampa.
   //
-  // L'ordine dei vini nell'elenco e' l'ordine di servizio (frecce su/giu').
+  // L'ordine dei vini nell'elenco e' l'ordine di servizio (si trascina dalla maniglia).
   // Il tipo (bianco, rosato, rosso, bolla, speciale) e' la classificazione della
   // carta: dall'anagrafica si ricava da Categoria carta (o, se manca, da
   // Categoria costo), sui temporanei lo si sceglie.
@@ -624,15 +631,13 @@
   function disegnaVini() {
     const box = $('elencoVini');
     if (!S.vini.length) { box.innerHTML = '<div class="vuoto">Nessun vino: aggiungine uno qui sopra.</div>'; return; }
-    const ultimo = S.vini.length - 1;
     box.innerHTML = S.vini.map((v, i) => `
       <div class="vino t-${v.tipo}${v.temp ? ' temp' : ''}" data-id="${v.id}">
         <div class="vino-testa">
           <div class="vino-sx">
-            <div class="ordine">
-              <button class="btn-freccia" data-azione="su" title="Prima" ${i === 0 ? 'disabled' : ''}>▲</button>
+            <div class="ordine" title="Trascina per cambiare l'ordine">
+              <span class="maniglia">⋮⋮</span>
               <b>${i + 1}</b>
-              <button class="btn-freccia" data-azione="giu" title="Dopo" ${i === ultimo ? 'disabled' : ''}>▼</button>
             </div>
             <div class="vino-nome"><span class="pallino tipo-${v.cat || ''}"></span>${esc(v.nome)}
               <span class="badge">${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}${v.temp ? ' · temporaneo' : ''}</span>
@@ -944,14 +949,69 @@
     aggiorna(true);
   }
 
-  function sposta(id, verso) {
-    const i = S.vini.findIndex(x => x.id === id), j = i + verso;
-    if (i < 0 || j < 0 || j >= S.vini.length) return;
-    [S.vini[i], S.vini[j]] = [S.vini[j], S.vini[i]];
+  // ── Trascinamento dalla maniglia ────────────────────────────────────
+  // Pointer events, cosi' funziona uguale con mouse e dito (lo stesso schema
+  // dei TODO del CRM). La scheda segue il puntatore, le altre si spostano
+  // al passaggio della meta'; vicino ai bordi la pagina scorre da sola.
+  let trascina = null;
+
+  function iniziaTrascinamento(e) {
+    const maniglia = e.target.closest('.ordine');
+    if (!maniglia || e.button > 0 || trascina) return;
+    const item = maniglia.closest('.vino');
+    e.preventDefault();
+    trascina = {
+      item, lista: $('elencoVini'),
+      presa: e.clientY - item.getBoundingClientRect().top,
+      prima: ordineVisibile().join(','),
+      y: e.clientY
+    };
+    item.classList.add('trascinato');
+    document.addEventListener('pointermove', muoviTrascinamento);
+    document.addEventListener('pointerup', fineTrascinamento);
+    document.addEventListener('pointercancel', fineTrascinamento);
+  }
+
+  function ordineVisibile() {
+    return [...$('elencoVini').querySelectorAll('.vino')].map(x => x.dataset.id);
+  }
+
+  function muoviTrascinamento(e) {
+    const d = trascina;
+    if (!d) return;
+    d.y = e.clientY;
+    const altri = [...d.lista.querySelectorAll('.vino')].filter(x => x !== d.item);
+    if (altri.length) {
+      const sotto = altri.find(x => { const r = x.getBoundingClientRect(); return d.y < r.top + r.height / 2; });
+      if (sotto) { if (sotto.previousElementSibling !== d.item) d.lista.insertBefore(d.item, sotto); }
+      else { const u = altri[altri.length - 1]; if (u.nextElementSibling !== d.item) d.lista.insertBefore(d.item, u.nextSibling); }
+    }
+    posizionaTrascinato();
+    if (d.y < 70) window.scrollBy(0, -12);
+    else if (d.y > window.innerHeight - 70) window.scrollBy(0, 12);
+  }
+
+  function posizionaTrascinato() {
+    const d = trascina;
+    d.item.style.transform = '';
+    const naturale = d.item.getBoundingClientRect().top;
+    d.item.style.transform = `translateY(${d.y - d.presa - naturale}px)`;
+  }
+
+  function fineTrascinamento() {
+    const d = trascina;
+    if (!d) return;
+    trascina = null;
+    document.removeEventListener('pointermove', muoviTrascinamento);
+    document.removeEventListener('pointerup', fineTrascinamento);
+    document.removeEventListener('pointercancel', fineTrascinamento);
+    d.item.style.transform = '';
+    d.item.classList.remove('trascinato');
+    const ids = ordineVisibile();
+    if (ids.join(',') === d.prima) return;
+    const pos = new Map(ids.map((id, i) => [id, i]));
+    S.vini.sort((a, b) => pos.get(a.id) - pos.get(b.id));
     aggiorna(true);
-    // il vino resta sotto il dito: lo si riporta in vista dopo il ridisegno
-    const el = document.querySelector(`.vino[data-id="${id}"]`);
-    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   // Si chiama una volta sola: aggiunge ascoltatori che non vanno duplicati.
@@ -1015,12 +1075,11 @@
       v[campo] = (campo === 'bott' || campo === 'calici') ? Math.max(0, Math.floor(n)) : Math.max(0, n);
       aggiorna();
     });
+    $('elencoVini').addEventListener('pointerdown', iniziaTrascinamento);
     $('elencoVini').addEventListener('click', e => {
       const b = e.target.closest('[data-azione]');
       if (!b || b.disabled) return;
       const id = b.closest('.vino').dataset.id;
-      if (b.dataset.azione === 'su') return sposta(id, -1);
-      if (b.dataset.azione === 'giu') return sposta(id, 1);
       if (b.dataset.azione !== 'togli') return;
       S.vini = S.vini.filter(x => x.id !== id);
       aggiorna(true);
