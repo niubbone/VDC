@@ -479,6 +479,7 @@
         </label>
       </div>
       
+      <div id="ultimaCarta" style="margin-bottom: 12px; text-align: center; font-size: 13px; color: rgba(255,255,255,0.85);"></div>
       <button class="btn btn-generate" id="btnGenera" onclick="generaCarta()">
         GENERA CARTA VINI
       </button>
@@ -787,8 +788,8 @@
           `;
           message.style.display = 'block';
           
-          // ⭐ Salva configurazione in localStorage
-          salvaConfigurazione();
+          // ⭐ Salva configurazione in localStorage (il server la salva da sé)
+          salvaConfigurazione(data.docUrl);
           
           // Prova comunque ad aprire (funziona su alcuni browser)
           try {
@@ -812,25 +813,72 @@
     }
     
     // ⭐ SALVA CONFIGURAZIONE in localStorage
-    function salvaConfigurazione() {
+    function salvaConfigurazione(docUrl) {
       const config = {
         introText: document.getElementById('introText').value,
         viniSelezionati: viniSelezionati,
         includiQR: document.getElementById('chkIncludiQR').checked,
+        docUrl: docUrl || '',
         timestamp: new Date().toISOString()
       };
-      localStorage.setItem('cartaViniConfig', JSON.stringify(config));
+      try { localStorage.setItem('cartaViniConfig', JSON.stringify(config)); } catch (e) {}
+      mostraUltimaCarta(config);
       console.log('✅ Configurazione salvata');
     }
-    
-    // ⭐ CARICA ULTIMA CONFIGURAZIONE da localStorage
-    function caricaUltimaConfigurazione() {
+
+    // ⭐ ULTIMA CARTA: quella salvata sul server (generata da qualunque dispositivo);
+    // il localStorage resta di riserva se il server non risponde. Vince la più recente.
+    async function leggiUltimaCartaServer() {
       try {
-        const savedConfig = localStorage.getItem('cartaViniConfig');
-        if (!savedConfig) return;
-        
-        const config = JSON.parse(savedConfig);
-        
+        const r = await fetch(`${API_URL}?action=getUltimaCartaCalice`);
+        const d = await r.json();
+        return d && d.config ? d.config : null;
+      } catch (e) {
+        console.warn('Ultima carta dal server non disponibile:', e);
+        return null;
+      }
+    }
+
+    function leggiUltimaCartaLocale() {
+      try {
+        const s = localStorage.getItem('cartaViniConfig');
+        return s ? JSON.parse(s) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function mostraUltimaCarta(config) {
+      const el = document.getElementById('ultimaCarta');
+      if (!config || !config.timestamp) { el.innerHTML = ''; return; }
+      const d = new Date(config.timestamp);
+      const quando = d.toLocaleDateString('it-IT') + ' alle ' +
+        d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      el.innerHTML = `Riproposta l'ultima carta, generata il ${quando}` +
+        (config.docUrl ? ` · <a href="${config.docUrl}" target="_blank" rel="noopener" style="color:#fff;">apri il documento</a>` : '');
+    }
+
+    // Ricollega i vini salvati a quelli della carta attuale (dati aggiornati), tenendo il prezzo
+    function ricollegaVini(salvati) {
+      const out = { bolle: [], bianchi: [], rossi: [], speciali: [] };
+      Object.keys(out).forEach(cat => {
+        (salvati[cat] || []).forEach(v => {
+          const attuale = (viniDisponibili[cat] || []).find(x => x.nome === v.nome && x.nazione === v.nazione);
+          out[cat].push({ ...(attuale || v), prezzo: Number(v.prezzo) || 0 });
+        });
+      });
+      return out;
+    }
+
+    // ⭐ CARICA ULTIMA CONFIGURAZIONE (server o, in mancanza, questo dispositivo)
+    async function caricaUltimaConfigurazione(promessaServer) {
+      try {
+        const server = await promessaServer;
+        const locale = leggiUltimaCartaLocale();
+        let config = server || locale;
+        if (server && locale && new Date(locale.timestamp) > new Date(server.timestamp)) config = locale;
+        if (!config) return;
+
         // Ripristina intro text
         if (config.introText) {
           document.getElementById('introText').value = config.introText;
@@ -843,7 +891,7 @@
         
         // Ripristina vini selezionati
         if (config.viniSelezionati) {
-          viniSelezionati = config.viniSelezionati;
+          viniSelezionati = ricollegaVini(config.viniSelezionati);
           
           // Aggiorna tutte le liste
           aggiornaLista('bolle');
@@ -852,6 +900,7 @@
           aggiornaLista('speciali');
         }
         
+        mostraUltimaCarta(config);
         console.log('✅ Configurazione ripristinata');
       } catch (error) {
         console.error('Errore caricamento configurazione:', error);
@@ -866,10 +915,11 @@
       aggiornaLista('rossi');
       aggiornaLista('speciali');
       
-      // Carica vini
+      // Carica vini e ultima carta in parallelo
+      const ultimaServer = leggiUltimaCartaServer();
       caricaVini().then(() => {
         // ⭐ Dopo aver caricato i vini, ripristina ultima configurazione
-        caricaUltimaConfigurazione();
+        caricaUltimaConfigurazione(ultimaServer);
       });
     });
   </script>
