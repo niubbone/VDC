@@ -207,6 +207,14 @@
     .vino-temp { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-top: 10px; }
     .vino-temp label { font-size: 0.7em; }
     .vino-temp input, .vino-temp select { padding: 8px 10px; }
+    .vino-note { margin-top: 10px; }
+    .vino-note label { font-size: 0.7em; }
+    .vino-note textarea {
+      width: 100%; padding: 8px 10px; border: 2px solid #ddd; border-radius: 8px; resize: vertical;
+      font-family: 'Arial', sans-serif; font-size: 0.9em; color: #222; min-height: 38px;
+    }
+    .vino-note textarea:focus { outline: none; border-color: #2a5298; }
+    .vino.fuori .vino-note { opacity: 0.7; }
     .vino-acq { margin-top: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 0.8em; color: #666; }
     .vino-acq .btn { padding: 7px 12px; font-size: 0.78em; }
     @media (max-width: 600px) { .vino-temp { grid-template-columns: 1fr 1fr; } .vino-temp > :first-child { grid-column: 1 / -1; } }
@@ -423,6 +431,8 @@
   // Si esporta in PDF dal dialogo di stampa.
   //
   // L'ordine dei vini nell'elenco e' l'ordine di servizio (si trascina dalla maniglia).
+  // Ogni vino ha le sue note (restano nella degustazione: non vanno in WINE_COST
+  // ne' nel PDF).
   // I temporanei si modificano in tutto (nome, acquisto, fornitore, costi) e
   // con "Acquisisci" diventano vini di WINE_COST (vedi acquisisci()).
   // Ogni vino si puo' escludere dai conti senza toglierlo (flag `fuori`): l'elenco
@@ -732,6 +742,7 @@
           <div><label>Bottiglie</label><input type="text" inputmode="numeric" data-campo="bott" value="${v.bott}"></div>
           <div><label>Calici da questa bott.</label><input type="text" inputmode="numeric" data-campo="calici" value="${v.calici}"></div>
         </div>
+        <div class="vino-note"><label>Note</label><textarea data-campo="note" rows="1" placeholder="Giudizi, prezzo di vendita possibile, annata...">${esc(v.note || '')}</textarea></div>
         <div class="vino-sotto" data-sotto></div>
         ${v.temp ? `<div class="vino-acq"><button class="btn btn-secondario" data-azione="acquisisci">Acquisisci in WINE_COST</button>
           <span>apre il modulo Nuovo Vino già compilato; salvato, torna qui come vino dell'anagrafica</span></div>` : ''}
@@ -1149,7 +1160,7 @@
       if (!campo || !riga) return;
       const v = S.vini.find(x => x.id === riga.dataset.id);
       if (!v) return;
-      if (campo === 'nome' || campo === 'fornitore') {
+      if (campo === 'nome' || campo === 'fornitore' || campo === 'note') {
         v[campo] = e.target.value;
         if (campo === 'nome') riga.querySelector('[data-nome]').textContent = v.nome;
         salvaBozza(); mostraStatoSalva();
