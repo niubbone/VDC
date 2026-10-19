@@ -204,6 +204,12 @@
     .vino-campi label { font-size: 0.7em; }
     .vino-campi input { padding: 8px 10px; }
     .vino-sotto { font-size: 0.8em; color: #666; margin-top: 8px; }
+    .vino-temp { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .vino-temp label { font-size: 0.7em; }
+    .vino-temp input, .vino-temp select { padding: 8px 10px; }
+    .vino-acq { margin-top: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 0.8em; color: #666; }
+    .vino-acq .btn { padding: 7px 12px; font-size: 0.78em; }
+    @media (max-width: 600px) { .vino-temp { grid-template-columns: 1fr 1fr; } .vino-temp > :first-child { grid-column: 1 / -1; } }
     .vino-sotto b { color: #1e3c72; }
 
     .avviso {
@@ -354,6 +360,7 @@
             <option value="IMPORT">Import (senza IVA)</option>
           </select>
         </div>
+        <div><label for="tForn">Fornitore</label><input type="text" id="tForn" placeholder="Facoltativo"></div>
         <div><label for="tImp">Imponibile bottiglia €</label><input type="text" id="tImp" inputmode="decimal" placeholder="0,00"></div>
         <div id="wrapSpese" hidden><label for="tSpese">Spese logistiche €</label><input type="text" id="tSpese" inputmode="decimal" value="1,00"></div>
       </div>
@@ -416,6 +423,8 @@
   // Si esporta in PDF dal dialogo di stampa.
   //
   // L'ordine dei vini nell'elenco e' l'ordine di servizio (si trascina dalla maniglia).
+  // I temporanei si modificano in tutto (nome, acquisto, fornitore, costi) e
+  // con "Acquisisci" diventano vini di WINE_COST (vedi acquisisci()).
   // Ogni vino si puo' escludere dai conti senza toglierlo (flag `fuori`): l'elenco
   // e' la rosa dei candidati, i conti, il riepilogo per tipo e il PDF usano solo
   // quelli nel conto. Le degustazioni salvate prima del flag li hanno tutti dentro.
@@ -641,11 +650,50 @@
     const cat = $('tCat').value;
     if (!nome || imp <= 0 || !cat) { $('erroreTemp').textContent = 'Servono nome, tipo e imponibile.'; return; }
     $('erroreTemp').textContent = '';
-    S.vini.push({ id: 'v' + Date.now(), codice: null, nome, tipo, imp, cat,
+    S.vini.push({ id: 'v' + Date.now(), codice: null, nome, tipo, imp, cat, fornitore: $('tForn').value.trim(),
                   ss: tipo === 'IMPORT' ? num($('tSpese').value) : 0,
                   temp: true, bott: S.bottVino, calici: S.caliciBott });
-    $('tNome').value = ''; $('tImp').value = ''; $('tCat').value = '';
+    $('tNome').value = ''; $('tImp').value = ''; $('tCat').value = ''; $('tForn').value = '';
     aggiorna(true);
+  }
+
+  // ── Da temporaneo a vino dell'anagrafica ────────────────────────────
+  // Non si scrive in WINE_COST da qui: si apre il modulo "Nuovo Vino" di
+  // gestione-vini.html gia' compilato (stesso saveVino, stessi campi
+  // obbligatori: nazione, listino, carta...). Il passaggio fra le due pagine
+  // va per localStorage: DA_ACQUISIRE all'andata, ACQUISITI ({id temporaneo:
+  // codice}) al ritorno, letto all'avvio e all'apertura di una salvata.
+  const DA_ACQUISIRE = 'vdc_vino_da_acquisire';
+  const ACQUISITI = 'vdc_vini_acquisiti';
+  const CAT_CARTA = { BIANCO: 'I Bianchi', ROSATO: 'I Rosati', ROSSO: 'I Rossi', BOLLA: 'Le Bolle', SPECIALE: 'I Vini Speciali' };
+  const CAT_COSTO = { BOLLA: 'BOLLICINE', SPECIALE: 'SPECIALI' };
+
+  function acquisisci(id) {
+    const v = S.vini.find(x => x.id === id);
+    if (!v) return;
+    try {
+      localStorage.setItem(DA_ACQUISIRE, JSON.stringify({
+        idTemp: v.id, vino: v.nome, sheet: v.tipo, imponibile: v.imp, ss: v.tipo === 'IMPORT' ? (v.ss || 1) : null,
+        fornitore: v.fornitore || '', catCarta: CAT_CARTA[v.cat] || '', catCosto: CAT_COSTO[v.cat] || 'FERMI'
+      }));
+    } catch (e) { return; }
+    salvaBozza();
+    location.href = 'gestione-vini.html?acquisisci=1';
+  }
+
+  function applicaAcquisiti() {
+    let mappa;
+    try { mappa = JSON.parse(localStorage.getItem(ACQUISITI) || '{}'); } catch (e) { return; }
+    let cambiati = 0;
+    S.vini.forEach(v => {
+      if (!v.temp || !mappa[v.id]) return;
+      v.codice = mappa[v.id]; v.temp = false;
+      delete mappa[v.id]; cambiati++;
+    });
+    if (!cambiati) return;
+    try { localStorage.setItem(ACQUISITI, JSON.stringify(mappa)); } catch (e) {}
+    aggiorna(true);
+    caricaAnagrafica(true);           // la copia locale non ha ancora il vino nuovo
   }
 
   // ── Disegno ─────────────────────────────────────────────────────────
@@ -661,7 +709,7 @@
               <span class="maniglia">⋮⋮</span>
               <b>${v.fuori ? '–' : ++n}</b>
             </div>
-            <div class="vino-nome"><span class="pallino tipo-${v.cat || ''}"></span>${esc(v.nome)}
+            <div class="vino-nome"><span class="pallino tipo-${v.cat || ''}"></span><span data-nome>${esc(v.nome)}</span>
               <span class="badge">${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}${v.temp ? ' · temporaneo' : ''}</span>
             </div>
           </div>
@@ -670,6 +718,13 @@
             <button class="btn-mini" data-azione="togli" title="Togli"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
           </div>
         </div>
+        ${v.temp ? `<div class="vino-temp">
+          <div><label>Vino</label><input type="text" data-campo="nome" value="${esc(v.nome)}"></div>
+          <div><label>Acquisto</label><select data-campo="tipo">
+            <option value="DIST"${v.tipo === 'DIST' ? ' selected' : ''}>Distributore</option>
+            <option value="IMPORT"${v.tipo === 'IMPORT' ? ' selected' : ''}>Import</option></select></div>
+          <div><label>Fornitore</label><input type="text" data-campo="fornitore" value="${esc(v.fornitore || '')}"></div>
+        </div>` : ''}
         <div class="vino-campi">
           <div><label>Tipo</label><select data-campo="cat" class="${v.cat ? '' : 'manca'}">${opzioniTipo(v.cat)}</select></div>
           <div><label>Imponibile €</label><input type="text" inputmode="decimal" data-campo="imp" value="${dec(v.imp)}"></div>
@@ -678,6 +733,8 @@
           <div><label>Calici da questa bott.</label><input type="text" inputmode="numeric" data-campo="calici" value="${v.calici}"></div>
         </div>
         <div class="vino-sotto" data-sotto></div>
+        ${v.temp ? `<div class="vino-acq"><button class="btn btn-secondario" data-azione="acquisisci">Acquisisci in WINE_COST</button>
+          <span>apre il modulo Nuovo Vino già compilato; salvato, torna qui come vino dell'anagrafica</span></div>` : ''}
       </div>`).join('');
     aggiornaSottoVini();
   }
@@ -881,6 +938,7 @@
       riempiCampi();
       aggiorna(true);
       completaTipi();
+      applicaAcquisiti();
       disegnaElenco();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
@@ -1091,6 +1149,18 @@
       if (!campo || !riga) return;
       const v = S.vini.find(x => x.id === riga.dataset.id);
       if (!v) return;
+      if (campo === 'nome' || campo === 'fornitore') {
+        v[campo] = e.target.value;
+        if (campo === 'nome') riga.querySelector('[data-nome]').textContent = v.nome;
+        salvaBozza(); mostraStatoSalva();
+        return;
+      }
+      if (campo === 'tipo') {
+        v.tipo = e.target.value;
+        v.ss = v.tipo === 'IMPORT' ? (v.ss || 1) : 0;
+        aggiorna(true);
+        return;
+      }
       if (campo === 'cat') {
         v.cat = e.target.value;
         e.target.classList.toggle('manca', !v.cat);
@@ -1113,6 +1183,7 @@
         aggiorna(true);
         return;
       }
+      if (b.dataset.azione === 'acquisisci') { acquisisci(id); return; }
       if (b.dataset.azione !== 'togli') return;
       S.vini = S.vini.filter(x => x.id !== id);
       aggiorna(true);
@@ -1151,6 +1222,7 @@
   collega();
   aggiorna(true);
   caricaAnagrafica(false);
+  applicaAcquisiti();
   caricaElenco();
 </script>
 </body>

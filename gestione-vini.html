@@ -683,6 +683,7 @@
     let wineData = [];  // popolato da loadVini()
 
     let currentSheet = 'DIST', filtroAttivo = 'tutti', editingId = null, caliceOn = false;
+    let acquisizione = null;   // {idTemp, ...} se il modulo e' stato aperto dalla degustazione
 
     function costoDist(i) { return i * 1.22; }
     function costoImport(i, ss) { return i + (ss||0); }
@@ -834,7 +835,7 @@
       ricalcola();
       document.getElementById('modalVino').classList.add('active');
     }
-    function chiudiModale(){document.getElementById('modalVino').classList.remove('active');}
+    function chiudiModale(){document.getElementById('modalVino').classList.remove('active'); acquisizione=null;}
     function chiudiSeOutside(e){if(e.target===document.getElementById('modalVino'))chiudiModale();}
     function mostraTab(tab,el){
       document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -901,6 +902,17 @@
       try {
         const res = await callAPI('saveVino', payload);
         if (res.ok) {
+          // Vino nato da un temporaneo della degustazione: si torna li' col codice.
+          if (acquisizione && !editingId && res.codice) {
+            try {
+              const m = JSON.parse(localStorage.getItem('vdc_vini_acquisiti') || '{}');
+              m[acquisizione.idTemp] = res.codice;
+              localStorage.setItem('vdc_vini_acquisiti', JSON.stringify(m));
+              localStorage.removeItem('vdc_vino_da_acquisire');
+            } catch (e) {}
+            location.href = 'degustazione.html';
+            return;
+          }
           chiudiModale();
           await loadVini();
         } else {
@@ -1319,6 +1331,27 @@
       document.getElementById('sync').classList.add('active');
     }
     loadVini();
+
+    // Arrivo da degustazione.html con "Acquisisci": modulo Nuovo Vino gia' compilato
+    // coi dati del temporaneo; il resto (nazione, listino, carta) lo completa il titolare.
+    if (new URLSearchParams(window.location.search).get('acquisisci')) {
+      let d = null;
+      try { d = JSON.parse(localStorage.getItem('vdc_vino_da_acquisire') || 'null'); } catch (e) {}
+      if (d) {
+        apriNuovoVino();
+        acquisizione = d;
+        document.getElementById('modalTitolo').textContent = '⚓ Nuovo Vino dalla degustazione';
+        setSheet(d.sheet === 'IMPORT' ? 'IMPORT' : 'DIST');
+        document.getElementById('f-vino').value = d.vino || '';
+        document.getElementById('f-imponibile').value = d.imponibile || '';
+        if (d.sheet === 'IMPORT') document.getElementById('f-ss').value = d.ss || 1;
+        document.getElementById('f-fornitore').value = d.fornitore || '';
+        document.getElementById('f-cat-costo').value = d.catCosto || '';
+        document.getElementById('f-cat-carta').value = d.catCarta || '';
+        ricalcola();
+      }
+      history.replaceState(null, '', 'gestione-vini.html');
+    }
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <div style="text-align:center; padding:16px; font-size:0.76em; color:rgba(244,228,193,0.5); line-height:1.6;">
