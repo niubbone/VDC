@@ -160,6 +160,20 @@
     .vino.trascinato .maniglia { color: #2a5298; }
     .vino-dx { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
+    /* Nel conto / escluso: la rosa dei candidati resta tutta in elenco, ma
+       costi, tipi e PDF contano solo i vini accesi. */
+    .btn-conto {
+      padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.78em; font-weight: bold;
+      background: #e8f6ee; color: #2a7a4a; border: 1px solid #a8d8bb; white-space: nowrap;
+    }
+    .btn-conto::before { content: '✓ '; }
+    .vino.fuori .btn-conto { background: #f5f5f5; color: #888; border-color: #ddd; }
+    .vino.fuori .btn-conto::before { content: '✕ '; }
+    .vino.fuori { background: #f7f7f7; border-left-color: #ccc; }
+    .vino.fuori .vino-nome, .vino.fuori .vino-campi, .vino.fuori .vino-sotto { opacity: 0.5; }
+    .vino.fuori .ordine b { color: #bbb; }
+    .chip-tipo.esclusi { border-style: dashed; color: #777; cursor: pointer; }
+
     /* Tipo del vino (classificazione della carta): pallino e riepilogo. */
     .pallino { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--t, #bbb); margin-right: 6px; vertical-align: 0; }
     .tipo-BIANCO   { --t: #d4b000; }
@@ -402,6 +416,9 @@
   // Si esporta in PDF dal dialogo di stampa.
   //
   // L'ordine dei vini nell'elenco e' l'ordine di servizio (si trascina dalla maniglia).
+  // Ogni vino si puo' escludere dai conti senza toglierlo (flag `fuori`): l'elenco
+  // e' la rosa dei candidati, i conti, il riepilogo per tipo e il PDF usano solo
+  // quelli nel conto. Le degustazioni salvate prima del flag li hanno tutti dentro.
   // Il tipo (bianco, rosato, rosso, bolla, speciale) e' la classificazione della
   // carta: dall'anagrafica si ricava da Categoria carta (o, se manca, da
   // Categoria costo), sui temporanei lo si sceglie.
@@ -466,6 +483,9 @@
     delete c.idServer; delete c.salvataIl; delete c.firmaSalvata;
     return c;
   }
+  // I vini che entrano nei conti: gli altri restano nella rosa, spenti.
+  function inConto(vini) { return vini.filter(v => !v.fuori); }
+
   function firma(s) { return JSON.stringify(contenuto(s)); }
   function sporca() {
     if (S.idServer) return firma(S) !== S.firmaSalvata;
@@ -496,9 +516,10 @@
   function costoIvato(v) { return v.tipo === 'DIST' ? v.imp * IVA_ACQUISTO : v.imp + (v.ss || 0); }
 
   function calcola(s) {
-    const costo = s.vini.reduce((t, v) => t + v.bott * costoNetto(v), 0);
-    const esborso = s.vini.reduce((t, v) => t + v.bott * costoIvato(v), 0);
-    const capienza = s.vini.length ? Math.min.apply(null, s.vini.map(v => Math.floor(v.bott * v.calici))) : 0;
+    const vini = inConto(s.vini);
+    const costo = vini.reduce((t, v) => t + v.bott * costoNetto(v), 0);
+    const esborso = vini.reduce((t, v) => t + v.bott * costoIvato(v), 0);
+    const capienza = vini.length ? Math.min.apply(null, vini.map(v => Math.floor(v.bott * v.calici))) : 0;
     const n = s.persone;
     let prezzo = s.prezzo;
     if (s.guida === 'x') prezzo = n > 0 ? costo * s.ricX * IVA_VENDITA / n : 0;
@@ -631,19 +652,21 @@
   function disegnaVini() {
     const box = $('elencoVini');
     if (!S.vini.length) { box.innerHTML = '<div class="vuoto">Nessun vino: aggiungine uno qui sopra.</div>'; return; }
-    box.innerHTML = S.vini.map((v, i) => `
-      <div class="vino t-${v.tipo}${v.temp ? ' temp' : ''}" data-id="${v.id}">
+    let n = 0;
+    box.innerHTML = S.vini.map(v => `
+      <div class="vino t-${v.tipo}${v.temp ? ' temp' : ''}${v.fuori ? ' fuori' : ''}" data-id="${v.id}">
         <div class="vino-testa">
           <div class="vino-sx">
             <div class="ordine" title="Trascina per cambiare l'ordine">
               <span class="maniglia">⋮⋮</span>
-              <b>${i + 1}</b>
+              <b>${v.fuori ? '–' : ++n}</b>
             </div>
             <div class="vino-nome"><span class="pallino tipo-${v.cat || ''}"></span>${esc(v.nome)}
               <span class="badge">${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}${v.temp ? ' · temporaneo' : ''}</span>
             </div>
           </div>
           <div class="vino-dx">
+            <button class="btn-conto" data-azione="conto" title="Tocca per ${v.fuori ? 'rimetterlo nei conti' : 'toglierlo dai conti senza eliminarlo'}">${v.fuori ? 'Escluso' : 'Nel conto'}</button>
             <button class="btn-mini" data-azione="togli" title="Togli"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
           </div>
         </div>
@@ -679,10 +702,11 @@
     ['prezzo', 'ricX', 'ricEur'].forEach(id => $(id).classList.toggle('guida',
       (id === 'prezzo' && S.guida === 'prezzo') || (id === 'ricX' && S.guida === 'x') || (id === 'ricEur' && S.guida === 'eur')));
 
-    const oltre = S.vini.length && S.persone > r.capienza;
+    const vini = inConto(S.vini);
+    const oltre = vini.length && S.persone > r.capienza;
     $('avviso').hidden = !oltre;
     if (oltre) {
-      const corti = S.vini.filter(v => Math.floor(v.bott * v.calici) < S.persone).map(v => v.nome);
+      const corti = vini.filter(v => Math.floor(v.bott * v.calici) < S.persone).map(v => v.nome);
       $('avvisoTesto').textContent = `Con ${S.persone} persone i calici non bastano per: ${corti.join(', ')}.`;
     }
 
@@ -710,7 +734,7 @@
     const n = S.persone || r.capienza || 10;
     const da = Math.max(1, n - 5), a = n + 5;
     const righe = [];
-    for (let k = da; k <= a; k++) righe.push(Object.assign({ k, oltre: S.vini.length && k > r.capienza }, conto(r.costo, r.prezzo, k)));
+    for (let k = da; k <= a; k++) righe.push(Object.assign({ k, oltre: inConto(S.vini).length && k > r.capienza }, conto(r.costo, r.prezzo, k)));
     return righe;
   }
 
@@ -739,10 +763,12 @@
   function disegnaRiepilogo() {
     const box = $('riepilogoTipi');
     if (!S.vini.length) { box.innerHTML = ''; return; }
-    const n = contaTipi(S.vini);
-    box.innerHTML = `<span class="chip-tipo">${S.vini.length} ${S.vini.length === 1 ? 'vino' : 'vini'}</span>` +
+    const vini = inConto(S.vini), fuori = S.vini.length - vini.length;
+    const n = contaTipi(vini);
+    box.innerHTML = `<span class="chip-tipo">${vini.length} ${vini.length === 1 ? 'vino' : 'vini'}${fuori ? ' nel conto' : ''}</span>` +
       TIPI.map(t => `<span class="chip-tipo tipo-${t.k}${n[t.k] ? '' : ' zero'}"><span class="pallino"></span>${n[t.k] || 0} ${n[t.k] === 1 ? t.uno : t.piu}</span>`).join('') +
-      (n[''] ? `<span class="chip-tipo manca">${n['']} senza tipo</span>` : '');
+      (n[''] ? `<span class="chip-tipo manca">${n['']} senza tipo</span>` : '') +
+      (fuori ? `<span class="chip-tipo esclusi" id="includiTutti" title="Tocca per rimetterli tutti nei conti">${fuori} ${fuori === 1 ? 'escluso' : 'esclusi'} · includi tutti</span>` : '');
   }
 
   function aggiorna(ridisegnaVini) {
@@ -880,14 +906,15 @@
   // ── PDF ─────────────────────────────────────────────────────────────
   function preparaStampa() {
     const r = calcola(S);
+    const vini = inConto(S.vini);
     const data = S.data ? S.data.split('-').reverse().join('/') : '';
     $('stampa').innerHTML = `
       <h1>${esc(S.nome || 'Degustazione')}</h1>
       <div class="sotto">Vecchia Dogana${data ? ' · ' + data : ''} · ${S.persone} persone · ${euro(r.prezzo)} a persona IVA incl.</div>
       <h2>Vini, in ordine di servizio</h2>
-      <div class="sotto">${testoTipi(S.vini)}</div>
+      <div class="sotto">${testoTipi(vini)}</div>
       <table><thead><tr><th>Vino</th><th>Tipo</th><th>Acquisto</th><th>Bottiglie</th><th>Calici/bott.</th><th>Costo bott. senza IVA</th><th>Totale</th></tr></thead>
-      <tbody>${S.vini.map((v, i) => `<tr><td>${i + 1}. ${esc(v.nome)}${v.temp ? ' (temporaneo)' : ''}</td><td>${v.cat ? nomeTipo(v.cat) : '—'}</td><td>${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}</td>
+      <tbody>${vini.map((v, i) => `<tr><td>${i + 1}. ${esc(v.nome)}${v.temp ? ' (temporaneo)' : ''}</td><td>${v.cat ? nomeTipo(v.cat) : '—'}</td><td>${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}</td>
         <td>${v.bott}</td><td>${v.calici}</td><td>${euro(costoNetto(v))}</td><td>${euro(v.bott * costoNetto(v))}</td></tr>`).join('')}</tbody></table>
       <h2>Conti</h2>
       <table><tbody>
@@ -1080,13 +1107,24 @@
       const b = e.target.closest('[data-azione]');
       if (!b || b.disabled) return;
       const id = b.closest('.vino').dataset.id;
+      if (b.dataset.azione === 'conto') {
+        const v = S.vini.find(x => x.id === id);
+        if (v) { if (v.fuori) delete v.fuori; else v.fuori = true; }
+        aggiorna(true);
+        return;
+      }
       if (b.dataset.azione !== 'togli') return;
       S.vini = S.vini.filter(x => x.id !== id);
       aggiorna(true);
     });
 
+    $('riepilogoTipi').onclick = e => {
+      if (!e.target.closest('#includiTutti')) return;
+      S.vini.forEach(v => { delete v.fuori; });
+      aggiorna(true);
+    };
     $('btnAdegua').onclick = () => {
-      S.vini.forEach(v => { if (v.calici > 0) v.bott = Math.max(v.bott, Math.ceil(S.persone / v.calici)); });
+      inConto(S.vini).forEach(v => { if (v.calici > 0) v.bott = Math.max(v.bott, Math.ceil(S.persone / v.calici)); });
       aggiorna(true);
     };
     $('btnPdf').onclick = scaricaPdf;
