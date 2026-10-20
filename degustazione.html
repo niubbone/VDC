@@ -781,15 +781,14 @@
     const neg = r.netto > 0 && r.ricEur < 0;
     const voci = [
       ['Costo vini (senza IVA)', euro(r.costo)],
+      ['Uscita di cassa (IVA incl.)', euro(r.esborso)],
       ['Costo per persona', euro(r.costoPP)],
-      ['Incasso (IVA incl.)', euro(r.lordo)],
-      ['Incasso senza IVA', euro(r.netto)],
-      ['IVA 10% da versare', euro(r.iva)],
+      ['Incasso', euro(r.lordo)],
+      ['Incasso (Imponibile)', euro(r.netto)],
       ['Ricarico', per(r.ricX), 'forte' + (neg ? ' neg' : '')],
-      ['Guadagno', euro(r.netto > 0 ? r.ricEur : null), 'forte' + (neg ? ' neg' : '')],
+      ['Guadagno (Imponibile)', euro(r.netto > 0 ? r.ricEur : null), 'forte' + (neg ? ' neg' : '')],
       ['Margine sull\'incasso', r.margine == null ? '—' : Math.round(r.margine * 100) + '%', neg ? 'neg' : ''],
-      ['Pareggio da', r.pareggio == null ? '—' : r.pareggio + (r.pareggio === 1 ? ' persona' : ' persone')],
-      ['Uscita di cassa (IVA incl.)', euro(r.esborso)]
+      ['Pareggio da', r.pareggio == null ? '—' : r.pareggio + (r.pareggio === 1 ? ' persona' : ' persone')]
     ];
     $('conti').innerHTML = voci.map(v => `<div class="conto ${v[2] || ''}"><div class="l">${v[0]}</div><div class="v">${v[1]}</div></div>`).join('');
 
@@ -810,7 +809,7 @@
     const righe = righePersone(r);
     if (!righe.length) return '';
     return `<table>
-      <thead><tr><th>Persone (a ${euro(r.prezzo)})</th><th>Incasso senza IVA</th><th>Ricarico</th><th>Guadagno</th></tr></thead>
+      <thead><tr><th>Persone (a ${euro(r.prezzo)})</th><th>Incasso (Imponibile)</th><th>Ricarico</th><th>Guadagno (Imponibile)</th></tr></thead>
       <tbody>${righe.map(x => `<tr class="${x.k === S.persone ? 'attuale' : ''}${x.oltre ? ' oltre' : ''}">
         <td>${x.k}${x.oltre ? ' · servono più bottiglie' : ''}</td><td>${euro(x.netto)}</td>
         <td>${per(x.ricX)}</td><td class="${x.ricEur < 0 ? 'neg' : ''}">${euro(x.ricEur)}</td></tr>`).join('')}</tbody></table>`;
@@ -988,15 +987,14 @@
       <h2>Conti</h2>
       <table><tbody>
         <tr><td>Costo vini senza IVA</td><td>${euro(r.costo)}</td></tr>
+        <tr><td>Uscita di cassa per i vini (IVA incl.)</td><td>${euro(r.esborso)}</td></tr>
         <tr><td>Costo per persona</td><td>${euro(r.costoPP)}</td></tr>
-        <tr><td>Incasso IVA inclusa</td><td>${euro(r.lordo)}</td></tr>
-        <tr><td>Incasso senza IVA</td><td>${euro(r.netto)}</td></tr>
-        <tr><td>IVA 10% da versare</td><td>${euro(r.iva)}</td></tr>
+        <tr><td>Incasso</td><td>${euro(r.lordo)}</td></tr>
+        <tr><td>Incasso (Imponibile)</td><td>${euro(r.netto)}</td></tr>
         <tr class="attuale"><td>Ricarico</td><td>${per(r.ricX)}</td></tr>
-        <tr class="attuale"><td>Guadagno</td><td>${euro(r.ricEur)}</td></tr>
+        <tr class="attuale"><td>Guadagno (Imponibile)</td><td>${euro(r.ricEur)}</td></tr>
         <tr><td>Margine sull'incasso</td><td>${r.margine == null ? '—' : Math.round(r.margine * 100) + '%'}</td></tr>
         <tr><td>Pareggio da</td><td>${r.pareggio == null ? '—' : r.pareggio + ' persone'}</td></tr>
-        <tr><td>Uscita di cassa per i vini (IVA incl.)</td><td>${euro(r.esborso)}</td></tr>
       </tbody></table>
       ${righePersone(r).length ? '<h2>Al variare delle persone</h2>' + tabellaPersone(r) : ''}
       <div class="nota-pdf">Costo e incasso confrontati senza IVA: incasso / 1,10; distributori = imponibile, import = imponibile + spese logistiche.</div>`;
