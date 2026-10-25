@@ -1199,6 +1199,7 @@
       // La rubrica si carica da sola alla prima apertura. Gli Incassi no (dal
       // 25/10/2026): partivano su tutto lo storico senza che si fosse scelto il
       // periodo; ora si cerca solo premendo Cerca.
+      if (tabName === 'rubrica' && !rubricaCache.length) caricaRubrica();
     }
 
     /**
