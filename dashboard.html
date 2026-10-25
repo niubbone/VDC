@@ -939,15 +939,15 @@
             <input type="date" id="paDa">
           </div>
           <div class="form-group">
-            <label>Al <span style="font-weight:400; font-size:0.85em;">(vuoto = a oggi)</span>:</label>
+            <label>Al <span style="font-weight:400; font-size:0.85em;">(vuoto = senza limite, anche eventi futuri)</span>:</label>
             <input type="date" id="paA">
           </div>
           <div style="display:flex; align-items:flex-end;">
-            <button class="btn btn-primary" onclick="caricaPartiteAperte()"><svg class="ico"><use href="#i-fa-receipt"></use></svg> Aggiorna</button>
+            <button class="btn btn-primary" onclick="caricaPartiteAperte()"><svg class="ico"><use href="#i-fa-receipt"></use></svg> Cerca</button>
           </div>
         </div>
       </div>
-      <div id="risultatoPartite"></div>
+      <div id="risultatoPartite"><div class="section"><div class="pa-vuoto">Scegli il periodo (o lascia vuoto per tutto) e premi <strong>Cerca</strong>.</div></div></div>
     </div>
   </div>
 
@@ -1196,10 +1196,9 @@
       event.currentTarget.classList.add('active');
       document.getElementById(tabName).classList.add('active');
 
-      // I due tab nuovi si caricano da soli alla prima apertura: chiedere anche
-      // un click su "Aggiorna" per vedere qualcosa è un passaggio a vuoto.
-      if (tabName === 'rubrica' && !rubricaCache.length) caricaRubrica();
-      if (tabName === 'incassi' && !partiteCache) caricaPartiteAperte();
+      // La rubrica si carica da sola alla prima apertura. Gli Incassi no (dal
+      // 25/10/2026): partivano su tutto lo storico senza che si fosse scelto il
+      // periodo; ora si cerca solo premendo Cerca.
     }
 
     /**

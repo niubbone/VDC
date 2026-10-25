@@ -2880,6 +2880,13 @@
         if (stato === 'pagato_cassa') metodo.value = 'cassa';
         if (stato === 'pagato_online') metodo.value = 'online';
       }
+      // Saldato = pagato il dovuto: senza importo la prenotazione non entrava
+      // negli scontrini da emettere né negli incassi dell'evento.
+      const pagato = document.getElementById('inputImportoPagato');
+      const dovuto = document.getElementById('inputImportoDovuto').value;
+      if ((stato === 'pagato_cassa' || stato === 'pagato_online') && !Number(pagato.value) && dovuto) {
+        pagato.value = dovuto;
+      }
     }
 
     /**
