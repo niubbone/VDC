@@ -822,16 +822,20 @@
         timestamp: new Date().toISOString()
       };
       try { localStorage.setItem('cartaViniConfig', JSON.stringify(config)); } catch (e) {}
+      erroreUltimaCartaServer = '';
       mostraUltimaCarta(config);
       console.log('✅ Configurazione salvata');
     }
 
     // ⭐ ULTIMA CARTA: quella salvata sul server (generata da qualunque dispositivo);
     // il localStorage resta di riserva se il server non risponde. Vince la più recente.
+    let erroreUltimaCartaServer = '';
     async function leggiUltimaCartaServer() {
       try {
         const r = await fetch(`${API_URL}?action=getUltimaCartaCalice`);
         const d = await r.json();
+        // il server non è riuscito a salvare l'ultima carta: dirlo, non far finta di niente
+        if (d && d.errore) erroreUltimaCartaServer = d.errore;
         return d && d.config ? d.config : null;
       } catch (e) {
         console.warn('Ultima carta dal server non disponibile:', e);
@@ -855,7 +859,9 @@
       const quando = d.toLocaleDateString('it-IT') + ' alle ' +
         d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
       el.innerHTML = `Riproposta l'ultima carta, generata il ${quando}` +
-        (config.docUrl ? ` · <a href="${config.docUrl}" target="_blank" rel="noopener" style="color:#fff;">apri il documento</a>` : '');
+        (config.docUrl ? ` · <a href="${config.docUrl}" target="_blank" rel="noopener" style="color:#fff;">apri il documento</a>` : '') +
+        (erroreUltimaCartaServer ? '<br>⚠️ Il server non ha salvato l\'ultima carta: gli altri dispositivi non la vedono (' +
+          erroreUltimaCartaServer.replace(/</g, '&lt;') + ')' : '');
     }
 
     // Ricollega i vini salvati a quelli della carta attuale (dati aggiornati), tenendo il prezzo
@@ -877,6 +883,12 @@
         const locale = leggiUltimaCartaLocale();
         let config = server || locale;
         if (server && locale && new Date(locale.timestamp) > new Date(server.timestamp)) config = locale;
+        if (erroreUltimaCartaServer) {
+          const el = document.getElementById('ultimaCarta');
+          el.innerHTML = '⚠️ Il server non ha salvato l\'ultima carta (gli altri dispositivi non la vedono): ' +
+            erroreUltimaCartaServer.replace(/</g, '&lt;');
+          if (!config) return;
+        }
         if (!config) return;
 
         // Ripristina intro text

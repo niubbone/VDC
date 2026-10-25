@@ -541,6 +541,8 @@
         <div class="check-row" style="margin-bottom:15px;">
           <input type="checkbox" id="f-incarta">
           <label for="f-incarta">In carta</label>
+          <input type="checkbox" id="f-bestseller" style="margin-left:22px;">
+          <label for="f-bestseller">⭐ Bestseller</label>
         </div>
         <div class="form-grid">
           <div class="form-group">
@@ -770,7 +772,7 @@
       if(!wines.length){grid.innerHTML='<div class="empty-state">Nessun vino trovato</div>';return;}
       grid.innerHTML=wines.map(w=>`
         <div class="wine-card ${catClass(w.catCarta)}" onclick="apriModifica('${w.id}')">
-          <div class="card-header"><span class="card-codice">${w.id}</span>${w.catCarta?`<span class="card-cat-badge">${w.catCarta}</span>`:''}</div>
+          <div class="card-header"><span class="card-codice">${w.id}${w.bestseller?' ⭐':''}</span>${w.catCarta?`<span class="card-cat-badge">${w.catCarta}</span>`:''}</div>
           <div class="card-nome">${w.nomeCarta||w.vino}</div>
           <div class="card-nazione">${w.nazione}${w.aoc?' · '+w.aoc:''}</div>
           <div class="card-footer">
@@ -790,6 +792,7 @@
       ['f-cat-costo','f-cat-carta','f-formato'].forEach(id=>document.getElementById(id).value=id==='f-formato'?'6.1':'');
       document.getElementById('f-abbandonato').checked=false;
       document.getElementById('f-incarta').checked=false;
+      document.getElementById('f-bestseller').checked=false;
       ['c-ric-x','c-ric-eur','c-asporto','c-nbott','c-margin-pct','cc-ric-x','cc-ric-eur','cc-costo','cc-margine']
         .forEach(id=>document.getElementById(id).textContent='—');
       document.getElementById('c-margin-bar').style.width='0%';
@@ -816,6 +819,7 @@
       document.getElementById('f-tavolo-listino').value=w.tavoloListino||'';
       document.getElementById('f-abbandonato').checked=!!w.abbandonato;
       document.getElementById('f-incarta').checked=!!w.incarta;
+      document.getElementById('f-bestseller').checked=!!w.bestseller;
       document.getElementById('f-nome-carta').value=w.nomeCarta||'';
       document.getElementById('f-cat-carta').value=w.catCarta||'';
       document.getElementById('f-aoc').value=w.aoc||'';
@@ -892,6 +896,7 @@
         calice: caliceOn ? document.getElementById('f-calice').value : null,
         abbandonato: document.getElementById('f-abbandonato').checked,
         incarta: document.getElementById('f-incarta').checked,
+        bestseller: document.getElementById('f-bestseller').checked,
         nomeCarta: document.getElementById('f-nome-carta').value,
         catCarta: document.getElementById('f-cat-carta').value,
         aoc: document.getElementById('f-aoc').value,
