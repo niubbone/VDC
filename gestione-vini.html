@@ -98,6 +98,8 @@
     }
     .btn-nuovo:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(42,82,152,0.5); }
     .btn-nuovo:active { transform: translateY(0); }
+    .btn-nuovo.btn-excel { background: linear-gradient(135deg, #1e7145 0%, #155a35 100%); box-shadow: 0 4px 12px rgba(30,113,69,0.35); }
+    .btn-nuovo.btn-excel:hover { box-shadow: 0 6px 18px rgba(30,113,69,0.5); }
 
     /* ── WINE GRID ── */
     .wine-grid {
@@ -324,6 +326,7 @@
           <span class="search-icon">🔍</span>
           <input type="text" id="searchInput" placeholder="Cerca nome, nazione, fornitore…" oninput="filtraVini()">
         </div>
+        <button class="btn-nuovo btn-excel" onclick="scaricaTerminati()" title="Vini col pallino rosso nella carta dei vini, con fornitore, costo, calice e bestseller">📥 Vini terminati</button>
         <button class="btn-nuovo" onclick="apriNuovoVino()">+ Nuovo Vino</button>
       </div>
       <div class="filtri">
@@ -658,6 +661,78 @@
         }
       }
       throw new Error('Il server ha risposto in modo inatteso. Di solito basta riprovare fra qualche secondo.');
+    }
+
+    // ── VINI TERMINATI IN EXCEL (25/10/2026) ─────────────────────────
+    // Terminati = pallino rosso nella carta dei vini (CartaQR, Disponibile non spuntato).
+    // Nome in carta, tipo e nazione dalla carta; fornitore, costo bottiglia, calice e bestseller
+    // da WINE_COST (wineData, già caricato), agganciati per codice e, in mancanza, per nome.
+    const CARTA_QR_URL = 'https://script.google.com/macros/s/AKfycbwIhY-mG3pIMos7nFjF-B382QwK8ROqc8TBFC9PJtpVi4IfPw1ug-2ajhKSB_Vl5LNh/exec';
+
+    async function leggiCartaQR() {
+      let ultimo = '';
+      for (let i = 0; i < 3; i++) {        // Apps Script a volte risponde una pagina HTML (§5.4)
+        const r = await fetch(`${CARTA_QR_URL}?context=admin`);
+        ultimo = await r.text();
+        try {
+          const d = JSON.parse(ultimo);
+          if (Array.isArray(d)) return d;
+        } catch (e) {}
+      }
+      throw new Error('la carta dei vini non risponde (' + ultimo.slice(0, 60) + ')');
+    }
+
+    async function scaricaTerminati() {
+      if (!window.XLSX) { alert('Libreria Excel non caricata: controlla la connessione e ricarica la pagina.'); return; }
+      if (!wineData.length) { alert('Elenco vini non ancora caricato: riprova tra un attimo.'); return; }
+      showLoading('Preparo l\'elenco dei vini terminati...');
+      try {
+        const carta = await leggiCartaQR();
+        const terminati = carta.filter(w => w.Disponibile !== true);
+        if (!terminati.length) { alert('Nessun vino terminato nella carta.'); return; }
+        const norm = s => String(s || '').trim().toLowerCase();
+        const perCodice = {}, perNome = {};
+        wineData.forEach(v => {
+          if (v.codice) perCodice[String(v.codice).trim()] = v;
+          if (v.nomeCarta) perNome[norm(v.nomeCarta)] = v;
+        });
+        const num = x => (typeof x === 'number' ? x : (parseFloat(String(x || '').replace(',', '.')) || null));
+        const righe = terminati.map(w => {
+          const c = perCodice[String(w.CODICE || '').trim()] || perNome[norm(w.Nome)] || {};
+          return [
+            w.Nome || '',
+            c.fornitore || '',
+            w.Categoria || c.catCarta || '',
+            c.bestseller ? 'Sì' : 'No',
+            w.Nazione || c.nazione || '',
+            num(c.costoBottiglia),
+            num(c.calice) ?? num(w.Calice),
+            w.Visibile === true ? 'Sì' : 'No',
+          ];
+        }).sort((a, b) => String(a[2]).localeCompare(b[2]) || String(a[0]).localeCompare(b[0]));
+
+        const testa = ['Vino (nome in carta)', 'Fornitore', 'Tipo vino', 'Bestseller', 'Nazione',
+                       'Costo bottiglia € (senza IVA)', 'Prezzo calice €', 'Visibile in carta'];
+        const ws = XLSX.utils.aoa_to_sheet([testa, ...righe]);
+        for (let r = 1; r <= righe.length; r++) {
+          [5, 6].forEach(col => {
+            const cella = ws[XLSX.utils.encode_cell({ r, c: col })];
+            if (cella && cella.t === 'n') cella.z = '#,##0.00';
+          });
+        }
+        ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: righe.length, c: testa.length - 1 } }) };
+        ws['!cols'] = [{ wch: 42 }, { wch: 24 }, { wch: 14 }, { wch: 11 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Vini terminati');
+        XLSX.writeFile(wb, `Vini terminati ${new Date().toISOString().slice(0, 10)}.xlsx`);
+        const senza = righe.filter(r => !r[1] && r[5] == null).length;
+        if (senza) alert(`Scaricato: ${righe.length} vini terminati. ${senza} non sono in Gestione Vini (forse abbandonati): escono senza fornitore e costo.`);
+      } catch (e) {
+        console.error('Vini terminati:', e);
+        alert('Elenco non creato: ' + e.message);
+      } finally {
+        hideLoading();
+      }
     }
 
     async function callAPI(action, data = {}) {
