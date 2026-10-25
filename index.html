@@ -947,46 +947,42 @@
     bgMusic.volume = 0.3; // 30% volume
     
     // VERSIONING AUTOMATICO - Legge versione dal service worker
-    async function getAppVersion() {
+    //
+    // Durante un aggiornamento (o dopo un ricarica forzata) la pagina non ha
+    // ancora un service worker che la controlla, o ce l'ha vecchio e non
+    // risponde: prima qui si scriveva un "2.5" fisso, rimasto dal 2025. Ora la
+    // versione di riserva si legge dal file service-worker.js pubblicato.
+    const scriviVersione = v => { document.getElementById('appVersion').textContent = v; };
+
+    async function versioneDalFile() {
       try {
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-          // Metodo 1: chiedi versione al service worker via message
-          const messageChannel = new MessageChannel();
-          
-          navigator.serviceWorker.controller.postMessage(
-            { type: 'GET_VERSION' },
-            [messageChannel.port2]
-          );
-          
-          messageChannel.port1.onmessage = (event) => {
-            if (event.data && event.data.version) {
-              document.getElementById('appVersion').textContent = event.data.version;
-            }
-          };
-          
-          // Timeout fallback
-          setTimeout(() => {
-            if (document.getElementById('appVersion').textContent === 'caricamento...') {
-              document.getElementById('appVersion').textContent = '2.5';
-            }
-          }, 1000);
-        } else {
-          // Service worker non attivo, usa versione default
-          document.getElementById('appVersion').textContent = '2.5';
-        }
-      } catch (error) {
-        console.log('Errore lettura versione:', error);
-        document.getElementById('appVersion').textContent = '2.5';
+        const r = await fetch('service-worker.js', { cache: 'no-store' });
+        const m = (await r.text()).match(/VERSION\s*=\s*'([^']+)'/);
+        if (m) return scriviVersione(m[1]);
+      } catch (e) {
+        console.log('Errore lettura versione:', e);
       }
+      scriviVersione('—');
     }
-    
-    // Carica versione quando service worker è pronto
+
+    function getAppVersion() {
+      const sw = navigator.serviceWorker && navigator.serviceWorker.controller;
+      if (!sw) return versioneDalFile();
+      const canale = new MessageChannel();
+      let risposto = false;
+      canale.port1.onmessage = (event) => {
+        if (event.data && event.data.version) { risposto = true; scriviVersione(event.data.version); }
+      };
+      sw.postMessage({ type: 'GET_VERSION' }, [canale.port2]);
+      setTimeout(() => { if (!risposto) versioneDalFile(); }, 1000);
+    }
+
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(() => {
-        getAppVersion();
-      });
+      navigator.serviceWorker.ready.then(getAppVersion);
+      // Il service worker nuovo prende il controllo: rileggi la versione.
+      navigator.serviceWorker.addEventListener('controllerchange', getAppVersion);
     } else {
-      document.getElementById('appVersion').textContent = '2.5';
+      versioneDalFile();
     }
   </script>
 </body>
