@@ -163,15 +163,26 @@
       border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; transition: all 0.18s;
     }
     .voce:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
-    .voce-vino { --cat-color: #cc0000; }
-    .voce-calice { --cat-color: #1a6a9a; }
-    .voce-assortimento { --cat-color: #2a7a4a; }
-    .voce-altro { --cat-color: #9a7f00; }
+    .voce-rifornimento { --cat-color: #cc0000; }
+    .voce-inventario { --cat-color: #9a7f00; }
+    .voce-valutazione { --cat-color: #2a7a4a; }
+    .voce-calici { --cat-color: #1a6a9a; }
+    .voce-altro { --cat-color: #6a6a7a; }
+    .voce-vino { --cat-color: #8b4513; }   /* «Dallo staff», da smistare */
     .voce.chiusa { background: #f7f9fc; --cat-color: #b9c4d6; }
     .voce-corpo { flex: 1; min-width: 0; }
     .voce-testo { font-size: 0.97em; font-weight: bold; color: #1e3c72; line-height: 1.4; overflow-wrap: anywhere; }
     .voce.chiusa .voce-testo { text-decoration: line-through; color: #8a94a6; font-weight: normal; }
     .voce-sotto { font-size: 0.8em; color: #888; margin-top: 6px; }
+    /* Urgenti (dal 25/10/2026): sempre in cima, nel gruppo «Urgenti». */
+    .voce.urgente { background: #fff5f3; border-color: #f2b8ad; }
+    .badge-urgente { color: #c0392b; font-style: normal; font-weight: bold; margin-right: 4px; }
+    .badge-locale { color: #6b4423; font-style: normal; margin-left: 4px; }
+    .urgente-scelta {
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; cursor: pointer;
+      font-weight: bold; font-size: 0.85em; color: #c0392b; text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .urgente-scelta input { width: 18px; height: 18px; accent-color: #c0392b; cursor: pointer; }
     .badge {
       display: inline-flex; align-items: center; font-size: 0.92em;
       padding: 2px 10px; border-radius: 10px; font-style: italic;
@@ -241,15 +252,18 @@
   <div class="section">
     <div class="section-title" id="titoloForm">Nuova segnalazione</div>
     <div class="nota">
-      Quello che manca o che vale la pena valutare. Il <strong>fornitore</strong> è
-      facoltativo, ma se c'è le segnalazioni si raggruppano per lui — ed è così che
-      serviranno quando si compone l'ordine.
+      <strong>Rifornimento</strong>: un vino in carta che sta finendo o è finito ·
+      <strong>Inventario</strong>: un controllo da fare · <strong>Valutazione</strong>: vini o
+      fornitori nuovi da decidere · <strong>Calici</strong>: la carta dei calici.
+      Le <strong>Dallo staff</strong> arrivano dalle Segnalazioni del menu principale: chiudile,
+      eliminale o dagli una categoria. Il <strong>fornitore</strong> è facoltativo, ma se c'è le
+      segnalazioni si raggruppano per lui — ed è così che serviranno quando si compone l'ordine.
     </div>
 
     <div class="scelte" id="scelteCategoria"></div>
 
     <label for="testo">Cosa manca o cosa serve</label>
-    <textarea id="testo" placeholder="es. Sta finendo il Gemma bianco · Manca un aromatico tra i calici"></textarea>
+    <textarea id="testo" placeholder="es. Sta finendo il Gemma bianco · Contare le bolle in cantina · Manca un aromatico tra i calici"></textarea>
 
     <div class="riga-campi">
       <div>
@@ -265,6 +279,8 @@
         <div class="combo-stato" id="statoFornitore"></div>
       </div>
     </div>
+
+    <label class="urgente-scelta"><input type="checkbox" id="urgente"> Urgente (va in cima)</label>
 
     <div class="azioni">
       <button class="btn btn-primario" id="btnSalva" onclick="salva()">
@@ -353,13 +369,24 @@
   // nessuna bottiglia, e riusare la spunta per "Calice" la confondeva col
   // bottone "segna come risolta" della riga accanto. Bastano il colore del
   // badge e la parola. Le icone restano sui comandi, dove dicono un'azione.
+  // Categorie dal 25/10/2026 (prima: vino, calice, assortimento, altro; il
+  // server ha convertito le righe esistenti).
   const CATEGORIE = [
-    { chiave: 'vino',         etichetta: 'Vino' },
-    { chiave: 'calice',       etichetta: 'Calice' },
-    { chiave: 'assortimento', etichetta: 'Assortimento' },
+    { chiave: 'rifornimento', etichetta: 'Rifornimento' },
+    { chiave: 'inventario',   etichetta: 'Inventario' },
+    { chiave: 'valutazione',  etichetta: 'Valutazione' },
+    { chiave: 'calici',       etichetta: 'Calici' },
     { chiave: 'altro',        etichetta: 'Altro' }
   ];
+  // La «Vino» scritta dal personale: qui è la casella d'ingresso, da smistare.
+  const DALLO_STAFF = { chiave: 'vino', etichetta: 'Dallo staff' };
   const SENZA_FORNITORE = 'Senza fornitore';
+  const URGENTI = 'Urgenti';
+  // Dal 25/10/2026 arrivano qui anche le segnalazioni «Vino» scritte dal
+  // personale nella pagina del menu principale (segnalazioni-locale.html,
+  // area "locale"): stessa riga sul server, quindi chiuderle o cancellarle
+  // qui vale anche là.
+  const AREA = 'vini';
 
   let segnalazioni = [];
   let fornitoriNoti = [];          // dal server, cioè già usati nelle segnalazioni
@@ -429,7 +456,8 @@
   }
 
   function categoriaDi(chiave) {
-    return CATEGORIE.filter(c => c.chiave === chiave)[0] || CATEGORIE[3];
+    if (chiave === DALLO_STAFF.chiave) return DALLO_STAFF;
+    return CATEGORIE.filter(c => c.chiave === chiave)[0] || CATEGORIE[CATEGORIE.length - 1];
   }
 
   function mostraVelo(testo) {
@@ -483,27 +511,37 @@
       return true;
     });
     const gruppi = {};
+    const urgenti = [];
     filtrate.forEach(s => {
+      // Un'urgente aperta sta in cima, nel gruppo «Urgenti», non sotto il fornitore.
+      if (s.urgente && s.stato === 'aperta') return urgenti.push(s);
       const chiave = (s.fornitore || '').trim() || SENZA_FORNITORE;
       (gruppi[chiave] = gruppi[chiave] || []).push(s);
     });
     // I fornitori in ordine alfabetico; "Senza fornitore" sempre in fondo,
     // perché è un contenitore, non un fornitore.
-    return Object.keys(gruppi)
+    const elenco = Object.keys(gruppi)
       .sort((a, b) => a === SENZA_FORNITORE ? 1 : b === SENZA_FORNITORE ? -1 : a.localeCompare(b, 'it'))
       .map(nome => ({ fornitore: nome, voci: gruppi[nome] }));
+    return urgenti.length ? [{ fornitore: URGENTI, voci: urgenti }].concat(elenco) : elenco;
   }
 
   // ── Disegno ─────────────────────────────────────────────────────────
   function disegnaCategorie() {
+    // «Dallo staff» compare fra le scelte solo modificando una di quelle: si
+    // può lasciarla lì, ma non crearne una nuova.
     document.getElementById('scelteCategoria').innerHTML = CATEGORIE.map((c, i) => `
       <label class="chip">
         <input type="radio" name="categoria" value="${c.chiave}" ${i === 0 ? 'checked' : ''}>
         ${c.etichetta}
-      </label>`).join('');
+      </label>`).join('') + `
+      <label class="chip" id="chipStaff" hidden>
+        <input type="radio" name="categoria" value="${DALLO_STAFF.chiave}">
+        ${DALLO_STAFF.etichetta}
+      </label>`;
     document.getElementById('filtroCategoria').innerHTML =
       '<option value="">Tutte</option>' +
-      CATEGORIE.map(c => `<option value="${c.chiave}">${c.etichetta}</option>`).join('');
+      [DALLO_STAFF].concat(CATEGORIE).map(c => `<option value="${c.chiave}">${c.etichetta}</option>`).join('');
   }
 
   // ── Fornitori: elenco chiuso con filtro ─────────────────────────────
@@ -693,12 +731,16 @@
 
   function voce(s) {
     const cat = categoriaDi(s.categoria);
+    const urgente = s.urgente && s.stato === 'aperta';
     return `
-      <div class="voce voce-${esc(s.categoria)} ${s.stato === 'chiusa' ? 'chiusa' : ''}">
+      <div class="voce voce-${esc(s.categoria)} ${urgente ? 'urgente' : ''} ${s.stato === 'chiusa' ? 'chiusa' : ''}">
         <div class="voce-corpo">
           <div class="voce-testo">${esc(s.testo)}</div>
           <div class="voce-sotto">
+            ${urgente ? '<span class="badge badge-urgente">Urgente</span>' : ''}
             <span class="badge badge-${esc(s.categoria)}">${cat.etichetta}</span>
+            ${s.area === 'locale' ? '<span class="badge badge-locale">dal locale</span>' : ''}
+            ${urgente && s.fornitore ? ' · ' + esc(s.fornitore) : ''}
             · ${dataBreve(s.creato)}${s.stato === 'chiusa' ? ' · chiusa il ' + dataBreve(s.chiuso) : ''}
           </div>
         </div>
@@ -721,7 +763,7 @@
   async function carica() {
     mostraVelo('Carico le segnalazioni...');
     try {
-      const r = await callAPI('getSegnalazioni');
+      const r = await callAPI('getSegnalazioni', { area: AREA });
       nascondiVelo();
       // L'errore si guarda per primo: un elenco vuoto è comunque "truthy".
       if (r.errore) return messaggio(r.errore, 'errore');
@@ -742,7 +784,9 @@
       categoria: scelta ? scelta.value : 'altro',
       testo: document.getElementById('testo').value.trim(),
       // Non quello che c'è scritto: quello che è stato SCELTO dalla tendina.
-      fornitore: fornitoreScelto.trim()
+      fornitore: fornitoreScelto.trim(),
+      urgente: document.getElementById('urgente').checked,
+      area: AREA        // conta solo per le nuove: in modifica il server tiene l'area della riga
     };
   }
 
@@ -768,6 +812,7 @@
       if (r.errore) return messaggio(r.errore, 'errore');
       annullaModifica();
       document.getElementById('testo').value = '';
+      document.getElementById('urgente').checked = false;
       messaggio(r.messaggio || 'Fatto', 'ok');
       await carica();
     } catch (error) {
@@ -789,6 +834,8 @@
     // Il fornitore salvato è già uno scelto: si riparte considerandolo tale.
     fornitoreScelto = s.fornitore || '';
     aggiornaStatoFornitore();
+    document.getElementById('urgente').checked = !!s.urgente;
+    document.getElementById('chipStaff').hidden = s.categoria !== DALLO_STAFF.chiave;
     const radio = document.querySelector(`input[name="categoria"][value="${s.categoria}"]`);
     if (radio) radio.checked = true;
     document.getElementById('titoloForm').textContent = 'Modifica segnalazione';
@@ -800,6 +847,9 @@
 
   function annullaModifica() {
     inModifica = null;
+    document.getElementById('chipStaff').hidden = true;
+    const staff = document.querySelector(`input[name="categoria"][value="${DALLO_STAFF.chiave}"]`);
+    if (staff && staff.checked) document.querySelector('input[name="categoria"]').checked = true;
     document.getElementById('titoloForm').textContent = 'Nuova segnalazione';
     document.getElementById('btnSalvaTesto').textContent = 'Aggiungi';
     document.getElementById('btnAnnulla').hidden = true;

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Pagina interna: fuori dai motori di ricerca. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Segnalazioni</title>
+  <meta name="theme-color" content="#3d1f0f">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Rye&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    /* Aspetto del menu principale (pergamena, legno, Pirata One): questa
+       pagina si apre da lì ed è di tutti. Quella dei vini (segnalazioni.html)
+       resta blu, come l'area vini da cui si apre. */
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(rgba(20, 40, 60, 0.40), rgba(20, 40, 60, 0.40)), url('./assets/images/SfondoVD.png');
+      background-size: cover; background-position: center; background-attachment: fixed;
+      color: #2c1810; min-height: 100vh; padding: 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    /* Testata con la geometria di prenotazioni.html. */
+    .header {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      margin-bottom: 20px; padding: 20px;
+      background: rgba(35, 55, 80, 0.85); border: 3px solid #d4a574; border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .header h1 {
+      font-family: 'Pirata One', cursive; font-weight: 400; font-size: 2em; color: #d4a574;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    }
+    .btn-home {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%); color: #2c1810;
+      padding: 8px 20px; border: 2px solid #8b4513; border-radius: 8px; font-size: 1.15em;
+      box-shadow: 0 5px 0 #6b3410, 0 7px 10px rgba(0,0,0,0.6), inset 0 2px 0 rgba(255,255,255,0.4);
+      text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap;
+      font-family: 'Pirata One', cursive; transition: all 0.15s;
+    }
+    .btn-home:hover { background: linear-gradient(145deg, #f4c489 0%, #d4a874 100%); transform: translateY(-2px); }
+    .btn-home:active { transform: translateY(4px); box-shadow: 0 1px 0 #6b3410, 0 3px 6px rgba(0,0,0,0.5); }
+
+    /* Icone: sprite SVG inline (MANUALE §9). */
+    .ico {
+      width: 1.3em; height: 1.3em; fill: currentColor;
+      vertical-align: -0.28em; flex-shrink: 0; margin-right: 0.3em;
+    }
+    .ico-sola { margin-right: 0; }
+    .btn-home .ico {
+      width: 1.75em; height: 1.75em; vertical-align: -0.44em;
+      stroke: currentColor; stroke-width: 12; paint-order: stroke fill;
+    }
+    .header h1 .ico { width: 1.5em; height: 1.5em; vertical-align: -0.35em; margin-right: 0.2em; }
+
+    /* Pergamena come i riquadri del menu principale. */
+    .section {
+      background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
+      border: 4px solid #6b4423; border-radius: 15px;
+      padding: 24px; margin-bottom: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .section-title {
+      font-family: 'Pirata One', cursive; font-size: 1.7em; color: #3d1f0f;
+      margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      text-shadow: 1px 1px 0 rgba(255,255,255,0.25);
+    }
+
+    label {
+      display: block; font-family: 'Rye', cursive; font-size: 0.95em; color: #2c1810; margin-bottom: 6px;
+    }
+    input[type="text"], input[type="search"], select, textarea {
+      width: 100%; padding: 11px 12px; border: 3px solid #6b4423; border-radius: 8px;
+      font-family: 'Georgia', serif; font-size: 1em; background: #f4e4c1; color: #2c1810;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #3d1f0f; background: #fbf1da; }
+    textarea { min-height: 80px; resize: vertical; }
+
+    .scelte { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .chip {
+      display: inline-flex; align-items: center; cursor: pointer; position: relative;
+      padding: 8px 16px; border: 3px solid #6b4423; border-radius: 22px;
+      background: #f4e4c1; color: #3d1f0f; font-family: 'Pirata One', cursive; font-size: 1.2em;
+      transition: all 0.15s;
+    }
+    .chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .chip:has(input:checked) { background: #3d1f0f; border-color: #3d1f0f; color: #f4e4c1; }
+    .chip:focus-within { outline: 2px solid #f4e4c1; outline-offset: 2px; }
+
+    .riga-campi { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    .urgente-scelta {
+      display: flex; align-items: center; gap: 10px; margin-top: 16px; cursor: pointer;
+      font-family: 'Rye', cursive; color: #8b0000; font-size: 1.05em;
+    }
+    .urgente-scelta input { width: 22px; height: 22px; accent-color: #8b0000; cursor: pointer; }
+    .azioni { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
+
+    .btn {
+      padding: 12px 24px; border: 3px solid #3d1f0f; border-radius: 8px; cursor: pointer;
+      font-family: 'Pirata One', cursive; font-size: 1.35em; letter-spacing: 0.5px;
+      display: inline-flex; align-items: center; transition: all 0.15s;
+      box-shadow: 0 4px 0 #3d1f0f, 0 8px 20px rgba(0,0,0,0.4);
+    }
+    .btn:active { transform: translateY(4px); box-shadow: 0 0 0 #3d1f0f, 0 4px 10px rgba(0,0,0,0.4); }
+    .btn-primario { background: linear-gradient(145deg, #8b4513 0%, #654321 100%); color: #f4e4c1; }
+    .btn-primario:hover { background: linear-gradient(145deg, #a0522d 0%, #7a3e1e 100%); }
+    .btn-secondario { background: linear-gradient(145deg, #e8b873 0%, #c89858 100%); color: #2c1810; }
+    .btn-secondario:hover { background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%); }
+    .btn-mini {
+      padding: 7px 10px; border-radius: 6px; cursor: pointer; margin-left: 4px;
+      background: #f4e4c1; color: #3d1f0f; border: 2px solid #6b4423;
+    }
+    .btn-mini:hover { background: #fbf1da; }
+    .btn-mini.pericolo { color: #8b0000; border-color: #8b0000; }
+
+    .contatori { font-family: 'Rye', cursive; color: #3d1f0f; margin: 4px 0 12px; font-size: 0.95em; }
+
+    /* Riga: bordo del colore della categoria, come le schede vini. */
+    .voce {
+      display: flex; gap: 10px; align-items: flex-start; background: #f4e4c1;
+      border: 2px solid #6b4423; border-left: 7px solid var(--cat-color, #6b4423);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+    }
+    .voce-food      { --cat-color: #b35a00; }
+    .voce-strumenti { --cat-color: #4a5a6a; }
+    .voce-drink     { --cat-color: #1a6a9a; }
+    .voce-vino      { --cat-color: #7a1022; }
+    .voce-altro     { --cat-color: #6b4423; }
+    .voce.urgente { background: #fde3d6; border-color: #8b0000; box-shadow: 0 0 0 2px #8b0000 inset; }
+    .voce.chiusa { background: #e9dcc0; --cat-color: #b4a58a; opacity: 0.85; }
+    .voce-corpo { flex: 1; min-width: 0; }
+    .voce-testo { font-size: 1.05em; font-weight: bold; color: #2c1810; line-height: 1.4; overflow-wrap: anywhere; }
+    .voce.chiusa .voce-testo { text-decoration: line-through; font-weight: normal; color: #6b5a44; }
+    .voce-sotto { font-size: 0.85em; color: #5a4632; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .badge {
+      display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 10px;
+      font-family: 'Pirata One', cursive; font-size: 1.1em; color: #fff; background: var(--cat-color, #6b4423);
+    }
+    .badge-urgente { background: #8b0000; }
+
+    .messaggio { padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; margin-top: 14px; }
+    .messaggio.errore { background: #ffcccc; color: #8b0000; border: 2px solid #8b0000; }
+    .messaggio.ok { background: #dcedc8; color: #33691e; border: 2px solid #558b2f; }
+    .vuoto { text-align: center; padding: 24px; color: #3d1f0f; font-style: italic; }
+
+    .velo {
+      position: fixed; inset: 0; background: rgba(20, 12, 6, 0.75); z-index: 9999;
+      display: none; justify-content: center; align-items: center; flex-direction: column;
+    }
+    .velo.attivo { display: flex; }
+    .velo-ancora { font-size: 2.5em; margin-bottom: 12px; animation: gira 1s linear infinite; }
+    @keyframes gira { to { transform: rotate(360deg); } }
+    .velo-testo { color: #f4e4c1; font-family: 'Pirata One', cursive; font-size: 1.4em; letter-spacing: 1px; }
+
+    /* Attribuzione obbligatoria (MANUALE §9). */
+    .crediti-icone { text-align: center; color: rgba(255,255,255,0.75); font-size: 0.78em; margin: 18px auto 6px; }
+    .crediti-icone a { color: #f4e4c1; }
+
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .header { padding: 14px; }
+      .header h1 { font-size: 1.5em; }
+      .section { padding: 16px; }
+      .riga-campi { grid-template-columns: 1fr; }
+      .voce { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ATTENZIONE: i-fa-circle-check e i-cycle sono scelte a runtime (#${...}):
+     non compaiono come riferimento letterale, non vanno tolte. -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-scroll-unfurled" viewBox="0 0 512 512"><path fill="currentColor" d="M103.432 17.844c-1.118.005-2.234.032-3.348.08-2.547.11-5.083.334-7.604.678-20.167 2.747-39.158 13.667-52.324 33.67-24.613 37.4 2.194 98.025 56.625 98.025.536 0 1.058-.012 1.583-.022v.704h60.565c-10.758 31.994-30.298 66.596-52.448 101.43-2.162 3.4-4.254 6.878-6.29 10.406l34.878 35.733-56.263 9.423c-32.728 85.966-27.42 182.074 48.277 182.074v-.002l9.31.066c23.83-.57 46.732-4.298 61.325-12.887 4.174-2.458 7.63-5.237 10.467-8.42h-32.446c-20.33 5.95-40.8-6.94-47.396-25.922-8.956-25.77 7.52-52.36 31.867-60.452 5.803-1.93 11.723-2.834 17.565-2.834v-.406h178.33c-.57-44.403 16.35-90.125 49.184-126 23.955-26.176 42.03-60.624 51.3-94.846l-41.225-24.932 38.272-6.906-43.37-25.807h-.005l.002-.002.002.002 52.127-8.85c-5.232-39.134-28.84-68.113-77.37-68.113C341.14 32.26 222.11 35.29 149.34 28.496c-14.888-6.763-30.547-10.723-45.908-10.652zm.464 18.703c13.137.043 27.407 3.804 41.247 10.63l.033-.07c4.667 4.735 8.542 9.737 11.68 14.985H82.92l10.574 14.78c10.608 14.83 19.803 31.99 21.09 42.024.643 5.017-.11 7.167-1.814 8.836-1.705 1.67-6.228 3.875-15.99 3.875-40.587 0-56.878-44.952-41.012-69.06C66.238 46.64 79.582 39.22 95.002 37.12c2.89-.395 5.863-.583 8.894-.573zM118.5 80.78h46.28c4.275 15.734 3.656 33.07-.544 51.51H131.52c1.9-5.027 2.268-10.574 1.6-15.77-1.527-11.913-7.405-24.065-14.62-35.74zm101.553 317.095c6.44 6.84 11.192 15.31 13.37 24.914 3.797 16.736 3.092 31.208-1.767 43.204-4.526 11.175-12.576 19.79-22.29 26h237.19c14.448 0 24.887-5.678 32.2-14.318 7.312-8.64 11.2-20.514 10.705-32.352-.186-4.473-.978-8.913-2.407-13.18l-69.91-8.205 42.017-20.528c-8.32-3.442-18.64-5.537-31.375-5.537H220.053zm-42.668.506c-1.152-.003-2.306.048-3.457.153-2.633.242-5.256.775-7.824 1.63-15.11 5.02-25.338 21.54-20.11 36.583 3.673 10.57 15.347 17.71 25.654 13.938l1.555-.57h43.354c.946-6.36.754-13.882-1.358-23.192-3.71-16.358-20.543-28.483-37.815-28.54z"/></symbol>
+  <symbol id="i-pirate-flag" viewBox="0 0 512 512"><path fill="currentColor" d="M256 31.203c-96 .797-117.377 76.692-79.434 135.133-6.397 6.534-10.344 15.886-.566 25.664 16 16 32 16 39.852 32.42h80.296C304 208 320 208 336 192c9.778-9.778 5.831-19.13-.566-25.664C373.377 107.896 352 32 256 31.203zm-42.146 101.049c.426-.003.862.007 1.306.03 28.404 1.442 40.84 59.718-10.83 51.095-10.412-1.738-17.355-50.963 9.524-51.125zm84.292 0c26.88.162 19.936 49.387 9.524 51.125C256 192 268.436 133.724 296.84 132.28c.444-.022.88-.032 1.306-.03zM32 144c7.406 88.586 64.475 175.544 156.623 236.797 17.959-7.251 35.767-15.322 50.424-23.877C180.254 319.737 104.939 255.465 32 144zm448 0C359.2 328.605 231.863 383.797 183.908 400.797c3.177 5.374 5.997 10.98 8.711 16.432 3.878 7.789 7.581 15.251 11.184 20.986A517.457 517.457 0 0 0 256 417.973l.168.076a884.617 884.617 0 0 0 9.652-4.65C391.488 353.263 471.156 249.79 480 144zm-224 27.725l20.074 40.15L256 199.328l-20.074 12.547L256 171.725zm-65.604 57.11l15.76 51.042s31.268 24.92 49.844 24.92 49.844-24.92 49.844-24.92l15.76-51.041-27.086 19.236-8.063 16.248S267.35 279.547 256 279.547c-11.35 0-30.455-15.227-30.455-15.227l-8.063-16.248-27.086-19.236zm-59.984 152.976c-.783-.02-1.574-.011-2.375.027l.856 17.978c6.36-.302 10.814 2.416 16.11 8.64 5.298 6.222 10.32 15.707 15.24 25.589 4.918 9.882 9.707 20.12 16.122 28.45 6.415 8.327 16.202 15.446 27.969 13.89l-2.36-17.844c-4.094.541-6.78-1.099-11.349-7.031-4.57-5.933-9.275-15.46-14.268-25.489-4.992-10.029-10.297-20.604-17.644-29.234-6.888-8.09-16.556-14.686-28.3-14.976zm251.176 0c-11.745.29-21.413 6.885-28.3 14.976-7.348 8.63-12.653 19.205-17.645 29.234-4.993 10.03-9.698 19.556-14.268 25.489-4.57 5.932-7.255 7.572-11.35 7.031l-2.359 17.844c11.767 1.556 21.554-5.563 27.969-13.89 6.415-8.33 11.204-18.568 16.123-28.45 4.919-9.882 9.94-19.367 15.238-25.59 5.297-6.223 9.75-8.941 16.111-8.639l.856-17.978a32.853 32.853 0 0 0-2.375-.027zm-55.928 18.107c-13.97 10.003-30.13 18.92-47.424 27.478a524.868 524.868 0 0 0 29.961 10.819c3.603-5.735 7.306-13.197 11.184-20.986 2.714-5.453 5.534-11.058 8.71-16.432-.77-.273-1.62-.586-2.43-.879zm-191.808 23.371l-27.67 10.352 7.904 31.771 36.424-11.707c-1.418-2.814-2.81-5.649-4.207-8.457-4.048-8.131-8.169-15.961-12.451-21.959zm244.296 0c-4.282 5.998-8.403 13.828-12.45 21.959-1.399 2.808-2.79 5.643-4.208 8.457l36.424 11.707 7.904-31.771-27.67-10.352zM78.271 435.438a9.632 9.632 0 0 0-1.32.12 6.824 6.824 0 0 0-1.217.313c-11.544 4.201-25.105 18.04-21.648 29.828 3.07 10.472 19.675 13.359 30.492 11.916 3.828-.51 8.415-3.761 12.234-7.086l-8.124-32.648c-3.238-1.285-7.214-2.528-10.417-2.443zm355.458 0c-3.203-.085-7.179 1.158-10.416 2.443l-8.125 32.648c3.819 3.325 8.406 6.576 12.234 7.086 10.817 1.443 27.422-1.444 30.492-11.916 3.457-11.788-10.104-25.627-21.648-29.828a6.824 6.824 0 0 0-1.217-.312 9.632 9.632 0 0 0-1.32-.122z"/></symbol>
+  <symbol id="i-hazard-sign" viewBox="0 0 512 512"><path fill="currentColor" d="M254.97 34.75c-30.48-.167-59.02 22.12-79.532 62.156-.075.146-.176.26-.25.406L43.063 326.783l-.22.343C18.5 365.413 13.377 401.515 28.47 428.03c15.08 26.498 48.627 40.126 93.5 37.908H387.063c44.887 2.227 78.445-11.404 93.53-37.907 15.09-26.51 9.956-62.595-14.375-100.874l-.22-.375L335.28 98.064c-.06-.12-.124-.225-.186-.344-20.948-40.263-49.626-62.803-80.125-62.97zm.06 18.844c13.576.13 26.453 6.93 38.126 18.343 11.606 11.347 22.554 27.453 33.406 48.344.063.122.125.224.188.345l115.22 201.563c.033.053.058.102.092.156l.125.22c12.92 20.274 21.395 38.06 25.282 53.967 3.91 16.01 3.063 30.648-3.845 42.408-6.908 11.76-19.222 19.533-34.78 23.906-15.444 4.34-34.508 5.656-57.408 4.5H137.625c-24.845 1.258-44.73-.32-60.405-5.125-15.78-4.84-27.68-13.45-33.72-25.69-6.04-12.237-5.862-26.797-1.5-42.436 4.333-15.535 12.815-32.608 24.875-51.53l.22-.377L183.562 120c.08-.157.17-.28.25-.438C194.51 98.644 205.32 82.6 216.875 71.376c11.642-11.307 24.58-17.913 38.156-17.78zm47.657 62.093l-28.53 224.032h-41.844L204.438 120.5c-1.404 2.556-2.81 5.205-4.22 7.97l-.093.218-.125.218-116.938 202.97-.093.187-.126.187C71.28 350.346 63.598 366.226 60 379.125c-3.598 12.9-3.108 22.322.25 29.125 3.358 6.803 9.925 12.28 22.47 16.125 12.542 3.845 30.67 5.547 54.405 4.313l.25-.032h234.313l.25.03c21.85 1.138 39.308-.28 51.875-3.81 12.566-3.533 19.822-8.827 23.687-15.407 3.865-6.58 4.978-15.545 1.813-28.5-3.166-12.958-10.732-29.374-23.094-48.72l-.126-.188-.125-.218-115.658-202.28-.093-.158-.064-.187c-2.5-4.828-4.99-9.326-7.47-13.532zM231.28 361.875h43.907v43.906H231.28v-43.905z"/></symbol>
+  <symbol id="i-plus" viewBox="27 27 202 202"><path fill="currentColor" d="M119 64v55H64v18h55v55h18v-55h55v-18h-55V64h-18z"/></symbol>
+  <symbol id="i-quill" viewBox="0 0 512 512"><path fill="currentColor" d="M492.47 21.938c-82.74-.256-167.442 12.5-242.814 45.093 5.205 13.166 9.578 28.48 13.188 45.532C242.55 97.27 217.167 92.385 194.72 95.5c-46.22 28.432-87.13 66.305-119.44 115.594 25.193 7.756 51.57 22.81 72.845 43.844-31.87-7.045-68.907-5.895-99.188 3-13.743 28.688-25.008 60.48-33.343 95.687 128.71-30.668 130.522 3.514 50.75 140.438 16.877 12.614 42.182 13.77 61.906-1.563C134 267.936 231.43 326.246 254.188 354.562c14.288-40.59 34.77-82.54 62.906-126.468-17.29-14.667-39.21-24.838-63.813-32.375 25.364-5.256 50.91-10.928 74.126-11.22 6.482-.082 12.78.272 18.844 1.156 17.57-24.007 37.408-48.612 59.75-73.97-12.538-6.31-25.476-11.454-38.125-14.967 17.132-5.76 35.274-8.34 52.844-8.157 2.01.02 4.004.095 6 .187 20.07-21.708 41.927-43.976 65.75-66.813zM426.72 47.28C295.79 112.674 200.094 210.206 144.936 333.53 172.34 184.41 287.048 84.57 426.72 47.28z"/></symbol>
+  <symbol id="i-trash-can" viewBox="0 0 512 512"><path fill="currentColor" d="M199 103v50h-78v30h270v-30h-78v-50H199zm18 18h78v32h-78v-32zm-79.002 80l30.106 286h175.794l30.104-286H137.998zm62.338 13.38l.64 8.98 16 224 .643 8.976-17.956 1.283-.64-8.98-16-224-.643-8.976 17.956-1.283zm111.328 0l17.955 1.284-.643 8.977-16 224-.64 8.98-17.956-1.284.643-8.977 16-224 .64-8.98zM247 215h18v242h-18V215z"/></symbol>
+  <symbol id="i-cycle" viewBox="0 0 512 512"><path fill="currentColor" d="M252.314 19.957c-72.036.363-142.99 33.534-189.18 95.97-69.83 94.39-59.125 223.32 19.85 304.993l-37.238 50.332 151.22-22.613L174.35 297.42l-43.137 58.308c-44.08-54.382-47.723-133.646-4.16-192.53 30.676-41.466 77.863-63.504 125.758-63.753 16.344-.085 32.766 2.382 48.645 7.467l-6.963-46.55c-23.858-4.86-47.908-5.026-71.017-.997-59.232 7.322-113.994 39.918-148.157 91.215 35.65-65.89 103.774-105.918 176.043-107.744 1.673-.042 3.347-.063 5.023-.065 14.8-.01 29.748 1.596 44.597 4.905l48.608-7.268c-31.14-13.906-64.32-20.62-97.274-20.453zm212.93 22.055l-151.217 22.61 22.614 151.22 41.126-55.588c42.204 54.29 45.092 132.048 2.187 190.043-40.22 54.367-108.82 75.32-170.19 57.566l6.522 43.598c28.726 5.533 58.236 4.414 86.203-3.07 37.448-5.957 73.34-22.05 103.16-47.728-49.196 54.65-122.615 77.514-191.744 64.34l-55.8 8.344c99.03 43.7 218.402 14.77 285.51-75.938 69.13-93.445 59.34-220.743-17.483-302.53l39.114-52.866z"/></symbol>
+  <symbol id="i-fa-circle-check" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></symbol>
+  <symbol id="i-fa-circle-xmark" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/></symbol>
+</svg>
+
+<div class="velo" id="velo">
+  <div class="velo-ancora">⚓</div>
+  <div class="velo-testo" id="veloTesto">Carico...</div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Segnalazioni</h1>
+    <a href="index.html" class="btn-home"><svg class="ico"><use href="#i-pirate-flag"></use></svg> Porto</a>
+  </div>
+
+  <div class="section">
+    <div class="section-title" id="titoloForm">Nuova segnalazione</div>
+
+    <div class="scelte" id="scelteCategoria"></div>
+
+    <label for="testo">Cosa manca o cosa serve</label>
+    <textarea id="testo" placeholder="es. Finito il burrata · Si è rotto il cavatappi · Manca il tonic"></textarea>
+
+    <div class="riga-campi">
+      <div>
+        <label for="fornitore">Fornitore (facoltativo)</label>
+        <input type="text" id="fornitore" list="fornitoriNoti" autocomplete="off" placeholder="se lo sai">
+        <datalist id="fornitoriNoti"></datalist>
+      </div>
+    </div>
+
+    <label class="urgente-scelta">
+      <input type="checkbox" id="urgente">
+      <span><svg class="ico"><use href="#i-hazard-sign"></use></svg>Urgente (va in cima)</span>
+    </label>
+
+    <div class="azioni">
+      <button class="btn btn-primario" onclick="salva()">
+        <svg class="ico"><use href="#i-plus"></use></svg> <span id="btnSalvaTesto">Aggiungi</span>
+      </button>
+      <button class="btn btn-secondario" id="btnAnnulla" onclick="annullaModifica()" hidden>
+        <svg class="ico"><use href="#i-fa-circle-xmark"></use></svg> Annulla
+      </button>
+    </div>
+    <div id="messaggio"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">
+      <span>Elenco</span>
+      <button class="btn btn-secondario" onclick="carica()" title="Ricarica">
+        <svg class="ico ico-sola"><use href="#i-cycle"></use></svg>
+      </button>
+    </div>
+    <div class="riga-campi" style="margin-top:0;">
+      <div>
+        <label for="filtroCategoria">Categoria</label>
+        <select id="filtroCategoria" onchange="disegna()"><option value="">Tutte</option></select>
+      </div>
+      <div>
+        <label for="filtroStato">Stato</label>
+        <select id="filtroStato" onchange="disegna()">
+          <option value="aperte">Solo aperte</option>
+          <option value="tutte">Aperte e chiuse</option>
+          <option value="chiuse">Solo chiuse</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <label for="cerca">Cerca</label>
+      <input type="search" id="cerca" placeholder="testo o fornitore..." oninput="disegna()">
+    </div>
+    <div id="elenco" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<div class="crediti-icone">
+  Icone: <a href="https://game-icons.net/" target="_blank" rel="noopener">game-icons.net</a>
+  (Lorc, Delapouite, skoll) &mdash;
+  <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>,
+  e <a href="https://fontawesome.com/" target="_blank" rel="noopener">Font Awesome Free</a> &mdash;
+  <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.
+</div>
+
+<script>
+  // =====================================================================
+  // SEGNALAZIONI DEL LOCALE (25/10/2026)
+  // =====================================================================
+  // Dal menu principale, aperta a tutti: food, strumenti, drink, vino, altro.
+  // Stesso server delle segnalazioni vini (Hosting/api/vdc-segnalazioni.php),
+  // area "locale". Le VINO finiscono anche nelle Segnalazioni di Gestione Vini.
+  // Segnarle fatte o eliminarle qui le toglie solo da questa pagina: nel
+  // pannello del titolare restano finché non le lavora lui (il server lo sa
+  // dall'area "locale" mandata con la richiesta). Il server qui non manda le
+  // vino già lavorate o tolte, quindi non c'è "riapri" per loro.
+  //
+  // Il fornitore è un campo libero, con i nomi già usati come suggerimento.
+  // Una segnalazione URGENTE sta sempre in cima finché è aperta.
+  const API_URL = 'https://www.studio-smart.it/api/vdc-segnalazioni.php';
+  const AREA = 'locale';
+  const TIMEOUT_MS = 20000;
+
+  const CATEGORIE = [
+    { chiave: 'food',      etichetta: 'Food' },
+    { chiave: 'strumenti', etichetta: 'Strumenti' },
+    { chiave: 'drink',     etichetta: 'Drink' },
+    { chiave: 'vino',      etichetta: 'Vino' },
+    { chiave: 'altro',     etichetta: 'Altro' }
+  ];
+  // Restano del locale; le altre sono le vino, che vanno anche al titolare.
+  const SOLO_LOCALE = ['food', 'strumenti', 'drink', 'altro'];
+  const delTitolare = s => SOLO_LOCALE.indexOf(s.categoria) === -1;
+
+  let segnalazioni = [];
+  let inModifica = null;
+
+  // ── Rete: stesse regole di segnalazioni.html (MANUALE §5.3, §5.4) ───
+  async function fetchConRetry(url, options, tentativi = 2, timeoutMs = TIMEOUT_MS) {
+    for (let i = 0; i < tentativi; i++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        return res;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') throw error;   // mai ritentare sul timeout
+        if (i === tentativi - 1) throw error;
+        await new Promise(r => setTimeout(r, 800 * Math.pow(2, i)));
+      }
+    }
+  }
+
+  async function callAPI(azione, dati = {}, tentativi = 3) {
+    let ultima = '';
+    for (let i = 0; i < tentativi; i++) {
+      const risposta = await fetchConRetry(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: azione, ...dati })
+      });
+      ultima = await risposta.text();
+      try {
+        return JSON.parse(ultima);
+      } catch (e) {
+        console.warn(`[${azione}] risposta non-JSON al tentativo ${i + 1}/${tentativi}:`, ultima.slice(0, 150));
+        if (i < tentativi - 1) await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+      }
+    }
+    throw new Error('Il server ha risposto in modo inatteso. Di solito basta riprovare fra qualche secondo.');
+  }
+
+  // ── Utilità ─────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function dataBreve(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+  }
+
+  function categoriaDi(chiave) {
+    return CATEGORIE.filter(c => c.chiave === chiave)[0] || { chiave: chiave, etichetta: chiave };
+  }
+
+  function mostraVelo(testo) {
+    document.getElementById('veloTesto').textContent = testo;
+    document.getElementById('velo').classList.add('attivo');
+  }
+  function nascondiVelo() { document.getElementById('velo').classList.remove('attivo'); }
+
+  function messaggio(testo, tipo) {
+    const box = document.getElementById('messaggio');
+    if (!testo) { box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="messaggio ${tipo}">${esc(testo)}</div>`;
+    if (tipo === 'ok') setTimeout(() => { box.innerHTML = ''; }, 2500);
+  }
+
+  // Su una scrittura il timeout non vuol dire "non è successo" (MANUALE §5.3).
+  function erroreLeggibile(error, scrittura) {
+    const nome = error && error.name;
+    if (nome === 'AbortError' || nome === 'TimeoutError') {
+      return scrittura
+        ? 'Il server non ha risposto entro 20 secondi. Può essere andata lo stesso: guarda l\'elenco prima di rifarla.'
+        : 'Il server non ha risposto entro 20 secondi. Controlla la connessione e riprova con il tasto ricarica.';
+    }
+    return (error && error.message) ? error.message : 'Errore imprevisto';
+  }
+
+  /** Filtra e ordina: urgenti aperte in cima, poi le più recenti. */
+  function ordinaSegnalazioni(lista, filtri) {
+    const q = String(filtri.cerca || '').trim().toLowerCase();
+    const inCima = s => s.urgente && s.stato === 'aperta';
+    return lista.filter(s => {
+      if (filtri.stato === 'aperte' && s.stato !== 'aperta') return false;
+      if (filtri.stato === 'chiuse' && s.stato !== 'chiusa') return false;
+      if (filtri.categoria && (delTitolare(s) ? 'vino' : s.categoria) !== filtri.categoria) return false;
+      if (q && (s.testo + ' ' + (s.fornitore || '')).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    }).sort((a, b) =>
+      (inCima(b) - inCima(a)) ||
+      (a.stato === b.stato ? 0 : a.stato === 'aperta' ? -1 : 1) ||
+      String(b.creato).localeCompare(String(a.creato)) ||
+      String(b.id).localeCompare(String(a.id)));
+  }
+
+  // ── Disegno ─────────────────────────────────────────────────────────
+  function disegnaCategorie() {
+    document.getElementById('scelteCategoria').innerHTML = CATEGORIE.map((c, i) => `
+      <label class="chip">
+        <input type="radio" name="categoria" value="${c.chiave}" ${i === 0 ? 'checked' : ''}>
+        ${c.etichetta}
+      </label>`).join('');
+    document.getElementById('filtroCategoria').innerHTML =
+      '<option value="">Tutte</option>' +
+      CATEGORIE.map(c => `<option value="${c.chiave}">${c.etichetta}</option>`).join('');
+  }
+
+  function disegnaFornitori(nomi) {
+    document.getElementById('fornitoriNoti').innerHTML =
+      nomi.map(f => `<option value="${esc(f)}"></option>`).join('');
+  }
+
+  function disegna() {
+    const lista = ordinaSegnalazioni(segnalazioni, {
+      cerca: document.getElementById('cerca').value,
+      categoria: document.getElementById('filtroCategoria').value,
+      stato: document.getElementById('filtroStato').value
+    });
+    const box = document.getElementById('elenco');
+    const aperte = segnalazioni.filter(s => s.stato === 'aperta');
+    const urgenti = aperte.filter(s => s.urgente).length;
+
+    if (!lista.length) {
+      box.innerHTML = `<p class="vuoto">${segnalazioni.length
+        ? 'Nessuna segnalazione con questi filtri.'
+        : 'Ancora nessuna segnalazione: la prima scrivila qui sopra.'}</p>`;
+      return;
+    }
+    box.innerHTML =
+      `<p class="contatori">${aperte.length} apert${aperte.length === 1 ? 'a' : 'e'}` +
+      (urgenti ? ` · ${urgenti} urgent${urgenti === 1 ? 'e' : 'i'}` : '') + '</p>' +
+      lista.map(voce).join('');
+  }
+
+  function voce(s) {
+    const chiave = delTitolare(s) ? 'vino' : s.categoria;
+    const cat = categoriaDi(chiave);
+    const urgente = s.urgente && s.stato === 'aperta';
+    // Le vino: solo fatta ed elimina (qui le toglie e basta, vedi in alto).
+    const comandi = delTitolare(s)
+      ? `<div style="white-space:nowrap;">
+          <button class="btn-mini" onclick="cambiaStato('${esc(s.id)}', true)" title="Segna come fatta">
+            <svg class="ico ico-sola"><use href="#i-fa-circle-check"></use></svg>
+          </button>
+          <button class="btn-mini pericolo" onclick="elimina('${esc(s.id)}')" title="Elimina">
+            <svg class="ico ico-sola"><use href="#i-trash-can"></use></svg>
+          </button>
+        </div>`
+      : `<div style="white-space:nowrap;">
+          <button class="btn-mini" onclick="cambiaStato('${esc(s.id)}', ${s.stato === 'aperta'})"
+                  title="${s.stato === 'aperta' ? 'Segna come risolta' : 'Riapri'}">
+            <svg class="ico ico-sola"><use href="#${s.stato === 'aperta' ? 'i-fa-circle-check' : 'i-cycle'}"></use></svg>
+          </button>
+          <button class="btn-mini" onclick="apriModifica('${esc(s.id)}')" title="Modifica">
+            <svg class="ico ico-sola"><use href="#i-quill"></use></svg>
+          </button>
+          <button class="btn-mini pericolo" onclick="elimina('${esc(s.id)}')" title="Elimina">
+            <svg class="ico ico-sola"><use href="#i-trash-can"></use></svg>
+          </button>
+        </div>`;
+    return `
+      <div class="voce voce-${esc(chiave)} ${urgente ? 'urgente' : ''} ${s.stato === 'chiusa' ? 'chiusa' : ''}">
+        <div class="voce-corpo">
+          <div class="voce-testo">${esc(s.testo)}</div>
+          <div class="voce-sotto">
+            ${urgente ? '<span class="badge badge-urgente">Urgente</span>' : ''}
+            <span class="badge">${esc(cat.etichetta)}</span>
+            ${s.fornitore ? `<span>${esc(s.fornitore)}</span> ·` : ''}
+            <span>${dataBreve(s.creato)}${s.stato === 'chiusa' ? ' · chiusa il ' + dataBreve(s.chiuso) : ''}</span>
+          </div>
+        </div>
+        ${comandi}
+      </div>`;
+  }
+
+  // ── Azioni ──────────────────────────────────────────────────────────
+  async function carica() {
+    mostraVelo('Carico le segnalazioni...');
+    try {
+      const r = await callAPI('getSegnalazioni', { area: AREA });
+      nascondiVelo();
+      if (r.errore) return messaggio(r.errore, 'errore');
+      segnalazioni = r.segnalazioni || [];
+      disegnaFornitori(r.fornitori || []);
+      disegna();
+    } catch (error) {
+      nascondiVelo();
+      console.error('getSegnalazioni:', error);
+      messaggio(erroreLeggibile(error, false), 'errore');
+    }
+  }
+
+  function datiForm() {
+    const scelta = document.querySelector('input[name="categoria"]:checked');
+    return {
+      area: AREA,
+      categoria: scelta ? scelta.value : CATEGORIE[0].chiave,
+      testo: document.getElementById('testo').value.trim(),
+      fornitore: document.getElementById('fornitore').value.trim(),
+      urgente: document.getElementById('urgente').checked
+    };
+  }
+
+  function pulisciForm() {
+    document.getElementById('testo').value = '';
+    document.getElementById('fornitore').value = '';
+    document.getElementById('urgente').checked = false;
+  }
+
+  async function salva() {
+    const dati = datiForm();
+    if (!dati.testo) return messaggio('Scrivi che cosa manca', 'errore');
+    mostraVelo(inModifica ? 'Aggiorno...' : 'Salvo...');
+    try {
+      const r = inModifica
+        ? await callAPI('modificaSegnalazione', { id: inModifica, segnalazione: dati })
+        : await callAPI('salvaSegnalazione', { segnalazione: dati });
+      nascondiVelo();
+      if (r.errore) return messaggio(r.errore, 'errore');
+      annullaModifica();
+      pulisciForm();
+      messaggio(r.messaggio || 'Fatto', 'ok');
+      await carica();
+    } catch (error) {
+      nascondiVelo();
+      console.error('salvataggio:', error);
+      messaggio(erroreLeggibile(error, true), 'errore');
+      await carica();
+    }
+  }
+
+  function apriModifica(id) {
+    const s = segnalazioni.filter(x => x.id === id)[0];
+    if (!s) return;
+    inModifica = id;
+    document.getElementById('testo').value = s.testo;
+    document.getElementById('fornitore').value = s.fornitore || '';
+    document.getElementById('urgente').checked = !!s.urgente;
+    const radio = document.querySelector(`input[name="categoria"][value="${s.categoria}"]`);
+    if (radio) radio.checked = true;
+    document.getElementById('titoloForm').textContent = 'Modifica segnalazione';
+    document.getElementById('btnSalvaTesto').textContent = 'Salva modifica';
+    document.getElementById('btnAnnulla').hidden = false;
+    document.getElementById('testo').focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function annullaModifica() {
+    if (inModifica) pulisciForm();
+    inModifica = null;
+    document.getElementById('titoloForm').textContent = 'Nuova segnalazione';
+    document.getElementById('btnSalvaTesto').textContent = 'Aggiungi';
+    document.getElementById('btnAnnulla').hidden = true;
+  }
+
+  async function cambiaStato(id, chiudi) {
+    mostraVelo(chiudi ? 'Chiudo...' : 'Riapro...');
+    try {
+      const r = await callAPI('chiudiSegnalazione', { id: id, chiusa: chiudi, area: AREA });
+      nascondiVelo();
+      if (r.errore) return messaggio(r.errore, 'errore');
+      await carica();
+    } catch (error) {
+      nascondiVelo();
+      messaggio(erroreLeggibile(error, true), 'errore');
+      await carica();
+    }
+  }
+
+  async function elimina(id) {
+    const s = segnalazioni.filter(x => x.id === id)[0];
+    if (!confirm(`🗑️ Eliminare questa segnalazione?\n\n"${s ? s.testo : ''}"\n\nSe è risolta conviene chiuderla (✔), così resta la memoria.`)) return;
+    mostraVelo('Elimino...');
+    try {
+      const r = await callAPI('eliminaSegnalazione', { id: id, area: AREA });
+      nascondiVelo();
+      if (r.errore) return messaggio(r.errore, 'errore');
+      if (inModifica === id) annullaModifica();
+      await carica();
+    } catch (error) {
+      nascondiVelo();
+      messaggio(erroreLeggibile(error, true), 'errore');
+      await carica();
+    }
+  }
+
+  document.getElementById('testo').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); salva(); }
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  }
+
+  disegnaCategorie();
+  carica();
+</script>
+</body>
+</html>
