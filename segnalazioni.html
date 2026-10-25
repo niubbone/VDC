@@ -518,11 +518,15 @@
       const chiave = (s.fornitore || '').trim() || SENZA_FORNITORE;
       (gruppi[chiave] = gruppi[chiave] || []).push(s);
     });
-    // I fornitori in ordine alfabetico; "Senza fornitore" sempre in fondo,
-    // perché è un contenitore, non un fornitore.
+    // Dalla più recente (25/10/2026): dentro il gruppo e fra i gruppi, che
+    // vanno nell'ordine della loro segnalazione più nuova. Prima i fornitori
+    // erano in ordine alfabetico e le ultime arrivate finivano in fondo.
+    const piuNuova = (x, y) =>
+      String(y.creato || '').localeCompare(String(x.creato || '')) || String(y.id).localeCompare(String(x.id));
+    urgenti.sort(piuNuova);
     const elenco = Object.keys(gruppi)
-      .sort((a, b) => a === SENZA_FORNITORE ? 1 : b === SENZA_FORNITORE ? -1 : a.localeCompare(b, 'it'))
-      .map(nome => ({ fornitore: nome, voci: gruppi[nome] }));
+      .map(nome => ({ fornitore: nome, voci: gruppi[nome].sort(piuNuova) }))
+      .sort((g, h) => piuNuova(g.voci[0], h.voci[0]) || g.fornitore.localeCompare(h.fornitore, 'it'));
     return urgenti.length ? [{ fornitore: URGENTI, voci: urgenti }].concat(elenco) : elenco;
   }
 

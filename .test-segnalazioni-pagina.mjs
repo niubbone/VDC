@@ -19,6 +19,7 @@ const pezzo = (inizio, fine) => {
 };
 const codice = [
   pezzo('const SENZA_FORNITORE', ';'),
+  pezzo('const URGENTI', ';'),
   pezzo('function raggruppaSegnalazioni(', '\n  }')
 ].join('\n');
 const raggruppa = new Function(codice + '\nreturn raggruppaSegnalazioni;')();
@@ -43,9 +44,17 @@ const nomi = g => g.map(x => x.fornitore);
 const ids = g => g.map(x => x.voci.map(v => v.id));
 
 console.log('\n-- Raggruppamento --');
-verifica('fornitori in ordine, senza fornitore in fondo', ['abbondanza', 'Gemma', 'Senza fornitore'],
+verifica('stessa data: comanda la più recente inserita (id)', ['abbondanza', 'Senza fornitore', 'Gemma'],
   nomi(raggruppa(lista, soloAperte)));
-verifica('voci nei gruppi giusti', [['5'], ['1'], ['2', '3']], ids(raggruppa(lista, soloAperte)));
+verifica('voci nei gruppi giusti (a pari data, id più alto prima)', [['5'], ['3', '2'], ['1']], ids(raggruppa(lista, soloAperte)));
+const recenti = [
+  Object.assign(s('7', 'altro', 'vecchia', 'Zeta', 'aperta'), { creato: '2026-09-01 10:00' }),
+  Object.assign(s('8', 'altro', 'nuova senza fornitore', '', 'aperta'), { creato: '2026-10-25 15:00' }),
+  Object.assign(s('9', 'altro', 'media', 'Alfa', 'aperta'), { creato: '2026-10-01 10:00' }),
+  Object.assign(s('10', 'altro', 'urgente', 'Alfa', 'aperta'), { creato: '2026-08-01 10:00', urgente: true })
+];
+verifica('gruppi dalla segnalazione più recente, urgenti in cima', ['Urgenti', 'Senza fornitore', 'Alfa', 'Zeta'],
+  nomi(raggruppa(recenti, soloAperte)));
 verifica('la chiusa non compare fra le aperte', false,
   raggruppa(lista, soloAperte).some(g => g.voci.some(v => v.id === '4')));
 
