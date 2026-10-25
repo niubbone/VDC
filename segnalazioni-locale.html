@@ -59,7 +59,8 @@
     }
     .header h1 .ico { width: 1.5em; height: 1.5em; vertical-align: -0.35em; margin-right: 0.2em; }
 
-    /* Pergamena come i riquadri del menu principale. */
+    /* Pergamena come i riquadri del menu principale. Categorie in Rye e non
+       in Pirata One: la F maiuscola di Pirata One sembra minuscola (Food). */
     .section {
       background: linear-gradient(145deg, #d4a574 0%, #a67c52 100%);
       border: 4px solid #6b4423; border-radius: 15px;
@@ -85,7 +86,7 @@
     .chip {
       display: inline-flex; align-items: center; cursor: pointer; position: relative;
       padding: 8px 16px; border: 3px solid #6b4423; border-radius: 22px;
-      background: #f4e4c1; color: #3d1f0f; font-family: 'Pirata One', cursive; font-size: 1.2em;
+      background: #f4e4c1; color: #3d1f0f; font-family: 'Rye', cursive; font-size: 0.95em;
       transition: all 0.15s;
     }
     .chip input { position: absolute; opacity: 0; width: 0; height: 0; }
@@ -139,7 +140,7 @@
     .voce-sotto { font-size: 0.85em; color: #5a4632; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .badge {
       display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 10px;
-      font-family: 'Pirata One', cursive; font-size: 1.1em; color: #fff; background: var(--cat-color, #6b4423);
+      font-family: 'Rye', cursive; font-size: 0.85em; color: #fff; background: var(--cat-color, #6b4423);
     }
     .badge-urgente { background: #8b0000; }
 
@@ -204,12 +205,12 @@
     <div class="scelte" id="scelteCategoria"></div>
 
     <label for="testo">Cosa manca o cosa serve</label>
-    <textarea id="testo" placeholder="es. Finito il burrata · Si è rotto il cavatappi · Manca il tonic"></textarea>
+    <textarea id="testo"></textarea>
 
     <div class="riga-campi">
       <div>
         <label for="fornitore">Fornitore (facoltativo)</label>
-        <input type="text" id="fornitore" list="fornitoriNoti" autocomplete="off" placeholder="se lo sai">
+        <input type="text" id="fornitore" list="fornitoriNoti" autocomplete="off">
         <datalist id="fornitoriNoti"></datalist>
       </div>
     </div>
@@ -253,7 +254,7 @@
     </div>
     <div style="margin-top:14px;">
       <label for="cerca">Cerca</label>
-      <input type="search" id="cerca" placeholder="testo o fornitore..." oninput="disegna()">
+      <input type="search" id="cerca" oninput="disegna()">
     </div>
     <div id="elenco" style="margin-top:14px;"></div>
   </div>
