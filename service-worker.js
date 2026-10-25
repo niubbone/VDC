@@ -2,7 +2,7 @@
 //  SERVICE WORKER - VECCHIA DOGANA - VERSIONE OTTIMIZZATA
 //  Cambia SOLO questo numero ad ogni aggiornamento ↓
 // ═══════════════════════════════════════════════════════════════════
-const VERSION = '11.1';
+const VERSION = '11.2';
 // ═══════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════

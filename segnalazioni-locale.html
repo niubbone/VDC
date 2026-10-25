@@ -108,8 +108,10 @@
       box-shadow: 0 4px 0 #3d1f0f, 0 8px 20px rgba(0,0,0,0.4);
     }
     .btn:active { transform: translateY(4px); box-shadow: 0 0 0 #3d1f0f, 0 4px 10px rgba(0,0,0,0.4); }
-    .btn-primario { background: linear-gradient(145deg, #8b4513 0%, #654321 100%); color: #f4e4c1; }
-    .btn-primario:hover { background: linear-gradient(145deg, #a0522d 0%, #7a3e1e 100%); }
+    .btn-primario { background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); color: white; }
+    .btn-primario:hover { background: linear-gradient(145deg, #3cb371 0%, #2e8b57 100%); }
+    .btn-piccolo { padding: 5px 9px; font-size: 0.85em; border-width: 2px; box-shadow: 0 2px 0 #3d1f0f, 0 3px 8px rgba(0,0,0,0.3); }
+    .btn-piccolo:active { transform: translateY(2px); }
     .btn-secondario { background: linear-gradient(145deg, #e8b873 0%, #c89858 100%); color: #2c1810; }
     .btn-secondario:hover { background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%); }
     .btn-mini {
@@ -234,7 +236,7 @@
   <div class="section">
     <div class="section-title">
       <span>Elenco</span>
-      <button class="btn btn-secondario" onclick="carica()" title="Ricarica">
+      <button class="btn btn-secondario btn-piccolo" onclick="carica()" title="Ricarica">
         <svg class="ico ico-sola"><use href="#i-cycle"></use></svg>
       </button>
     </div>
