@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Pagina interna: fuori dai motori di ricerca. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Ordini</title>
+  <meta name="theme-color" content="#1e3c72">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    /* Stile dell'area vini (fondo blu, contenitore bianco): stessa stanza di
+       gestione-vini.html, segnalazioni.html e degustazione.html (MANUALE §6). */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh; padding: 20px; color: #222;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    .header {
+      max-width: 1000px; margin: 0 auto 20px;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .header h1 {
+      font-family: 'Pirata One', cursive; color: #fff; font-size: 2.2em;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.4); display: flex; align-items: center;
+    }
+    .btn-home {
+      background: rgba(255,255,255,0.15); color: #fff; padding: 9px 20px;
+      border: 2px solid rgba(255,255,255,0.4); border-radius: 8px;
+      font-weight: bold; font-size: 0.95em; text-decoration: none;
+      transition: all 0.2s; backdrop-filter: blur(4px); display: inline-flex; align-items: center;
+    }
+    .btn-home:hover { background: rgba(255,255,255,0.25); }
+
+    /* Icone: sprite SVG inline (Safari non legge <use> su file esterni, MANUALE §9). */
+    .ico {
+      width: 1.3em; height: 1.3em; fill: currentColor;
+      vertical-align: -0.28em; flex-shrink: 0; margin-right: 0.3em;
+    }
+    .ico-sola { margin-right: 0; }
+    .header h1 .ico { width: 1em; height: 1em; vertical-align: -0.1em; }
+    .btn-home .ico {
+      width: 1.75em; height: 1.75em; vertical-align: -0.44em; margin-right: 0.34em;
+      stroke: currentColor; stroke-width: 12; paint-order: stroke fill;
+    }
+
+    .section {
+      background: rgba(255,255,255,0.97); border-radius: 20px;
+      padding: 28px; box-shadow: 0 10px 40px rgba(0,0,0,0.35); margin-bottom: 20px;
+    }
+    .section-title {
+      font-weight: bold; color: #2a5298; font-size: 0.95em;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #e0e8f8;
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .nota {
+      background: #f8faff; border: 2px solid #dce6f8; border-radius: 10px;
+      padding: 12px 14px; margin-bottom: 16px; font-size: 0.85em; line-height: 1.5; color: #555;
+    }
+    .nota strong { color: #2a5298; }
+
+    label {
+      display: block; font-weight: bold; font-size: 0.78em; color: #555;
+      text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px;
+    }
+    input[type="text"], input[type="email"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%; padding: 10px 12px; border: 2px solid #ddd; border-radius: 8px;
+      font-family: 'Arial', sans-serif; font-size: 0.95em;
+      background: #fff; color: #222; transition: border-color 0.2s;
+    }
+    textarea { resize: vertical; min-height: 42px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #2a5298; }
+    input.errato { border-color: #e0a0a0; background: #fff3f3; }
+
+    .griglia { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+    .griglia .largo { grid-column: 1 / -1; }
+    .azioni { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+
+    .btn {
+      padding: 11px 20px; border-radius: 8px; border: none; cursor: pointer;
+      font-weight: bold; font-size: 0.88em; text-transform: uppercase; letter-spacing: 0.5px;
+      transition: all 0.2s; display: inline-flex; align-items: center; text-decoration: none;
+    }
+    .btn-primario {
+      background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%); color: #fff;
+      box-shadow: 0 4px 12px rgba(42,82,152,0.3);
+    }
+    .btn-primario:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(42,82,152,0.45); }
+    .btn-verde { background: linear-gradient(135deg, #2e8b57 0%, #228b22 100%); color: #fff; box-shadow: 0 4px 12px rgba(34,139,34,0.3); }
+    .btn-secondario { background: #f0f4ff; color: #2a5298; border: 2px solid #c0cce8; }
+    .btn-secondario:hover { background: #dce6ff; }
+    .btn-pericolo { background: #fff0f0; color: #c0392b; border: 2px solid #f5c6cb; }
+    .btn-piccolo { padding: 6px 12px; font-size: 0.75em; }
+    .btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+    .btn-mini {
+      padding: 6px 10px; border-radius: 6px; cursor: pointer;
+      background: #fff0f0; color: #c0392b; border: 1px solid #f5c6cb;
+    }
+
+    .scelta-fornitore { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .scelta-fornitore > div { flex: 1; min-width: 200px; }
+
+    .stato { font-size: 0.82em; color: #666; }
+    .stato.sporca { color: #b36b00; font-weight: bold; }
+    .stato.errore { color: #c0392b; font-weight: bold; }
+
+    .date-listino { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85em; color: #555; margin-top: 10px; }
+    .date-listino b { color: #1e3c72; }
+    .vecchio { color: #b36b00; font-weight: bold; }
+
+    /* Segnalazioni aperte del fornitore (dalla pagina Segnalazioni). */
+    .segn { padding: 8px 10px; border-left: 4px solid #2a5298; background: #f8faff; border-radius: 6px; margin-bottom: 6px; font-size: 0.88em; }
+    .segn.urgente { border-left-color: #c0392b; background: #fff3f3; }
+    .segn small { color: #888; }
+
+    /* Riga del listino: bordo colorato come le schede di gestione-vini. */
+    .vino {
+      background: #fff; border: 1px solid #e0e8f8;
+      border-left: 5px solid var(--c, #2a5298); border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 10px;
+    }
+    .vino.temp { --c: #b36b00; border-style: dashed; border-left-style: solid; }
+    .vino.abb { --c: #bbb; background: #fafafa; }
+    .vino.ordinato { --c: #228b22; background: #f4fbf6; }
+    .vino-testa { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .vino-nome { font-weight: bold; color: #1e3c72; overflow-wrap: anywhere; flex: 1; }
+    .vino-nome input { font-weight: bold; color: #1e3c72; padding: 6px 8px; }
+    .vino-sotto { font-size: 0.78em; color: #777; margin-top: 4px; font-weight: normal; }
+    .badge {
+      display: inline-block; font-size: 0.72em; padding: 1px 8px; border-radius: 10px;
+      border: 1px solid var(--c, #2a5298); color: var(--c, #2a5298); margin-left: 6px; font-weight: normal; vertical-align: 1px;
+    }
+    .vino-campi { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 10px; align-items: end; }
+    .vino-campi label { font-size: 0.7em; }
+    .vino-campi input { padding: 8px 10px; }
+    .vino-campi .valore { padding: 8px 0; font-weight: bold; color: #1e3c72; }
+    .vino-campi .spiega { font-size: 0.72em; color: #888; margin-top: 3px; min-height: 1em; }
+    input.bott { font-weight: bold; text-align: center; }
+    input.bott.pieno { border-color: #228b22; background: #eefaf1; }
+    .diff-wc { margin-top: 8px; font-size: 0.8em; color: #b36b00; }
+    .vino-dx { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+    .filtri { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.85em; color: #555; }
+    .filtri label { display: inline-flex; gap: 6px; align-items: center; text-transform: none; font-size: 1em; font-weight: normal; margin: 0; cursor: pointer; }
+    .filtri input[type="text"] { max-width: 260px; padding: 8px 10px; }
+
+    .conti { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 6px; }
+    .conto { background: #f8faff; border: 1px solid #dce6f8; border-radius: 10px; padding: 10px 12px; }
+    .conto .l { font-size: 0.72em; color: #777; text-transform: uppercase; letter-spacing: 0.3px; }
+    .conto .v { font-size: 1.2em; font-weight: bold; color: #1e3c72; margin-top: 3px; }
+    .conto.forte { background: #2a5298; border-color: #2a5298; }
+    .conto.forte .l { color: #dce6ff; }
+    .conto.forte .v { color: #fff; }
+
+    .avviso {
+      background: #fff6e5; border: 2px solid #f0c36d; color: #7a5200;
+      border-radius: 10px; padding: 10px 14px; margin-top: 14px; font-size: 0.88em;
+    }
+    .avviso ul { margin: 8px 0 0 18px; }
+    .ok { background: #eefaf1; border: 2px solid #a8d8bb; color: #1e6b3a; border-radius: 10px; padding: 10px 14px; margin-top: 14px; font-size: 0.88em; }
+
+    .tabella-wrap { overflow-x: auto; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+    th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid #eef2fa; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; white-space: normal; }
+    th { color: #2a5298; font-size: 0.8em; text-transform: uppercase; }
+
+    .ordine-arch {
+      display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap;
+      padding: 10px 12px; border: 1px solid #e0e8f8; border-radius: 10px; margin-bottom: 8px;
+    }
+    .ordine-arch b { color: #1e3c72; }
+    .ordine-arch small { color: #888; }
+    .ordine-arch .azioni { margin-top: 0; gap: 6px; }
+
+    .vuoto { text-align: center; padding: 20px; color: #aaa; }
+
+    .velo {
+      position: fixed; inset: 0; background: rgba(30,60,114,0.75); z-index: 9999;
+      display: none; justify-content: center; align-items: center; flex-direction: column;
+    }
+    .velo.attivo { display: flex; }
+    .velo-ancora { font-size: 2.5em; margin-bottom: 12px; animation: gira 1s linear infinite; }
+    @keyframes gira { to { transform: rotate(360deg); } }
+    .velo-testo { color: #fff; font-family: 'Pirata One', cursive; font-size: 1.3em; letter-spacing: 1px; }
+
+    .crediti-icone {
+      text-align: center; color: rgba(255,255,255,0.6); font-size: 0.78em;
+      margin: 18px auto 6px; max-width: 1000px;
+    }
+    .crediti-icone a { color: rgba(255,255,255,0.8); }
+
+    #stampa { display: none; }
+
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .section { padding: 18px; border-radius: 14px; }
+      .header h1 { font-size: 1.6em; }
+      .vino-campi { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* PDF dell'ordine: si stampa solo il foglio d'ordine, su fondo bianco.
+       «Salva come PDF» dal dialogo di stampa del browser. */
+    @media print {
+      @page { size: A4; margin: 14mm; }
+      body { background: #fff; padding: 0; font-size: 11pt; }
+      body > *:not(#stampa) { display: none !important; }
+      #stampa { display: block; color: #000; }
+      #stampa h1 { font-family: 'Pirata One', cursive; font-size: 24pt; color: #1e3c72; }
+      #stampa .sotto { color: #555; margin: 2px 0 14px; }
+      #stampa table { font-size: 10pt; }
+      #stampa th, #stampa td { border-bottom: 1px solid #ccc; padding: 5px 6px; white-space: normal; }
+      #stampa tfoot td { border-bottom: none; font-weight: bold; }
+      #stampa .note-pdf { margin-top: 14px; white-space: pre-wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-wine-glass" viewBox="0 0 512 512"><path fill="currentColor" d="M148.97 22.47l-6.25.093-2.564 6.156c-13.235 37.556-21.28 79-21.28 118.093 0 53.777 14.848 93.17 39.874 118.875 18.945 19.458 43.36 30.696 70.156 35 17.09 48.115 16.085 101.005-2.562 148.687-30.555 5.118-60.254 18.273-86.313 39.5h231.22c-26.066-21.23-55.75-34.384-86.313-39.5-18.667-47.734-19.62-100.686-2.468-148.844 26.58-4.382 50.84-15.552 69.75-34.842 25.184-25.692 40.186-65.08 40.186-118.875 0-39.093-8.045-80.537-21.28-118.094l-2.188-6.25h-219.97zm6.75 18.686h199.843c7.25 21.815 12.64 44.904 15.593 67.72h-231.03c2.953-22.816 8.344-45.905 15.593-67.72zm-17.47 86.406h234.78c.45 6.49.69 12.912.69 19.25 0 50.357-13.716 84.26-34.845 105.813-21.13 21.554-50.295 31.406-83.53 31.406-33.238 0-62.247-9.863-83.22-31.405s-34.563-55.437-34.563-105.813c0-6.338.24-12.76.688-19.25z"/></symbol>
+<symbol id="i-plus" viewBox="27 27 202 202"><path fill="currentColor" d="M119 64v55H64v18h55v55h18v-55h55v-18h-55V64h-18z"/></symbol>
+<symbol id="i-trash-can" viewBox="0 0 512 512"><path fill="currentColor" d="M199 103v50h-78v30h270v-30h-78v-50H199zm18 18h78v32h-78v-32zm-79.002 80l30.106 286h175.794l30.104-286H137.998zm62.338 13.38l.64 8.98 16 224 .643 8.976-17.956 1.283-.64-8.98-16-224-.643-8.976 17.956-1.283zm111.328 0l17.955 1.284-.643 8.977-16 224-.64 8.98-17.956-1.284.643-8.977 16-224 .64-8.98zM247 215h18v242h-18V215z"/></symbol>
+<symbol id="i-pirate-flag" viewBox="0 0 512 512"><path fill="currentColor" d="M256 31.203c-96 .797-117.377 76.692-79.434 135.133-6.397 6.534-10.344 15.886-.566 25.664 16 16 32 16 39.852 32.42h80.296C304 208 320 208 336 192c9.778-9.778 5.831-19.13-.566-25.664C373.377 107.896 352 32 256 31.203zm-42.146 101.049c.426-.003.862.007 1.306.03 28.404 1.442 40.84 59.718-10.83 51.095-10.412-1.738-17.355-50.963 9.524-51.125zm84.292 0c26.88.162 19.936 49.387 9.524 51.125C256 192 268.436 133.724 296.84 132.28c.444-.022.88-.032 1.306-.03zM32 144c7.406 88.586 64.475 175.544 156.623 236.797 17.959-7.251 35.767-15.322 50.424-23.877C180.254 319.737 104.939 255.465 32 144zm448 0C359.2 328.605 231.863 383.797 183.908 400.797c3.177 5.374 5.997 10.98 8.711 16.432 3.878 7.789 7.581 15.251 11.184 20.986A517.457 517.457 0 0 0 256 417.973l.168.076a884.617 884.617 0 0 0 9.652-4.65C391.488 353.263 471.156 249.79 480 144zm-224 27.725l20.074 40.15L256 199.328l-20.074 12.547L256 171.725zm-65.604 57.11l15.76 51.042s31.268 24.92 49.844 24.92 49.844-24.92 49.844-24.92l15.76-51.041-27.086 19.236-8.063 16.248S267.35 279.547 256 279.547c-11.35 0-30.455-15.227-30.455-15.227l-8.063-16.248-27.086-19.236zm-59.984 152.976c-.783-.02-1.574-.011-2.375.027l.856 17.978c6.36-.302 10.814 2.416 16.11 8.64 5.298 6.222 10.32 15.707 15.24 25.589 4.918 9.882 9.707 20.12 16.122 28.45 6.415 8.327 16.202 15.446 27.969 13.89l-2.36-17.844c-4.094.541-6.78-1.099-11.349-7.031-4.57-5.933-9.275-15.46-14.268-25.489-4.992-10.029-10.297-20.604-17.644-29.234-6.888-8.09-16.556-14.686-28.3-14.976zm251.176 0c-11.745.29-21.413 6.885-28.3 14.976-7.348 8.63-12.653 19.205-17.645 29.234-4.993 10.03-9.698 19.556-14.268 25.489-4.57 5.932-7.255 7.572-11.35 7.031l-2.359 17.844c11.767 1.556 21.554-5.563 27.969-13.89 6.415-8.33 11.204-18.568 16.123-28.45 4.919-9.882 9.94-19.367 15.238-25.59 5.297-6.223 9.75-8.941 16.111-8.639l.856-17.978a32.853 32.853 0 0 0-2.375-.027zm-55.928 18.107c-13.97 10.003-30.13 18.92-47.424 27.478a524.868 524.868 0 0 0 29.961 10.819c3.603-5.735 7.306-13.197 11.184-20.986 2.714-5.453 5.534-11.058 8.71-16.432-.77-.273-1.62-.586-2.43-.879zm-191.808 23.371l-27.67 10.352 7.904 31.771 36.424-11.707c-1.418-2.814-2.81-5.649-4.207-8.457-4.048-8.131-8.169-15.961-12.451-21.959zm244.296 0c-4.282 5.998-8.403 13.828-12.45 21.959-1.399 2.808-2.79 5.643-4.208 8.457l36.424 11.707 7.904-31.771-27.67-10.352zM78.271 435.438a9.632 9.632 0 0 0-1.32.12 6.824 6.824 0 0 0-1.217.313c-11.544 4.201-25.105 18.04-21.648 29.828 3.07 10.472 19.675 13.359 30.492 11.916 3.828-.51 8.415-3.761 12.234-7.086l-8.124-32.648c-3.238-1.285-7.214-2.528-10.417-2.443zm355.458 0c-3.203-.085-7.179 1.158-10.416 2.443l-8.125 32.648c3.819 3.325 8.406 6.576 12.234 7.086 10.817 1.443 27.422-1.444 30.492-11.916 3.457-11.788-10.104-25.627-21.648-29.828a6.824 6.824 0 0 0-1.217-.312 9.632 9.632 0 0 0-1.32-.122z"/></symbol>
+</svg>
+
+<div class="velo" id="velo">
+  <div class="velo-ancora">⚓</div>
+  <div class="velo-testo" id="veloTesto">Carico...</div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1><svg class="ico"><use href="#i-wine-glass"></use></svg> Ordini</h1>
+    <a href="index.html?menu=vini" class="btn-home"><svg class="ico"><use href="#i-pirate-flag"></use></svg> Porto</a>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span>Fornitore</span><span class="stato" id="statoScheda"></span></div>
+    <div class="scelta-fornitore">
+      <div>
+        <label for="selFornitore">Scegli il fornitore</label>
+        <select id="selFornitore"><option value="">Carico...</option></select>
+      </div>
+      <button class="btn btn-secondario btn-piccolo" id="btnNuovoForn" type="button">
+        <svg class="ico"><use href="#i-plus"></use></svg> Nuovo fornitore
+      </button>
+    </div>
+    <div id="nuovoForn" hidden style="margin-top:12px;">
+      <div class="scelta-fornitore">
+        <div><label for="nomeNuovo">Nome (come nella colonna Fornitore di WINE_COST)</label><input type="text" id="nomeNuovo"></div>
+        <button class="btn btn-primario btn-piccolo" id="btnCreaForn" type="button">Crea</button>
+      </div>
+    </div>
+
+    <div id="schedaForn" hidden>
+      <div class="griglia" style="margin-top:16px;">
+        <div><label for="fEmail">Email per gli ordini</label><input type="email" id="fEmail" data-campo="email"></div>
+        <div><label for="fContatto">Agente / referente</label><input type="text" id="fContatto" data-campo="contatto"></div>
+        <div><label for="fTelefono">Cellulare (WhatsApp)</label><input type="text" id="fTelefono" data-campo="telefono"></div>
+        <div><label for="fSconto">Sconto abituale</label><input type="text" id="fSconto" data-campo="sconto" placeholder="es. 12,5%  ·  11+1"></div>
+        <div><label for="fMinimo">Ordine minimo (bottiglie)</label><input type="number" id="fMinimo" data-campo="minimo" min="0" step="1"></div>
+        <div><label for="fPagamento">Pagamento</label><input type="text" id="fPagamento" data-campo="pagamento"></div>
+        <div><label for="fListinoData">Listino del</label><input type="date" id="fListinoData" data-campo="listinoData"></div>
+        <div class="largo"><label for="fNote">Note sul fornitore</label><textarea id="fNote" data-campo="note" rows="2"></textarea></div>
+      </div>
+      <div class="date-listino" id="dateListino"></div>
+      <div class="azioni">
+        <button class="btn btn-secondario btn-piccolo" id="btnRichiediWa" type="button">WhatsApp: richiedi listino</button>
+        <button class="btn btn-secondario btn-piccolo" id="btnRichiedi" type="button">✉ Email: richiedi listino</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="secSegn" hidden>
+    <div class="section-title"><span>Segnalazioni aperte per questo fornitore</span><a href="segnalazioni.html" class="btn btn-secondario btn-piccolo">Apri Segnalazioni</a></div>
+    <div id="segnalazioni"></div>
+  </div>
+
+  <div class="section" id="secListino" hidden>
+    <div class="section-title"><span>Listino e ordine</span><span class="stato" id="statoBozza"></span></div>
+    <div class="nota">
+      <strong>Sconto</strong>: <b>10%</b> = percentuale · <b>11+1</b> = bottiglie in omaggio · <b>6,40</b> = prezzo netto.
+      Vuoto = lo sconto abituale del fornitore. Il <strong>netto</strong> è il costo che va in WINE_COST.
+      Listino e sconti si salvano da soli; le bottiglie restano nella bozza finché l'ordine non è segnato come inviato.
+    </div>
+    <div class="filtri">
+      <input type="text" id="cerca" placeholder="Cerca un vino...">
+      <label><input type="checkbox" id="soloOrdinati"> solo quelli in ordine</label>
+      <label><input type="checkbox" id="mostraAbb"> anche gli abbandonati</label>
+    </div>
+    <div id="righe"></div>
+    <div class="azioni">
+      <button class="btn btn-secondario btn-piccolo" id="btnAggiungi" type="button">
+        <svg class="ico"><use href="#i-plus"></use></svg> Vino non in WINE_COST
+      </button>
+    </div>
+    <div id="pannelloCosti"></div>
+  </div>
+
+  <div class="section" id="secOrdine" hidden>
+    <div class="section-title"><span>L'ordine</span></div>
+    <div class="conti" id="conti"></div>
+    <div id="avvisoMinimo"></div>
+    <div style="margin-top:16px;">
+      <label for="noteOrdine">Note per il fornitore (vanno nell'email e nel PDF)</label>
+      <textarea id="noteOrdine" rows="2" placeholder="es. consegna entro venerdì, mattina"></textarea>
+    </div>
+    <div class="azioni">
+      <button class="btn btn-verde" id="btnWa" type="button">WhatsApp dell'ordine</button>
+      <button class="btn btn-verde" id="btnEmail" type="button">✉ Email dell'ordine</button>
+      <button class="btn btn-secondario" id="btnCopia" type="button">Copia testo</button>
+      <button class="btn btn-secondario" id="btnPdf" type="button">Scarica PDF</button>
+      <button class="btn btn-primario" id="btnInviato" type="button">Segna come inviato</button>
+      <button class="btn btn-pericolo btn-piccolo" id="btnSvuota" type="button">Svuota</button>
+    </div>
+    <div id="esitoOrdine"></div>
+  </div>
+
+  <div class="section" id="secArchivio" hidden>
+    <div class="section-title"><span>Ordini inviati</span></div>
+    <div id="archivio"><div class="vuoto">Nessun ordine inviato.</div></div>
+  </div>
+</div>
+
+<div class="crediti-icone">
+  Icone: <a href="https://game-icons.net/" target="_blank" rel="noopener">game-icons.net</a>
+  (Lorc, Delapouite, skoll) &mdash;
+  <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.
+</div>
+
+<div id="stampa"></div>
+
+<script>
+  // =====================================================================
+  // ORDINI — listini dei fornitori e composizione degli ordini
+  // =====================================================================
+  // Prende il posto di «ordine vini.xlsx» (27/10/2026). Tre fonti:
+  //  - WINE_COST (getVini): i vini del fornitore, con il costo (imponibile) e
+  //    tutti i campi che servono a saveVino per aggiornarlo;
+  //  - vdc-ordini.php (hosting): scheda del fornitore (recapiti, sconto
+  //    abituale, data del listino) con listino e sconto di ogni vino, la bozza
+  //    dell'ordine e gli ordini inviati;
+  //  - vdc-segnalazioni.php: le segnalazioni aperte che citano il fornitore.
+  //
+  // Il netto (listino meno sconto) e' il costo di WINE_COST: dove differisce,
+  // un pulsante lo riporta in WINE_COST con saveVino, riscrivendo la riga com'e'
+  // e cambiando solo l'imponibile (stesso divisore del calice).
+  //
+  // L'email parte dal programma di posta del dispositivo (mailto:), quindi
+  // resta fra le inviate; WhatsApp si apre col messaggio gia' scritto (wa.me,
+  // al cellulare dell'agente: per Cavalli i listini si chiedono cosi' a
+  // Broccoli); il PDF si fa dal dialogo di stampa.
+
+  const API_VINI = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
+  const API_ORD = 'https://www.studio-smart.it/api/vdc-ordini.php';
+  const API_SEGN = 'https://www.studio-smart.it/api/vdc-segnalazioni.php';
+  const ULTIMO_FORN = 'vdc_ordini_fornitore';
+  const DA_ACQUISIRE = 'vdc_vino_da_acquisire';     // stesso giro della degustazione
+  const ACQUISITI = 'vdc_vini_acquisiti';
+  const IVA = 0.22;
+  const MESI_LISTINO_VECCHIO = 3;
+  const DIVISORI = [3.1, 6, 6.1, 8, 12];             // come gestione-vini.html
+
+  const $ = id => document.getElementById(id);
+  let vini = [];            // getVini di WINE_COST, oggetti interi
+  let fornitoriHost = [];   // elencoFornitori
+  let segnalazioni = [];
+  let F = '';               // fornitore scelto
+  let scheda = null;        // { email, ..., righe: [{ id, codice, nome, listino, sconto, nota }] }
+  let bozza = { id: '', note: '', q: {} };   // q: id riga → bottiglie
+  let timerScheda = null, timerBozza = null;
+
+  // ── Utilità ─────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function num(v) {
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    const n = parseFloat(String(v == null ? '' : v).replace(/\s|€/g, '').replace(',', '.'));
+    return isFinite(n) ? n : 0;
+  }
+  function cent(n) { return Math.round(n * 100) / 100; }
+  function euro(n) { return '€ ' + (n || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function dec(n) { return n ? n.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }) : ''; }
+  function dataIt(s) { return s ? s.slice(0, 10).split('-').reverse().join('/') : ''; }
+  function oggi() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function norm(s) { return String(s || '').trim().toLowerCase(); }
+  function velo(t) { $('veloTesto').textContent = t || ''; $('velo').classList.toggle('attivo', !!t); }
+  function erroreRete(e) { return e.name === 'TimeoutError' ? 'il server non ha risposto' : e.message; }
+
+  async function chiama(url, action, corpo, secondi) {
+    const r = await fetch(url, {
+      method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action }, corpo || {})),
+      signal: AbortSignal.timeout((secondi || 20) * 1000)
+    });
+    const d = JSON.parse(await r.text());
+    if (d.errore) throw new Error(d.errore);
+    if (d.ok === false) throw new Error(d.error || 'risposta non valida');
+    return d;
+  }
+
+  // ── Sconto ──────────────────────────────────────────────────────────
+  // «10%» percentuale, «11+1» omaggio (si pagano 11 su 12), «6,40» prezzo netto.
+  function leggiSconto(s) {
+    s = String(s || '').trim();
+    if (!s) return { tipo: 'nessuno' };
+    let m = s.match(/^(\d+(?:[.,]\d+)?)\s*%$/);
+    if (m) return { tipo: 'perc', p: num(m[1]) };
+    m = s.match(/^(\d+)\s*\+\s*(\d+)$/);
+    if (m) return { tipo: 'omaggio', paga: +m[1], gratis: +m[2] };
+    m = s.match(/^(?:€\s*)?(\d+(?:[.,]\d+)?)(?:\s*€)?$/);
+    if (m) return { tipo: 'netto', v: num(m[1]) };
+    return { tipo: 'errato' };
+  }
+  function scontoRiga(r) { return String(r.sconto || '').trim() || String(scheda.sconto || '').trim(); }
+  function netto(r) {
+    const l = num(r.listino), s = leggiSconto(scontoRiga(r));
+    if (s.tipo === 'perc') return cent(l * (1 - s.p / 100));
+    if (s.tipo === 'omaggio') return cent(l * s.paga / (s.paga + s.gratis));
+    if (s.tipo === 'netto') return cent(s.v);
+    return cent(l);
+  }
+  function spiegaSconto(r) {
+    const proprio = String(r.sconto || '').trim();
+    const s = leggiSconto(scontoRiga(r));
+    const da = proprio ? '' : ' (abituale)';
+    if (s.tipo === 'perc') return '−' + dec(s.p).replace(/,00$/, '') + '%' + da;
+    if (s.tipo === 'omaggio') return s.gratis + ' omaggio ogni ' + (s.paga + s.gratis) + da;
+    if (s.tipo === 'netto') return 'prezzo netto' + da;
+    if (s.tipo === 'errato') return 'non capisco lo sconto';
+    return '';
+  }
+
+  // ── Dati: WINE_COST, hosting, segnalazioni ──────────────────────────
+  async function caricaVini() {
+    const d = await chiama(API_VINI, 'getVini', {}, 60);
+    vini = d.vini || [];
+  }
+  function viniDelFornitore() {
+    return vini.filter(v => norm(v.fornitore) === norm(F));
+  }
+  function vinoWc(codice) { return vini.find(v => v.codice === codice); }
+
+  async function caricaSegnalazioni() {
+    try {
+      const d = await chiama(API_SEGN, 'getSegnalazioni', { area: 'vini' });
+      segnalazioni = d.segnalazioni || [];
+    } catch (e) { segnalazioni = []; }
+  }
+
+  async function avvio() {
+    velo('Carico vini e fornitori...');
+    const esiti = await Promise.allSettled([
+      caricaVini(),
+      chiama(API_ORD, 'elencoFornitori').then(d => { fornitoriHost = d.fornitori || []; }),
+      caricaSegnalazioni()
+    ]);
+    velo('');
+    const errori = esiti.filter(e => e.status === 'rejected').map(e => erroreRete(e.reason));
+    if (errori.length) $('statoScheda').innerHTML = '<span class="stato errore">Qualcosa non si è caricato: ' + esc(errori.join('; ')) + '</span>';
+    riempiFornitori();
+    let ultimo = '';
+    try { ultimo = localStorage.getItem(ULTIMO_FORN) || ''; } catch (e) {}
+    const q = new URLSearchParams(location.search).get('fornitore');
+    if (q) ultimo = q;
+    if (ultimo && [...$('selFornitore').options].some(o => o.value === ultimo)) {
+      $('selFornitore').value = ultimo;
+      await scegliFornitore(ultimo);
+    }
+  }
+
+  function riempiFornitori(scelto) {
+    const nomi = new Map();
+    vini.forEach(v => { const f = String(v.fornitore || '').trim(); if (f) nomi.set(norm(f), f); });
+    fornitoriHost.forEach(f => nomi.set(norm(f.nome), f.nome));
+    const conVini = n => vini.filter(v => norm(v.fornitore) === norm(n) && !v.abbandonato).length;
+    const lista = [...nomi.values()].sort((a, b) => a.localeCompare(b, 'it'));
+    $('selFornitore').innerHTML = '<option value="">— scegli —</option>' +
+      lista.map(n => `<option value="${esc(n)}">${esc(n)} (${conVini(n)})</option>`).join('');
+    if (scelto) $('selFornitore').value = scelto;
+  }
+
+  async function scegliFornitore(nome) {
+    salvaSubito();
+    F = nome;
+    try { localStorage.setItem(ULTIMO_FORN, F); } catch (e) {}
+    ['schedaForn', 'secSegn', 'secListino', 'secOrdine', 'secArchivio'].forEach(id => { $(id).hidden = !F; });
+    if (!F) return;
+    velo('Apro ' + F + '...');
+    try {
+      const d = await chiama(API_ORD, 'getFornitore', { nome: F });
+      scheda = Object.assign({ email: '', contatto: '', telefono: '', sconto: '', minimo: '', pagamento: '', note: '',
+                               listinoData: '', listinoRichiesto: '', righe: [] }, d.fornitore || {});
+      bozza = { id: '', note: '', q: {} };
+      if (d.bozza) {
+        bozza.id = d.bozza.id;
+        bozza.note = d.bozza.dati.note || '';
+        (d.bozza.dati.righe || []).forEach(r => { if (r.bott > 0) bozza.q[r.id] = r.bott; });
+      }
+      $('statoScheda').textContent = d.aggiornato ? 'Scheda salvata il ' + dataIt(d.aggiornato) + ' ' + d.aggiornato.slice(11) : 'Scheda nuova';
+      $('statoBozza').textContent = d.bozza ? 'Bozza del ' + dataIt(d.bozza.aggiornato) + ' ' + d.bozza.aggiornato.slice(11) : '';
+    } catch (e) {
+      velo('');
+      $('statoScheda').innerHTML = '<span class="stato errore">Non riesco ad aprire il fornitore (' + esc(erroreRete(e)) + ')</span>';
+      ['schedaForn', 'secListino', 'secOrdine', 'secArchivio'].forEach(id => { $(id).hidden = true; });
+      return;
+    }
+    velo('');
+    applicaAcquisiti();
+    riempiScheda();
+    disegnaSegnalazioni();
+    disegna();
+    caricaArchivio();
+  }
+
+  // Righe del listino: i vini del fornitore in WINE_COST (con listino e sconto
+  // della scheda, o al primo giro il costo attuale come listino) piu' i vini
+  // che in WINE_COST non ci sono ancora.
+  function righe() {
+    const perCodice = new Map(scheda.righe.filter(r => r.codice).map(r => [r.codice, r]));
+    const out = [];
+    viniDelFornitore().forEach(v => {
+      const r = perCodice.get(v.codice) || { id: 'W-' + v.codice, codice: v.codice, nome: v.vino, listino: num(v.imponibile), sconto: '', nota: '' };
+      out.push(Object.assign({}, r, { wc: v }));
+      perCodice.delete(v.codice);
+    });
+    // Codici che non sono piu' di questo fornitore in WINE_COST: restano visibili
+    perCodice.forEach(r => out.push(Object.assign({}, r, { wc: vinoWc(r.codice) || null, spostato: true })));
+    scheda.righe.filter(r => !r.codice).forEach(r => out.push(Object.assign({}, r, { wc: null })));
+    return out;
+  }
+  // Riporta nella scheda tutte le righe visibili (anche quelle ancora implicite).
+  function materializza(lista) {
+    scheda.righe = lista.map(r => ({ id: r.id, codice: r.codice || null, nome: r.nome || '', listino: num(r.listino), sconto: r.sconto || '', nota: r.nota || '' }));
+  }
+
+  // ── Scheda del fornitore ────────────────────────────────────────────
+  function riempiScheda() {
+    document.querySelectorAll('#schedaForn [data-campo]').forEach(el => { el.value = scheda[el.dataset.campo] || ''; });
+    $('noteOrdine').value = bozza.note || '';
+    dateListino();
+  }
+  function dateListino() {
+    const parti = [];
+    if (scheda.listinoData) {
+      const mesi = (Date.now() - new Date(scheda.listinoData)) / (30.4 * 864e5);
+      parti.push(`Listino in uso: <b class="${mesi > MESI_LISTINO_VECCHIO ? 'vecchio' : ''}">${dataIt(scheda.listinoData)}</b>` +
+        (mesi > MESI_LISTINO_VECCHIO ? ' (più di ' + MESI_LISTINO_VECCHIO + ' mesi)' : ''));
+    } else parti.push('Data del listino non indicata');
+    if (scheda.listinoRichiesto) parti.push('Listino richiesto il <b>' + dataIt(scheda.listinoRichiesto) + '</b>');
+    $('dateListino').innerHTML = parti.map(p => '<span>' + p + '</span>').join('');
+  }
+
+  function salvaSchedaTra() {
+    $('statoScheda').className = 'stato sporca';
+    $('statoScheda').textContent = 'Modifiche da salvare...';
+    clearTimeout(timerScheda);
+    timerScheda = setTimeout(salvaScheda, 1200);
+  }
+  async function salvaScheda() {
+    clearTimeout(timerScheda); timerScheda = null;
+    if (!F || !scheda) return;
+    const nome = F, dati = JSON.parse(JSON.stringify(scheda));
+    try {
+      const d = await chiama(API_ORD, 'salvaFornitore', { nome, fornitore: dati });
+      if (nome !== F) return;
+      $('statoScheda').className = 'stato';
+      $('statoScheda').textContent = 'Scheda salvata alle ' + d.aggiornato.slice(11);
+      if (!fornitoriHost.some(f => norm(f.nome) === norm(nome))) fornitoriHost.push({ nome });
+    } catch (e) {
+      $('statoScheda').className = 'stato errore';
+      $('statoScheda').textContent = 'Scheda NON salvata (' + erroreRete(e) + '): riprovo alla prossima modifica';
+    }
+  }
+
+  // ── Bozza dell'ordine ───────────────────────────────────────────────
+  function righeOrdine() {
+    return righe().filter(r => (bozza.q[r.id] || 0) > 0).map(r => ({
+      id: r.id, codice: r.codice || null, nome: r.nome, listino: num(r.listino),
+      sconto: scontoRiga(r), netto: netto(r), bott: bozza.q[r.id]
+    }));
+  }
+  function salvaBozzaTra() {
+    $('statoBozza').className = 'stato sporca';
+    $('statoBozza').textContent = 'Bozza da salvare...';
+    clearTimeout(timerBozza);
+    timerBozza = setTimeout(() => salvaBozza(false), 1200);
+  }
+  async function salvaBozza(inviato) {
+    clearTimeout(timerBozza); timerBozza = null;
+    if (!F) return null;
+    const corpo = { id: bozza.id, fornitore: F, ordine: { righe: righeOrdine(), note: bozza.note }, inviato: !!inviato };
+    try {
+      const d = await chiama(API_ORD, 'salvaOrdine', corpo);
+      if (corpo.fornitore !== F) return d;
+      bozza.id = inviato ? '' : d.id;
+      $('statoBozza').className = 'stato';
+      $('statoBozza').textContent = inviato ? '' : 'Bozza salvata alle ' + d.aggiornato.slice(11);
+      return d;
+    } catch (e) {
+      $('statoBozza').className = 'stato errore';
+      $('statoBozza').textContent = 'Bozza NON salvata (' + erroreRete(e) + ')';
+      if (inviato) throw e;
+      return null;
+    }
+  }
+  // Prima di cambiare fornitore o lasciare la pagina: niente modifiche perse.
+  function salvaSubito() {
+    if (timerScheda) salvaScheda();
+    if (timerBozza) salvaBozza(false);
+  }
+
+  // ── Disegno del listino ─────────────────────────────────────────────
+  function disegna() {
+    const tutte = righe();
+    const cerca = norm($('cerca').value);
+    const soloOrd = $('soloOrdinati').checked, conAbb = $('mostraAbb').checked;
+    const vis = tutte.filter(r => {
+      const q = bozza.q[r.id] || 0;
+      if (soloOrd && !q) return false;
+      if (!conAbb && r.wc && r.wc.abbandonato && !q) return false;
+      if (cerca && !norm(r.nome + ' ' + (r.wc ? r.wc.vino : '')).includes(cerca)) return false;
+      return true;
+    });
+    $('righe').innerHTML = vis.length ? vis.map(rigaHtml).join('') :
+      '<div class="vuoto">' + (tutte.length ? 'Nessun vino con questi filtri.' : 'Nessun vino di questo fornitore in WINE_COST: aggiungine uno qui sotto.') + '</div>';
+    disegnaConti();
+    disegnaCosti();
+  }
+
+  function rigaHtml(r) {
+    const q = bozza.q[r.id] || 0;
+    const n = netto(r);
+    const wc = r.wc;
+    const s = leggiSconto(scontoRiga(r));
+    const cls = ['vino', !r.codice ? 'temp' : '', wc && wc.abbandonato ? 'abb' : '', q ? 'ordinato' : ''].join(' ');
+    const badge = !r.codice ? '<span class="badge" style="--c:#b36b00">non in WINE_COST</span>'
+      : wc && wc.abbandonato ? '<span class="badge" style="--c:#999">abbandonato</span>'
+      : wc && wc.incarta ? '<span class="badge" style="--c:#228b22">in carta</span>'
+      : '<span class="badge" style="--c:#999">fuori carta</span>';
+    const sotto = [r.codice ? r.codice : '', wc && norm(wc.vino) !== norm(r.nome) ? 'WINE_COST: ' + esc(wc.vino) : '',
+                   r.spostato ? (wc ? 'ora fornitore «' + esc(wc.fornitore) + '» in WINE_COST' : 'codice non più in WINE_COST') : '']
+      .filter(Boolean).join(' · ');
+    const diff = wc && Math.abs(n - num(wc.imponibile)) >= 0.01
+      ? `<div class="diff-wc">Costo in WINE_COST ${euro(num(wc.imponibile))} → netto ${euro(n)} (${n > num(wc.imponibile) ? '+' : ''}${dec(cent(n - num(wc.imponibile)))})</div>` : '';
+    return `<div class="${cls}" data-id="${esc(r.id)}">
+      <div class="vino-testa">
+        <div class="vino-nome">
+          <input type="text" data-f="nome" value="${esc(r.nome)}" aria-label="Nome per il fornitore">
+          <div class="vino-sotto">${badge} ${sotto}</div>
+        </div>
+        <div class="vino-dx">
+          ${!r.codice ? `<button class="btn btn-secondario btn-piccolo" data-azione="acquisisci" type="button">In WINE_COST</button>
+                         <button class="btn-mini" data-azione="togli" type="button" title="Togli dal listino"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>` : ''}
+        </div>
+      </div>
+      <div class="vino-campi">
+        <div><label>Listino €</label><input type="text" inputmode="decimal" data-f="listino" value="${dec(num(r.listino))}"></div>
+        <div><label>Sconto</label><input type="text" data-f="sconto" value="${esc(r.sconto || '')}" placeholder="${esc(scheda.sconto || '')}" class="${s.tipo === 'errato' ? 'errato' : ''}">
+          <div class="spiega">${esc(spiegaSconto(r))}</div></div>
+        <div><label>Netto</label><div class="valore">${euro(n)}</div></div>
+        <div><label>Bottiglie</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${q ? 'pieno' : ''}" data-f="bott" value="${q || ''}"></div>
+      </div>
+      ${diff}
+    </div>`;
+  }
+
+  function disegnaConti() {
+    const ro = righeOrdine();
+    const bott = ro.reduce((a, r) => a + r.bott, 0);
+    const lordo = cent(ro.reduce((a, r) => a + r.bott * r.listino, 0));
+    const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
+    const iva = cent(imp * IVA);
+    $('conti').innerHTML = [
+      ['Vini', ro.length], ['Bottiglie', bott], ['A listino', euro(lordo)], ['Sconti', euro(cent(lordo - imp))],
+      ['Imponibile', euro(imp)], ['IVA 22%', euro(iva)], ['Totale', euro(cent(imp + iva)), true]
+    ].map(([l, v, f]) => `<div class="conto ${f ? 'forte' : ''}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
+    const min = parseInt(scheda.minimo, 10) || 0;
+    $('avvisoMinimo').innerHTML = min && bott && bott < min
+      ? `<div class="avviso">Mancano <b>${min - bott}</b> bottiglie all'ordine minimo di ${min}.</div>` : '';
+  }
+
+  // Netti diversi dal costo in WINE_COST: si aggiornano con un pulsante.
+  function differenze() {
+    return righe().filter(r => r.wc && !r.spostato && Math.abs(netto(r) - num(r.wc.imponibile)) >= 0.01);
+  }
+  function disegnaCosti() {
+    const d = differenze();
+    $('pannelloCosti').innerHTML = d.length ? `<div class="avviso">
+        <b>${d.length} ${d.length === 1 ? 'vino ha' : 'vini hanno'} un netto diverso dal costo in WINE_COST.</b>
+        <ul>${d.map(r => `<li>${esc(r.wc.vino)}: ${euro(num(r.wc.imponibile))} → <b>${euro(netto(r))}</b></li>`).join('')}</ul>
+        <div class="azioni"><button class="btn btn-primario btn-piccolo" id="btnCosti" type="button">Aggiorna i costi in WINE_COST</button></div>
+      </div>` : '';
+    if (d.length) $('btnCosti').onclick = aggiornaCosti;
+  }
+
+  async function aggiornaCosti() {
+    const d = differenze();
+    if (!d.length) return;
+    const btn = $('btnCosti'); btn.disabled = true;
+    const falliti = [];
+    for (let i = 0; i < d.length; i++) {
+      const r = d[i], v = r.wc;
+      velo('WINE_COST ' + (i + 1) + ' di ' + d.length + '...');
+      // saveVino riscrive tutta la riga: si rimanda com'e', cambia solo l'imponibile.
+      let divisore = 6.1;
+      if (num(v.costoCalice) && num(v.imponibile)) {
+        const x = num(v.imponibile) / num(v.costoCalice);
+        divisore = DIVISORI.reduce((a, b) => Math.abs(b - x) < Math.abs(a - x) ? b : a);
+      }
+      const p = {
+        codice: v.codice, sheet: v.sheet, nazione: v.nazione, vino: v.vino, imponibile: netto(r),
+        ss: v.ss || 1, divisore, fornitore: v.fornitore, catCosto: v.catCosto,
+        tavoloListino: v.tavoloListino == null ? '' : v.tavoloListino, calice: v.calice,
+        abbandonato: v.abbandonato, incarta: v.incarta, bestseller: v.bestseller,
+        nomeCarta: v.nomeCarta, catCarta: v.catCarta, aoc: v.aoc, vitigni: v.vitigni, descrizione: v.descrizione
+      };
+      try { await chiama(API_VINI, 'saveVino', p, 60); }
+      catch (e) { falliti.push(v.vino + ' (' + erroreRete(e) + ')'); }
+    }
+    velo('Ricarico WINE_COST...');
+    try { await caricaVini(); } catch (e) {}
+    velo('');
+    disegna();
+    $('pannelloCosti').insertAdjacentHTML('afterbegin', falliti.length
+      ? `<div class="avviso">Non aggiornati: ${esc(falliti.join('; '))}</div>`
+      : `<div class="ok">Costi aggiornati in WINE_COST (${d.length}). I prezzi di vendita non sono cambiati: rivedili in Gestione Vini.</div>`);
+  }
+
+  // ── Segnalazioni ────────────────────────────────────────────────────
+  function disegnaSegnalazioni() {
+    const mie = segnalazioni.filter(s => s.stato === 'aperta' && norm(s.fornitore) === norm(F));
+    $('secSegn').hidden = !mie.length;
+    $('segnalazioni').innerHTML = mie.map(s => `<div class="segn ${s.urgente ? 'urgente' : ''}">
+      ${s.urgente ? '<b>Urgente</b> · ' : ''}${esc(s.testo)} <small>· ${esc(s.categoria)} · ${esc(dataIt(s.creato))}</small></div>`).join('');
+  }
+
+  // ── Testo dell'ordine, email, PDF ───────────────────────────────────
+  function righeTesto(ro) {
+    return ro.map(r => {
+      const sc = leggiSconto(r.sconto);
+      const dett = sc.tipo === 'perc' || sc.tipo === 'omaggio' ? ` (listino ${euro(r.listino)}, sconto ${r.sconto})` : '';
+      return `${r.bott} × ${r.nome} — ${euro(r.netto)}${dett} = ${euro(cent(r.bott * r.netto))}`;
+    });
+  }
+  function testoOrdine() {
+    const ro = righeOrdine();
+    const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
+    const bott = ro.reduce((a, r) => a + r.bott, 0);
+    const note = String(bozza.note || '').trim();
+    return ['Buongiorno,', '', 'vi inviamo il nostro ordine:', '', ...righeTesto(ro), '',
+            `Bottiglie: ${bott}`, `Imponibile: ${euro(imp)}`, `IVA 22%: ${euro(cent(imp * IVA))}`, `Totale: ${euro(cent(imp * (1 + IVA)))}`,
+            ...(note ? ['', note] : []), '', 'Grazie, cordiali saluti', 'Vecchia Dogana'].join('\n');
+  }
+  function oggettoOrdine() { return 'Ordine Vecchia Dogana del ' + dataIt(oggi()); }
+
+  function apriEmail(a, oggetto, corpo) {
+    location.href = 'mailto:' + encodeURIComponent(a || '').replace(/%40/g, '@') +
+      '?subject=' + encodeURIComponent(oggetto) + '&body=' + encodeURIComponent(corpo);
+  }
+
+  // Cellulare per wa.me: solo cifre, col prefisso internazionale (italiano se manca).
+  function numeroWa(t) {
+    let n = String(t || '').replace(/[^\d+]/g, '');
+    if (n.startsWith('+')) n = n.slice(1);
+    else if (n.startsWith('00')) n = n.slice(2);
+    else if (n.length <= 10) n = '39' + n;
+    return n.length >= 10 ? n : '';
+  }
+  function apriWhatsApp(testo) {
+    const n = numeroWa(scheda.telefono);
+    if (!n) return false;
+    window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(testo), '_blank', 'noopener');
+    return true;
+  }
+
+  function esito(html) { $('esitoOrdine').innerHTML = html; }
+
+  function emailOrdine() {
+    if (!righeOrdine().length) { esito('<div class="avviso">L\'ordine è vuoto.</div>'); return; }
+    if (!scheda.email) esito('<div class="avviso">Manca l\'email del fornitore: la puoi scrivere nella scheda qui sopra (intanto l\'email si apre senza destinatario).</div>');
+    salvaSubito();
+    apriEmail(scheda.email, oggettoOrdine(), testoOrdine());
+  }
+
+  function waOrdine() {
+    if (!righeOrdine().length) { esito('<div class="avviso">L\'ordine è vuoto.</div>'); return; }
+    salvaSubito();
+    if (!apriWhatsApp(testoOrdine())) esito('<div class="avviso">Manca il cellulare dell\'agente: scrivilo nella scheda qui sopra.</div>');
+  }
+
+  async function copiaTesto() {
+    try {
+      await navigator.clipboard.writeText(testoOrdine());
+      esito('<div class="ok">Testo dell\'ordine copiato.</div>');
+    } catch (e) { esito('<div class="avviso">Non riesco a copiare: usa «Email dell\'ordine».</div>'); }
+  }
+
+  function stampaOrdine(ro, quando, note) {
+    const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
+    const bott = ro.reduce((a, r) => a + r.bott, 0);
+    $('stampa').innerHTML = `
+      <h1>Ordine a ${esc(F)}</h1>
+      <div class="sotto">Vecchia Dogana · ${dataIt(quando)}</div>
+      <table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Prezzo</th><th>Totale</th></tr></thead>
+      <tbody>${ro.map(r => `<tr><td>${esc(r.nome)}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td>
+        <td>${euro(r.netto)}</td><td>${euro(cent(r.bott * r.netto))}</td></tr>`).join('')}</tbody>
+      <tfoot>
+        <tr><td>Bottiglie</td><td>${bott}</td><td colspan="3">Imponibile</td><td>${euro(imp)}</td></tr>
+        <tr><td></td><td></td><td colspan="3">IVA 22%</td><td>${euro(cent(imp * IVA))}</td></tr>
+        <tr><td></td><td></td><td colspan="3">Totale</td><td>${euro(cent(imp * (1 + IVA)))}</td></tr>
+      </tfoot></table>
+      ${String(note || '').trim() ? `<div class="note-pdf">${esc(note)}</div>` : ''}`;
+    const titolo = document.title;
+    document.title = 'Ordine ' + F + ' ' + quando;
+    window.print();
+    setTimeout(() => { document.title = titolo; }, 1000);
+  }
+  function pdfOrdine() {
+    const ro = righeOrdine();
+    if (!ro.length) { esito('<div class="avviso">L\'ordine è vuoto.</div>'); return; }
+    stampaOrdine(ro, oggi(), bozza.note);
+  }
+
+  async function segnaInviato() {
+    if (!righeOrdine().length) { esito('<div class="avviso">L\'ordine è vuoto.</div>'); return; }
+    const btn = $('btnInviato'); btn.disabled = true;
+    velo('Archivio l\'ordine...');
+    try {
+      await salvaBozza(true);
+      bozza = { id: '', note: '', q: {} };
+      $('noteOrdine').value = '';
+      disegna();
+      esito('<div class="ok">Ordine archiviato fra gli inviati. La bozza è di nuovo vuota.</div>');
+      caricaArchivio();
+    } catch (e) {
+      esito('<div class="avviso">Non riesco ad archiviarlo (' + esc(erroreRete(e)) + '): riprova.</div>');
+    }
+    velo('');
+    btn.disabled = false;
+  }
+
+  function svuota() {
+    if (!Object.keys(bozza.q).length) return;
+    bozza.q = {};
+    disegna();
+    salvaBozzaTra();
+  }
+
+  // ── Archivio ────────────────────────────────────────────────────────
+  let archivio = [];
+  async function caricaArchivio() {
+    try {
+      const d = await chiama(API_ORD, 'elencoOrdini', { fornitore: F });
+      archivio = d.ordini || [];
+    } catch (e) {
+      $('archivio').innerHTML = '<div class="vuoto">Ordini non disponibili (' + esc(erroreRete(e)) + ').</div>';
+      return;
+    }
+    $('archivio').innerHTML = archivio.length ? archivio.map(o => `<div class="ordine-arch" data-id="${esc(o.id)}">
+      <div><b>${dataIt(o.inviato)}</b> · ${o.bottiglie} bottiglie · ${euro(o.totale)} <small>imponibile</small></div>
+      <div class="azioni">
+        <button class="btn btn-secondario btn-piccolo" data-arch="vedi" type="button">Vedi</button>
+        <button class="btn btn-secondario btn-piccolo" data-arch="ripeti" type="button">Ripeti</button>
+        <button class="btn btn-secondario btn-piccolo" data-arch="pdf" type="button">PDF</button>
+        <button class="btn-mini" data-arch="elimina" type="button" title="Elimina"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
+      </div>
+      <div class="dettaglio" style="flex-basis:100%" hidden></div>
+    </div>`).join('') : '<div class="vuoto">Nessun ordine inviato.</div>';
+  }
+
+  async function azioneArchivio(id, azione, box) {
+    let o;
+    try { o = (await chiama(API_ORD, 'getOrdine', { id })).ordine; }
+    catch (e) { box.querySelector('.dettaglio').hidden = false; box.querySelector('.dettaglio').textContent = 'Non disponibile: ' + erroreRete(e); return; }
+    const ro = o.dati.righe || [];
+    if (azione === 'vedi') {
+      const det = box.querySelector('.dettaglio');
+      det.hidden = !det.hidden;
+      det.innerHTML = `<div class="tabella-wrap"><table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Prezzo</th></tr></thead>
+        <tbody>${ro.map(r => `<tr><td>${esc(r.nome)}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td></tr>`).join('')}</tbody></table></div>
+        ${o.dati.note ? '<div class="vino-sotto">Note: ' + esc(o.dati.note) + '</div>' : ''}`;
+    } else if (azione === 'ripeti') {
+      const ids = new Set(righe().map(r => r.id));
+      const persi = [];
+      bozza.q = {};
+      ro.forEach(r => { if (ids.has(r.id)) bozza.q[r.id] = r.bott; else persi.push(r.nome); });
+      disegna();
+      salvaBozzaTra();
+      esito(persi.length ? '<div class="avviso">Ricopiato, tranne: ' + esc(persi.join(', ')) + ' (non più nel listino).</div>'
+                         : '<div class="ok">Quantità ricopiate nella bozza: controlla e modifica.</div>');
+      $('secOrdine').scrollIntoView({ behavior: 'smooth' });
+    } else if (azione === 'pdf') {
+      stampaOrdine(ro, o.inviato, o.dati.note);
+    } else if (azione === 'elimina') {
+      const btn = box.querySelector('[data-arch="elimina"]');
+      if (btn.dataset.conferma !== '1') { btn.dataset.conferma = '1'; btn.innerHTML = 'Sicuro?'; return; }
+      try { await chiama(API_ORD, 'eliminaOrdine', { id }); caricaArchivio(); }
+      catch (e) { btn.textContent = 'Errore'; }
+    }
+  }
+
+  // ── Vini non in WINE_COST ───────────────────────────────────────────
+  function aggiungiTemp() {
+    const lista = righe();
+    lista.push({ id: 'T-' + Date.now(), codice: null, nome: '', listino: 0, sconto: '', nota: '' });
+    materializza(lista);
+    salvaSchedaTra();
+    $('cerca').value = ''; $('soloOrdinati').checked = false;
+    disegna();
+    const ultimi = $('righe').querySelectorAll('.vino.temp input[data-f="nome"]');
+    if (ultimi.length) ultimi[ultimi.length - 1].focus();
+  }
+  function acquisisci(id) {
+    const r = righe().find(x => x.id === id);
+    if (!r || !r.nome.trim()) return;
+    salvaSubito();
+    try {
+      localStorage.setItem(DA_ACQUISIRE, JSON.stringify({
+        idTemp: r.id, vino: r.nome, sheet: 'DIST', imponibile: netto(r), ss: null,
+        fornitore: F, catCarta: '', catCosto: 'FERMI'
+      }));
+    } catch (e) { return; }
+    location.href = 'gestione-vini.html?acquisisci=1';
+  }
+  // Al ritorno da Gestione Vini: il vino temporaneo prende il suo codice.
+  function applicaAcquisiti() {
+    let mappa;
+    try { mappa = JSON.parse(localStorage.getItem(ACQUISITI) || '{}'); } catch (e) { return; }
+    let cambiati = 0;
+    scheda.righe.forEach(r => {
+      if (r.codice || !mappa[r.id]) return;
+      r.codice = mappa[r.id]; delete mappa[r.id]; cambiati++;
+    });
+    if (!cambiati) return;
+    try { localStorage.setItem(ACQUISITI, JSON.stringify(mappa)); } catch (e) {}
+    salvaSchedaTra();
+  }
+
+  // ── Richiesta del listino ───────────────────────────────────────────
+  function testoRichiesta() {
+    return ['Buongiorno,', '',
+      'potreste inviarci il vostro listino aggiornato, con le eventuali condizioni e promozioni in corso?', '',
+      'Grazie, cordiali saluti', 'Vecchia Dogana'].join('\n');
+  }
+  function richiediListinoWa() {
+    if (!numeroWa(scheda.telefono)) {
+      $('dateListino').insertAdjacentHTML('beforeend', '<span class="vecchio">Scrivi prima il cellulare dell\'agente.</span>');
+      $('fTelefono').focus();
+      return;
+    }
+    scheda.listinoRichiesto = oggi();
+    salvaScheda();
+    dateListino();
+    apriWhatsApp(testoRichiesta());
+  }
+  function richiediListino() {
+    if (!scheda.email) {
+      $('dateListino').insertAdjacentHTML('beforeend', '<span class="vecchio">Scrivi prima l\'email del fornitore.</span>');
+      $('fEmail').focus();
+      return;
+    }
+    scheda.listinoRichiesto = oggi();
+    salvaScheda();
+    dateListino();
+    apriEmail(scheda.email, 'Richiesta listino aggiornato - Vecchia Dogana', testoRichiesta());
+  }
+
+  // ── Eventi ──────────────────────────────────────────────────────────
+  $('selFornitore').addEventListener('change', e => scegliFornitore(e.target.value));
+  $('btnNuovoForn').addEventListener('click', () => { $('nuovoForn').hidden = !$('nuovoForn').hidden; $('nomeNuovo').focus(); });
+  $('btnCreaForn').addEventListener('click', async () => {
+    const nome = $('nomeNuovo').value.trim();
+    if (!nome) return;
+    if (!fornitoriHost.some(f => norm(f.nome) === norm(nome))) fornitoriHost.push({ nome });
+    riempiFornitori();
+    const esiste = [...$('selFornitore').options].find(o => norm(o.value) === norm(nome));
+    $('selFornitore').value = esiste.value;
+    $('nuovoForn').hidden = true; $('nomeNuovo').value = '';
+    await scegliFornitore(esiste.value);
+    salvaScheda();
+  });
+
+  $('schedaForn').addEventListener('input', e => {
+    const c = e.target.dataset.campo;
+    if (!c || !scheda) return;
+    scheda[c] = e.target.value;
+    salvaSchedaTra();
+    if (c === 'listinoData') dateListino();
+    if (c === 'sconto' || c === 'minimo') disegna();
+  });
+
+  $('righe').addEventListener('input', e => {
+    const box = e.target.closest('.vino'), f = e.target.dataset.f;
+    if (!box || !f) return;
+    const id = box.dataset.id;
+    if (f === 'bott') {
+      const n = Math.max(0, parseInt(e.target.value, 10) || 0);
+      if (n) bozza.q[id] = n; else delete bozza.q[id];
+      e.target.classList.toggle('pieno', !!n);
+      box.classList.toggle('ordinato', !!n);
+      disegnaConti();
+      salvaBozzaTra();
+      return;
+    }
+    const lista = righe();
+    const r = lista.find(x => x.id === id);
+    r[f] = f === 'listino' ? num(e.target.value) : e.target.value;
+    materializza(lista);
+    salvaSchedaTra();
+    if (f === 'nome') return;
+    // Aggiorna solo netto, spiegazione e differenza della riga, senza ridisegnare (il cursore resta dov'è).
+    const nuovo = document.createElement('div');
+    nuovo.innerHTML = rigaHtml(r);
+    const n = nuovo.firstElementChild;
+    box.querySelector('.valore').textContent = n.querySelector('.valore').textContent;
+    box.querySelector('.spiega').textContent = n.querySelector('.spiega').textContent;
+    box.querySelector('[data-f="sconto"]').classList.toggle('errato', leggiSconto(scontoRiga(r)).tipo === 'errato');
+    const vecchia = box.querySelector('.diff-wc'), nuova = n.querySelector('.diff-wc');
+    if (vecchia) vecchia.remove();
+    if (nuova) box.appendChild(nuova);
+    disegnaConti();
+    disegnaCosti();
+  });
+
+  $('righe').addEventListener('click', e => {
+    const b = e.target.closest('[data-azione]');
+    if (!b) return;
+    const id = b.closest('.vino').dataset.id;
+    if (b.dataset.azione === 'togli') {
+      if (b.dataset.conferma !== '1') { b.dataset.conferma = '1'; b.textContent = 'Sicuro?'; return; }
+      const lista = righe().filter(r => r.id !== id);
+      materializza(lista);
+      delete bozza.q[id];
+      salvaSchedaTra(); salvaBozzaTra();
+      disegna();
+    } else if (b.dataset.azione === 'acquisisci') acquisisci(id);
+  });
+
+  $('archivio').addEventListener('click', e => {
+    const b = e.target.closest('[data-arch]');
+    if (!b) return;
+    const box = b.closest('.ordine-arch');
+    azioneArchivio(box.dataset.id, b.dataset.arch, box);
+  });
+
+  ['cerca', 'soloOrdinati', 'mostraAbb'].forEach(id => $(id).addEventListener('input', disegna));
+  $('noteOrdine').addEventListener('input', e => { bozza.note = e.target.value; salvaBozzaTra(); });
+  $('btnAggiungi').addEventListener('click', aggiungiTemp);
+  $('btnEmail').addEventListener('click', emailOrdine);
+  $('btnCopia').addEventListener('click', copiaTesto);
+  $('btnPdf').addEventListener('click', pdfOrdine);
+  $('btnInviato').addEventListener('click', segnaInviato);
+  $('btnSvuota').addEventListener('click', svuota);
+  $('btnRichiedi').addEventListener('click', richiediListino);
+  $('btnRichiediWa').addEventListener('click', richiediListinoWa);
+  $('btnWa').addEventListener('click', waOrdine);
+  window.addEventListener('pagehide', salvaSubito);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') salvaSubito(); });
+
+  avvio();
+</script>
+</body>
+</html>
