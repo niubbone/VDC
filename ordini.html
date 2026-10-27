@@ -344,6 +344,10 @@
     <div class="section-title"><span>L'ordine</span></div>
     <div class="conti" id="conti"></div>
     <div id="avvisoMinimo"></div>
+    <div class="filtri" style="margin:14px 0 0;">
+      <label title="Vino, bottiglie, prezzo unitario, totale della riga; in fondo imponibile e con IVA. Vale per email, testo e PDF di questo fornitore (WhatsApp è sempre semplificato).">
+        <input type="checkbox" id="ordSemplice"> Ordine semplificato</label>
+    </div>
     <div style="margin-top:16px;">
       <label for="noteOrdine">Note per il fornitore (vanno nell'email e nel PDF)</label>
       <textarea id="noteOrdine" rows="2" placeholder="es. consegna entro venerdì, mattina"></textarea>
@@ -353,6 +357,7 @@
       <button class="btn btn-verde" id="btnEmail" type="button">✉ Email dell'ordine</button>
       <button class="btn btn-secondario" id="btnCopia" type="button">Copia testo</button>
       <button class="btn btn-secondario" id="btnPdf" type="button">Scarica PDF</button>
+      <button class="btn btn-verde" id="btnCondividi" type="button" hidden>Condividi PDF</button>
       <button class="btn btn-primario" id="btnInviato" type="button">Segna come inviato</button>
       <button class="btn btn-pericolo btn-piccolo" id="btnSvuota" type="button">Svuota</button>
     </div>
@@ -628,6 +633,9 @@
       return;
     }
     velo('');
+    // Sul telefono le librerie del PDF si scaricano subito: «Condividi PDF» deve partire
+    // appena toccato, o il telefono rifiuta la condivisione.
+    if (puoCondividere()) caricaJsPdf().catch(() => {});
     applicaAcquisiti();
     riempiScheda();
     disegnaSegnalazioni();
@@ -683,6 +691,7 @@
   // ── Scheda del fornitore ────────────────────────────────────────────
   function riempiScheda() {
     document.querySelectorAll('#schedaForn [data-campo]').forEach(el => { el.value = scheda[el.dataset.campo] || ''; });
+    $('ordSemplice').checked = !!scheda.semplice;
     $('noteOrdine').value = bozza.note || '';
     dateListino();
   }
@@ -910,23 +919,32 @@
   }
 
   // ── Testo dell'ordine, email, PDF ───────────────────────────────────
-  function righeTesto(ro) {
+  // Semplificato: vino, bottiglie, prezzo unitario e totale della riga, senza listino e sconto.
+  function righeTesto(ro, semplice) {
     return ro.map(r => {
       const sc = leggiSconto(r.sconto);
-      const dett = sc.tipo === 'perc' || sc.tipo === 'omaggio' ? ` (listino ${euro(r.listino)}, sconto ${r.sconto})` : '';
-      return `${r.bott} × ${r.nome} — ${euro(r.netto)}${dett} = ${euro(cent(r.bott * r.netto))}`;
+      const dett = !semplice && (sc.tipo === 'perc' || sc.tipo === 'omaggio') ? ` (listino ${euro(r.listino)}, sconto ${r.sconto})` : '';
+      return `${r.bott} × ${r.nome} — ${euro(r.netto)}${semplice ? ' cad.' : ''}${dett} = ${euro(cent(r.bott * r.netto))}`;
     });
   }
-  function testoOrdine() {
+  const semplificato = () => !!(scheda && scheda.semplice);
+  // wa = testo per WhatsApp: sempre semplificato, saluti brevi, totali in grassetto (*...*).
+  function testoOrdine(wa) {
+    const semplice = wa || semplificato();
     const ro = righeOrdine();
     const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
     const bott = ro.reduce((a, r) => a + r.bott, 0);
     const note = String(bozza.note || '').trim();
     const prova = ro.filter(r => r.test);
-    return ['Buongiorno,', '', 'vi inviamo il nostro ordine:', '', ...righeTesto(ro.filter(r => !r.test)),
-            ...(prova.length ? ['', 'Vini in prova:', ...righeTesto(prova)] : []), '',
-            `Bottiglie: ${bott}`, `Imponibile: ${euro(imp)}`, `IVA 22%: ${euro(cent(imp * IVA))}`, `Totale: ${euro(cent(imp * (1 + IVA)))}`,
-            ...(note ? ['', note] : []), '', 'Grazie, cordiali saluti', 'Vecchia Dogana'].join('\n');
+    const g = s => wa ? '*' + s + '*' : s;
+    const totali = semplice
+      ? [g(`Imponibile: ${euro(imp)}`), g(`Totale con IVA: ${euro(cent(imp * (1 + IVA)))}`)]
+      : [`Bottiglie: ${bott}`, `Imponibile: ${euro(imp)}`, `IVA 22%: ${euro(cent(imp * IVA))}`, `Totale: ${euro(cent(imp * (1 + IVA)))}`];
+    return [...(wa ? ['Buongiorno, ecco il nostro ordine:'] : ['Buongiorno,', '', 'vi inviamo il nostro ordine:']), '',
+            ...righeTesto(ro.filter(r => !r.test), semplice),
+            ...(prova.length ? ['', 'Vini in prova:', ...righeTesto(prova, semplice)] : []), '',
+            ...totali, ...(note ? ['', note] : []), '',
+            ...(wa ? ['Grazie, Vecchia Dogana'] : ['Grazie, cordiali saluti', 'Vecchia Dogana'])].join('\n');
   }
   function oggettoOrdine() { return 'Ordine Vecchia Dogana del ' + dataIt(oggi()); }
 
@@ -943,10 +961,11 @@
     else if (n.length <= 10) n = '39' + n;
     return n.length >= 10 ? n : '';
   }
-  function apriWhatsApp(testo) {
+  // Senza cellulare (o con libero = true) WhatsApp fa scegliere a chi mandarlo.
+  function apriWhatsApp(testo, libero) {
     const n = numeroWa(scheda.telefono);
-    if (!n) return false;
-    window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(testo), '_blank', 'noopener');
+    if (!n && !libero) return false;
+    window.open('https://wa.me/' + (n || '') + '?text=' + encodeURIComponent(testo), '_blank', 'noopener');
     return true;
   }
 
@@ -962,7 +981,7 @@
   function waOrdine() {
     if (!righeOrdine().length) { esito('<div class="avviso">L\'ordine è vuoto.</div>'); return; }
     salvaSubito();
-    if (!apriWhatsApp(testoOrdine())) esito('<div class="avviso">Manca il cellulare dell\'agente: scrivilo nella scheda qui sopra.</div>');
+    apriWhatsApp(testoOrdine(true), true);
   }
 
   async function copiaTesto() {
@@ -983,9 +1002,13 @@
       document.head.appendChild(s);
     });
   }
-  async function caricaJsPdf() {
-    if (!window.jspdf) await caricaScript(LIB_PDF[0]);
-    if (!window.jspdf.jsPDF.API.autoTable) await caricaScript(LIB_PDF[1]);
+  let libPdf = null;
+  function caricaJsPdf() {
+    if (!libPdf) libPdf = (async () => {
+      if (!window.jspdf) await caricaScript(LIB_PDF[0]);
+      if (!window.jspdf.jsPDF.API.autoTable) await caricaScript(LIB_PDF[1]);
+    })().catch(e => { libPdf = null; throw e; });
+    return libPdf;
   }
 
   // «Ordine-Cavalli_10_2026.pdf»
@@ -994,10 +1017,31 @@
     return 'Ordine-' + forn + '_' + quando.slice(5, 7) + '_' + quando.slice(0, 4) + '.pdf';
   }
 
-  async function scaricaPdf(ro, quando, note) {
+  // Condivisione di file (smartphone): il PDF va a WhatsApp o altro dal menu del telefono.
+  function puoCondividere() {
+    try { return !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'o.pdf', { type: 'application/pdf' })] })); }
+    catch (e) { return false; }
+  }
+
+  // modo: 'salva' scarica il file, 'condividi' apre il menu di condivisione del telefono.
+  async function scaricaPdf(ro, quando, note, modo) {
     velo('Preparo il PDF...');
     try { await caricaJsPdf(); }
     catch (e) { velo(''); esito('<div class="avviso">Non riesco a preparare il PDF (' + esc(e.message) + '): controlla la connessione.</div>'); return; }
+    const doc = creaPdf(ro, quando, note, semplificato());
+    velo('');
+    if (modo === 'condividi') {
+      const file = new File([doc.output('blob')], nomeFilePdf(quando), { type: 'application/pdf' });
+      try { await navigator.share({ files: [file], title: file.name.replace(/\.pdf$/, '') }); return; }
+      catch (e) {
+        if (e.name === 'AbortError') return;          // condivisione annullata da te
+        esito('<div class="avviso">Il telefono non ha aperto la condivisione: il PDF è stato scaricato, allegalo a mano.</div>');
+      }
+    }
+    doc.save(nomeFilePdf(quando));
+  }
+
+  function creaPdf(ro, quando, note, semplice) {
     const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
     const bott = ro.reduce((a, r) => a + r.bott, 0);
     const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
@@ -1005,38 +1049,45 @@
     doc.text('Ordine a ' + F, 14, 20);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90, 90, 90);
     doc.text('Vecchia Dogana · ' + dataIt(quando), 14, 27);
-    const riga = r => [r.nome, r.bott, euro(r.listino), r.sconto || '', euro(r.netto), euro(cent(r.bott * r.netto))];
+    const tot = r => euro(cent(r.bott * r.netto));
+    // Semplificato: vino, bottiglie, prezzo unitario, totale; in fondo imponibile e con IVA.
+    const riga = semplice ? r => [r.nome, r.bott, euro(r.netto), tot(r)]
+                          : r => [r.nome, r.bott, euro(r.listino), r.sconto || '', euro(r.netto), tot(r)];
+    const col = semplice ? 4 : 6;
+    const vuote = n => Array(n).fill('');
     const prova = ro.filter(r => r.test);
     const corpo = ro.filter(r => !r.test).map(riga);
     if (prova.length) {
-      corpo.push([{ content: 'VINI IN PROVA', colSpan: 6, styles: { fontStyle: 'bold', fillColor: [255, 246, 229], textColor: [122, 82, 0] } }]);
+      corpo.push([{ content: 'VINI IN PROVA', colSpan: col, styles: { fontStyle: 'bold', fillColor: [255, 246, 229], textColor: [122, 82, 0] } }]);
       prova.forEach(r => corpo.push(riga(r)));
     }
     const dx = { halign: 'right' };
     doc.autoTable({
       startY: 33, theme: 'striped',
-      head: [['Vino', 'Bott.', 'Listino', 'Sconto', 'Prezzo', 'Totale']],
+      head: [semplice ? ['Vino', 'Bott.', 'Prezzo', 'Totale'] : ['Vino', 'Bott.', 'Listino', 'Sconto', 'Prezzo', 'Totale']],
       body: corpo,
-      foot: [['Bottiglie: ' + bott, '', '', '', 'Imponibile', euro(imp)],
-             ['', '', '', '', 'IVA 22%', euro(cent(imp * IVA))],
-             ['', '', '', '', 'Totale', euro(cent(imp * (1 + IVA)))]],
+      foot: semplice
+        ? [[...vuote(2), 'Imponibile', euro(imp)], [...vuote(2), 'Totale con IVA', euro(cent(imp * (1 + IVA)))]]
+        : [['Bottiglie: ' + bott, ...vuote(3), 'Imponibile', euro(imp)],
+           [...vuote(4), 'IVA 22%', euro(cent(imp * IVA))],
+           [...vuote(4), 'Totale', euro(cent(imp * (1 + IVA)))]],
       showFoot: 'lastPage',
       styles: { font: 'helvetica', fontSize: 9.5, cellPadding: 2 },
       headStyles: { fillColor: [30, 60, 114], textColor: 255 },
       footStyles: { fillColor: 255, textColor: [30, 60, 114], fontStyle: 'bold' },
-      columnStyles: { 0: { cellWidth: 'auto' }, 1: dx, 2: dx, 3: { halign: 'center' }, 4: dx, 5: dx }
+      columnStyles: semplice ? { 1: dx, 2: dx, 3: dx } : { 1: dx, 2: dx, 3: { halign: 'center' }, 4: dx, 5: dx }
     });
     if (String(note || '').trim()) {
       doc.setFontSize(10); doc.setTextColor(40, 40, 40);
       doc.text(doc.splitTextToSize('Note: ' + note.trim(), 182), 14, doc.lastAutoTable.finalY + 10);
     }
-    doc.save(nomeFilePdf(quando));
-    velo('');
+    return doc;
   }
-  function pdfOrdine() {
+  function pdfOrdine(modo) {
     const ro = righeOrdine();
     if (!ro.length) { esito('<div class="avviso">L\'ordine è vuoto.</div>'); return; }
-    scaricaPdf(ro, oggi(), bozza.note);
+    salvaSubito();
+    scaricaPdf(ro, oggi(), bozza.note, modo);
   }
 
   async function segnaInviato() {
@@ -1277,7 +1328,10 @@
   $('btnAggiungi').addEventListener('click', aggiungiTemp);
   $('btnEmail').addEventListener('click', emailOrdine);
   $('btnCopia').addEventListener('click', copiaTesto);
-  $('btnPdf').addEventListener('click', pdfOrdine);
+  $('btnPdf').addEventListener('click', () => pdfOrdine('salva'));
+  $('btnCondividi').addEventListener('click', () => pdfOrdine('condividi'));
+  $('btnCondividi').hidden = !puoCondividere();
+  $('ordSemplice').addEventListener('input', e => { if (!scheda) return; scheda.semplice = e.target.checked; salvaSchedaTra(); });
   $('btnInviato').addEventListener('click', segnaInviato);
   $('btnSvuota').addEventListener('click', svuota);
   $('btnRichiedi').addEventListener('click', richiediListino);
