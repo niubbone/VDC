@@ -1426,6 +1426,7 @@
         document.getElementById('f-imponibile').value = d.imponibile || '';
         if (d.sheet === 'IMPORT') document.getElementById('f-ss').value = d.ss || 1;
         document.getElementById('f-fornitore').value = d.fornitore || '';
+        if (d.nazione) document.getElementById('f-nazione').value = d.nazione;
         document.getElementById('f-cat-costo').value = d.catCosto || '';
         document.getElementById('f-cat-carta').value = d.catCarta || '';
         ricalcola();

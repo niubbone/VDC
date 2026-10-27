@@ -236,12 +236,12 @@
     .barra-totale {
       position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 50;
       display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; justify-content: center;
-      background: #1e3c72; color: #dce6ff; border: 2px solid rgba(255,255,255,0.35);
+      background: #ffd84d; color: #1e3c72; border: 2px solid #1e3c72;
       border-radius: 14px; padding: 8px 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
       font-size: 0.85em; max-width: calc(100% - 24px);
     }
-    .barra-totale b { color: #fff; font-size: 1.15em; }
-    .barra-totale .avviso-min { color: #ffd27a; font-weight: bold; }
+    .barra-totale b { color: #1e3c72; font-size: 1.15em; }
+    .barra-totale .avviso-min { color: #b00020; font-weight: bold; }
     body.con-barra { padding-bottom: 80px; }
 
     #stampa { display: none; }
@@ -505,9 +505,21 @@
     const d = await chiama(API_VINI, 'getVini', {}, 60);
     vini = d.vini || [];
   }
-  function viniDelFornitore() {
-    return vini.filter(v => norm(v.fornitore) === norm(F));
+  // Liste per nazione: i vini IMPORT senza fornitore (groupage, o arrivi che
+  // cambiano di volta in volta) stanno nella lista della loro nazione, col nome
+  // in maiuscolo (AUSTRIA, FRANCIA...). Chi li spedisce si scrive nelle note.
+  const senzaForn = v => v.sheet === 'IMPORT' && !String(v.fornitore || '').trim();
+  function listeNazione() {
+    const m = new Map();
+    vini.forEach(v => { const n = String(v.nazione || '').trim(); if (senzaForn(v) && n) m.set(n.toUpperCase(), n); });
+    return m;     // AUSTRIA → Austria
   }
+  const isLista = n => listeNazione().has(String(n || ''));
+  function viniDi(nome) {
+    if (isLista(nome)) return vini.filter(v => senzaForn(v) && String(v.nazione || '').trim().toUpperCase() === nome);
+    return vini.filter(v => norm(v.fornitore) === norm(nome));
+  }
+  function viniDelFornitore() { return viniDi(F); }
   function vinoWc(codice) { return vini.find(v => v.codice === codice); }
 
   async function caricaSegnalazioni() {
@@ -585,12 +597,13 @@
     const nomi = new Map();
     vini.forEach(v => { const f = String(v.fornitore || '').trim(); if (f) nomi.set(norm(f), f); });
     fornitoriHost.forEach(f => { if (f.nome !== SCHEDA_NASCOSTI) nomi.set(norm(f.nome), f.nome); });
-    const conVini = n => vini.filter(v => norm(v.fornitore) === norm(n) && !v.abbandonato).length;
+    listeNazione().forEach((_, n) => nomi.set(norm(n), n));
+    const conVini = n => viniDi(n).filter(v => !v.abbandonato).length;
     const tutti = $('mostraNascosti').checked;
     const lista = [...nomi.values()].filter(n => tutti || !isNascosto(n) || norm(n) === norm(scelto))
       .sort((a, b) => a.localeCompare(b, 'it'));
     $('selFornitore').innerHTML = '<option value="">— scegli —</option>' +
-      lista.map(n => `<option value="${esc(n)}">${esc(n)} (${conVini(n)})${isNascosto(n) ? ' · nascosto' : ''}</option>`).join('');
+      lista.map(n => `<option value="${esc(n)}">${esc(n)} (${conVini(n)})${isLista(n) ? ' · import' : ''}${isNascosto(n) ? ' · nascosto' : ''}</option>`).join('');
     if (scelto != null) $('selFornitore').value = scelto;
   }
 
@@ -1091,8 +1104,10 @@
     salvaSubito();
     try {
       localStorage.setItem(DA_ACQUISIRE, JSON.stringify({
-        idTemp: r.id, vino: r.nome, sheet: 'DIST', imponibile: netto(r), ss: null,
-        fornitore: F, catCarta: '', catCosto: 'FERMI'
+        idTemp: r.id, vino: r.nome, imponibile: netto(r), catCarta: r.tipo || '', catCosto: 'FERMI',
+        // da una lista nazione: foglio IMPORT, senza fornitore, con la nazione
+        ...(isLista(F) ? { sheet: 'IMPORT', ss: 1, fornitore: '', nazione: listeNazione().get(F) }
+                       : { sheet: 'DIST', ss: null, fornitore: F })
       }));
     } catch (e) { return; }
     location.href = 'gestione-vini.html?acquisisci=1';
