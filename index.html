@@ -140,6 +140,13 @@
       font-size: 1.2em;
       padding: 15px 30px;
     }
+    /* Numero delle segnalazioni aperte accanto a «Segnalazioni» (rosso se ce n'e' di urgenti). */
+    .badge-segn {
+      display: inline-block; min-width: 1.6em; padding: 1px 7px; margin-left: 6px;
+      border-radius: 1em; background: #2c1810; color: #f4e4c1;
+      font-size: 0.8em; font-weight: bold; line-height: 1.5; text-align: center; vertical-align: 2px;
+    }
+    .badge-segn.urgente { background: #b00020; color: #fff; }
     .btn-spese-rapide:hover {
       background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
       transform: translateY(-2px);
@@ -380,7 +387,7 @@
     </div>
     <div class="btn-group">
       <button class="btn btn-spese-rapide" onclick="mostraModalSpeseRapide()">💸 Inserisci Spesa Rapida</button>
-      <a href="segnalazioni-locale.html" class="btn btn-spese-rapide">📋 Segnalazioni</a>
+      <a href="segnalazioni-locale.html" class="btn btn-spese-rapide">📋 Segnalazioni <span class="badge-segn" id="badgeSegn" hidden></span></a>
       <a href="prenotazioni.html" class="btn btn-spese-rapide">⚓ Prenotazioni</a>
       <a href="chiusura.html" class="btn btn-primary">📜 Registra Chiusura</a>
       <button class="btn btn-secondary" onclick="mostraModalVini()">🍷 Gestione Vini</button>
@@ -986,6 +993,31 @@
     } else {
       versioneDalFile();
     }
+  </script>
+  <script>
+    // Segnalazioni aperte del locale (vdc-segnalazioni.php): il numero accanto al pulsante,
+    // riletto a ogni ritorno sulla home. Se il server non risponde il numero resta nascosto.
+    (function () {
+      const API_SEGN = 'https://www.studio-smart.it/api/vdc-segnalazioni.php';
+      async function contaSegnalazioni() {
+        const badge = document.getElementById('badgeSegn');
+        try {
+          const r = await fetch(API_SEGN, {
+            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'getSegnalazioni', area: 'locale' }), signal: AbortSignal.timeout(15000)
+          });
+          const d = JSON.parse(await r.text());
+          const aperte = (d.segnalazioni || []).filter(s => s.stato === 'aperta');
+          badge.textContent = aperte.length;
+          badge.hidden = !aperte.length;
+          badge.classList.toggle('urgente', aperte.some(s => s.urgente));
+          badge.title = aperte.length + (aperte.length === 1 ? ' segnalazione aperta' : ' segnalazioni aperte');
+        } catch (e) { badge.hidden = true; }
+      }
+      contaSegnalazioni();
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') contaSegnalazioni(); });
+      window.addEventListener('pageshow', e => { if (e.persisted) contaSegnalazioni(); });
+    })();
   </script>
 </body>
 </html>
