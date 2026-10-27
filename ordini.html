@@ -189,6 +189,10 @@
     input.bott { font-weight: bold; text-align: center; }
     input.bott.pieno { border-color: #228b22; background: #eefaf1; }
     .diff-wc { margin-top: 8px; font-size: 0.8em; color: #b36b00; }
+    .lista-costi { list-style: none; padding-left: 0; margin: 8px 0; }
+    .lista-costi li { margin: 4px 0; }
+    .lista-costi label { display: flex; gap: 8px; align-items: center; margin: 0; cursor: pointer; font-weight: normal; }
+    .lista-costi input { width: auto; flex: none; }
     .vino-dx { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
     .filtri { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.85em; color: #555; }
@@ -425,6 +429,7 @@
   let fornitoriHost = [];   // elencoFornitori
   let segnalazioni = [];
   let F = '';               // fornitore scelto
+  const costiScelti = new Set();   // vini da aggiornare in WINE_COST
   let scheda = null;        // { email, ..., righe: [{ id, codice, nome, listino, sconto, nota }] }
   let bozza = { id: '', note: '', q: {} };   // q: id riga → bottiglie
   let timerScheda = null, timerBozza = null;
@@ -625,7 +630,7 @@
 
   async function scegliFornitore(nome) {
     salvaSubito();
-    F = nome;
+    F = nome; costiScelti.clear();
     try { localStorage.setItem(ULTIMO_FORN, F); } catch (e) {}
     ['schedaForn', 'secSegn', 'secListino', 'secOrdine', 'secArchivio'].forEach(id => { $(id).hidden = !F; });
     aggiornaBtnNascondi();
@@ -888,23 +893,34 @@
     document.body.classList.toggle('con-barra', !!F);
   }
 
-  // Netti diversi dal costo in WINE_COST: si aggiornano con un pulsante.
+  // Netti diversi dal costo in WINE_COST: si sceglie vino per vino quali aggiornare
+  // (con bottiglie in magazzino al prezzo vecchio il costo si lascia com'e').
+  // Di partenza nessuno e' spuntato (costiScelti, in cima).
   function differenze() {
     return righe().filter(r => r.wc && !r.spostato && Math.abs(netto(r) - num(r.wc.imponibile)) >= 0.01);
   }
   function disegnaCosti() {
     const d = differenze();
+    const scelti = d.filter(r => costiScelti.has(r.id)).length;
     $('pannelloCosti').innerHTML = d.length ? `<div class="avviso">
         <b>${d.length} ${d.length === 1 ? 'vino ha' : 'vini hanno'} un netto diverso dal costo in WINE_COST.</b>
-        <ul>${d.map(r => `<li>${esc(r.wc.vino)}: ${euro(num(r.wc.imponibile))} → <b>${euro(netto(r))}</b></li>`).join('')}</ul>
-        <div class="azioni"><button class="btn btn-primario btn-piccolo" id="btnCosti" type="button">Aggiorna i costi in WINE_COST</button></div>
+        Spunta quelli da aggiornare: gli altri restano al costo di adesso.
+        <ul class="lista-costi">${d.map(r => `<li><label><input type="checkbox" data-costo="${esc(r.id)}" ${costiScelti.has(r.id) ? 'checked' : ''}>
+          ${esc(r.wc.vino)}: ${euro(num(r.wc.imponibile))} → <b>${euro(netto(r))}</b></label></li>`).join('')}</ul>
+        <div class="azioni"><button class="btn btn-primario btn-piccolo" id="btnCosti" type="button" ${scelti ? '' : 'disabled'}>Aggiorna in WINE_COST${scelti ? ' (' + scelti + ')' : ''}</button></div>
       </div>` : '';
-    if (d.length) $('btnCosti').onclick = aggiornaCosti;
+    if (!d.length) return;
+    $('btnCosti').onclick = aggiornaCosti;
+    $('pannelloCosti').querySelectorAll('[data-costo]').forEach(c => c.onchange = () => {
+      if (c.checked) costiScelti.add(c.dataset.costo); else costiScelti.delete(c.dataset.costo);
+      disegnaCosti();
+    });
   }
 
   async function aggiornaCosti() {
-    const d = differenze();
+    const d = differenze().filter(r => costiScelti.has(r.id));
     if (!d.length) return;
+    d.forEach(r => costiScelti.delete(r.id));
     const btn = $('btnCosti'); btn.disabled = true;
     const falliti = [];
     for (let i = 0; i < d.length; i++) {
