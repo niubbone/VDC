@@ -148,7 +148,7 @@
     .vino-sotto select { width: auto; padding: 2px 6px; font-size: 1em; border-width: 1px; }
     .chk-test {
       display: inline-flex; gap: 5px; align-items: center; margin: 0; cursor: pointer;
-      font-size: 0.72em; color: #7a5200; text-transform: uppercase; white-space: nowrap;
+      font-size: 0.72em; color: #1e3c72; text-transform: uppercase; white-space: nowrap;
     }
 
     .gruppo-titolo {
@@ -157,13 +157,21 @@
     }
     .gruppo-titolo:first-child { margin-top: 4px; }
     .gruppo-titolo small { color: #888; font-weight: normal; text-transform: none; letter-spacing: 0; }
-    details.gruppo-test { margin-top: 22px; border: 2px dashed #f0c36d; border-radius: 12px; padding: 0 12px; background: #fffaf0; }
-    details.gruppo-test > summary {
-      cursor: pointer; padding: 12px 2px; font-weight: bold; color: #7a5200;
-      font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.4px;
+    /* Sezioni in fondo: riquadri colorati con il titolo in una fascia piena */
+    .gruppo-box { margin-top: 22px; border: 2px solid var(--gb); border-radius: 12px; padding: 0 12px; background: var(--gf); }
+    .gruppo-box > summary, .gruppo-box > .gruppo-testa {
+      margin: 0 -12px; padding: 11px 14px; background: var(--gb); color: #fff; border-radius: 9px 9px 0 0;
+      font-weight: bold; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.4px;
     }
-    details.gruppo-test > summary small { font-weight: normal; text-transform: none; letter-spacing: 0; }
-    details.gruppo-test[open] { padding-bottom: 4px; }
+    .gruppo-box > summary { cursor: pointer; border-radius: 9px; }
+    .gruppo-box[open] > summary { border-radius: 9px 9px 0 0; margin-bottom: 10px; }
+    .gruppo-box > .gruppo-testa { margin-bottom: 10px; }
+    .gruppo-box small { font-weight: normal; text-transform: none; letter-spacing: 0; opacity: 0.9; }
+    .gruppo-box[open], div.gruppo-box { padding-bottom: 4px; }
+    .gruppo-rari { --gb: #5a7bb0; --gf: #e8eef8; }
+    .gruppo-test { --gb: #d99a00; --gf: #ffeeb8; }
+    .gruppo-test > summary { color: #3d2a00; }
+    .gruppo-fuori { --gb: #7d7d7d; --gf: #ececec; }
     .vino-nome { font-weight: bold; color: #1e3c72; overflow-wrap: anywhere; flex: 1; }
     .vino-nome input { font-weight: bold; color: #1e3c72; padding: 6px 8px; }
     .vino-sotto { font-size: 0.85em; color: #555; margin-top: 5px; font-weight: normal; line-height: 1.6; }
@@ -671,7 +679,7 @@
   // Riporta nella scheda tutte le righe visibili (anche quelle ancora implicite).
   function materializza(lista) {
     scheda.righe = lista.map(r => ({ id: r.id, codice: r.codice || null, nome: r.nome || '', listino: num(r.listino),
-                                     sconto: r.sconto || '', nota: r.nota || '', tipo: r.tipo || '', test: isTest(r),
+                                     sconto: r.sconto || '', nota: r.nota || '', tipo: r.tipo || '', raro: isRaro(r),
                                      annata: r.annata || '' }));
   }
 
@@ -686,16 +694,18 @@
   }
   function tipoBreve(t) { return String(t || '').replace(/^(I Vini|I|Le)\s+/, ''); }
 
-  // Vini test: quelli da provare, in fondo e a parte anche nell'ordine. Un vino
-  // che non e' in WINE_COST lo e' finche' non si toglie la spunta.
-  function isTest(r) { return r.test != null ? !!r.test : !r.codice; }
+  // Vini test: quelli non ancora in WINE_COST. In fondo e a parte anche nell'ordine;
+  // con «In WINE_COST» prendono il codice e smettono di esserlo.
+  function isTest(r) { return !r.codice; }
+  // Vini movimentati di rado (spunta «Di rado»): in carta, ma in un gruppo richiudibile.
+  // Le schede di prima della 13.2 avevano la spunta Test sui vini con codice: vale come «di rado».
+  function isRaro(r) { return !!r.codice && (r.raro != null ? !!r.raro : !!r.test); }
 
-  // In carta sopra, poi i nuovi non ancora in WINE_COST, poi quelli non piu' in carta.
+  // In carta sopra, poi quelli di rado, i test e quelli non piu' in carta.
   function gruppoDi(r) {
     if (isTest(r)) return 'test';
-    if (!r.codice) return 'nuovi';
-    if (r.wc && !r.spostato && r.wc.incarta && !r.wc.abbandonato) return 'carta';
-    return 'fuori';
+    if (!(r.wc && !r.spostato && r.wc.incarta && !r.wc.abbandonato)) return 'fuori';
+    return isRaro(r) ? 'rari' : 'carta';
   }
 
   // ── Scheda del fornitore ────────────────────────────────────────────
@@ -789,23 +799,28 @@
     if (!vis.length) {
       $('righe').innerHTML = '<div class="vuoto">' + (tutte.length ? 'Nessun vino con questi filtri.' : 'Nessun vino di questo fornitore in WINE_COST: aggiungine uno qui sotto.') + '</div>';
     } else {
-      const per = { carta: [], nuovi: [], fuori: [], test: [] };
+      const per = { carta: [], rari: [], test: [], fuori: [] };
       vis.forEach(r => per[gruppoDi(r)].push(r));
-      const titolo = (t, l, nota) => l.length ? `<div class="gruppo-titolo">${t} <small>· ${l.length}${nota ? ' · ' + nota : ''}</small></div>` + l.map(rigaHtml).join('') : '';
-      const inTest = per.test.reduce((a, r) => a + (bozza.q[r.id] || 0), 0);
-      // La sezione test resta aperta se ha bottiglie in ordine o se la si e' aperta a mano.
-      const aperta = testAperta || inTest > 0 || (!!cerca && per.test.length > 0);
-      $('righe').innerHTML = titolo('In carta', per.carta) +
-        titolo('Nuovi, non ancora in WINE_COST', per.nuovi) +
-        titolo('Non più in carta', per.fuori) +
-        (per.test.length ? `<details class="gruppo-test" ${aperta ? 'open' : ''}>
-          <summary>Vini test <small>· ${per.test.length}${inTest ? ' · ' + inTest + ' bottiglie in ordine' : ''} · nell'ordine escono a parte, come vini in prova</small></summary>
-          ${per.test.map(rigaHtml).join('')}</details>` : '');
+      const inOrdine = l => l.reduce((a, r) => a + (bozza.q[r.id] || 0), 0);
+      const conta = (l, nota) => { const b = inOrdine(l); return `<small>· ${l.length}${b ? ' · ' + b + ' bottiglie in ordine' : ''}${nota ? ' · ' + nota : ''}</small>`; };
+      // Richiudibile: resta aperta se ha bottiglie in ordine, se la ricerca ci trova qualcosa o se la si e' aperta a mano.
+      const chiudibile = (g, t, nota) => {
+        const l = per[g];
+        if (!l.length) return '';
+        const aperta = gruppiAperti.has(g) || inOrdine(l) > 0 || !!cerca;
+        return `<details class="gruppo-box gruppo-${g}" data-gruppo="${g}" ${aperta ? 'open' : ''}>
+          <summary>${t} ${conta(l, nota)}</summary>${l.map(rigaHtml).join('')}</details>`;
+      };
+      $('righe').innerHTML =
+        (per.carta.length ? `<div class="gruppo-titolo">In carta <small>· ${per.carta.length}</small></div>` + per.carta.map(rigaHtml).join('') : '') +
+        chiudibile('rari', 'Movimentati di rado') +
+        chiudibile('test', 'Vini test', 'non ancora in WINE_COST; nell\'ordine escono a parte, come vini in prova') +
+        (per.fuori.length ? `<div class="gruppo-box gruppo-fuori"><div class="gruppo-testa">Non più in carta ${conta(per.fuori)}</div>${per.fuori.map(rigaHtml).join('')}</div>` : '');
     }
     disegnaConti();
     disegnaCosti();
   }
-  let testAperta = false;
+  const gruppiAperti = new Set();
 
   function rigaHtml(r) {
     const q = bozza.q[r.id] || 0;
@@ -833,7 +848,7 @@
           <div class="vino-sotto">${badge} ${sotto}</div>
         </div>
         <div class="vino-dx">
-          <label class="chk-test" title="Vino da provare: in fondo, e a parte nell'ordine"><input type="checkbox" data-f="test" ${isTest(r) ? 'checked' : ''}> Test</label>
+          ${r.codice ? `<label class="chk-test" title="Vino che si ordina di rado: va nel gruppo «Movimentati di rado»"><input type="checkbox" data-f="raro" ${isRaro(r) ? 'checked' : ''}> Di rado</label>` : ''}
           ${!r.codice ? `<button class="btn btn-secondario btn-piccolo" data-azione="acquisisci" type="button">In WINE_COST</button>
                          <button class="btn-mini" data-azione="togli" type="button" title="Togli dal listino"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>` : ''}
         </div>
@@ -1191,7 +1206,7 @@
   function aggiungiTemp() {
     const lista = righe();
     lista.push({ id: 'T-' + Date.now(), codice: null, nome: '', listino: 0, sconto: '', nota: '' });
-    testAperta = true;     // un vino nuovo nasce fra i test
+    gruppiAperti.add('test');     // un vino nuovo nasce fra i test
     materializza(lista);
     salvaSchedaTra();
     $('cerca').value = ''; $('soloOrdinati').checked = false;
@@ -1297,11 +1312,11 @@
     }
     const lista = righe();
     const r = lista.find(x => x.id === id);
-    r[f] = f === 'listino' ? num(e.target.value) : f === 'test' ? e.target.checked : e.target.value;
+    r[f] = f === 'listino' ? num(e.target.value) : f === 'raro' ? e.target.checked : e.target.value;
     materializza(lista);
     salvaSchedaTra();
     if (f === 'nome' || f === 'nota' || f === 'annata') return;
-    if (f === 'tipo' || f === 'test') { disegna(); return; }   // cambia colore o sezione
+    if (f === 'tipo' || f === 'raro') { disegna(); return; }   // cambia colore o sezione
     // Aggiorna solo netto, spiegazione e differenza della riga, senza ridisegnare (il cursore resta dov'è).
     const nuovo = document.createElement('div');
     nuovo.innerHTML = rigaHtml(r);
@@ -1332,7 +1347,8 @@
 
   // <details> non fa salire l'evento toggle: si ascolta in cattura.
   $('righe').addEventListener('toggle', e => {
-    if (e.target.classList && e.target.classList.contains('gruppo-test')) testAperta = e.target.open;
+    const g = e.target.dataset && e.target.dataset.gruppo;
+    if (g) { if (e.target.open) gruppiAperti.add(g); else gruppiAperti.delete(g); }
   }, true);
 
   $('archivio').addEventListener('click', e => {
