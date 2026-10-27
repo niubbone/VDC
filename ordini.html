@@ -132,7 +132,8 @@
     }
     .vino.temp { border-style: dashed; border-left-style: solid; }
     .vino.abb { opacity: 0.7; }
-    .vino.ordinato { border-color: #228b22; box-shadow: 0 3px 12px rgba(34,139,34,0.25); }
+    /* Il filo a sinistra resta della tipologia anche quando il vino e' in ordine. */
+    .vino.ordinato { border-top-color: #228b22; border-right-color: #228b22; border-bottom-color: #228b22; box-shadow: 0 3px 12px rgba(34,139,34,0.25); }
     .vino.ordinato .vino-testa { background: #e3f5e9; }
     .vino-testa {
       display: flex; justify-content: space-between; gap: 10px; align-items: flex-start;
@@ -140,8 +141,9 @@
     }
     .vino-corpo { padding: 10px 14px 12px; }
     .tipo {
-      display: inline-block; font-size: 0.72em; padding: 2px 9px; border-radius: 10px;
-      background: var(--t, #8a9bbd); color: #fff; font-weight: bold; vertical-align: 1px;
+      display: inline-block; font-size: 1.05em; padding: 3px 12px; border-radius: 12px;
+      background: var(--t, #8a9bbd); color: #fff; font-weight: bold; letter-spacing: 0.5px;
+      text-transform: uppercase; vertical-align: middle; margin-right: 4px;
     }
     .vino-sotto select { width: auto; padding: 2px 6px; font-size: 1em; border-width: 1px; }
     .chk-test {
@@ -287,6 +289,10 @@
       <button class="btn btn-secondario btn-piccolo" id="btnNuovoForn" type="button">
         <svg class="ico"><use href="#i-plus"></use></svg> Nuovo fornitore
       </button>
+      <button class="btn btn-pericolo btn-piccolo" id="btnNascondiForn" type="button" hidden>Nascondi</button>
+    </div>
+    <div class="filtri" style="margin:10px 0 0;">
+      <label><input type="checkbox" id="mostraNascosti"> mostra i fornitori nascosti</label>
     </div>
     <div id="nuovoForn" hidden style="margin-top:12px;">
       <div class="scelta-fornitore">
@@ -329,7 +335,7 @@
     <div class="filtri">
       <input type="text" id="cerca" placeholder="Cerca un vino...">
       <label><input type="checkbox" id="soloOrdinati"> solo quelli in ordine</label>
-      <label title="Vini segnati «Abbandonato» in Gestione Vini: quelli che non compri più"><input type="checkbox" id="mostraAbb"> anche gli abbandonati in WINE_COST</label>
+      <label title="Vini segnati «Abbandonato» in Gestione Vini: quelli che non compri più"><input type="checkbox" id="mostraAbb"> abbandonati</label>
     </div>
     <div id="righe"></div>
     <div class="azioni">
@@ -502,6 +508,7 @@
     const esiti = await Promise.allSettled([
       caricaVini(),
       chiama(API_ORD, 'elencoFornitori').then(d => { fornitoriHost = d.fornitori || []; }),
+      caricaNascosti(),
       caricaSegnalazioni()
     ]);
     velo('');
@@ -518,15 +525,59 @@
     }
   }
 
+  // Fornitori nascosti: fuori dall'elenco, ma i vini in WINE_COST restano dove
+  // sono. L'elenco sta sull'hosting come una scheda fornitore a parte (nome
+  // riservato), cosi' vale su tutti i dispositivi senza toccare vdc-ordini.php.
+  const SCHEDA_NASCOSTI = '__nascosti__';
+  let nascosti = [];
+  const isNascosto = n => nascosti.some(x => norm(x) === norm(n));
+  async function caricaNascosti() {
+    const d = await chiama(API_ORD, 'getFornitore', { nome: SCHEDA_NASCOSTI });
+    nascosti = (d.fornitore && d.fornitore.nascosti) || [];
+  }
+  async function nascondiFornitore() {
+    if (!F) return;
+    const btn = $('btnNascondiForn');
+    const riattiva = isNascosto(F);
+    if (!riattiva && btn.dataset.conferma !== '1') { btn.dataset.conferma = '1'; btn.textContent = 'Sicuro? Nascondi ' + F; return; }
+    const prima = nascosti.slice();
+    nascosti = riattiva ? nascosti.filter(x => norm(x) !== norm(F)) : nascosti.concat([F]);
+    btn.disabled = true;
+    try {
+      await chiama(API_ORD, 'salvaFornitore', { nome: SCHEDA_NASCOSTI, fornitore: { righe: [], nascosti } });
+    } catch (e) {
+      nascosti = prima;
+      $('statoScheda').innerHTML = '<span class="stato errore">Non riesco a salvare (' + esc(erroreRete(e)) + '): riprova.</span>';
+      btn.disabled = false;
+      return;
+    }
+    btn.disabled = false;
+    if (riattiva) { riempiFornitori(F); aggiornaBtnNascondi(); return; }
+    try { localStorage.removeItem(ULTIMO_FORN); } catch (e) {}
+    const nome = F;
+    riempiFornitori('');
+    await scegliFornitore('');
+    $('statoScheda').textContent = nome + ' nascosto: lo ritrovi con «mostra i fornitori nascosti».';
+  }
+  function aggiornaBtnNascondi() {
+    const btn = $('btnNascondiForn');
+    btn.hidden = !F;
+    btn.dataset.conferma = '';
+    btn.textContent = isNascosto(F) ? 'Riattiva' : 'Nascondi';
+    btn.className = 'btn btn-piccolo ' + (isNascosto(F) ? 'btn-secondario' : 'btn-pericolo');
+  }
+
   function riempiFornitori(scelto) {
     const nomi = new Map();
     vini.forEach(v => { const f = String(v.fornitore || '').trim(); if (f) nomi.set(norm(f), f); });
-    fornitoriHost.forEach(f => nomi.set(norm(f.nome), f.nome));
+    fornitoriHost.forEach(f => { if (f.nome !== SCHEDA_NASCOSTI) nomi.set(norm(f.nome), f.nome); });
     const conVini = n => vini.filter(v => norm(v.fornitore) === norm(n) && !v.abbandonato).length;
-    const lista = [...nomi.values()].sort((a, b) => a.localeCompare(b, 'it'));
+    const tutti = $('mostraNascosti').checked;
+    const lista = [...nomi.values()].filter(n => tutti || !isNascosto(n) || norm(n) === norm(scelto))
+      .sort((a, b) => a.localeCompare(b, 'it'));
     $('selFornitore').innerHTML = '<option value="">— scegli —</option>' +
-      lista.map(n => `<option value="${esc(n)}">${esc(n)} (${conVini(n)})</option>`).join('');
-    if (scelto) $('selFornitore').value = scelto;
+      lista.map(n => `<option value="${esc(n)}">${esc(n)} (${conVini(n)})${isNascosto(n) ? ' · nascosto' : ''}</option>`).join('');
+    if (scelto != null) $('selFornitore').value = scelto;
   }
 
   async function scegliFornitore(nome) {
@@ -534,6 +585,7 @@
     F = nome;
     try { localStorage.setItem(ULTIMO_FORN, F); } catch (e) {}
     ['schedaForn', 'secSegn', 'secListino', 'secOrdine', 'secArchivio'].forEach(id => { $(id).hidden = !F; });
+    aggiornaBtnNascondi();
     if (!F) return;
     velo('Apro ' + F + '...');
     try {
@@ -588,7 +640,11 @@
   // Gestione Vini), per quelli che non ci sono ancora la sceglie la scheda.
   const TIPI = ['Le Bolle', 'I Bianchi', 'I Rosati', 'I Rossi', 'I Vini Speciali'];
   const COLORE_TIPO = { 'Le Bolle': '#1a6a9a', 'I Bianchi': '#9a7f00', 'I Rosati': '#e07aaa', 'I Rossi': '#cc0000', 'I Vini Speciali': '#2a7a4a' };
-  function tipoDi(r) { return (r.wc && r.wc.catCarta) || r.tipo || ''; }
+  // Senza categoria carta (vini fuori carta) si ripiega sulla categoria costo.
+  const TIPO_DA_COSTO = { BOLLICINE: 'Le Bolle', CHAMPAGNE: 'Le Bolle', SPECIALI: 'I Vini Speciali' };
+  function tipoDi(r) {
+    return (r.wc && (r.wc.catCarta || TIPO_DA_COSTO[String(r.wc.catCosto || '').toUpperCase()])) || r.tipo || '';
+  }
   function tipoBreve(t) { return String(t || '').replace(/^(I Vini|I|Le)\s+/, ''); }
 
   // Vini test: quelli da provare, in fondo e a parte anche nell'ordine. Un vino
@@ -1067,7 +1123,9 @@
 
   // ── Eventi ──────────────────────────────────────────────────────────
   $('selFornitore').addEventListener('change', e => scegliFornitore(e.target.value));
-  $('btnNuovoForn').addEventListener('click', () => { $('nuovoForn').hidden = !$('nuovoForn').hidden; $('nomeNuovo').focus(); });
+  $('btnNascondiForn').addEventListener('click', nascondiFornitore);
+  $('mostraNascosti').addEventListener('input', () => riempiFornitori(F));
+  $('btnNuovoForn').addEventListener('click',() => { $('nuovoForn').hidden = !$('nuovoForn').hidden; $('nomeNuovo').focus(); });
   $('btnCreaForn').addEventListener('click', async () => {
     const nome = $('nomeNuovo').value.trim();
     if (!nome) return;
