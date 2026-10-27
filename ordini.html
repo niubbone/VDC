@@ -171,7 +171,7 @@
       display: inline-block; font-size: 0.72em; padding: 1px 8px; border-radius: 10px;
       border: 1px solid var(--c, #2a5298); color: var(--c, #2a5298); margin-left: 6px; font-weight: normal; vertical-align: 1px;
     }
-    .vino-campi { display: grid; grid-template-columns: 92px 112px 92px 80px 1fr; gap: 10px; align-items: start; }
+    .vino-campi { display: grid; grid-template-columns: 70px 92px 112px 92px 80px 1fr; gap: 10px; align-items: start; }
     .vino-campi label { font-size: 0.7em; }
     .vino-campi input, .vino-campi textarea { padding: 8px 10px; }
     .vino-campi textarea { min-height: 38px; font-size: 0.88em; }
@@ -248,7 +248,7 @@
       body { padding: 12px; }
       .section { padding: 18px; border-radius: 14px; }
       .header h1 { font-size: 1.6em; }
-      .vino-campi { grid-template-columns: 1fr 1fr; }
+      .vino-campi { grid-template-columns: 1fr 1fr 1fr; }
       .vino-campi .nota-vino { grid-column: 1 / -1; }
     }
   </style>
@@ -662,7 +662,8 @@
   // Riporta nella scheda tutte le righe visibili (anche quelle ancora implicite).
   function materializza(lista) {
     scheda.righe = lista.map(r => ({ id: r.id, codice: r.codice || null, nome: r.nome || '', listino: num(r.listino),
-                                     sconto: r.sconto || '', nota: r.nota || '', tipo: r.tipo || '', test: isTest(r) }));
+                                     sconto: r.sconto || '', nota: r.nota || '', tipo: r.tipo || '', test: isTest(r),
+                                     annata: r.annata || '' }));
   }
 
   // Tipologia: per i vini di WINE_COST la categoria della carta (si cambia in
@@ -731,7 +732,7 @@
   // ── Bozza dell'ordine ───────────────────────────────────────────────
   function righeOrdine() {
     return righe().filter(r => (bozza.q[r.id] || 0) > 0).map(r => ({
-      id: r.id, codice: r.codice || null, nome: r.nome, listino: num(r.listino),
+      id: r.id, codice: r.codice || null, nome: r.nome, annata: r.annata || '', listino: num(r.listino),
       sconto: scontoRiga(r), netto: netto(r), bott: bozza.q[r.id], tipo: tipoDi(r), test: isTest(r)
     }));
   }
@@ -831,6 +832,7 @@
       </div>
       <div class="vino-corpo">
         <div class="vino-campi">
+          <div><label>Annata</label><input type="text" data-f="annata" maxlength="9" value="${esc(r.annata || '')}" placeholder="—"></div>
           <div><label>Listino €</label><input type="text" inputmode="decimal" data-f="listino" value="${dec(num(r.listino))}"></div>
           <div><label>Sconto</label><input type="text" data-f="sconto" value="${esc(r.sconto || '')}" placeholder="${esc(scheda.sconto || '')}" class="${s.tipo === 'errato' ? 'errato' : ''}">
             <div class="spiega">${esc(spiegaSconto(r))}</div></div>
@@ -919,12 +921,16 @@
   }
 
   // ── Testo dell'ordine, email, PDF ───────────────────────────────────
+  // Nell'ordine il vino esce con l'annata, se indicata («Barolo 2019»): serve quando il
+  // listino ha piu' annate dello stesso vino.
+  function nomeOrdine(r) { return r.nome + (String(r.annata || '').trim() ? ' ' + String(r.annata).trim() : ''); }
+
   // Semplificato: vino, bottiglie, prezzo unitario e totale della riga, senza listino e sconto.
   function righeTesto(ro, semplice) {
     return ro.map(r => {
       const sc = leggiSconto(r.sconto);
       const dett = !semplice && (sc.tipo === 'perc' || sc.tipo === 'omaggio') ? ` (listino ${euro(r.listino)}, sconto ${r.sconto})` : '';
-      return `${r.bott} × ${r.nome} — ${euro(r.netto)}${semplice ? ' cad.' : ''}${dett} = ${euro(cent(r.bott * r.netto))}`;
+      return `${r.bott} × ${nomeOrdine(r)} — ${euro(r.netto)}${semplice ? ' cad.' : ''}${dett} = ${euro(cent(r.bott * r.netto))}`;
     });
   }
   const semplificato = () => !!(scheda && scheda.semplice);
@@ -1051,8 +1057,8 @@
     doc.text('Vecchia Dogana · ' + dataIt(quando), 14, 27);
     const tot = r => euro(cent(r.bott * r.netto));
     // Semplificato: vino, bottiglie, prezzo unitario, totale; in fondo imponibile e con IVA.
-    const riga = semplice ? r => [r.nome, r.bott, euro(r.netto), tot(r)]
-                          : r => [r.nome, r.bott, euro(r.listino), r.sconto || '', euro(r.netto), tot(r)];
+    const riga = semplice ? r => [nomeOrdine(r), r.bott, euro(r.netto), tot(r)]
+                          : r => [nomeOrdine(r), r.bott, euro(r.listino), r.sconto || '', euro(r.netto), tot(r)];
     const col = semplice ? 4 : 6;
     const vuote = n => Array(n).fill('');
     const prova = ro.filter(r => r.test);
@@ -1146,7 +1152,7 @@
       const det = box.querySelector('.dettaglio');
       det.hidden = !det.hidden;
       det.innerHTML = `<div class="tabella-wrap"><table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Prezzo</th></tr></thead>
-        <tbody>${ro.map(r => `<tr><td>${esc(r.nome)}${r.test ? ' <small>(in prova)</small>' : ''}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td></tr>`).join('')}</tbody></table></div>
+        <tbody>${ro.map(r => `<tr><td>${esc(nomeOrdine(r))}${r.test ? ' <small>(in prova)</small>' : ''}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td></tr>`).join('')}</tbody></table></div>
         ${o.dati.note ? '<div class="vino-sotto">Note: ' + esc(o.dati.note) + '</div>' : ''}`;
     } else if (azione === 'ripeti') {
       const ids = new Set(righe().map(r => r.id));
@@ -1281,7 +1287,7 @@
     r[f] = f === 'listino' ? num(e.target.value) : f === 'test' ? e.target.checked : e.target.value;
     materializza(lista);
     salvaSchedaTra();
-    if (f === 'nome' || f === 'nota') return;
+    if (f === 'nome' || f === 'nota' || f === 'annata') return;
     if (f === 'tipo' || f === 'test') { disegna(); return; }   // cambia colore o sezione
     // Aggiorna solo netto, spiegazione e differenza della riga, senza ridisegnare (il cursore resta dov'è).
     const nuovo = document.createElement('div');
