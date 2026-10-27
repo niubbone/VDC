@@ -140,13 +140,8 @@
       font-size: 1.2em;
       padding: 15px 30px;
     }
-    /* Numero delle segnalazioni aperte accanto a «Segnalazioni»: nero, in un cerchio sottile. */
-    .badge-segn {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-width: 1.7em; height: 1.7em; padding: 0 5px; margin-left: 6px;
-      border: 1px solid #000; border-radius: 1em; background: transparent; color: #000;
-      font-size: 0.8em; font-weight: normal; line-height: 1; vertical-align: 2px;
-    }
+    /* Segnalazioni: scritta rossa se ce n'e' almeno una urgente aperta. */
+    .btn-spese-rapide.segn-urgenti { color: #b00020; }
     .btn-spese-rapide:hover {
       background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
       transform: translateY(-2px);
@@ -387,7 +382,7 @@
     </div>
     <div class="btn-group">
       <button class="btn btn-spese-rapide" onclick="mostraModalSpeseRapide()">💸 Inserisci Spesa Rapida</button>
-      <a href="segnalazioni-locale.html" class="btn btn-spese-rapide">📋 Segnalazioni <span class="badge-segn" id="badgeSegn" hidden></span></a>
+      <a href="segnalazioni-locale.html" class="btn btn-spese-rapide" id="btnSegn">📋 Segnalazioni</a>
       <a href="prenotazioni.html" class="btn btn-spese-rapide">⚓ Prenotazioni</a>
       <a href="chiusura.html" class="btn btn-primary">📜 Registra Chiusura</a>
       <button class="btn btn-secondary" onclick="mostraModalVini()">🍷 Gestione Vini</button>
@@ -995,27 +990,25 @@
     }
   </script>
   <script>
-    // Segnalazioni aperte del locale (vdc-segnalazioni.php): il numero accanto al pulsante,
-    // riletto a ogni ritorno sulla home. Se il server non risponde il numero resta nascosto.
+    // Segnalazioni urgenti ancora aperte del locale (vdc-segnalazioni.php): se ce n'e'
+    // almeno una la scritta del pulsante diventa rossa. Riletto a ogni ritorno sulla home;
+    // se il server non risponde il pulsante resta com'e'.
     (function () {
       const API_SEGN = 'https://www.studio-smart.it/api/vdc-segnalazioni.php';
-      async function contaSegnalazioni() {
-        const badge = document.getElementById('badgeSegn');
+      async function controllaUrgenti() {
         try {
           const r = await fetch(API_SEGN, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'getSegnalazioni', area: 'locale' }), signal: AbortSignal.timeout(15000)
           });
           const d = JSON.parse(await r.text());
-          const aperte = (d.segnalazioni || []).filter(s => s.stato === 'aperta');
-          badge.textContent = aperte.length;
-          badge.hidden = !aperte.length;
-          badge.title = aperte.length + (aperte.length === 1 ? ' segnalazione aperta' : ' segnalazioni aperte');
-        } catch (e) { badge.hidden = true; }
+          const urgenti = (d.segnalazioni || []).some(s => s.stato === 'aperta' && s.urgente);
+          document.getElementById('btnSegn').classList.toggle('segn-urgenti', urgenti);
+        } catch (e) { /* lascia il pulsante com'e' */ }
       }
-      contaSegnalazioni();
-      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') contaSegnalazioni(); });
-      window.addEventListener('pageshow', e => { if (e.persisted) contaSegnalazioni(); });
+      controllaUrgenti();
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') controllaUrgenti(); });
+      window.addEventListener('pageshow', e => { if (e.persisted) controllaUrgenti(); });
     })();
   </script>
 </body>
