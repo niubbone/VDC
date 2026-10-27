@@ -122,16 +122,46 @@
     .segn.urgente { border-left-color: #c0392b; background: #fff3f3; }
     .segn small { color: #888; }
 
-    /* Riga del listino: bordo colorato come le schede di gestione-vini. */
+    /* Scheda del vino: bordo pieno, fascia in testa e filo a sinistra del colore
+       della tipologia (stessi colori di gestione-vini). */
     .vino {
-      background: #fff; border: 1px solid #e0e8f8;
-      border-left: 5px solid var(--c, #2a5298); border-radius: 12px;
-      padding: 12px 14px; margin-bottom: 10px;
+      background: #fff; border: 2px solid #c9d6ee;
+      border-left: 8px solid var(--t, #8a9bbd); border-radius: 12px;
+      margin-bottom: 14px; overflow: hidden;
+      box-shadow: 0 3px 10px rgba(30,60,114,0.14);
     }
-    .vino.temp { --c: #b36b00; border-style: dashed; border-left-style: solid; }
-    .vino.abb { --c: #bbb; background: #fafafa; }
-    .vino.ordinato { --c: #228b22; background: #f4fbf6; }
-    .vino-testa { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .vino.temp { border-style: dashed; border-left-style: solid; }
+    .vino.abb { opacity: 0.7; }
+    .vino.ordinato { border-color: #228b22; box-shadow: 0 3px 12px rgba(34,139,34,0.25); }
+    .vino.ordinato .vino-testa { background: #e3f5e9; }
+    .vino-testa {
+      display: flex; justify-content: space-between; gap: 10px; align-items: flex-start;
+      background: #eef3fc; padding: 10px 14px; border-bottom: 1px solid #dce6f8;
+    }
+    .vino-corpo { padding: 10px 14px 12px; }
+    .tipo {
+      display: inline-block; font-size: 0.72em; padding: 2px 9px; border-radius: 10px;
+      background: var(--t, #8a9bbd); color: #fff; font-weight: bold; vertical-align: 1px;
+    }
+    .vino-sotto select { width: auto; padding: 2px 6px; font-size: 1em; border-width: 1px; }
+    .chk-test {
+      display: inline-flex; gap: 5px; align-items: center; margin: 0; cursor: pointer;
+      font-size: 0.72em; color: #7a5200; text-transform: uppercase; white-space: nowrap;
+    }
+
+    .gruppo-titolo {
+      font-weight: bold; color: #1e3c72; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.4px;
+      margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e0e8f8;
+    }
+    .gruppo-titolo:first-child { margin-top: 4px; }
+    .gruppo-titolo small { color: #888; font-weight: normal; text-transform: none; letter-spacing: 0; }
+    details.gruppo-test { margin-top: 22px; border: 2px dashed #f0c36d; border-radius: 12px; padding: 0 12px; background: #fffaf0; }
+    details.gruppo-test > summary {
+      cursor: pointer; padding: 12px 2px; font-weight: bold; color: #7a5200;
+      font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    details.gruppo-test > summary small { font-weight: normal; text-transform: none; letter-spacing: 0; }
+    details.gruppo-test[open] { padding-bottom: 4px; }
     .vino-nome { font-weight: bold; color: #1e3c72; overflow-wrap: anywhere; flex: 1; }
     .vino-nome input { font-weight: bold; color: #1e3c72; padding: 6px 8px; }
     .vino-sotto { font-size: 0.78em; color: #777; margin-top: 4px; font-weight: normal; }
@@ -139,9 +169,10 @@
       display: inline-block; font-size: 0.72em; padding: 1px 8px; border-radius: 10px;
       border: 1px solid var(--c, #2a5298); color: var(--c, #2a5298); margin-left: 6px; font-weight: normal; vertical-align: 1px;
     }
-    .vino-campi { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 10px; align-items: end; }
+    .vino-campi { display: grid; grid-template-columns: 92px 112px 92px 80px 1fr; gap: 10px; align-items: start; }
     .vino-campi label { font-size: 0.7em; }
-    .vino-campi input { padding: 8px 10px; }
+    .vino-campi input, .vino-campi textarea { padding: 8px 10px; }
+    .vino-campi textarea { min-height: 38px; font-size: 0.88em; }
     .vino-campi .valore { padding: 8px 0; font-weight: bold; color: #1e3c72; }
     .vino-campi .spiega { font-size: 0.72em; color: #888; margin-top: 3px; min-height: 1em; }
     input.bott { font-weight: bold; text-align: center; }
@@ -206,6 +237,7 @@
       .section { padding: 18px; border-radius: 14px; }
       .header h1 { font-size: 1.6em; }
       .vino-campi { grid-template-columns: 1fr 1fr; }
+      .vino-campi .nota-vino { grid-column: 1 / -1; }
     }
 
     /* PDF dell'ordine: si stampa solo il foglio d'ordine, su fondo bianco.
@@ -221,6 +253,7 @@
       #stampa th, #stampa td { border-bottom: 1px solid #ccc; padding: 5px 6px; white-space: normal; }
       #stampa tfoot td { border-bottom: none; font-weight: bold; }
       #stampa .note-pdf { margin-top: 14px; white-space: pre-wrap; }
+      #stampa td.gruppo-pdf { padding-top: 12px; font-weight: bold; text-transform: uppercase; font-size: 9pt; }
     }
   </style>
 </head>
@@ -296,7 +329,7 @@
     <div class="filtri">
       <input type="text" id="cerca" placeholder="Cerca un vino...">
       <label><input type="checkbox" id="soloOrdinati"> solo quelli in ordine</label>
-      <label><input type="checkbox" id="mostraAbb"> anche gli abbandonati</label>
+      <label title="Vini segnati «Abbandonato» in Gestione Vini: quelli che non compri più"><input type="checkbox" id="mostraAbb"> anche gli abbandonati in WINE_COST</label>
     </div>
     <div id="righe"></div>
     <div class="azioni">
@@ -547,7 +580,27 @@
   }
   // Riporta nella scheda tutte le righe visibili (anche quelle ancora implicite).
   function materializza(lista) {
-    scheda.righe = lista.map(r => ({ id: r.id, codice: r.codice || null, nome: r.nome || '', listino: num(r.listino), sconto: r.sconto || '', nota: r.nota || '' }));
+    scheda.righe = lista.map(r => ({ id: r.id, codice: r.codice || null, nome: r.nome || '', listino: num(r.listino),
+                                     sconto: r.sconto || '', nota: r.nota || '', tipo: r.tipo || '', test: isTest(r) }));
+  }
+
+  // Tipologia: per i vini di WINE_COST la categoria della carta (si cambia in
+  // Gestione Vini), per quelli che non ci sono ancora la sceglie la scheda.
+  const TIPI = ['Le Bolle', 'I Bianchi', 'I Rosati', 'I Rossi', 'I Vini Speciali'];
+  const COLORE_TIPO = { 'Le Bolle': '#1a6a9a', 'I Bianchi': '#9a7f00', 'I Rosati': '#e07aaa', 'I Rossi': '#cc0000', 'I Vini Speciali': '#2a7a4a' };
+  function tipoDi(r) { return (r.wc && r.wc.catCarta) || r.tipo || ''; }
+  function tipoBreve(t) { return String(t || '').replace(/^(I Vini|I|Le)\s+/, ''); }
+
+  // Vini test: quelli da provare, in fondo e a parte anche nell'ordine. Un vino
+  // che non e' in WINE_COST lo e' finche' non si toglie la spunta.
+  function isTest(r) { return r.test != null ? !!r.test : !r.codice; }
+
+  // In carta sopra, poi i nuovi non ancora in WINE_COST, poi quelli non piu' in carta.
+  function gruppoDi(r) {
+    if (isTest(r)) return 'test';
+    if (!r.codice) return 'nuovi';
+    if (r.wc && !r.spostato && r.wc.incarta && !r.wc.abbandonato) return 'carta';
+    return 'fuori';
   }
 
   // ── Scheda del fornitore ────────────────────────────────────────────
@@ -593,7 +646,7 @@
   function righeOrdine() {
     return righe().filter(r => (bozza.q[r.id] || 0) > 0).map(r => ({
       id: r.id, codice: r.codice || null, nome: r.nome, listino: num(r.listino),
-      sconto: scontoRiga(r), netto: netto(r), bott: bozza.q[r.id]
+      sconto: scontoRiga(r), netto: netto(r), bott: bozza.q[r.id], tipo: tipoDi(r), test: isTest(r)
     }));
   }
   function salvaBozzaTra() {
@@ -638,46 +691,69 @@
       if (cerca && !norm(r.nome + ' ' + (r.wc ? r.wc.vino : '')).includes(cerca)) return false;
       return true;
     });
-    $('righe').innerHTML = vis.length ? vis.map(rigaHtml).join('') :
-      '<div class="vuoto">' + (tutte.length ? 'Nessun vino con questi filtri.' : 'Nessun vino di questo fornitore in WINE_COST: aggiungine uno qui sotto.') + '</div>';
+    if (!vis.length) {
+      $('righe').innerHTML = '<div class="vuoto">' + (tutte.length ? 'Nessun vino con questi filtri.' : 'Nessun vino di questo fornitore in WINE_COST: aggiungine uno qui sotto.') + '</div>';
+    } else {
+      const per = { carta: [], nuovi: [], fuori: [], test: [] };
+      vis.forEach(r => per[gruppoDi(r)].push(r));
+      const titolo = (t, l, nota) => l.length ? `<div class="gruppo-titolo">${t} <small>· ${l.length}${nota ? ' · ' + nota : ''}</small></div>` + l.map(rigaHtml).join('') : '';
+      const inTest = per.test.reduce((a, r) => a + (bozza.q[r.id] || 0), 0);
+      // La sezione test resta aperta se ha bottiglie in ordine o se la si e' aperta a mano.
+      const aperta = testAperta || inTest > 0 || (!!cerca && per.test.length > 0);
+      $('righe').innerHTML = titolo('In carta', per.carta) +
+        titolo('Nuovi, non ancora in WINE_COST', per.nuovi) +
+        titolo('Non più in carta', per.fuori) +
+        (per.test.length ? `<details class="gruppo-test" ${aperta ? 'open' : ''}>
+          <summary>Vini test <small>· ${per.test.length}${inTest ? ' · ' + inTest + ' bottiglie in ordine' : ''} · nell'ordine escono a parte, come vini in prova</small></summary>
+          ${per.test.map(rigaHtml).join('')}</details>` : '');
+    }
     disegnaConti();
     disegnaCosti();
   }
+  let testAperta = false;
 
   function rigaHtml(r) {
     const q = bozza.q[r.id] || 0;
     const n = netto(r);
     const wc = r.wc;
     const s = leggiSconto(scontoRiga(r));
+    const tipo = tipoDi(r);
     const cls = ['vino', !r.codice ? 'temp' : '', wc && wc.abbandonato ? 'abb' : '', q ? 'ordinato' : ''].join(' ');
-    const badge = !r.codice ? '<span class="badge" style="--c:#b36b00">non in WINE_COST</span>'
-      : wc && wc.abbandonato ? '<span class="badge" style="--c:#999">abbandonato</span>'
-      : wc && wc.incarta ? '<span class="badge" style="--c:#228b22">in carta</span>'
-      : '<span class="badge" style="--c:#999">fuori carta</span>';
+    const colore = COLORE_TIPO[tipo] ? `style="--t:${COLORE_TIPO[tipo]}"` : '';
+    const tipoHtml = r.codice
+      ? (tipo ? `<span class="tipo">${esc(tipoBreve(tipo))}</span>` : '<span class="badge" style="--c:#999">tipologia da indicare in Gestione Vini</span>')
+      : `<select data-f="tipo" aria-label="Tipologia"><option value="">tipologia…</option>${TIPI.map(t => `<option value="${esc(t)}" ${t === r.tipo ? 'selected' : ''}>${esc(tipoBreve(t))}</option>`).join('')}</select>`;
+    const badge = tipoHtml + (!r.codice ? ' <span class="badge" style="--c:#b36b00">non in WINE_COST</span>'
+      : wc && wc.abbandonato ? ' <span class="badge" style="--c:#999">abbandonato</span>'
+      : wc && !wc.incarta ? ' <span class="badge" style="--c:#999">fuori carta</span>' : '');
     const sotto = [r.codice ? r.codice : '', wc && norm(wc.vino) !== norm(r.nome) ? 'WINE_COST: ' + esc(wc.vino) : '',
                    r.spostato ? (wc ? 'ora fornitore «' + esc(wc.fornitore) + '» in WINE_COST' : 'codice non più in WINE_COST') : '']
       .filter(Boolean).join(' · ');
     const diff = wc && Math.abs(n - num(wc.imponibile)) >= 0.01
       ? `<div class="diff-wc">Costo in WINE_COST ${euro(num(wc.imponibile))} → netto ${euro(n)} (${n > num(wc.imponibile) ? '+' : ''}${dec(cent(n - num(wc.imponibile)))})</div>` : '';
-    return `<div class="${cls}" data-id="${esc(r.id)}">
+    return `<div class="${cls}" data-id="${esc(r.id)}" ${colore}>
       <div class="vino-testa">
         <div class="vino-nome">
           <input type="text" data-f="nome" value="${esc(r.nome)}" aria-label="Nome per il fornitore">
           <div class="vino-sotto">${badge} ${sotto}</div>
         </div>
         <div class="vino-dx">
+          <label class="chk-test" title="Vino da provare: in fondo, e a parte nell'ordine"><input type="checkbox" data-f="test" ${isTest(r) ? 'checked' : ''}> Test</label>
           ${!r.codice ? `<button class="btn btn-secondario btn-piccolo" data-azione="acquisisci" type="button">In WINE_COST</button>
                          <button class="btn-mini" data-azione="togli" type="button" title="Togli dal listino"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>` : ''}
         </div>
       </div>
-      <div class="vino-campi">
-        <div><label>Listino €</label><input type="text" inputmode="decimal" data-f="listino" value="${dec(num(r.listino))}"></div>
-        <div><label>Sconto</label><input type="text" data-f="sconto" value="${esc(r.sconto || '')}" placeholder="${esc(scheda.sconto || '')}" class="${s.tipo === 'errato' ? 'errato' : ''}">
-          <div class="spiega">${esc(spiegaSconto(r))}</div></div>
-        <div><label>Netto</label><div class="valore">${euro(n)}</div></div>
-        <div><label>Bottiglie</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${q ? 'pieno' : ''}" data-f="bott" value="${q || ''}"></div>
+      <div class="vino-corpo">
+        <div class="vino-campi">
+          <div><label>Listino €</label><input type="text" inputmode="decimal" data-f="listino" value="${dec(num(r.listino))}"></div>
+          <div><label>Sconto</label><input type="text" data-f="sconto" value="${esc(r.sconto || '')}" placeholder="${esc(scheda.sconto || '')}" class="${s.tipo === 'errato' ? 'errato' : ''}">
+            <div class="spiega">${esc(spiegaSconto(r))}</div></div>
+          <div><label>Netto</label><div class="valore">${euro(n)}</div></div>
+          <div><label>Bottiglie</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${q ? 'pieno' : ''}" data-f="bott" value="${q || ''}"></div>
+          <div class="nota-vino"><label>Note sul vino</label><textarea data-f="nota" rows="1" placeholder="solo per te, non vanno nell'ordine">${esc(r.nota || '')}</textarea></div>
+        </div>
+        ${diff}
       </div>
-      ${diff}
     </div>`;
   }
 
@@ -764,7 +840,9 @@
     const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
     const bott = ro.reduce((a, r) => a + r.bott, 0);
     const note = String(bozza.note || '').trim();
-    return ['Buongiorno,', '', 'vi inviamo il nostro ordine:', '', ...righeTesto(ro), '',
+    const prova = ro.filter(r => r.test);
+    return ['Buongiorno,', '', 'vi inviamo il nostro ordine:', '', ...righeTesto(ro.filter(r => !r.test)),
+            ...(prova.length ? ['', 'Vini in prova:', ...righeTesto(prova)] : []), '',
             `Bottiglie: ${bott}`, `Imponibile: ${euro(imp)}`, `IVA 22%: ${euro(cent(imp * IVA))}`, `Totale: ${euro(cent(imp * (1 + IVA)))}`,
             ...(note ? ['', note] : []), '', 'Grazie, cordiali saluti', 'Vecchia Dogana'].join('\n');
   }
@@ -812,6 +890,10 @@
     } catch (e) { esito('<div class="avviso">Non riesco a copiare: usa «Email dell\'ordine».</div>'); }
   }
 
+  function rigaPdf(r) {
+    return `<tr><td>${esc(r.nome)}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td>
+      <td>${euro(r.netto)}</td><td>${euro(cent(r.bott * r.netto))}</td></tr>`;
+  }
   function stampaOrdine(ro, quando, note) {
     const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
     const bott = ro.reduce((a, r) => a + r.bott, 0);
@@ -819,8 +901,8 @@
       <h1>Ordine a ${esc(F)}</h1>
       <div class="sotto">Vecchia Dogana · ${dataIt(quando)}</div>
       <table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Prezzo</th><th>Totale</th></tr></thead>
-      <tbody>${ro.map(r => `<tr><td>${esc(r.nome)}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td>
-        <td>${euro(r.netto)}</td><td>${euro(cent(r.bott * r.netto))}</td></tr>`).join('')}</tbody>
+      <tbody>${ro.filter(r => !r.test).map(rigaPdf).join('')}
+        ${ro.some(r => r.test) ? '<tr><td colspan="6" class="gruppo-pdf">Vini in prova</td></tr>' + ro.filter(r => r.test).map(rigaPdf).join('') : ''}</tbody>
       <tfoot>
         <tr><td>Bottiglie</td><td>${bott}</td><td colspan="3">Imponibile</td><td>${euro(imp)}</td></tr>
         <tr><td></td><td></td><td colspan="3">IVA 22%</td><td>${euro(cent(imp * IVA))}</td></tr>
@@ -894,7 +976,7 @@
       const det = box.querySelector('.dettaglio');
       det.hidden = !det.hidden;
       det.innerHTML = `<div class="tabella-wrap"><table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Prezzo</th></tr></thead>
-        <tbody>${ro.map(r => `<tr><td>${esc(r.nome)}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td></tr>`).join('')}</tbody></table></div>
+        <tbody>${ro.map(r => `<tr><td>${esc(r.nome)}${r.test ? ' <small>(in prova)</small>' : ''}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td></tr>`).join('')}</tbody></table></div>
         ${o.dati.note ? '<div class="vino-sotto">Note: ' + esc(o.dati.note) + '</div>' : ''}`;
     } else if (azione === 'ripeti') {
       const ids = new Set(righe().map(r => r.id));
@@ -920,6 +1002,7 @@
   function aggiungiTemp() {
     const lista = righe();
     lista.push({ id: 'T-' + Date.now(), codice: null, nome: '', listino: 0, sconto: '', nota: '' });
+    testAperta = true;     // un vino nuovo nasce fra i test
     materializza(lista);
     salvaSchedaTra();
     $('cerca').value = ''; $('soloOrdinati').checked = false;
@@ -1021,10 +1104,11 @@
     }
     const lista = righe();
     const r = lista.find(x => x.id === id);
-    r[f] = f === 'listino' ? num(e.target.value) : e.target.value;
+    r[f] = f === 'listino' ? num(e.target.value) : f === 'test' ? e.target.checked : e.target.value;
     materializza(lista);
     salvaSchedaTra();
-    if (f === 'nome') return;
+    if (f === 'nome' || f === 'nota') return;
+    if (f === 'tipo' || f === 'test') { disegna(); return; }   // cambia colore o sezione
     // Aggiorna solo netto, spiegazione e differenza della riga, senza ridisegnare (il cursore resta dov'è).
     const nuovo = document.createElement('div');
     nuovo.innerHTML = rigaHtml(r);
@@ -1034,7 +1118,7 @@
     box.querySelector('[data-f="sconto"]').classList.toggle('errato', leggiSconto(scontoRiga(r)).tipo === 'errato');
     const vecchia = box.querySelector('.diff-wc'), nuova = n.querySelector('.diff-wc');
     if (vecchia) vecchia.remove();
-    if (nuova) box.appendChild(nuova);
+    if (nuova) box.querySelector('.vino-corpo').appendChild(nuova);
     disegnaConti();
     disegnaCosti();
   });
@@ -1052,6 +1136,11 @@
       disegna();
     } else if (b.dataset.azione === 'acquisisci') acquisisci(id);
   });
+
+  // <details> non fa salire l'evento toggle: si ascolta in cattura.
+  $('righe').addEventListener('toggle', e => {
+    if (e.target.classList && e.target.classList.contains('gruppo-test')) testAperta = e.target.open;
+  }, true);
 
   $('archivio').addEventListener('click', e => {
     const b = e.target.closest('[data-arch]');
