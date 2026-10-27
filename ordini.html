@@ -244,30 +244,12 @@
     .barra-totale .avviso-min { color: #b00020; font-weight: bold; }
     body.con-barra { padding-bottom: 80px; }
 
-    #stampa { display: none; }
-
     @media (max-width: 600px) {
       body { padding: 12px; }
       .section { padding: 18px; border-radius: 14px; }
       .header h1 { font-size: 1.6em; }
       .vino-campi { grid-template-columns: 1fr 1fr; }
       .vino-campi .nota-vino { grid-column: 1 / -1; }
-    }
-
-    /* PDF dell'ordine: si stampa solo il foglio d'ordine, su fondo bianco.
-       «Salva come PDF» dal dialogo di stampa del browser. */
-    @media print {
-      @page { size: A4; margin: 14mm; }
-      body { background: #fff; padding: 0; font-size: 11pt; }
-      body > *:not(#stampa) { display: none !important; }
-      #stampa { display: block; color: #000; }
-      #stampa h1 { font-family: 'Pirata One', cursive; font-size: 24pt; color: #1e3c72; }
-      #stampa .sotto { color: #555; margin: 2px 0 14px; }
-      #stampa table { font-size: 10pt; }
-      #stampa th, #stampa td { border-bottom: 1px solid #ccc; padding: 5px 6px; white-space: normal; }
-      #stampa tfoot td { border-bottom: none; font-weight: bold; }
-      #stampa .note-pdf { margin-top: 14px; white-space: pre-wrap; }
-      #stampa td.gruppo-pdf { padding-top: 12px; font-weight: bold; text-transform: uppercase; font-size: 9pt; }
     }
   </style>
 </head>
@@ -391,8 +373,6 @@
 
 <div class="barra-totale" id="barraTotale" hidden></div>
 
-<div id="stampa"></div>
-
 <script>
   // =====================================================================
   // ORDINI — listini dei fornitori e composizione degli ordini
@@ -508,15 +488,26 @@
   // Liste per nazione: i vini IMPORT senza fornitore (groupage, o arrivi che
   // cambiano di volta in volta) stanno nella lista della loro nazione, col nome
   // in maiuscolo (AUSTRIA, FRANCIA...). Chi li spedisce si scrive nelle note.
+  // Una nazione da cui arriva un solo produttore prende il suo nome e sta in
+  // elenco con gli altri fornitori, non in cima con le nazioni.
+  const LISTE_PRODUTTORE = { PORTOGALLO: 'Phulia' };
   const senzaForn = v => v.sheet === 'IMPORT' && !String(v.fornitore || '').trim();
-  function listeNazione() {
-    const m = new Map();
-    vini.forEach(v => { const n = String(v.nazione || '').trim(); if (senzaForn(v) && n) m.set(n.toUpperCase(), n); });
-    return m;     // AUSTRIA → Austria
+  function listaDi(v) {
+    const n = String(v.nazione || '').trim().toUpperCase();
+    return LISTE_PRODUTTORE[n] || n;
   }
-  const isLista = n => listeNazione().has(String(n || ''));
+  function listeImport() {
+    const m = new Map();     // FRANCIA → { nazione: 'Francia', inCima: true }
+    vini.forEach(v => {
+      const n = String(v.nazione || '').trim();
+      if (senzaForn(v) && n) m.set(listaDi(v), { nazione: n, inCima: !LISTE_PRODUTTORE[n.toUpperCase()] });
+    });
+    return m;
+  }
+  const isLista = n => listeImport().has(String(n || ''));
+  const nomeVisibile = n => isLista(n) ? n + ' (import)' : n;
   function viniDi(nome) {
-    if (isLista(nome)) return vini.filter(v => senzaForn(v) && String(v.nazione || '').trim().toUpperCase() === nome);
+    if (isLista(nome)) return vini.filter(v => senzaForn(v) && listaDi(v) === nome);
     return vini.filter(v => norm(v.fornitore) === norm(nome));
   }
   function viniDelFornitore() { return viniDi(F); }
@@ -597,13 +588,16 @@
     const nomi = new Map();
     vini.forEach(v => { const f = String(v.fornitore || '').trim(); if (f) nomi.set(norm(f), f); });
     fornitoriHost.forEach(f => { if (f.nome !== SCHEDA_NASCOSTI) nomi.set(norm(f.nome), f.nome); });
-    listeNazione().forEach((_, n) => nomi.set(norm(n), n));
+    const imp = listeImport();
+    imp.forEach((_, n) => nomi.set(norm(n), n));
     const conVini = n => viniDi(n).filter(v => !v.abbandonato).length;
     const tutti = $('mostraNascosti').checked;
+    const inCima = n => imp.has(n) && imp.get(n).inCima;
+    // Le liste import per nazione in cima, poi tutti gli altri in ordine alfabetico.
     const lista = [...nomi.values()].filter(n => tutti || !isNascosto(n) || norm(n) === norm(scelto))
-      .sort((a, b) => a.localeCompare(b, 'it'));
+      .sort((a, b) => (inCima(b) - inCima(a)) || a.localeCompare(b, 'it'));
     $('selFornitore').innerHTML = '<option value="">— scegli —</option>' +
-      lista.map(n => `<option value="${esc(n)}">${esc(n)} (${conVini(n)})${isLista(n) ? ' · import' : ''}${isNascosto(n) ? ' · nascosto' : ''}</option>`).join('');
+      lista.map(n => `<option value="${esc(n)}">${esc(nomeVisibile(n))} · ${conVini(n)}${isNascosto(n) ? ' · nascosto' : ''}</option>`).join('');
     if (scelto != null) $('selFornitore').value = scelto;
   }
 
@@ -978,34 +972,71 @@
     } catch (e) { esito('<div class="avviso">Non riesco a copiare: usa «Email dell\'ordine».</div>'); }
   }
 
-  function rigaPdf(r) {
-    return `<tr><td>${esc(r.nome)}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td>
-      <td>${euro(r.netto)}</td><td>${euro(cent(r.bott * r.netto))}</td></tr>`;
+  // PDF scaricato direttamente (jsPDF, carattere Helvetica), senza passare dalla
+  // stampa. Le librerie si scaricano solo la prima volta che serve un PDF.
+  const LIB_PDF = ['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+                   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'];
+  function caricaScript(src) {
+    return new Promise((ok, ko) => {
+      const s = document.createElement('script');
+      s.src = src; s.onload = ok; s.onerror = () => ko(new Error('libreria PDF non scaricata'));
+      document.head.appendChild(s);
+    });
   }
-  function stampaOrdine(ro, quando, note) {
+  async function caricaJsPdf() {
+    if (!window.jspdf) await caricaScript(LIB_PDF[0]);
+    if (!window.jspdf.jsPDF.API.autoTable) await caricaScript(LIB_PDF[1]);
+  }
+
+  // «Ordine-Cavalli_10_2026.pdf»
+  function nomeFilePdf(quando) {
+    const forn = String(F).replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim();
+    return 'Ordine-' + forn + '_' + quando.slice(5, 7) + '_' + quando.slice(0, 4) + '.pdf';
+  }
+
+  async function scaricaPdf(ro, quando, note) {
+    velo('Preparo il PDF...');
+    try { await caricaJsPdf(); }
+    catch (e) { velo(''); esito('<div class="avviso">Non riesco a preparare il PDF (' + esc(e.message) + '): controlla la connessione.</div>'); return; }
     const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
     const bott = ro.reduce((a, r) => a + r.bott, 0);
-    $('stampa').innerHTML = `
-      <h1>Ordine a ${esc(F)}</h1>
-      <div class="sotto">Vecchia Dogana · ${dataIt(quando)}</div>
-      <table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Prezzo</th><th>Totale</th></tr></thead>
-      <tbody>${ro.filter(r => !r.test).map(rigaPdf).join('')}
-        ${ro.some(r => r.test) ? '<tr><td colspan="6" class="gruppo-pdf">Vini in prova</td></tr>' + ro.filter(r => r.test).map(rigaPdf).join('') : ''}</tbody>
-      <tfoot>
-        <tr><td>Bottiglie</td><td>${bott}</td><td colspan="3">Imponibile</td><td>${euro(imp)}</td></tr>
-        <tr><td></td><td></td><td colspan="3">IVA 22%</td><td>${euro(cent(imp * IVA))}</td></tr>
-        <tr><td></td><td></td><td colspan="3">Totale</td><td>${euro(cent(imp * (1 + IVA)))}</td></tr>
-      </tfoot></table>
-      ${String(note || '').trim() ? `<div class="note-pdf">${esc(note)}</div>` : ''}`;
-    const titolo = document.title;
-    document.title = 'Ordine ' + F + ' ' + quando;
-    window.print();
-    setTimeout(() => { document.title = titolo; }, 1000);
+    const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(30, 60, 114);
+    doc.text('Ordine a ' + F, 14, 20);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90, 90, 90);
+    doc.text('Vecchia Dogana · ' + dataIt(quando), 14, 27);
+    const riga = r => [r.nome, r.bott, euro(r.listino), r.sconto || '', euro(r.netto), euro(cent(r.bott * r.netto))];
+    const prova = ro.filter(r => r.test);
+    const corpo = ro.filter(r => !r.test).map(riga);
+    if (prova.length) {
+      corpo.push([{ content: 'VINI IN PROVA', colSpan: 6, styles: { fontStyle: 'bold', fillColor: [255, 246, 229], textColor: [122, 82, 0] } }]);
+      prova.forEach(r => corpo.push(riga(r)));
+    }
+    const dx = { halign: 'right' };
+    doc.autoTable({
+      startY: 33, theme: 'striped',
+      head: [['Vino', 'Bott.', 'Listino', 'Sconto', 'Prezzo', 'Totale']],
+      body: corpo,
+      foot: [['Bottiglie: ' + bott, '', '', '', 'Imponibile', euro(imp)],
+             ['', '', '', '', 'IVA 22%', euro(cent(imp * IVA))],
+             ['', '', '', '', 'Totale', euro(cent(imp * (1 + IVA)))]],
+      showFoot: 'lastPage',
+      styles: { font: 'helvetica', fontSize: 9.5, cellPadding: 2 },
+      headStyles: { fillColor: [30, 60, 114], textColor: 255 },
+      footStyles: { fillColor: 255, textColor: [30, 60, 114], fontStyle: 'bold' },
+      columnStyles: { 0: { cellWidth: 'auto' }, 1: dx, 2: dx, 3: { halign: 'center' }, 4: dx, 5: dx }
+    });
+    if (String(note || '').trim()) {
+      doc.setFontSize(10); doc.setTextColor(40, 40, 40);
+      doc.text(doc.splitTextToSize('Note: ' + note.trim(), 182), 14, doc.lastAutoTable.finalY + 10);
+    }
+    doc.save(nomeFilePdf(quando));
+    velo('');
   }
   function pdfOrdine() {
     const ro = righeOrdine();
     if (!ro.length) { esito('<div class="avviso">L\'ordine è vuoto.</div>'); return; }
-    stampaOrdine(ro, oggi(), bozza.note);
+    scaricaPdf(ro, oggi(), bozza.note);
   }
 
   async function segnaInviato() {
@@ -1077,7 +1108,7 @@
                          : '<div class="ok">Quantità ricopiate nella bozza: controlla e modifica.</div>');
       $('secOrdine').scrollIntoView({ behavior: 'smooth' });
     } else if (azione === 'pdf') {
-      stampaOrdine(ro, o.inviato, o.dati.note);
+      scaricaPdf(ro, o.inviato, o.dati.note);
     } else if (azione === 'elimina') {
       const btn = box.querySelector('[data-arch="elimina"]');
       if (btn.dataset.conferma !== '1') { btn.dataset.conferma = '1'; btn.innerHTML = 'Sicuro?'; return; }
@@ -1106,7 +1137,7 @@
       localStorage.setItem(DA_ACQUISIRE, JSON.stringify({
         idTemp: r.id, vino: r.nome, imponibile: netto(r), catCarta: r.tipo || '', catCosto: 'FERMI',
         // da una lista nazione: foglio IMPORT, senza fornitore, con la nazione
-        ...(isLista(F) ? { sheet: 'IMPORT', ss: 1, fornitore: '', nazione: listeNazione().get(F) }
+        ...(isLista(F) ? { sheet: 'IMPORT', ss: 1, fornitore: '', nazione: listeImport().get(F).nazione }
                        : { sheet: 'DIST', ss: null, fornitore: F })
       }));
     } catch (e) { return; }
