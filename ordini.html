@@ -166,7 +166,8 @@
     details.gruppo-test[open] { padding-bottom: 4px; }
     .vino-nome { font-weight: bold; color: #1e3c72; overflow-wrap: anywhere; flex: 1; }
     .vino-nome input { font-weight: bold; color: #1e3c72; padding: 6px 8px; }
-    .vino-sotto { font-size: 0.78em; color: #777; margin-top: 4px; font-weight: normal; }
+    .vino-sotto { font-size: 0.85em; color: #555; margin-top: 5px; font-weight: normal; line-height: 1.6; }
+    .vino-sotto .vitigni { color: #1e3c72; font-style: italic; }
     .badge {
       display: inline-block; font-size: 0.72em; padding: 1px 8px; border-radius: 10px;
       border: 1px solid var(--c, #2a5298); color: var(--c, #2a5298); margin-left: 6px; font-weight: normal; vertical-align: 1px;
@@ -813,7 +814,7 @@
     const badge = tipoHtml + (!r.codice ? ' <span class="badge" style="--c:#b36b00">non in WINE_COST</span>'
       : wc && wc.abbandonato ? ' <span class="badge" style="--c:#999">abbandonato</span>'
       : wc && !wc.incarta ? ' <span class="badge" style="--c:#999">fuori carta</span>' : '');
-    const sotto = [r.codice ? r.codice : '', wc && norm(wc.vino) !== norm(r.nome) ? 'WINE_COST: ' + esc(wc.vino) : '',
+    const sotto = [r.codice ? r.codice : '', wc && wc.vitigni ? '<span class="vitigni">' + esc(wc.vitigni) + '</span>' : '', wc && norm(wc.vino) !== norm(r.nome) ? 'WINE_COST: ' + esc(wc.vino) : '',
                    r.spostato ? (wc ? 'ora fornitore «' + esc(wc.fornitore) + '» in WINE_COST' : 'codice non più in WINE_COST') : '']
       .filter(Boolean).join(' · ');
     const diff = wc && Math.abs(n - num(wc.imponibile)) >= 0.01
