@@ -232,6 +232,18 @@
     }
     .crediti-icone a { color: rgba(255,255,255,0.8); }
 
+    /* Barra del totale, sempre in vista mentre si scorrono i vini. */
+    .barra-totale {
+      position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 50;
+      display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; justify-content: center;
+      background: #1e3c72; color: #dce6ff; border: 2px solid rgba(255,255,255,0.35);
+      border-radius: 14px; padding: 8px 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      font-size: 0.85em; max-width: calc(100% - 24px);
+    }
+    .barra-totale b { color: #fff; font-size: 1.15em; }
+    .barra-totale .avviso-min { color: #ffd27a; font-weight: bold; }
+    body.con-barra { padding-bottom: 80px; }
+
     #stampa { display: none; }
 
     @media (max-width: 600px) {
@@ -376,6 +388,8 @@
   (Lorc, Delapouite, skoll) &mdash;
   <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.
 </div>
+
+<div class="barra-totale" id="barraTotale" hidden></div>
 
 <div id="stampa"></div>
 
@@ -586,7 +600,7 @@
     try { localStorage.setItem(ULTIMO_FORN, F); } catch (e) {}
     ['schedaForn', 'secSegn', 'secListino', 'secOrdine', 'secArchivio'].forEach(id => { $(id).hidden = !F; });
     aggiornaBtnNascondi();
-    if (!F) return;
+    if (!F) { $('barraTotale').hidden = true; document.body.classList.remove('con-barra'); return; }
     velo('Apro ' + F + '...');
     try {
       const d = await chiama(API_ORD, 'getFornitore', { nome: F });
@@ -826,6 +840,11 @@
     const min = parseInt(scheda.minimo, 10) || 0;
     $('avvisoMinimo').innerHTML = min && bott && bott < min
       ? `<div class="avviso">Mancano <b>${min - bott}</b> bottiglie all'ordine minimo di ${min}.</div>` : '';
+    $('barraTotale').innerHTML = `<span><b>${bott}</b> bott.</span><span>Imponibile <b>${euro(imp)}</b></span>` +
+      `<span>Con IVA <b>${euro(cent(imp + iva))}</b></span>` +
+      (min && bott && bott < min ? `<span class="avviso-min">−${min - bott} al minimo</span>` : '');
+    $('barraTotale').hidden = !F;
+    document.body.classList.toggle('con-barra', !!F);
   }
 
   // Netti diversi dal costo in WINE_COST: si aggiornano con un pulsante.
