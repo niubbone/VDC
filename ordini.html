@@ -550,7 +550,7 @@
       const rip = new URLSearchParams(location.search).get('ripeti');
       if (rip && F) {
         try { ripetiRighe(((await chiama(API_ORD, 'getOrdine', { id: rip })).ordine.dati || {}).righe || []); }
-        catch (e) { esito('<div class="avviso">Non riesco a ricopiare l'ordine (' + esc(erroreRete(e)) + ').</div>'); }
+        catch (e) { esito('<div class="avviso">Non riesco a ricopiare l\'ordine (' + esc(erroreRete(e)) + ').</div>'); }
       }
     }
     if (location.search) history.replaceState(null, '', 'ordini.html');
