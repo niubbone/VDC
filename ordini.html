@@ -611,7 +611,7 @@
     const lista = [...nomi.values()].filter(n => tutti || !isNascosto(n) || norm(n) === norm(scelto))
       .sort((a, b) => (inCima(b) - inCima(a)) || a.localeCompare(b, 'it'));
     $('selFornitore').innerHTML = '<option value="">— scegli —</option>' +
-      lista.map(n => `<option value="${esc(n)}">${esc(nomeVisibile(n))} · ${conVini(n)}${isNascosto(n) ? ' · nascosto' : ''}</option>`).join('');
+      lista.map(n => `<option value="${esc(n)}">${esc(nomeVisibile(n))} (${conVini(n)})${isNascosto(n) ? ' · nascosto' : ''}</option>`).join('');
     if (scelto != null) $('selFornitore').value = scelto;
   }
 
