@@ -140,13 +140,13 @@
       font-size: 1.2em;
       padding: 15px 30px;
     }
-    /* Numero delle segnalazioni aperte accanto a «Segnalazioni» (rosso se ce n'e' di urgenti). */
+    /* Numero delle segnalazioni aperte accanto a «Segnalazioni»: nero, in un cerchio sottile. */
     .badge-segn {
-      display: inline-block; min-width: 1.6em; padding: 1px 7px; margin-left: 6px;
-      border-radius: 1em; background: #2c1810; color: #f4e4c1;
-      font-size: 0.8em; font-weight: bold; line-height: 1.5; text-align: center; vertical-align: 2px;
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 1.7em; height: 1.7em; padding: 0 5px; margin-left: 6px;
+      border: 1px solid #000; border-radius: 1em; background: transparent; color: #000;
+      font-size: 0.8em; font-weight: normal; line-height: 1; vertical-align: 2px;
     }
-    .badge-segn.urgente { background: #b00020; color: #fff; }
     .btn-spese-rapide:hover {
       background: linear-gradient(145deg, #f0c890 0%, #d4a574 100%);
       transform: translateY(-2px);
@@ -1010,7 +1010,6 @@
           const aperte = (d.segnalazioni || []).filter(s => s.stato === 'aperta');
           badge.textContent = aperte.length;
           badge.hidden = !aperte.length;
-          badge.classList.toggle('urgente', aperte.some(s => s.urgente));
           badge.title = aperte.length + (aperte.length === 1 ? ' segnalazione aperta' : ' segnalazioni aperte');
         } catch (e) { badge.hidden = true; }
       }
