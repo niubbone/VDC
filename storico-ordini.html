@@ -98,6 +98,9 @@
       background: #f0f4ff; color: #2a5298; border: 2px solid #c0cce8;
     }
     .btn:hover { background: #dce6ff; }
+    .btn-excel { padding: 10px 16px; font-size: 0.82em; background: #1d6f42; color: #fff; border-color: #1d6f42; }
+    .btn-excel:hover { background: #185c37; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
     .ordine { padding: 10px 12px; border: 1px solid #e0e8f8; border-radius: 10px; margin-bottom: 8px; }
     .ordine-testa { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
     .ordine-testa b { color: #1e3c72; }
@@ -152,6 +155,7 @@
           <option value="T3">3° trimestre</option><option value="T4">4° trimestre</option>
         </select></div>
       <div style="flex:1;"><label for="selForn">Fornitore</label><select id="selForn"></select></div>
+      <div><button class="btn btn-excel" id="btnExcel" type="button">⬇ Esporta Excel</button></div>
     </div>
     <div class="nota" style="margin-top:14px;">
       Contano gli ordini segnati <strong>inviati</strong> nella pagina Ordini, alla data in cui li hai segnati,
@@ -412,6 +416,67 @@
         <td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td><td>${euro(cent(r.bott * r.netto))}</td></tr>`).join('')}</tbody></table></div>
       ${o.note ? '<div class="muto" style="margin-top:6px;font-size:0.85em;">Note: ' + esc(o.note) + '</div>' : ''}`;
   }
+
+  // ── Esportazione in Excel (SheetJS, scaricato al primo clic) ────────
+  // Il periodo e il fornitore scelti: righe, ordini, riepilogo fornitori e tipologie.
+  const LIB_XLSX = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  function caricaXlsx() {
+    if (window.XLSX) return Promise.resolve();
+    return new Promise((ok, ko) => {
+      const s = document.createElement('script');
+      s.src = LIB_XLSX; s.onload = ok; s.onerror = () => ko(new Error('libreria Excel non scaricata'));
+      document.head.appendChild(s);
+    });
+  }
+  const dataXls = s => new Date(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
+
+  async function esportaExcel() {
+    const sel = ordini.filter(nelPeriodo);
+    if (!sel.length) { alert('Nessun ordine nel periodo scelto.'); return; }
+    const btn = $('btnExcel'); btn.disabled = true;
+    try { await caricaXlsx(); }
+    catch (e) { btn.disabled = false; alert('Non riesco a preparare il file Excel: controlla la connessione.'); return; }
+
+    const righe = [], perForn = new Map(), perTipo = new Map();
+    const ord = sel.slice().sort((a, b) => a.inviato.localeCompare(b.inviato));
+    ord.forEach(o => o.righe.forEach(r => {
+      const tot = cent((r.bott || 0) * (r.netto || 0));
+      righe.push({ Data: dataXls(o.inviato), Fornitore: o.fornitore, Vino: r.nome, Annata: r.annata || '',
+        Tipologia: r.tipo ? tipoBreve(r.tipo) : '', 'In prova': r.test ? 'sì' : '', 'Codice WINE_COST': r.codice || '',
+        Bottiglie: r.bott || 0, Listino: r.listino || 0, Sconto: r.sconto || '', Netto: r.netto || 0,
+        Imponibile: tot, 'Con IVA': cent(tot * (1 + IVA)) });
+      const f = perForn.get(o.fornitore) || { b: 0, i: 0, o: new Set() };
+      f.b += r.bott || 0; f.i += tot; f.o.add(o.id); perForn.set(o.fornitore, f);
+      const t = perTipo.get(r.tipo || '') || { b: 0, i: 0 };
+      t.b += r.bott || 0; t.i += tot; perTipo.set(r.tipo || '', t);
+    }));
+    const impTot = righe.reduce((a, r) => a + r.Imponibile, 0), bottTot = righe.reduce((a, r) => a + r.Bottiglie, 0);
+    const q = (x, tot) => tot ? Math.round(x / tot * 1000) / 10 : 0;
+
+    const ordiniXls = ord.map(o => ({ Data: dataXls(o.inviato), Fornitore: o.fornitore, Bottiglie: bottRighe(o.righe),
+      Imponibile: totRighe(o.righe), 'Con IVA': cent(totRighe(o.righe) * (1 + IVA)), Note: o.note || '' }));
+    const fornXls = [...perForn].sort((a, b) => b[1].i - a[1].i).map(([n, f]) => ({ Fornitore: n, Ordini: f.o.size,
+      Bottiglie: f.b, Imponibile: cent(f.i), 'Con IVA': cent(f.i * (1 + IVA)), '% spesa': q(f.i, impTot) }));
+    const tipiXls = [...perTipo].map(([t, x]) => ({ Tipologia: tipoBreve(t), Bottiglie: x.b, '% bottiglie': q(x.b, bottTot),
+      Imponibile: cent(x.i), '% spesa': q(x.i, impTot) }));
+
+    const wb = XLSX.utils.book_new();
+    const foglio = (dati, larghe, nome) => {
+      const ws = XLSX.utils.json_to_sheet(dati, { cellDates: true, dateNF: 'dd/mm/yyyy' });
+      ws['!cols'] = Object.keys(dati[0] || {}).map(k => ({ wch: larghe[k] || Math.max(10, k.length + 2) }));
+      XLSX.utils.book_append_sheet(wb, ws, nome);
+    };
+    foglio(righe, { Vino: 42, Fornitore: 20, Data: 11 }, 'Righe');
+    foglio(ordiniXls, { Fornitore: 20, Note: 40, Data: 11 }, 'Ordini');
+    foglio(fornXls, { Fornitore: 22 }, 'Fornitori');
+    foglio(tipiXls, {}, 'Tipologie');
+
+    const anno = $('selAnno').value, per = $('selPeriodo').value, f = $('selForn').value;
+    const periodo = anno === 'tutti' ? 'tutti-gli-anni' : anno + (per === 'anno' ? '' : '-' + per);
+    XLSX.writeFile(wb, 'Storico-ordini_' + periodo + (f ? '_' + f.replace(/[\\/:*?"<>|]+/g, '') : '') + '.xlsx');
+    btn.disabled = false;
+  }
+  $('btnExcel').addEventListener('click', esportaExcel);
 
   ['selAnno', 'selPeriodo', 'selForn'].forEach(id => $(id).addEventListener('input', disegna));
   $('cercaVino').addEventListener('input', () => disegna());
