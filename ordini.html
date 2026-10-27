@@ -333,7 +333,6 @@
     <div class="filtri">
       <input type="text" id="cerca" placeholder="Cerca un vino...">
       <label><input type="checkbox" id="soloOrdinati"> solo quelli in ordine</label>
-      <label title="Vini segnati «Abbandonato» in Gestione Vini: quelli che non compri più"><input type="checkbox" id="mostraAbb"> abbandonati</label>
     </div>
     <div id="righe"></div>
     <div class="azioni">
@@ -780,11 +779,10 @@
   function disegna() {
     const tutte = righe();
     const cerca = norm($('cerca').value);
-    const soloOrd = $('soloOrdinati').checked, conAbb = $('mostraAbb').checked;
+    const soloOrd = $('soloOrdinati').checked;
     const vis = tutte.filter(r => {
       const q = bozza.q[r.id] || 0;
       if (soloOrd && !q) return false;
-      if (!conAbb && r.wc && r.wc.abbandonato && !q) return false;
       if (cerca && !norm(r.nome + ' ' + (r.wc ? r.wc.vino : '')).includes(cerca)) return false;
       return true;
     });
@@ -1344,7 +1342,7 @@
     azioneArchivio(box.dataset.id, b.dataset.arch, box);
   });
 
-  ['cerca', 'soloOrdinati', 'mostraAbb'].forEach(id => $(id).addEventListener('input', disegna));
+  ['cerca', 'soloOrdinati'].forEach(id => $(id).addEventListener('input', disegna));
   $('noteOrdine').addEventListener('input', e => { bozza.note = e.target.value; salvaBozzaTra(); });
   $('btnAggiungi').addEventListener('click', aggiungiTemp);
   $('btnEmail').addEventListener('click', emailOrdine);
