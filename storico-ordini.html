@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Pagina interna: fuori dai motori di ricerca. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Storico ordini</title>
+  <meta name="theme-color" content="#1e3c72">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    /* Stile dell'area vini (fondo blu, contenitore bianco), come ordini.html. */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh; padding: 20px; color: #222;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .header {
+      max-width: 1000px; margin: 0 auto 20px;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .header h1 {
+      font-family: 'Pirata One', cursive; color: #fff; font-size: 2.2em;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+    }
+    .header .link { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-home {
+      background: rgba(255,255,255,0.15); color: #fff; padding: 9px 20px;
+      border: 2px solid rgba(255,255,255,0.4); border-radius: 8px;
+      font-weight: bold; font-size: 0.95em; text-decoration: none; display: inline-flex; align-items: center;
+    }
+    .btn-home:hover { background: rgba(255,255,255,0.25); }
+
+    .section {
+      background: rgba(255,255,255,0.97); border-radius: 20px;
+      padding: 24px 28px; box-shadow: 0 10px 40px rgba(0,0,0,0.35); margin-bottom: 20px;
+    }
+    .section-title {
+      font-weight: bold; color: #2a5298; font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #e0e8f8;
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .section-title small { color: #888; font-weight: normal; text-transform: none; letter-spacing: 0; }
+
+    .filtri { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .filtri > div { min-width: 150px; }
+    label {
+      display: block; font-weight: bold; font-size: 0.75em; color: #555;
+      text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 5px;
+    }
+    select, input[type="text"] {
+      width: 100%; padding: 9px 11px; border: 2px solid #ddd; border-radius: 8px;
+      font-family: 'Arial', sans-serif; font-size: 0.95em; background: #fff; color: #222;
+    }
+    select:focus, input:focus { outline: none; border-color: #2a5298; }
+
+    .conti { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .conto { background: #f8faff; border: 1px solid #dce6f8; border-radius: 10px; padding: 10px 12px; }
+    .conto .l { font-size: 0.72em; color: #777; text-transform: uppercase; letter-spacing: 0.3px; }
+    .conto .v { font-size: 1.35em; font-weight: bold; color: #1e3c72; margin-top: 3px; }
+    .conto.forte { background: #2a5298; border-color: #2a5298; }
+    .conto.forte .l { color: #dce6ff; }
+    .conto.forte .v { color: #fff; }
+
+    /* Barre orizzontali: nome e valori scritti, la barra fa solo da proporzione. */
+    .barre { display: grid; gap: 8px; }
+    .barra-riga { display: grid; grid-template-columns: minmax(110px, 200px) 1fr; gap: 12px; align-items: center; font-size: 0.88em; }
+    .barra-nome { color: #1e3c72; font-weight: bold; overflow-wrap: anywhere; }
+    .barra-pista { position: relative; height: 26px; background: #f1f4fa; border-radius: 4px; }
+    .barra-pieno { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: var(--c, #2a5298); min-width: 2px; }
+    .barra-val { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); white-space: nowrap; color: #222; font-size: 0.92em; }
+    .barra-val b { color: #1e3c72; }
+    .barra-pieno + .barra-val { text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+
+    .tabella-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86em; }
+    th, td { padding: 7px 9px; text-align: right; border-bottom: 1px solid #eef2fa; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; white-space: normal; }
+    td.sx, th.sx { text-align: left; }
+    th { color: #2a5298; font-size: 0.78em; text-transform: uppercase; cursor: default; }
+    tbody tr.cliccabile { cursor: pointer; }
+    tbody tr.cliccabile:hover { background: #f4f7fd; }
+    tbody tr.scelto { background: #e8effc; }
+    .su { color: #c0392b; font-weight: bold; }
+    .giu { color: #228b22; font-weight: bold; }
+    .muto { color: #999; }
+
+    .btn {
+      padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.75em;
+      text-transform: uppercase; letter-spacing: 0.4px; text-decoration: none; display: inline-flex; align-items: center;
+      background: #f0f4ff; color: #2a5298; border: 2px solid #c0cce8;
+    }
+    .btn:hover { background: #dce6ff; }
+    .ordine { padding: 10px 12px; border: 1px solid #e0e8f8; border-radius: 10px; margin-bottom: 8px; }
+    .ordine-testa { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .ordine-testa b { color: #1e3c72; }
+    .ordine-testa .azioni { display: flex; gap: 6px; }
+    .ordine .dettaglio { margin-top: 8px; }
+
+    .nota {
+      background: #f8faff; border: 2px solid #dce6f8; border-radius: 10px;
+      padding: 10px 14px; font-size: 0.84em; line-height: 1.5; color: #555;
+    }
+    .avviso { background: #fff6e5; border: 2px solid #f0c36d; color: #7a5200; border-radius: 10px; padding: 10px 14px; font-size: 0.88em; }
+    .vuoto { text-align: center; padding: 18px; color: #999; }
+
+    .velo {
+      position: fixed; inset: 0; background: rgba(30,60,114,0.75); z-index: 9999;
+      display: none; justify-content: center; align-items: center; flex-direction: column;
+    }
+    .velo.attivo { display: flex; }
+    .velo-ancora { font-size: 2.5em; margin-bottom: 12px; animation: gira 1s linear infinite; }
+    @keyframes gira { to { transform: rotate(360deg); } }
+    .velo-testo { color: #fff; font-family: 'Pirata One', cursive; font-size: 1.3em; letter-spacing: 1px; }
+
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .section { padding: 16px; border-radius: 14px; }
+      .header h1 { font-size: 1.6em; }
+      .barra-riga { grid-template-columns: 1fr; gap: 3px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="velo" id="velo"><div class="velo-ancora">⚓</div><div class="velo-testo" id="veloTesto">Carico...</div></div>
+
+<div class="container">
+  <div class="header">
+    <h1>Storico ordini</h1>
+    <div class="link">
+      <a href="ordini.html" class="btn-home">📦 Ordini</a>
+      <a href="index.html?menu=vini" class="btn-home">⚓ Porto</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="filtri">
+      <div><label for="selAnno">Anno</label><select id="selAnno"></select></div>
+      <div><label for="selPeriodo">Periodo</label>
+        <select id="selPeriodo">
+          <option value="anno">Tutto l'anno</option>
+          <option value="S1">1° semestre</option><option value="S2">2° semestre</option>
+          <option value="T1">1° trimestre</option><option value="T2">2° trimestre</option>
+          <option value="T3">3° trimestre</option><option value="T4">4° trimestre</option>
+        </select></div>
+      <div style="flex:1;"><label for="selForn">Fornitore</label><select id="selForn"></select></div>
+    </div>
+    <div class="nota" style="margin-top:14px;">
+      Contano gli ordini segnati <strong>inviati</strong> nella pagina Ordini, alla data in cui li hai segnati,
+      con i prezzi netti di quel momento (imponibile senza IVA). È quanto hai <strong>ordinato</strong>, non quanto ti è
+      stato fatturato: rotture o vini mancanti non si vedono.
+    </div>
+  </div>
+
+  <div id="corpo">
+    <div class="section">
+      <div class="section-title"><span>Il periodo</span><small id="nomePeriodo"></small></div>
+      <div class="conti" id="conti"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span>Peso dei fornitori</span><small>sull'imponibile</small></div>
+      <div class="barre" id="barreForn"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span>Tipologie</span><small>sulle bottiglie</small></div>
+      <div class="barre" id="barreTipi"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span>Vini ordinati</span><small>tocca un vino per vedere come è cambiato il prezzo</small></div>
+      <input type="text" id="cercaVino" placeholder="Cerca un vino..." style="max-width:320px;margin-bottom:10px;">
+      <div class="tabella-wrap"><table>
+        <thead><tr><th>Vino</th><th class="sx">Fornitore</th><th>Bott.</th><th>Spesa</th><th>Prezzo medio</th><th>Ultimo prezzo</th></tr></thead>
+        <tbody id="tabVini"></tbody>
+      </table></div>
+    </div>
+
+    <div class="section" id="secPrezzo" hidden>
+      <div class="section-title"><span id="titoloPrezzo">Andamento del prezzo</span><small>tutti gli ordini, non solo il periodo</small></div>
+      <div class="tabella-wrap"><table>
+        <thead><tr><th class="sx">Data</th><th class="sx">Fornitore</th><th class="sx">Annata</th><th>Listino</th><th>Sconto</th><th>Netto</th><th>Bott.</th><th>Variazione</th></tr></thead>
+        <tbody id="tabPrezzo"></tbody>
+      </table></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span>Ordini del periodo</span></div>
+      <div id="elencoOrdini"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // =====================================================================
+  // STORICO ORDINI — quanto si e' ordinato, da chi, cosa, e come sono
+  // cambiati i prezzi. Legge gli ordini inviati di vdc-ordini.php (hosting):
+  // elencoOrdini per l'elenco, getOrdine per le righe di ognuno.
+  // =====================================================================
+  const API_ORD = 'https://www.studio-smart.it/api/vdc-ordini.php';
+  const IVA = 0.22;
+  const COLORE_TIPO = { 'Le Bolle': '#1a6a9a', 'I Bianchi': '#9a7f00', 'I Rosati': '#e07aaa', 'I Rossi': '#cc0000', 'I Vini Speciali': '#2a7a4a' };
+  const ORDINE_TIPI = ['Le Bolle', 'I Bianchi', 'I Rosati', 'I Rossi', 'I Vini Speciali'];
+
+  const $ = id => document.getElementById(id);
+  let ordini = [];        // { id, fornitore, inviato, righe: [...], note }
+  let vinoScelto = '';
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function cent(n) { return Math.round(n * 100) / 100; }
+  function euro(n) { return '€ ' + (n || 0).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function pct(n) { return (n || 0).toLocaleString('it-IT', { maximumFractionDigits: 1 }) + '%'; }
+  function dataIt(s) { return s ? s.slice(0, 10).split('-').reverse().join('/') : ''; }
+  function norm(s) { return String(s || '').trim().toLowerCase(); }
+  function velo(t) { $('veloTesto').textContent = t || ''; $('velo').classList.toggle('attivo', !!t); }
+  const tipoBreve = t => String(t || '').replace(/^(I Vini|I|Le)\s+/, '') || 'Non indicata';
+  const nomeVino = r => r.nome + (String(r.annata || '').trim() ? ' ' + String(r.annata).trim() : '');
+  // Stesso vino nel tempo: il codice WINE_COST, o il nome per i vini che non ci sono.
+  const chiaveVino = r => r.codice ? 'C:' + r.codice : 'N:' + norm(r.nome);
+
+  async function chiama(action, corpo) {
+    const r = await fetch(API_ORD, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action }, corpo || {})), signal: AbortSignal.timeout(20000)
+    });
+    const d = JSON.parse(await r.text());
+    if (d.errore) throw new Error(d.errore);
+    return d;
+  }
+
+  // Le righe di ogni ordine, sei richieste alla volta.
+  async function carica() {
+    velo('Carico gli ordini...');
+    try {
+      const elenco = (await chiama('elencoOrdini', { fornitore: '' })).ordini || [];
+      const fuori = [];
+      let i = 0;
+      async function lavora() {
+        while (i < elenco.length) {
+          const o = elenco[i++];
+          try {
+            const d = (await chiama('getOrdine', { id: o.id })).ordine;
+            fuori.push({ id: o.id, fornitore: o.fornitore, inviato: o.inviato, righe: (d.dati && d.dati.righe) || [], note: (d.dati && d.dati.note) || '' });
+          } catch (e) { /* un ordine illeggibile non ferma gli altri */ }
+        }
+      }
+      await Promise.all(Array.from({ length: 6 }, lavora));
+      ordini = fuori.sort((a, b) => b.inviato.localeCompare(a.inviato));
+    } catch (e) {
+      velo('');
+      $('corpo').innerHTML = '<div class="section"><div class="avviso">Non riesco a leggere gli ordini (' + esc(e.name === 'TimeoutError' ? 'il server non ha risposto' : e.message) + '). Riprova fra poco.</div></div>';
+      return;
+    }
+    velo('');
+    riempiFiltri();
+    disegna();
+  }
+
+  function riempiFiltri() {
+    const anni = [...new Set(ordini.map(o => o.inviato.slice(0, 4)))].sort().reverse();
+    const ora = String(new Date().getFullYear());
+    if (!anni.includes(ora)) anni.unshift(ora);
+    $('selAnno').innerHTML = anni.map(a => `<option>${a}</option>`).join('') + '<option value="tutti">Tutti gli anni</option>';
+    const forn = [...new Set(ordini.map(o => o.fornitore))].sort((a, b) => a.localeCompare(b, 'it'));
+    $('selForn').innerHTML = '<option value="">Tutti</option>' + forn.map(f => `<option>${esc(f)}</option>`).join('');
+  }
+
+  function nelPeriodo(o) {
+    const anno = $('selAnno').value, per = $('selPeriodo').value, f = $('selForn').value;
+    if (f && o.fornitore !== f) return false;
+    if (anno === 'tutti') return true;
+    if (o.inviato.slice(0, 4) !== anno) return false;
+    const m = +o.inviato.slice(5, 7);
+    if (per === 'S1') return m <= 6;
+    if (per === 'S2') return m >= 7;
+    if (/^T\d$/.test(per)) return Math.ceil(m / 3) === +per[1];
+    return true;
+  }
+
+  const totRighe = rr => cent(rr.reduce((a, r) => a + (r.bott || 0) * (r.netto || 0), 0));
+  const bottRighe = rr => rr.reduce((a, r) => a + (r.bott || 0), 0);
+
+  function disegna() {
+    const sel = ordini.filter(nelPeriodo);
+    const righe = sel.flatMap(o => o.righe.map(r => Object.assign({ fornitore: o.fornitore, data: o.inviato }, r)));
+    const anno = $('selAnno').value;
+    $('selPeriodo').disabled = anno === 'tutti';
+    $('nomePeriodo').textContent = anno === 'tutti' ? 'tutti gli anni'
+      : $('selPeriodo').selectedOptions[0].textContent + ' ' + anno + ($('selForn').value ? ' · ' + $('selForn').value : '');
+
+    const imp = totRighe(righe), bott = bottRighe(righe);
+    $('conti').innerHTML = [['Ordini', sel.length], ['Bottiglie', bott], ['Vini diversi', new Set(righe.map(chiaveVino)).size],
+      ['Imponibile', euro(imp)], ['Con IVA', euro(cent(imp * (1 + IVA))), true]]
+      .map(([l, v, f]) => `<div class="conto ${f ? 'forte' : ''}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
+
+    if (!sel.length) {
+      const vuoto = '<div class="vuoto">' + (ordini.length ? 'Nessun ordine inviato in questo periodo.' : 'Ancora nessun ordine inviato: si conta da quando li segni «inviati» nella pagina Ordini.') + '</div>';
+      ['barreForn', 'barreTipi', 'elencoOrdini'].forEach(id => { $(id).innerHTML = vuoto; });
+      $('tabVini').innerHTML = '<tr><td colspan="6" class="vuoto">—</td></tr>';
+      return;
+    }
+
+    // Fornitori: barra = quota dell'imponibile
+    const perForn = new Map();
+    sel.forEach(o => {
+      const x = perForn.get(o.fornitore) || { imp: 0, bott: 0, n: 0 };
+      x.imp += totRighe(o.righe); x.bott += bottRighe(o.righe); x.n++;
+      perForn.set(o.fornitore, x);
+    });
+    const fornOrd = [...perForn].sort((a, b) => b[1].imp - a[1].imp);
+    const maxF = Math.max(...fornOrd.map(([, x]) => x.imp), 0.01);
+    $('barreForn').innerHTML = fornOrd.map(([n, x]) => barra(n, x.imp / maxF, '#2a5298',
+      `<b>${euro(cent(x.imp))}</b> · ${pct(imp ? x.imp / imp * 100 : 0)} · ${x.bott} bott. · ${x.n} ${x.n === 1 ? 'ordine' : 'ordini'}`)).join('');
+
+    // Tipologie: barra = quota delle bottiglie, accanto anche la spesa
+    const perTipo = new Map();
+    righe.forEach(r => {
+      const t = r.tipo || '';
+      const x = perTipo.get(t) || { bott: 0, imp: 0 };
+      x.bott += r.bott || 0; x.imp += (r.bott || 0) * (r.netto || 0);
+      perTipo.set(t, x);
+    });
+    const tipiOrd = [...perTipo].sort((a, b) => (ORDINE_TIPI.indexOf(a[0]) + 99 * !a[0]) - (ORDINE_TIPI.indexOf(b[0]) + 99 * !b[0]));
+    const maxT = Math.max(...tipiOrd.map(([, x]) => x.bott), 1);
+    $('barreTipi').innerHTML = tipiOrd.map(([t, x]) => barra(tipoBreve(t), x.bott / maxT, COLORE_TIPO[t] || '#9aa5b8',
+      `<b>${pct(bott ? x.bott / bott * 100 : 0)}</b> · ${x.bott} bott. · ${euro(cent(x.imp))} (${pct(imp ? x.imp / imp * 100 : 0)} della spesa)`)).join('');
+
+    disegnaVini(righe);
+    disegnaOrdini(sel);
+    if (vinoScelto) disegnaPrezzo();
+  }
+
+  function barra(nome, quota, colore, testo) {
+    const w = Math.max(0, Math.min(1, quota)) * 100;
+    return `<div class="barra-riga" title="${esc(nome)}">
+      <div class="barra-nome">${esc(nome)}</div>
+      <div class="barra-pista"><div class="barra-pieno" style="width:${w}%;--c:${colore}"></div><div class="barra-val">${testo}</div></div>
+    </div>`;
+  }
+
+  function disegnaVini(righe) {
+    const cerca = norm($('cercaVino').value);
+    const perVino = new Map();
+    righe.forEach(r => {
+      const k = chiaveVino(r);
+      const x = perVino.get(k) || { nome: r.nome, forn: new Set(), bott: 0, imp: 0, ultimo: null };
+      x.forn.add(r.fornitore); x.bott += r.bott || 0; x.imp += (r.bott || 0) * (r.netto || 0);
+      if (!x.ultimo || r.data >= x.ultimo.data) x.ultimo = r;
+      perVino.set(k, x);
+    });
+    const lista = [...perVino].filter(([, x]) => !cerca || norm(x.nome).includes(cerca)).sort((a, b) => b[1].imp - a[1].imp);
+    $('tabVini').innerHTML = lista.length ? lista.map(([k, x]) => `<tr class="cliccabile ${k === vinoScelto ? 'scelto' : ''}" data-k="${esc(k)}">
+        <td>${esc(x.nome)}</td><td class="sx">${esc([...x.forn].join(', '))}</td><td>${x.bott}</td>
+        <td>${euro(cent(x.imp))}</td><td>${euro(x.bott ? cent(x.imp / x.bott) : 0)}</td><td>${euro(x.ultimo.netto)}</td></tr>`).join('')
+      : '<tr><td colspan="6" class="vuoto">Nessun vino.</td></tr>';
+  }
+
+  // Ogni volta che il vino e' stato ordinato, su tutti gli ordini (non solo il periodo).
+  function disegnaPrezzo() {
+    const storia = [];
+    ordini.forEach(o => o.righe.forEach(r => { if (chiaveVino(r) === vinoScelto) storia.push(Object.assign({ fornitore: o.fornitore, data: o.inviato }, r)); }));
+    storia.sort((a, b) => a.data.localeCompare(b.data));
+    if (!storia.length) { $('secPrezzo').hidden = true; return; }
+    $('secPrezzo').hidden = false;
+    $('titoloPrezzo').textContent = 'Andamento del prezzo · ' + storia[storia.length - 1].nome;
+    $('tabPrezzo').innerHTML = storia.slice().reverse().map((r, i, arr) => {
+      const prec = arr[i + 1];
+      let v = '<span class="muto">—</span>';
+      if (prec && prec.netto) {
+        const d = (r.netto - prec.netto) / prec.netto * 100;
+        v = Math.abs(d) < 0.05 ? '<span class="muto">=</span>'
+          : `<span class="${d > 0 ? 'su' : 'giu'}">${d > 0 ? '▲ +' : '▼ '}${pct(d)}</span>`;
+      }
+      return `<tr><td class="sx">${dataIt(r.data)}</td><td class="sx">${esc(r.fornitore)}</td><td class="sx">${esc(r.annata || '')}</td>
+        <td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td><b>${euro(r.netto)}</b></td><td>${r.bott}</td><td>${v}</td></tr>`;
+    }).join('');
+    $('secPrezzo').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function disegnaOrdini(sel) {
+    $('elencoOrdini').innerHTML = sel.map(o => `<div class="ordine" data-id="${esc(o.id)}">
+      <div class="ordine-testa">
+        <div><b>${dataIt(o.inviato)}</b> · ${esc(o.fornitore)} · ${bottRighe(o.righe)} bott. · ${euro(totRighe(o.righe))} <small class="muto">imponibile</small></div>
+        <div class="azioni">
+          <button class="btn" data-az="vedi" type="button">Vedi</button>
+          <a class="btn" href="ordini.html?fornitore=${encodeURIComponent(o.fornitore)}&ripeti=${encodeURIComponent(o.id)}">Ripeti</a>
+        </div>
+      </div>
+      <div class="dettaglio" hidden></div>
+    </div>`).join('');
+  }
+
+  function vediOrdine(box) {
+    const o = ordini.find(x => x.id === box.dataset.id);
+    const det = box.querySelector('.dettaglio');
+    det.hidden = !det.hidden;
+    if (det.hidden || !o) return;
+    det.innerHTML = `<div class="tabella-wrap"><table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Netto</th><th>Totale</th></tr></thead>
+      <tbody>${o.righe.map(r => `<tr><td>${esc(nomeVino(r))}${r.test ? ' <small class="muto">(in prova)</small>' : ''}</td><td>${r.bott}</td>
+        <td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td><td>${euro(cent(r.bott * r.netto))}</td></tr>`).join('')}</tbody></table></div>
+      ${o.note ? '<div class="muto" style="margin-top:6px;font-size:0.85em;">Note: ' + esc(o.note) + '</div>' : ''}`;
+  }
+
+  ['selAnno', 'selPeriodo', 'selForn'].forEach(id => $(id).addEventListener('input', disegna));
+  $('cercaVino').addEventListener('input', () => disegna());
+  $('tabVini').addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-k]');
+    if (!tr) return;
+    vinoScelto = tr.dataset.k;
+    document.querySelectorAll('#tabVini tr').forEach(x => x.classList.toggle('scelto', x === tr));
+    disegnaPrezzo();
+  });
+  $('elencoOrdini').addEventListener('click', e => {
+    const b = e.target.closest('[data-az="vedi"]');
+    if (b) vediOrdine(b.closest('.ordine'));
+  });
+
+  carica();
+</script>
+</body>
+</html>

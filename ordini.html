@@ -366,7 +366,7 @@
   </div>
 
   <div class="section" id="secArchivio" hidden>
-    <div class="section-title"><span>Ordini inviati</span></div>
+    <div class="section-title"><span>Ordini inviati</span><a href="storico-ordini.html" class="btn btn-secondario btn-piccolo">Storico e statistiche</a></div>
     <div id="archivio"><div class="vuoto">Nessun ordine inviato.</div></div>
   </div>
 </div>
@@ -545,7 +545,13 @@
     if (ultimo && [...$('selFornitore').options].some(o => o.value === ultimo)) {
       $('selFornitore').value = ultimo;
       await scegliFornitore(ultimo);
+      const rip = new URLSearchParams(location.search).get('ripeti');
+      if (rip && F) {
+        try { ripetiRighe(((await chiama(API_ORD, 'getOrdine', { id: rip })).ordine.dati || {}).righe || []); }
+        catch (e) { esito('<div class="avviso">Non riesco a ricopiare l'ordine (' + esc(erroreRete(e)) + ').</div>'); }
+      }
     }
+    if (location.search) history.replaceState(null, '', 'ordini.html');
   }
 
   // Fornitori nascosti: fuori dall'elenco, ma i vini in WINE_COST restano dove
@@ -1156,15 +1162,7 @@
         <tbody>${ro.map(r => `<tr><td>${esc(nomeOrdine(r))}${r.test ? ' <small>(in prova)</small>' : ''}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td></tr>`).join('')}</tbody></table></div>
         ${o.dati.note ? '<div class="vino-sotto">Note: ' + esc(o.dati.note) + '</div>' : ''}`;
     } else if (azione === 'ripeti') {
-      const ids = new Set(righe().map(r => r.id));
-      const persi = [];
-      bozza.q = {};
-      ro.forEach(r => { if (ids.has(r.id)) bozza.q[r.id] = r.bott; else persi.push(r.nome); });
-      disegna();
-      salvaBozzaTra();
-      esito(persi.length ? '<div class="avviso">Ricopiato, tranne: ' + esc(persi.join(', ')) + ' (non più nel listino).</div>'
-                         : '<div class="ok">Quantità ricopiate nella bozza: controlla e modifica.</div>');
-      $('secOrdine').scrollIntoView({ behavior: 'smooth' });
+      ripetiRighe(ro);
     } else if (azione === 'pdf') {
       scaricaPdf(ro, o.inviato, o.dati.note);
     } else if (azione === 'elimina') {
@@ -1173,6 +1171,19 @@
       try { await chiama(API_ORD, 'eliminaOrdine', { id }); caricaArchivio(); }
       catch (e) { btn.textContent = 'Errore'; }
     }
+  }
+
+  // Ricopia nella bozza le quantita' di un ordine inviato (anche da storico-ordini.html?ripeti=).
+  function ripetiRighe(ro) {
+    const ids = new Set(righe().map(r => r.id));
+    const persi = [];
+    bozza.q = {};
+    ro.forEach(r => { if (ids.has(r.id)) bozza.q[r.id] = r.bott; else persi.push(r.nome); });
+    disegna();
+    salvaBozzaTra();
+    esito(persi.length ? '<div class="avviso">Ricopiato, tranne: ' + esc(persi.join(', ')) + ' (non più nel listino).</div>'
+                       : '<div class="ok">Quantità ricopiate nella bozza: controlla e modifica.</div>');
+    $('secOrdine').scrollIntoView({ behavior: 'smooth' });
   }
 
   // ── Vini non in WINE_COST ───────────────────────────────────────────
