@@ -171,6 +171,11 @@
     .gruppo-rari { --gb: #5a7bb0; --gf: #e8eef8; }
     .gruppo-test { --gb: #d99a00; --gf: #ffeeb8; }
     .gruppo-test > summary { color: #3d2a00; }
+    .chk-prova {
+      display: inline-flex; gap: 5px; align-items: center; margin: 0 0 0 8px; padding: 1px 8px; cursor: pointer;
+      background: rgba(255,255,255,0.75); border-radius: 10px; font-size: 0.85em; white-space: nowrap;
+    }
+    .chk-prova input { width: auto; margin: 0; }
     .gruppo-fuori { --gb: #7d7d7d; --gf: #ececec; }
     .vino-nome { font-weight: bold; color: #1e3c72; overflow-wrap: anywhere; flex: 1; }
     .vino-nome input { font-weight: bold; color: #1e3c72; padding: 6px 8px; }
@@ -703,6 +708,9 @@
   // Vini test: quelli non ancora in WINE_COST. In fondo e a parte anche nell'ordine;
   // con «In WINE_COST» prendono il codice e smettono di esserlo.
   function isTest(r) { return !r.codice; }
+  // Spunta «Vini in prova» nel titolo del gruppo (per fornitore, di base attiva): tolta, nell'ordine
+  // i vini test vanno in coda agli altri senza la dicitura.
+  const provaSeparata = () => !(scheda && scheda.provaInCoda);
   // Vini movimentati di rado (spunta «Di rado»): in carta, ma in un gruppo richiudibile.
   // Le schede di prima della 13.2 avevano la spunta Test sui vini con codice: vale come «di rado».
   function isRaro(r) { return !!r.codice && (r.raro != null ? !!r.raro : !!r.test); }
@@ -756,9 +764,10 @@
 
   // ── Bozza dell'ordine ───────────────────────────────────────────────
   function righeOrdine() {
-    return righe().filter(r => (bozza.q[r.id] || 0) > 0).map(r => ({
+    const ord = righe().filter(r => (bozza.q[r.id] || 0) > 0);
+    return [...ord.filter(r => !isTest(r)), ...ord.filter(isTest)].map(r => ({
       id: r.id, codice: r.codice || null, nome: r.nome, annata: r.annata || '', listino: num(r.listino),
-      sconto: scontoRiga(r), netto: netto(r), bott: bozza.q[r.id], tipo: tipoDi(r), test: isTest(r)
+      sconto: scontoRiga(r), netto: netto(r), bott: bozza.q[r.id], tipo: tipoDi(r), test: isTest(r) && provaSeparata()
     }));
   }
   function salvaBozzaTra() {
@@ -810,17 +819,20 @@
       const inOrdine = l => l.reduce((a, r) => a + (bozza.q[r.id] || 0), 0);
       const conta = (l, nota) => { const b = inOrdine(l); return `<small>· ${l.length}${b ? ' · ' + b + ' bottiglie in ordine' : ''}${nota ? ' · ' + nota : ''}</small>`; };
       // Richiudibile: resta aperta se ha bottiglie in ordine, se la ricerca ci trova qualcosa o se la si e' aperta a mano.
-      const chiudibile = (g, t, nota) => {
+      const chiudibile = (g, t, nota, extra) => {
         const l = per[g];
         if (!l.length) return '';
         const aperta = gruppiAperti.has(g) || inOrdine(l) > 0 || !!cerca;
         return `<details class="gruppo-box gruppo-${g}" data-gruppo="${g}" ${aperta ? 'open' : ''}>
-          <summary>${t} ${conta(l, nota)}</summary>${l.map(rigaHtml).join('')}</details>`;
+          <summary>${t} ${extra || ''} ${conta(l, nota)}</summary>${l.map(rigaHtml).join('')}</details>`;
       };
+      const chkProva = `<label class="chk-prova" title="Attiva: nell'ordine i vini test escono a parte, sotto «Vini in prova». Tolta: in coda agli altri, senza dicitura. Vale per questo fornitore.">
+        <input type="checkbox" id="provaSeparata" ${provaSeparata() ? 'checked' : ''}> Vini in prova</label>`;
       $('righe').innerHTML =
         (per.carta.length ? `<div class="gruppo-titolo">In carta <small>· ${per.carta.length}</small></div>` + per.carta.map(rigaHtml).join('') : '') +
         chiudibile('rari', 'Movimentati di rado') +
-        chiudibile('test', 'Vini test', 'non ancora in WINE_COST; nell\'ordine escono a parte, come vini in prova') +
+        chiudibile('test', 'Vini test', 'non ancora in WINE_COST; nell\'ordine ' +
+          (provaSeparata() ? 'escono a parte, come vini in prova' : 'in coda agli altri'), chkProva) +
         (per.fuori.length ? `<div class="gruppo-box gruppo-fuori"><div class="gruppo-testa">Non più in carta ${conta(per.fuori)}</div>${per.fuori.map(rigaHtml).join('')}</div>` : '');
     }
     disegnaConti();
@@ -1384,6 +1396,14 @@
   $('btnCondividi').addEventListener('click', () => pdfOrdine('condividi'));
   $('btnCondividi').hidden = !puoCondividere();
   $('ordSemplice').addEventListener('input', e => { if (!scheda) return; scheda.semplice = e.target.checked; salvaSchedaTra(); });
+  $('righe').addEventListener('change', e => {
+    if (e.target.id !== 'provaSeparata' || !scheda) return;
+    if (e.target.checked) delete scheda.provaInCoda; else scheda.provaInCoda = true;
+    salvaSchedaTra();
+    if (righeOrdine().length) salvaBozzaTra();   // la bozza salvata porta il segno «in prova» di ogni riga
+    gruppiAperti.add('test');
+    disegna();
+  });
   $('btnInviato').addEventListener('click', segnaInviato);
   $('btnSvuota').addEventListener('click', svuota);
   $('btnRichiedi').addEventListener('click', richiediListino);
