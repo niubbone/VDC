@@ -387,6 +387,24 @@
     .badge-disiscritto { background: #e2e3e5; color: #494f54; border: 1px solid #494f54; }
     .badge-si { background: #d4edda; color: #155724; border: 1px solid #155724; }
     .badge-no { background: #f8d7da; color: #721c24; border: 1px solid #721c24; }
+    /* Casi dubbi dell'abbinamento prenotazione -> rubrica */
+    .ver-caso {
+      background: #fff3cd; border: 2px solid #e0a800; border-radius: 8px;
+      padding: 12px 14px; margin-bottom: 12px; color: #2c1810;
+    }
+    .ver-tipo { font-weight: 700; margin-bottom: 4px; }
+    .ver-dettaglio { font-size: 0.92em; margin-bottom: 8px; }
+    .ver-schede {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px; margin-bottom: 10px; font-size: 0.88em; line-height: 1.45;
+    }
+    .ver-schede > div {
+      background: rgba(255,255,255,0.6); border-radius: 6px; padding: 6px 10px;
+      overflow-wrap: anywhere;
+    }
+    .ver-etichetta { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; color: #6b4423; }
+    .ver-azioni { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ver-azioni .btn-mini { margin-right: 0; }
     .rub-riga-cliccabile { cursor: pointer; }
     .rub-riga-cliccabile:hover { background: #ecd9ae; }
     .rub-storico { font-size: 0.86em; line-height: 1.5; }
@@ -918,6 +936,7 @@
              style="color:#6b4423; font-size:0.88em;">apri la landing</a>
         </div>
       </div>
+      <div id="rubVerifiche"></div>
       <div id="rubCrescita"></div>
       <div id="risultatoRubrica"></div>
     </div>
@@ -2246,6 +2265,7 @@
           return;
         }
         rubricaCache = r.clienti || [];
+        renderVerifiche(r.daVerificare || []);
         renderContatoriRubrica(r);
         renderCrescitaRubrica();
         filtraRubrica();
@@ -2253,6 +2273,80 @@
         hideLoading();
         document.getElementById('risultatoRubrica').innerHTML =
           `<div class="message error"><svg class="ico"><use href="#i-hazard-sign"></use></svg> ${esc(error.message)}</div>`;
+      }
+    }
+
+    // ----- Da verificare -----
+    // Le prenotazioni si collegano alla rubrica da sole, al salvataggio
+    // (abbinaCliente_ nel backend). Quando il sistema non è sicuro collega lo
+    // stesso, o crea la scheda, e lascia qui il caso: si chiude con un tocco.
+    // Il riquadro compare solo se c'è qualcosa da guardare.
+    const ETICHETTE_VERIFICA = {
+      nome_diverso: 'Recapito di un\'altra persona?',
+      possibile_doppione: 'Possibile doppione'
+    };
+
+    function descriviScheda(s) {
+      if (!s) return '<em>scheda eliminata</em>';
+      return `<a href="#" onclick="apriModalCliente('${esc(s.id)}'); return false;" style="color:#2c1810;"><strong>${esc(s.nomeCompleto || '(senza nome)')}</strong></a>` +
+        (s.email ? '<br>' + esc(s.email) : '') + (s.cellulare ? '<br>' + esc(s.cellulare) : '');
+    }
+
+    function renderVerifiche(casi) {
+      const box = document.getElementById('rubVerifiche');
+      if (!casi.length) { box.innerHTML = ''; return; }
+
+      const righe = casi.map(v => {
+        const p = v.prenotazione;
+        const prenotazione = p
+          ? `<strong>${esc(p.cliente)}</strong> · ${esc(p.data)}` +
+            (p.telefono ? '<br>' + esc(p.telefono) : '') + (p.email ? '<br>' + esc(p.email) : '')
+          : '<em>prenotazione eliminata</em>';
+        const azioni = v.tipo === 'nome_diverso'
+          ? `<button class="btn-mini btn-primary" onclick="risolviVerifica('${esc(v.id)}', 'ok')"><svg class="ico"><use href="#i-check-mark"></use></svg> Va bene così</button>
+             <button class="btn-mini btn-secondary" onclick="risolviVerifica('${esc(v.id)}', 'non_e_lui')"><svg class="ico"><use href="#i-person"></use></svg> Non è lui: scheda sua</button>`
+          : `<button class="btn-mini btn-primary" onclick="risolviVerifica('${esc(v.id)}', 'stessa_persona')"><svg class="ico"><use href="#i-three-friends"></use></svg> È la stessa persona</button>
+             <button class="btn-mini btn-secondary" onclick="risolviVerifica('${esc(v.id)}', 'ok')"><svg class="ico"><use href="#i-fa-xmark"></use></svg> Sono persone diverse</button>`;
+        return `
+          <div class="ver-caso">
+            <div class="ver-tipo"><svg class="ico"><use href="#i-hazard-sign"></use></svg> ${ETICHETTE_VERIFICA[v.tipo] || esc(v.tipo)}</div>
+            <div class="ver-dettaglio">${esc(v.dettaglio)}</div>
+            <div class="ver-schede">
+              <div><div class="ver-etichetta">Prenotazione</div>${prenotazione}</div>
+              <div><div class="ver-etichetta">${v.tipo === 'nome_diverso' ? 'Collegata alla scheda' : 'Scheda nuova'}</div>${descriviScheda(v.cliente)}</div>
+              ${v.tipo === 'possibile_doppione'
+                ? `<div><div class="ver-etichetta">Già in rubrica</div>${descriviScheda(v.altroCliente)}</div>` : ''}
+            </div>
+            <div class="ver-azioni">${azioni}</div>
+          </div>`;
+      }).join('');
+
+      box.innerHTML = `
+        <div class="section">
+          <div class="section-title">Da verificare (${casi.length})</div>
+          <div class="diag-nota">
+            Prenotazioni che il sistema ha collegato alla rubrica senza esserne sicuro.
+            Finché non le guardi restano come sono: collegate alla scheda indicata, o con la loro scheda nuova.
+          </div>
+          ${righe}
+        </div>`;
+    }
+
+    async function risolviVerifica(id, esito) {
+      const conferme = {
+        non_e_lui: 'Creare una scheda nuova per questa prenotazione e scollegarla da quella attuale?',
+        stessa_persona: 'Spostare le prenotazioni sulla scheda già in rubrica ed eliminare quella nuova?'
+      };
+      if (conferme[esito] && !confirm(conferme[esito])) return;
+      showLoading('Aggiorno la rubrica...');
+      try {
+        const r = await callAPI('risolviVerifica', { id: id, esito: esito });
+        hideLoading();
+        if (r.errore) { alert('⚠️ ' + r.errore); return; }
+        await caricaRubrica();
+      } catch (error) {
+        hideLoading();
+        alert('⚠️ ' + error.message);
       }
     }
 

@@ -610,23 +610,6 @@
     }
     .riep-voce.allarme { background: #fff3cd; border-color: #e0a800; color: #6b5000; }
 
-    /* Autocomplete rubrica sul campo Cliente */
-    .autocomplete-wrap { position: relative; }
-    .autocomplete-lista {
-      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
-      background: #f4e4c1; border: 2px solid #6b4423; border-top: none;
-      border-radius: 0 0 8px 8px; max-height: 240px; overflow-y: auto;
-      display: none; box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-    }
-    .autocomplete-lista.active { display: block; }
-    .autocomplete-voce {
-      padding: 10px 12px; cursor: pointer; border-bottom: 1px solid rgba(107,68,35,0.25);
-      color: #2c1810; font-size: 0.92em; line-height: 1.35;
-    }
-    .autocomplete-voce:last-child { border-bottom: none; }
-    .autocomplete-voce:hover, .autocomplete-voce.evidenziata { background: #e8b873; }
-    .autocomplete-voce .ac-nome { font-weight: 700; }
-    .autocomplete-voce .ac-dettagli { font-size: 0.85em; color: #5a4632; }
     .cliente-collegato {
       background: #d4edda; border: 1px solid #155724; color: #155724;
       border-radius: 6px; padding: 6px 10px; margin-top: 6px;
@@ -1519,20 +1502,17 @@
              li prende come sono scritti, invece di indovinarli da un campo unico.
              Ne basta uno dei due. -->
         <div class="form-group" id="campoCliente">
-          <div class="autocomplete-wrap">
+          <div>
             <div class="form-row">
               <div>
                 <label for="inputNome">Nome</label>
-                <input type="text" id="inputNome" placeholder="Mario" autocomplete="off"
-                       oninput="cercaInRubrica()" onkeydown="navigaAutocomplete(event)">
+                <input type="text" id="inputNome" placeholder="Mario" autocomplete="off">
               </div>
               <div>
                 <label for="inputCognome">Cognome</label>
-                <input type="text" id="inputCognome" placeholder="Rossi" autocomplete="off"
-                       oninput="cercaInRubrica()" onkeydown="navigaAutocomplete(event)">
+                <input type="text" id="inputCognome" placeholder="Rossi" autocomplete="off">
               </div>
             </div>
-            <div class="autocomplete-lista" id="autocompleteLista"></div>
           </div>
           <div class="nota-campo">Almeno uno dei due: per un gruppo basta il nome.</div>
           <div class="cliente-collegato" id="clienteCollegato"></div>
@@ -1977,7 +1957,6 @@
     document.addEventListener('DOMContentLoaded', () => {
       generaCalendario();
       caricaPrenotazioni();
-      precaricaRubrica();
     });
     
     // Fetch con timeout + retry esponenziale: assorbe i glitch transitori di GAS
@@ -2517,7 +2496,6 @@
     function mostraModalNuova() {
       // Chiudi pannello mobile se aperto
       chiudiPannelloMobile();
-      precaricaRubrica();
 
       modalitaModifica = false;
       tipoCorrente = 'prenotazione';
@@ -2536,7 +2514,7 @@
       // Senza questa riga il blocco pagamenti restava a vista: il div nasce
       // visibile e aprire il modal non lo toccava.
       aggiornaVisibilitaPagamento();
-      scollegaCliente(true);
+      scollegaCliente();
 
       // Reset campi evento
       document.getElementById('inputNomeEvento').value = '';
@@ -2630,8 +2608,7 @@
       aggiornaVisibilitaPagamento();
       document.getElementById('linkCreaEvento').style.display = 'block';
       document.getElementById('tipoToggle').style.display = 'none';
-      chiudiAutocomplete();
-      scollegaCliente(false);
+      scollegaCliente();
 
       // Nascondi pulsante elimina evento se esiste
       const btnElimina = document.getElementById('btnEliminaEvento');
@@ -2643,14 +2620,12 @@
     // =====================================================================
     // ===== RUBRICA: RICONOSCIMENTO CLIENTE ===============================
     // =====================================================================
-    // Scrivendo nome o cognome si cerca in rubrica. Scegliendo una voce si
-    // collega la prenotazione a quella scheda (clienteId) e si riempiono
-    // telefono ed email. Se non si sceglie nulla la prenotazione si salva come
-    // sempre: il collegamento lo crea poi il backend dai recapiti.
-
-    let timerRicerca = null;
-    let risultatiRubrica = [];
-    let voceEvidenziata = -1;
+    // Il form non cerca in rubrica (dal 29/10/2026). Le prenotazioni le
+    // scrivono di corsa i ragazzi al locale e i suggerimenti confondevano più
+    // di quanto aiutassero: al salvataggio decide il server, dai recapiti e
+    // dal nome (abbinaCliente_), e mette i casi dubbi nella tab Rubrica del
+    // Quartier Generale. Qui resta solo, in modifica, il collegamento con
+    // «scollega».
 
     /** "Nome Cognome" come finisce nella colonna Cliente del foglio. */
     function testoCliente() {
@@ -2673,168 +2648,9 @@
       return { nome: parti[0] || '', cognome: parti.slice(1).join(' ') };
     }
 
-    // Rubrica precaricata (dal 29/10/2026). Chiedere al server a ogni tasto
-    // voleva dire aspettare Apps Script, a volte molti secondi: nel frattempo
-    // l'operatore toccava di nuovo il campo, la risposta veniva scartata e i
-    // suggerimenti arrivavano solo al secondo o terzo tentativo. Ora la rubrica
-    // si scarica una volta e si cerca qui; il server resta di riserva finché
-    // il primo caricamento non è arrivato o se è fallito.
-    const RUBRICA_VALIDA_MS = 10 * 60 * 1000;
-    let rubricaLocale = null;
-    let rubricaCaricataIl = 0;
-    let rubricaInArrivo = null;
-
-    /** Scarica la rubrica se manca o è vecchia; non fa nulla se è fresca. */
-    function precaricaRubrica() {
-      if (rubricaInArrivo) return rubricaInArrivo;
-      if (rubricaLocale && Date.now() - rubricaCaricataIl < RUBRICA_VALIDA_MS) return Promise.resolve();
-      rubricaInArrivo = callAPI('getRubrica', {})
-        .then(r => {
-          if (r.errore || !Array.isArray(r.clienti)) return;
-          rubricaLocale = r.clienti
-            .filter(c => c.stato !== 'disiscritto')
-            .map(c => ({
-              id: c.id, nome: c.nome, cognome: c.cognome, email: c.email,
-              cellulare: c.cellulare, nomeCompleto: c.nomeCompleto,
-              eventiPartecipati: c.eventiPartecipati || 0
-            }));
-          rubricaCaricataIl = Date.now();
-        })
-        .catch(() => {})  // la rubrica è un aiuto, non un requisito
-        .finally(() => { rubricaInArrivo = null; });
-      return rubricaInArrivo;
-    }
-
-    /** Dopo un salvataggio la rubrica può essere cambiata: al prossimo form si riscarica. */
-    function rubricaDaAggiornare() {
-      rubricaCaricataIl = 0;
-    }
-
-    /** Come normNome_ del backend: minuscole, senza accenti né punteggiatura. */
-    function normNomeRubrica(v) {
-      return String(v == null ? '' : v)
-        .normalize('NFD').replace(/\p{M}/gu, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, ' ')
-        .trim();
-    }
-
-    /** Stesso criterio di cercaClienti nel backend, sui dati già scaricati. */
-    function cercaInRubricaLocale(query, limite) {
-      const q = String(query || '').trim().toLowerCase();
-      const cifre = q.replace(/\D/g, '');
-      const parole = normNomeRubrica(q).split(' ').filter(Boolean);
-      return rubricaLocale
-        .filter(c =>
-          (parole.length && parole.every(p => normNomeRubrica(c.nomeCompleto).indexOf(p) !== -1)) ||
-          String(c.email).toLowerCase().indexOf(q) !== -1 ||
-          (cifre.length >= 3 && String(c.cellulare).replace(/\D/g, '').indexOf(cifre) !== -1))
-        .sort((a, b) => b.eventiPartecipati - a.eventiPartecipati)
-        .slice(0, limite);
-    }
-
-    function cercaInRubrica() {
-      const q = testoCliente();
-
-      // Cambiare il nome a mano scollega: la scheda collegata deve sempre
-      // corrispondere a quello che c'è scritto nel campo.
-      scollegaCliente(false);
-
-      clearTimeout(timerRicerca);
-      if (q.length < 2) return chiudiAutocomplete();
-
-      // Se è vecchia si riscarica, ma intanto si cerca su quella che c'è
-      precaricaRubrica();
-      if (rubricaLocale) {
-        risultatiRubrica = cercaInRubricaLocale(q, 8);
-        return risultatiRubrica.length ? renderAutocomplete() : chiudiAutocomplete();
-      }
-
-      // Debounce: si cerca quando smette di scrivere, non a ogni tasto.
-      timerRicerca = setTimeout(async () => {
-        try {
-          const r = await callAPI('cercaClienti', { query: q, limite: 8 });
-          if (r.errore || !r.clienti || !r.clienti.length) return chiudiAutocomplete();
-          // Nel frattempo può aver continuato a scrivere: risultati vecchi via.
-          if (testoCliente() !== q) return;
-          risultatiRubrica = r.clienti;
-          renderAutocomplete();
-        } catch (e) {
-          chiudiAutocomplete();  // la rubrica è un aiuto, non un requisito
-        }
-      }, 300);
-    }
-
-    function renderAutocomplete() {
-      const box = document.getElementById('autocompleteLista');
-      voceEvidenziata = -1;
-      box.innerHTML = risultatiRubrica.map((c, i) => `
-        <div class="autocomplete-voce" data-indice="${i}" onclick="selezionaClienteRubrica(${i})">
-          <div class="ac-nome">${escapeHtmlPren(c.nomeCompleto)}</div>
-          <div class="ac-dettagli">
-            ${escapeHtmlPren(c.email || 'nessuna email')}
-            ${c.cellulare ? ' · ' + escapeHtmlPren(c.cellulare) : ''}
-            ${c.eventiPartecipati ? ' · <svg class="ico"><use href="#i-wine-glass"></use></svg> ' + c.eventiPartecipati + (c.eventiPartecipati === 1 ? ' evento' : ' eventi') : ''}
-          </div>
-        </div>`).join('');
-      box.classList.add('active');
-    }
-
-    function chiudiAutocomplete() {
-      document.getElementById('autocompleteLista').classList.remove('active');
-      risultatiRubrica = [];
-      voceEvidenziata = -1;
-    }
-
-    function navigaAutocomplete(e) {
-      const box = document.getElementById('autocompleteLista');
-      if (!box.classList.contains('active')) return;
-
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        voceEvidenziata += (e.key === 'ArrowDown' ? 1 : -1);
-        if (voceEvidenziata < 0) voceEvidenziata = risultatiRubrica.length - 1;
-        if (voceEvidenziata >= risultatiRubrica.length) voceEvidenziata = 0;
-        box.querySelectorAll('.autocomplete-voce').forEach((v, i) => {
-          v.classList.toggle('evidenziata', i === voceEvidenziata);
-        });
-      } else if (e.key === 'Enter' && voceEvidenziata >= 0) {
-        e.preventDefault();
-        selezionaClienteRubrica(voceEvidenziata);
-      } else if (e.key === 'Escape') {
-        chiudiAutocomplete();
-      }
-    }
-
-    function selezionaClienteRubrica(indice) {
-      const c = risultatiRubrica[indice];
-      if (!c) return;
-
-      document.getElementById('inputNome').value = c.nome || '';
-      document.getElementById('inputCognome').value = c.cognome || '';
-      document.getElementById('inputClienteId').value = c.id;
-      // I recapiti già noti non si sovrascrivono con quelli in rubrica se
-      // l'operatore ne ha appena scritto uno diverso apposta.
-      if (c.email && !document.getElementById('inputEmail').value.trim()) {
-        document.getElementById('inputEmail').value = c.email;
-      }
-      if (c.cellulare && !document.getElementById('inputTelefono').value.trim()) {
-        document.getElementById('inputTelefono').value = c.cellulare;
-      }
-
-      const box = document.getElementById('clienteCollegato');
-      box.innerHTML = `<svg class="ico"><use href="#i-fa-circle-check"></use></svg> Collegato alla rubrica` +
-        (c.eventiPartecipati ? ` — già a ${c.eventiPartecipati} ${c.eventiPartecipati === 1 ? 'evento' : 'eventi'}` : ' — primo evento') +
-        ` <a href="#" onclick="scollegaCliente(true); return false;" style="color:#155724;">scollega</a>`;
-      box.classList.add('active');
-
-      chiudiAutocomplete();
-    }
-
-    function scollegaCliente(azzeraTesto) {
+    function scollegaCliente() {
       document.getElementById('inputClienteId').value = '';
       document.getElementById('clienteCollegato').classList.remove('active');
-      if (azzeraTesto) chiudiAutocomplete();
     }
 
     /** In modifica: mostra se la prenotazione è già agganciata a una scheda. */
@@ -2843,7 +2659,7 @@
       document.getElementById('inputClienteId').value = pren.clienteId || '';
       if (pren.clienteId) {
         box.innerHTML = '<svg class="ico"><use href="#i-fa-circle-check"></use></svg> Collegato alla rubrica ' +
-          '<a href="#" onclick="scollegaCliente(true); return false;" style="color:#155724;">scollega</a>';
+          '<a href="#" onclick="scollegaCliente(); return false;" style="color:#155724;">scollega</a>';
         box.classList.add('active');
       } else {
         box.classList.remove('active');
@@ -2877,10 +2693,6 @@
         .replace(/"/g, '&quot;');
     }
 
-    // Un click fuori chiude la tendina, altrimenti resta aperta sopra il form.
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.autocomplete-wrap')) chiudiAutocomplete();
-    });
 
     // =====================================================================
     // ===== PAGAMENTO NEL MODAL ===========================================
@@ -3039,7 +2851,6 @@
       document.getElementById('campiPrenotazione').style.display = 'none';
       document.getElementById('linkCreaEvento').style.display = 'none';
       document.getElementById('btnSalva').textContent = '💾 Crea Evento';
-      chiudiAutocomplete();
 
       // Mantieni data selezionata
       document.getElementById('inputData').value = giornoSelezionato;
@@ -3059,7 +2870,6 @@
         document.getElementById('campoStato').style.display = 'none';
         document.getElementById('sezionePagamento').style.display = 'none';
         document.getElementById('btnSalva').textContent = '💾 Crea Evento';
-        chiudiAutocomplete();
       } else {
         document.getElementById('btnTipoPrenotazione').classList.add('active');
         document.getElementById('btnTipoEvento').classList.remove('active');
@@ -3204,7 +3014,6 @@
     }
     
     function mostraModalPrenotazioneEvento() {
-      precaricaRubrica();
       modalitaModifica = false;
       tipoCorrente = 'prenotazione';
       
@@ -3222,7 +3031,7 @@
       // Senza questa riga il blocco pagamenti restava a vista: il div nasce
       // visibile e aprire il modal non lo toccava.
       aggiornaVisibilitaPagamento();
-      scollegaCliente(true);
+      scollegaCliente();
 
       // Se l'evento ha un prezzo per quota, il dovuto si calcola da solo:
       // 2 persone × 25€ = 50€, senza doverlo rifare a mente ogni volta.
@@ -3369,7 +3178,6 @@
         
         chiudiModal();
         invalidaCacheMemoria(); // <svg class="ico"><use href="#i-bolt"></use></svg> Invalida cache
-        rubricaDaAggiornare();  // può aver creato o completato una scheda
 
         // Se siamo in gestione evento, riapri evento
         if (eventoCorrente) {
