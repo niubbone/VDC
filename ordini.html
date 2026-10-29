@@ -995,12 +995,15 @@
     const note = String(bozza.note || '').trim();
     const prova = ro.filter(r => r.test);
     const g = s => wa ? '*' + s + '*' : s;
+    // Su WhatsApp le righe vanno a capo nel fumetto e si fondono: una riga vuota
+    // fra un vino e l'altro (29/10/2026, «altrimenti diventa illeggibile»).
+    const righe = rr => { const t = righeTesto(rr, semplice); return wa ? t.flatMap((x, i) => i ? ['', x] : [x]) : t; };
     const totali = semplice
       ? [g(`Imponibile: ${euro(imp)}`), g(`Totale con IVA: ${euro(cent(imp * (1 + IVA)))}`)]
       : [`Bottiglie: ${bott}`, `Imponibile: ${euro(imp)}`, `IVA 22%: ${euro(cent(imp * IVA))}`, `Totale: ${euro(cent(imp * (1 + IVA)))}`];
     return [...(wa ? ['Buongiorno, ecco il nostro ordine:'] : ['Buongiorno,', '', 'vi inviamo il nostro ordine:']), '',
-            ...righeTesto(ro.filter(r => !r.test), semplice),
-            ...(prova.length ? ['', 'Vini in prova:', ...righeTesto(prova, semplice)] : []), '',
+            ...righe(ro.filter(r => !r.test)),
+            ...(prova.length ? ['', 'Vini in prova:', ...righe(prova)] : []), '',
             ...totali, ...(note ? ['', note] : []), '',
             ...(wa ? ['Grazie, Vecchia Dogana'] : ['Grazie, cordiali saluti', 'Vecchia Dogana'])].join('\n');
   }
