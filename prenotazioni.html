@@ -1977,6 +1977,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       generaCalendario();
       caricaPrenotazioni();
+      precaricaRubrica();
     });
     
     // Fetch con timeout + retry esponenziale: assorbe i glitch transitori di GAS
@@ -2516,7 +2517,8 @@
     function mostraModalNuova() {
       // Chiudi pannello mobile se aperto
       chiudiPannelloMobile();
-      
+      precaricaRubrica();
+
       modalitaModifica = false;
       tipoCorrente = 'prenotazione';
       
@@ -2671,6 +2673,66 @@
       return { nome: parti[0] || '', cognome: parti.slice(1).join(' ') };
     }
 
+    // Rubrica precaricata (dal 29/10/2026). Chiedere al server a ogni tasto
+    // voleva dire aspettare Apps Script, a volte molti secondi: nel frattempo
+    // l'operatore toccava di nuovo il campo, la risposta veniva scartata e i
+    // suggerimenti arrivavano solo al secondo o terzo tentativo. Ora la rubrica
+    // si scarica una volta e si cerca qui; il server resta di riserva finché
+    // il primo caricamento non è arrivato o se è fallito.
+    const RUBRICA_VALIDA_MS = 10 * 60 * 1000;
+    let rubricaLocale = null;
+    let rubricaCaricataIl = 0;
+    let rubricaInArrivo = null;
+
+    /** Scarica la rubrica se manca o è vecchia; non fa nulla se è fresca. */
+    function precaricaRubrica() {
+      if (rubricaInArrivo) return rubricaInArrivo;
+      if (rubricaLocale && Date.now() - rubricaCaricataIl < RUBRICA_VALIDA_MS) return Promise.resolve();
+      rubricaInArrivo = callAPI('getRubrica', {})
+        .then(r => {
+          if (r.errore || !Array.isArray(r.clienti)) return;
+          rubricaLocale = r.clienti
+            .filter(c => c.stato !== 'disiscritto')
+            .map(c => ({
+              id: c.id, nome: c.nome, cognome: c.cognome, email: c.email,
+              cellulare: c.cellulare, nomeCompleto: c.nomeCompleto,
+              eventiPartecipati: c.eventiPartecipati || 0
+            }));
+          rubricaCaricataIl = Date.now();
+        })
+        .catch(() => {})  // la rubrica è un aiuto, non un requisito
+        .finally(() => { rubricaInArrivo = null; });
+      return rubricaInArrivo;
+    }
+
+    /** Dopo un salvataggio la rubrica può essere cambiata: al prossimo form si riscarica. */
+    function rubricaDaAggiornare() {
+      rubricaCaricataIl = 0;
+    }
+
+    /** Come normNome_ del backend: minuscole, senza accenti né punteggiatura. */
+    function normNomeRubrica(v) {
+      return String(v == null ? '' : v)
+        .normalize('NFD').replace(/\p{M}/gu, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+    }
+
+    /** Stesso criterio di cercaClienti nel backend, sui dati già scaricati. */
+    function cercaInRubricaLocale(query, limite) {
+      const q = String(query || '').trim().toLowerCase();
+      const cifre = q.replace(/\D/g, '');
+      const parole = normNomeRubrica(q).split(' ').filter(Boolean);
+      return rubricaLocale
+        .filter(c =>
+          (parole.length && parole.every(p => normNomeRubrica(c.nomeCompleto).indexOf(p) !== -1)) ||
+          String(c.email).toLowerCase().indexOf(q) !== -1 ||
+          (cifre.length >= 3 && String(c.cellulare).replace(/\D/g, '').indexOf(cifre) !== -1))
+        .sort((a, b) => b.eventiPartecipati - a.eventiPartecipati)
+        .slice(0, limite);
+    }
+
     function cercaInRubrica() {
       const q = testoCliente();
 
@@ -2680,6 +2742,13 @@
 
       clearTimeout(timerRicerca);
       if (q.length < 2) return chiudiAutocomplete();
+
+      // Se è vecchia si riscarica, ma intanto si cerca su quella che c'è
+      precaricaRubrica();
+      if (rubricaLocale) {
+        risultatiRubrica = cercaInRubricaLocale(q, 8);
+        return risultatiRubrica.length ? renderAutocomplete() : chiudiAutocomplete();
+      }
 
       // Debounce: si cerca quando smette di scrivere, non a ogni tasto.
       timerRicerca = setTimeout(async () => {
@@ -3135,6 +3204,7 @@
     }
     
     function mostraModalPrenotazioneEvento() {
+      precaricaRubrica();
       modalitaModifica = false;
       tipoCorrente = 'prenotazione';
       
@@ -3299,7 +3369,8 @@
         
         chiudiModal();
         invalidaCacheMemoria(); // <svg class="ico"><use href="#i-bolt"></use></svg> Invalida cache
-        
+        rubricaDaAggiornare();  // può aver creato o completato una scheda
+
         // Se siamo in gestione evento, riapri evento
         if (eventoCorrente) {
           await caricaPrenotazioni();
