@@ -438,6 +438,10 @@
             <input type="text" id="f-vino" placeholder="es. Thalvin - Tandem Rosé">
           </div>
           <div class="form-group">
+            <label>Annata</label>
+            <input type="text" id="f-annata" maxlength="9" placeholder="es. 2021 (vuoto se senza annata)">
+          </div>
+          <div class="form-group">
             <label>Imponibile (€) <span class="req">*</span></label>
             <input type="number" id="f-imponibile" step="0.01" min="0" placeholder="0.00" oninput="ricalcola()">
           </div>
@@ -480,6 +484,11 @@
         <!-- Calcoli bottiglia -->
         <div class="calc-box">
           <div class="calc-box-title">⚖️ Prezzo al Tavolo</div>
+          <div class="check-row" style="margin-bottom:10px;">
+            <input type="checkbox" id="f-topwine" onchange="ricalcola()">
+            <label for="f-topwine">🏆 Top Wine</label>
+            <span style="font-size:0.82em; color:#666; margin-left:8px;">prezzo automatico: guadagno sull'asporto = il maggiore fra 20 € e il 30% del costo</span>
+          </div>
           <div class="form-grid" style="margin-bottom:12px;">
             <div class="form-group">
               <label>Prezzo automatico (formula)</label>
@@ -767,6 +776,10 @@
     // Costo senza IVA, base dei ricarichi (il listino si divide per 1,1):
     // distributori = imponibile (il 22% si detrae), import = imponibile + spese.
     function costoNetto(i, ss) { return currentSheet==='DIST' ? i : costoImport(i, ss); }
+    // Top Wine (29/10/2026): stessa regola della formula in WINE_COST (formulaTavoloDist_ /
+    // formulaTavoloImp_). Guadagno sull'asporto = max(20 €, 30% del costo senza IVA); l'asporto
+    // e' il tavolo meno il 30%, con IVA al 10%: tavolo = (costo + guadagno) × 1,1 / 0,7.
+    function tavoloTopWine(netto) { return (netto + Math.max(20, netto * 0.3)) * 1.1 / 0.7; }
     function tavoloAut(c, sh) {
       if (sh==='DIST') { if(c>=50) return c*1.8; if(c>=25) return c*2.2; if(c>15) return c*2.6; return c*3; }
       return c<=15 ? c*3+5 : c*2.6+5;
@@ -779,7 +792,7 @@
       const ss  = parseFloat(document.getElementById('f-ss').value)||0;
       const costo = currentSheet==='DIST' ? costoDist(imp) : costoImport(imp,ss);
       document.getElementById('f-costo-ivato').value = imp>0 ? '€'+costo.toFixed(2) : '';
-      const aut = imp>0 ? tavoloAut(costo,currentSheet) : NaN;
+      const aut = imp>0 ? (document.getElementById('f-topwine').checked ? tavoloTopWine(costoNetto(imp,ss)) : tavoloAut(costo,currentSheet)) : NaN;
       document.getElementById('f-tavolo-aut').value = !isNaN(aut) ? '€'+aut.toFixed(2) : '';
       ricalcolaBottiglia(); ricalcolaCalice();
     }
@@ -847,8 +860,8 @@
       if(!wines.length){grid.innerHTML='<div class="empty-state">Nessun vino trovato</div>';return;}
       grid.innerHTML=wines.map(w=>`
         <div class="wine-card ${catClass(w.catCarta)}" onclick="apriModifica('${w.id}')">
-          <div class="card-header"><span class="card-codice">${w.id}${w.bestseller?' ⭐':''}</span>${w.catCarta?`<span class="card-cat-badge">${w.catCarta}</span>`:''}</div>
-          <div class="card-nome">${w.nomeCarta||w.vino}</div>
+          <div class="card-header"><span class="card-codice">${w.id}${w.bestseller?' ⭐':''}${w.topWine?' 🏆':''}</span>${w.catCarta?`<span class="card-cat-badge">${w.catCarta}</span>`:''}</div>
+          <div class="card-nome">${w.nomeCarta||w.vino}${w.annata?' '+w.annata:''}</div>
           <div class="card-nazione">${w.nazione}${w.aoc?' · '+w.aoc:''}</div>
           <div class="card-footer">
             <div class="card-prezzi">
@@ -861,13 +874,14 @@
     }
 
     function resetForm() {
-      ['f-nazione','f-vino','f-imponibile','f-ss','f-costo-ivato','f-tavolo-aut','f-tavolo-listino',
+      ['f-nazione','f-vino','f-annata','f-imponibile','f-ss','f-costo-ivato','f-tavolo-aut','f-tavolo-listino',
        'f-calice','f-calice-ricavo','f-fornitore','f-nome-carta','f-aoc','f-vitigni','f-descrizione']
         .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       ['f-cat-costo','f-cat-carta','f-formato'].forEach(id=>document.getElementById(id).value=id==='f-formato'?'6.1':'');
       document.getElementById('f-abbandonato').checked=false;
       document.getElementById('f-incarta').checked=false;
       document.getElementById('f-bestseller').checked=false;
+      document.getElementById('f-topwine').checked=false;
       ['c-ric-x','c-ric-eur','c-asporto','c-nbott','c-margin-pct','cc-ric-x','cc-ric-eur','cc-costo','cc-margine']
         .forEach(id=>document.getElementById(id).textContent='—');
       document.getElementById('c-margin-bar').style.width='0%';
@@ -895,6 +909,8 @@
       document.getElementById('f-abbandonato').checked=!!w.abbandonato;
       document.getElementById('f-incarta').checked=!!w.incarta;
       document.getElementById('f-bestseller').checked=!!w.bestseller;
+      document.getElementById('f-topwine').checked=!!w.topWine;
+      document.getElementById('f-annata').value=w.annata||'';
       document.getElementById('f-nome-carta').value=w.nomeCarta||'';
       document.getElementById('f-cat-carta').value=w.catCarta||'';
       document.getElementById('f-aoc').value=w.aoc||'';
@@ -972,6 +988,8 @@
         abbandonato: document.getElementById('f-abbandonato').checked,
         incarta: document.getElementById('f-incarta').checked,
         bestseller: document.getElementById('f-bestseller').checked,
+        topWine: document.getElementById('f-topwine').checked,
+        annata: document.getElementById('f-annata').value.trim(),
         nomeCarta: document.getElementById('f-nome-carta').value,
         catCarta: document.getElementById('f-cat-carta').value,
         aoc: document.getElementById('f-aoc').value,

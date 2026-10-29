@@ -950,6 +950,7 @@
         ss: v.ss || 1, divisore, fornitore: v.fornitore, catCosto: v.catCosto,
         tavoloListino: v.tavoloListino == null ? '' : v.tavoloListino, calice: v.calice,
         abbandonato: v.abbandonato, incarta: v.incarta, bestseller: v.bestseller,
+        topWine: v.topWine, annata: v.annata,
         nomeCarta: v.nomeCarta, catCarta: v.catCarta, aoc: v.aoc, vitigni: v.vitigni, descrizione: v.descrizione
       };
       try { await chiama(API_VINI, 'saveVino', p, 60); }
