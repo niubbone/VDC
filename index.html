@@ -705,6 +705,11 @@
       } else {
         mostraModalVini();
       }
+      // Il parametro serve una volta sola. Restando nell'indirizzo, ogni
+      // ricarica o aggiornamento dell'app — e la riapertura, che riprende
+      // l'ultimo indirizzo — riapriva il PIN dei vini al posto del menu
+      // principale (segnalato il 29/10/2026).
+      history.replaceState(null, '', location.pathname);
     }
 
     // ===== MODAL GESTIONE VINI =====
