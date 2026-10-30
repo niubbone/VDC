@@ -2376,6 +2376,7 @@
 
     const FONTI_CRESCITA = [
       { chiave: 'landing_qr', etichetta: 'Landing QR', icona: 'i-ticket', colore: '#256abf' },
+      { chiave: 'sito', etichetta: 'Sito web', icona: 'i-envelope', colore: '#8a4fb0' },
       { chiave: 'prenotazione', etichetta: 'Prenotazioni', icona: 'i-calendar', colore: '#c4521f' },
       { chiave: 'manuale', etichetta: 'A mano', icona: 'i-quill', colore: '#15875e' }
     ];
@@ -2680,7 +2681,7 @@
         : '<li><em>Nessuna partecipazione registrata.</em></li>';
 
       const provenienza = {
-        landing_qr: 'iscritto dal QR', import_storico: 'importato dalle prenotazioni',
+        landing_qr: 'iscritto dal QR', sito: 'iscritto dal sito web', import_storico: 'importato dalle prenotazioni',
         prenotazione: 'creato da una prenotazione', manuale: 'inserito a mano'
       }[c.fonte] || esc(c.fonte);
 
