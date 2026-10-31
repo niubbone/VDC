@@ -1089,6 +1089,10 @@
   <script>
     const API_URL = VDC_CONFIG.server.vdc;
 
+    // Senza gettone valido il server rifiuterebbe quasi tutto: subito al PIN.
+    // Il controllo vero è sul server (AZIONI_TITOLARI in API.js).
+    if (!leggiGettone()) location.replace('index.html?pin=1');
+
     async function callAPI(action, data = {}) {
       try {
         return await chiediAlServer(action, data);

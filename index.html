@@ -583,6 +583,8 @@
     }
     
     function mostraModalPIN() {
+      // Col gettone ancora valido il PIN è già stato dato su questo dispositivo
+      if (leggiGettone()) { window.location.href = 'dashboard.html'; return; }
       document.getElementById('modalPIN').classList.add('active');
       document.getElementById('pinInput').focus();
     }
@@ -607,7 +609,7 @@
         document.getElementById('loadingOverlay').classList.remove('active');
         
         if (result.valido) {
-          sessionStorage.setItem('auth', 'titolare');
+          if (result.gettone) salvaGettone(result.gettone);
           window.location.href = 'dashboard.html';
         } else {
           mostraErrorePIN('errorePin', result);
@@ -625,13 +627,7 @@
 
     // Riapri submenu vini se si torna dalle pagine vini
     if (new URLSearchParams(window.location.search).get('menu') === 'vini') {
-      if (sessionStorage.getItem('auth') === 'titolare') {
-        document.getElementById('pinViniSection').style.display = 'none';
-        document.getElementById('viniMenu').style.display = 'block';
-        document.getElementById('modalVini').classList.add('active');
-      } else {
-        mostraModalVini();
-      }
+      mostraModalVini();
       // Il parametro serve una volta sola. Restando nell'indirizzo, ogni
       // ricarica o aggiornamento dell'app — e la riapertura, che riprende
       // l'ultimo indirizzo — riapriva il PIN dei vini al posto del menu
@@ -639,16 +635,24 @@
       history.replaceState(null, '', location.pathname);
     }
 
+    // Rimandati qui dalla dashboard perché il gettone è scaduto
+    if (new URLSearchParams(window.location.search).get('pin') === '1') {
+      history.replaceState(null, '', location.pathname);
+      mostraModalPIN();
+    }
+
     // ===== MODAL GESTIONE VINI =====
     function mostraModalVini() {
-      document.getElementById('pinViniSection').style.display = 'block';
-      document.getElementById('viniMenu').style.display = 'none';
+      // Col gettone ancora valido si va dritti al menu, senza PIN
+      const conGettone = !!leggiGettone();
+      document.getElementById('pinViniSection').style.display = conGettone ? 'none' : 'block';
+      document.getElementById('viniMenu').style.display = conGettone ? 'block' : 'none';
       document.getElementById('pinViniInput').value = '';
       document.getElementById('errorePinVini').style.display = 'none';
       document.getElementById('modalVini').classList.add('active');
       // Il cursore nel campo, come fa l'Accesso Capitano: senza questa riga
       // bisognava prima toccare il campo e poi scrivere il PIN.
-      document.getElementById('pinViniInput').focus();
+      if (!conGettone) document.getElementById('pinViniInput').focus();
     }
 
     function chiudiModalVini() {
@@ -666,7 +670,7 @@
         const result = await verificaPINServer(pin);
         document.getElementById('loadingOverlay').classList.remove('active');
         if (result.valido) {
-          sessionStorage.setItem('auth', 'titolare');
+          if (result.gettone) salvaGettone(result.gettone);
           document.getElementById('pinViniSection').style.display = 'none';
           document.getElementById('viniMenu').style.display = 'block';
         } else {

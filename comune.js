@@ -8,6 +8,23 @@
 // es. le segnalazioni (hosting, ~0,1 s) usano un timeout di 20 s.
 const RETE = { tentativi: 3, timeoutMs: 45000 };
 
+// Gettone dei titolari (dal 31/10/2026). Lo rilascia vdc-pin.php quando il
+// PIN è giusto, vale 7 giorni e resta su questo dispositivo: il PIN si digita
+// una volta a settimana. Apps Script lo pretende sulle azioni con dati
+// personali o economici (AZIONI_TITOLARI in API.js): il controllo vero è là,
+// qui c'è solo la comodità di non chiederlo di nuovo.
+const GETTONE_STORAGE = 'vdc_gettone';
+
+/** Il gettone se c'è e non è scaduto, altrimenti ''. */
+function leggiGettone() {
+  try {
+    const g = localStorage.getItem(GETTONE_STORAGE) || '';
+    return Number(g.split('.')[0]) * 1000 > Date.now() ? g : '';
+  } catch (e) { return ''; }
+}
+function salvaGettone(g) { try { localStorage.setItem(GETTONE_STORAGE, g); } catch (e) {} }
+function dimenticaGettone() { try { localStorage.removeItem(GETTONE_STORAGE); } catch (e) {} }
+
 // Fetch con timeout + ritentativi, ma ⚠️ MAI SUL TIMEOUT.
 //
 // Abortire il fetch non ferma l'esecuzione sul server: ritentare accoda
@@ -69,18 +86,27 @@ async function chiediAlServer(azione, dati, tentativi = 3) {
       method: 'POST',
       redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: azione, ...dati })
+      body: JSON.stringify({ action: azione, ...dati, gettone: leggiGettone() })
     });
     ultimaRisposta = await risposta.text();
+    let r;
     try {
-      return JSON.parse(ultimaRisposta);
+      r = JSON.parse(ultimaRisposta);
     } catch (e) {
       console.warn(`[${azione}] risposta non-JSON al tentativo ${i + 1}/${tentativi}:`,
         ultimaRisposta.slice(0, 150));
       if (i < tentativi - 1) {
         await new Promise(r => setTimeout(r, 1200 * (i + 1)));
       }
+      continue;
     }
+    // Gettone scaduto o assente: si torna al PIN, che ne rilascia uno nuovo
+    if (r && r.codice === 'PIN') {
+      dimenticaGettone();
+      location.href = 'index.html?pin=1';
+      throw new Error(r.errore);
+    }
+    return r;
   }
   throw new Error('Il server ha risposto in modo inatteso. Di solito basta riprovare fra qualche secondo.');
 }
