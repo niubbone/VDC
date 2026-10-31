@@ -294,6 +294,8 @@
       #stampa .nota-pdf { font-size: 8.5pt; color: #666; margin-top: 12px; }
     }
   </style>
+  <script src="config.js"></script>
+  <script src="comune.js"></script>
 </head>
 <body>
 
@@ -453,8 +455,8 @@
   // Il costo IVA compresa si mostra solo come uscita di cassa.
   // Ogni persona beve un calice di ogni vino.
 
-  const API_VINI = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
-  const API_DEG = 'https://www.studio-smart.it/api/vdc-degustazioni.php';
+  const API_VINI = VDC_CONFIG.server.vini;
+  const API_DEG = VDC_CONFIG.server.degustazioni;
   // _v2: dal 12/10/2026 la copia porta anche il tipo del vino (prima no)
   const CACHE_VINI = 'vdc_vini_degustazione_v2';
   const DURATA_CACHE_VINI = 24 * 60 * 60 * 1000;
@@ -991,7 +993,7 @@
     const data = S.data ? S.data.split('-').reverse().join('/') : '';
     $('stampa').innerHTML = `
       <h1>${esc(S.nome || 'Degustazione')}</h1>
-      <div class="sotto">Vecchia Dogana${data ? ' · ' + data : ''} · ${S.persone} persone · ${euro(r.prezzo)} a persona IVA incl.</div>
+      <div class="sotto">${VDC_CONFIG.locale.nome}${data ? ' · ' + data : ''} · ${S.persone} persone · ${euro(r.prezzo)} a persona IVA incl.</div>
       <h2>Vini, in ordine di servizio</h2>
       <div class="sotto">${testoTipi(vini)}</div>
       <table><thead><tr><th>Vino</th><th>Tipo</th><th>Acquisto</th><th>Bottiglie</th><th>Calici/bott.</th><th>Costo bott. (senza IVA)</th><th>Totale</th></tr></thead>

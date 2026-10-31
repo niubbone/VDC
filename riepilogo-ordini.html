@@ -150,6 +150,8 @@
       .barra-riga { grid-template-columns: 1fr; gap: 3px; }
     }
   </style>
+  <script src="config.js"></script>
+  <script src="comune.js"></script>
 </head>
 <body>
 
@@ -224,8 +226,8 @@
   // rossi, quanti calici da 8... Il prezzo al calice e la tipologia vengono
   // da WINE_COST (getVini). Nessuna scrittura: si modifica dalla pagina Ordini.
   // =====================================================================
-  const API_VINI = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
-  const API_ORD = 'https://www.studio-smart.it/api/vdc-ordini.php';
+  const API_VINI = VDC_CONFIG.server.vini;
+  const API_ORD = VDC_CONFIG.server.ordini;
   const IVA = 0.22;
   const COLORE_TIPO = { 'Le Bolle': '#1a6a9a', 'I Bianchi': '#9a7f00', 'I Rosati': '#e07aaa', 'I Rossi': '#cc0000', 'I Vini Speciali': '#2a7a4a' };
   const ORDINE_TIPI = ['Le Bolle', 'I Bianchi', 'I Rosati', 'I Rossi', 'I Vini Speciali'];

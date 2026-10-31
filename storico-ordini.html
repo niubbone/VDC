@@ -143,6 +143,8 @@
       .barra-riga { grid-template-columns: 1fr; gap: 3px; }
     }
   </style>
+  <script src="config.js"></script>
+  <script src="comune.js"></script>
 </head>
 <body>
 
@@ -228,7 +230,7 @@
   // cambiati i prezzi. Legge gli ordini inviati di vdc-ordini.php (hosting):
   // elencoOrdini per l'elenco, getOrdine per le righe di ognuno.
   // =====================================================================
-  const API_ORD = 'https://www.studio-smart.it/api/vdc-ordini.php';
+  const API_ORD = VDC_CONFIG.server.ordini;
   const IVA = 0.22;
   const COLORE_TIPO = { 'Le Bolle': '#1a6a9a', 'I Bianchi': '#9a7f00', 'I Rosati': '#e07aaa', 'I Rossi': '#cc0000', 'I Vini Speciali': '#2a7a4a' };
   const ORDINE_TIPI = ['Le Bolle', 'I Bianchi', 'I Rosati', 'I Rossi', 'I Vini Speciali'];

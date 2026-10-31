@@ -270,6 +270,8 @@
       .vino-campi .nota-vino { grid-column: 1 / -1; }
     }
   </style>
+  <script src="config.js"></script>
+  <script src="comune.js"></script>
 </head>
 <body>
 
@@ -420,9 +422,9 @@
   // al cellulare dell'agente: per Cavalli i listini si chiedono cosi' a
   // Broccoli); il PDF si fa dal dialogo di stampa.
 
-  const API_VINI = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
-  const API_ORD = 'https://www.studio-smart.it/api/vdc-ordini.php';
-  const API_SEGN = 'https://www.studio-smart.it/api/vdc-segnalazioni.php';
+  const API_VINI = VDC_CONFIG.server.vini;
+  const API_ORD = VDC_CONFIG.server.ordini;
+  const API_SEGN = VDC_CONFIG.server.segnalazioni;
   const ULTIMO_FORN = 'vdc_ordini_fornitore';
   const DA_ACQUISIRE = 'vdc_vino_da_acquisire';     // stesso giro della degustazione
   const ACQUISITI = 'vdc_vini_acquisiti';
@@ -1006,9 +1008,9 @@
             ...righe(ro.filter(r => !r.test)),
             ...(prova.length ? ['', 'Vini in prova:', ...righe(prova)] : []), '',
             ...totali, ...(note ? ['', note] : []), '',
-            ...(wa ? ['Grazie, Vecchia Dogana'] : ['Grazie, cordiali saluti', 'Vecchia Dogana'])].join('\n');
+            ...(wa ? ['Grazie, ' + VDC_CONFIG.locale.nome] : ['Grazie, cordiali saluti', VDC_CONFIG.locale.nome])].join('\n');
   }
-  function oggettoOrdine() { return 'Ordine Vecchia Dogana del ' + dataIt(oggi()); }
+  function oggettoOrdine() { return 'Ordine ' + VDC_CONFIG.locale.nome + ' del ' + dataIt(oggi()); }
 
   function apriEmail(a, oggetto, corpo) {
     location.href = 'mailto:' + encodeURIComponent(a || '').replace(/%40/g, '@') +
@@ -1110,7 +1112,7 @@
     doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(30, 60, 114);
     doc.text('Ordine a ' + F, 14, 20);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90, 90, 90);
-    doc.text('Vecchia Dogana · ' + dataIt(quando), 14, 27);
+    doc.text(VDC_CONFIG.locale.nome + ' · ' + dataIt(quando), 14, 27);
     const tot = r => euro(cent(r.bott * r.netto));
     // Semplificato: vino, bottiglie, prezzo unitario, totale; in fondo imponibile e con IVA.
     const riga = semplice ? r => [nomeOrdine(r), r.bott, euro(r.netto), tot(r)]
@@ -1279,7 +1281,7 @@
   function testoRichiesta() {
     return ['Buongiorno,', '',
       'potreste inviarci il vostro listino aggiornato, con le eventuali condizioni e promozioni in corso?', '',
-      'Grazie, cordiali saluti', 'Vecchia Dogana'].join('\n');
+      'Grazie, cordiali saluti', VDC_CONFIG.locale.nome].join('\n');
   }
   function richiediListinoWa() {
     if (!numeroWa(scheda.telefono)) {
@@ -1301,7 +1303,7 @@
     scheda.listinoRichiesto = oggi();
     salvaScheda();
     dateListino();
-    apriEmail(scheda.email, 'Richiesta listino aggiornato - Vecchia Dogana', testoRichiesta());
+    apriEmail(scheda.email, 'Richiesta listino aggiornato - ' + VDC_CONFIG.locale.nome, testoRichiesta());
   }
 
   // ── Eventi ──────────────────────────────────────────────────────────

@@ -219,6 +219,8 @@
       .riga-campi { grid-template-columns: 1fr; }
     }
   </style>
+  <script src="config.js"></script>
+  <script src="comune.js"></script>
 </head>
 <body>
 
@@ -359,9 +361,11 @@
   // storti) ma da un piccolo PHP sull'hosting di studio-smart.it, con i dati in
   // SQLite: ~100-150 ms. Stesse azioni, stesse risposte — sorgente in
   // Hosting/api/vdc-segnalazioni.php (26/09/2026).
-  const API_URL = 'https://www.studio-smart.it/api/vdc-segnalazioni.php';
+  const API_URL = VDC_CONFIG.server.segnalazioni;
   const TIMEOUT_MS = 20000;
-  const API_VINI = 'https://script.google.com/macros/s/AKfycbz_fpZSr1plB6vliWBzSh3rxjaaLz5ilFH_OHIIM2kjqHOaMDWk-za_yaR5gWxtb-1f/exec';
+  RETE.tentativi = 2;
+  RETE.timeoutMs = TIMEOUT_MS;
+  const API_VINI = VDC_CONFIG.server.vini;
   const CACHE_FORNITORI = 'vdc_fornitori_anagrafica';
   const DURATA_CACHE_FORNITORI = 24 * 60 * 60 * 1000;
 
@@ -395,48 +399,6 @@
   let vociFornitore = [];
   let voceFornitoreEvidenziata = -1;
   let inModifica = null;
-
-  // ── Rete ────────────────────────────────────────────────────────────
-  // Stesse regole del resto del progetto (MANUALE §5.3 e §5.4): non si
-  // ritenta mai su una richiesta lenta — abortire il fetch non ferma il
-  // server — e si ritenta invece quando al posto del JSON arriva una pagina
-  // HTML, che è come Apps Script dice "sono freddo".
-  async function fetchConRetry(url, options, tentativi = 2, timeoutMs = TIMEOUT_MS) {
-    for (let i = 0; i < tentativi; i++) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      try {
-        const res = await fetch(url, { ...options, signal: controller.signal });
-        clearTimeout(timeoutId);
-        return res;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') throw error;
-        if (i === tentativi - 1) throw error;
-        await new Promise(r => setTimeout(r, 800 * Math.pow(2, i)));
-      }
-    }
-  }
-
-  async function chiediAlServer(azione, dati, tentativi = 3) {
-    let ultima = '';
-    for (let i = 0; i < tentativi; i++) {
-      const risposta = await fetchConRetry(API_URL, {
-        method: 'POST',
-        redirect: 'follow',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: azione, ...dati })
-      });
-      ultima = await risposta.text();
-      try {
-        return JSON.parse(ultima);
-      } catch (e) {
-        console.warn(`[${azione}] risposta non-JSON al tentativo ${i + 1}/${tentativi}:`, ultima.slice(0, 150));
-        if (i < tentativi - 1) await new Promise(r => setTimeout(r, 1200 * (i + 1)));
-      }
-    }
-    throw new Error('Il server ha risposto in modo inatteso. Di solito basta riprovare fra qualche secondo.');
-  }
 
   // Dichiarata come funzione, non come costante: le pagine di prova la
   // sostituiscono con dati finti per disegnare senza chiamare il server.

@@ -173,6 +173,8 @@
       .voce { flex-direction: column; }
     }
   </style>
+  <script src="config.js"></script>
+  <script src="comune.js"></script>
 </head>
 <body>
 
@@ -284,9 +286,11 @@
   //
   // Il fornitore è un campo libero, con i nomi già usati come suggerimento.
   // Una segnalazione URGENTE sta sempre in cima finché è aperta.
-  const API_URL = 'https://www.studio-smart.it/api/vdc-segnalazioni.php';
+  const API_URL = VDC_CONFIG.server.segnalazioni;
   const AREA = 'locale';
   const TIMEOUT_MS = 20000;
+  RETE.tentativi = 2;
+  RETE.timeoutMs = TIMEOUT_MS;
 
   const CATEGORIE = [
     { chiave: 'food',      etichetta: 'Food' },
@@ -302,41 +306,8 @@
   let segnalazioni = [];
   let inModifica = null;
 
-  // ── Rete: stesse regole di segnalazioni.html (MANUALE §5.3, §5.4) ───
-  async function fetchConRetry(url, options, tentativi = 2, timeoutMs = TIMEOUT_MS) {
-    for (let i = 0; i < tentativi; i++) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      try {
-        const res = await fetch(url, { ...options, signal: controller.signal });
-        clearTimeout(timeoutId);
-        return res;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') throw error;   // mai ritentare sul timeout
-        if (i === tentativi - 1) throw error;
-        await new Promise(r => setTimeout(r, 800 * Math.pow(2, i)));
-      }
-    }
-  }
-
   async function callAPI(azione, dati = {}, tentativi = 3) {
-    let ultima = '';
-    for (let i = 0; i < tentativi; i++) {
-      const risposta = await fetchConRetry(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: azione, ...dati })
-      });
-      ultima = await risposta.text();
-      try {
-        return JSON.parse(ultima);
-      } catch (e) {
-        console.warn(`[${azione}] risposta non-JSON al tentativo ${i + 1}/${tentativi}:`, ultima.slice(0, 150));
-        if (i < tentativi - 1) await new Promise(r => setTimeout(r, 1200 * (i + 1)));
-      }
-    }
-    throw new Error('Il server ha risposto in modo inatteso. Di solito basta riprovare fra qualche secondo.');
+    return chiediAlServer(azione, dati, tentativi);
   }
 
   // ── Utilità ─────────────────────────────────────────────────────────
