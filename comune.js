@@ -9,17 +9,22 @@
 const RETE = { tentativi: 3, timeoutMs: 45000 };
 
 // Gettone dei titolari (dal 31/10/2026). Lo rilascia vdc-pin.php quando il
-// PIN è giusto, vale 7 giorni e resta su questo dispositivo: il PIN si digita
-// una volta a settimana. Apps Script lo pretende sulle azioni con dati
+// PIN è giusto, vale 12 ore e resta su questo dispositivo: il PIN si digita
+// una volta per turno. Apps Script lo pretende sulle azioni con dati
 // personali o economici (AZIONI_TITOLARI in API.js): il controllo vero è là,
 // qui c'è solo la comodità di non chiederlo di nuovo.
 const GETTONE_STORAGE = 'vdc_gettone';
 
-/** Il gettone se c'è e non è scaduto, altrimenti ''. */
+/**
+ * Il gettone se c'è e non è scaduto, altrimenti ''. Oltre le 13 ore di vita
+ * residua non vale: scarta i gettoni da 7 giorni rilasciati il 31/10 prima
+ * del passaggio a 12 ore (il tablet del locale ne aveva uno).
+ */
 function leggiGettone() {
   try {
     const g = localStorage.getItem(GETTONE_STORAGE) || '';
-    return Number(g.split('.')[0]) * 1000 > Date.now() ? g : '';
+    const scadenza = Number(g.split('.')[0]) * 1000;
+    return scadenza > Date.now() && scadenza < Date.now() + 13 * 3600 * 1000 ? g : '';
   } catch (e) { return ''; }
 }
 function salvaGettone(g) { try { localStorage.setItem(GETTONE_STORAGE, g); } catch (e) {} }
