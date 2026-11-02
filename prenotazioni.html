@@ -1219,6 +1219,7 @@
     .btn-rapido:disabled { opacity: 0.5; cursor: wait; }
     .btn-rapido-scontrino { background: #f5b041; color: #2c1810; border-color: #8a4300; }
     .btn-rapido-pagato { background: #27ae60; color: #fff; border-color: #1e8449; }
+    .btn-rapido-omaggio { background: #f4e4c1; color: #2c1810; border-color: #8b4513; }
     .nessun-risultato { color: #f4e4c1; opacity: 0.8; text-align: center; padding: 20px; }
 
     /* Lista accoglienza: a schermo non esiste, in stampa è l'unica cosa. */
@@ -1692,6 +1693,7 @@
               <label>Metodo</label>
               <select id="inputMetodoPagamento">
                 <option value="">—</option>
+                <option value="cassa">Cassa</option>
                 <option value="contanti">Contanti</option>
                 <option value="pos">POS</option>
                 <option value="online">Online</option>
@@ -2793,9 +2795,9 @@
 
     function popolaCampiPagamento(pren) {
       document.getElementById('inputStatoPagamento').value = pren.statoPagamento || 'non_pagato';
-      // "cassa" e' il vecchio valore unico, da quando Contanti e POS erano la
-      // stessa voce: si apre su Contanti invece di lasciare il menu vuoto.
-      const metodoSalvato = pren.metodoPagamento === 'cassa' ? 'contanti' : (pren.metodoPagamento || '');
+      // "cassa" e' tornato una voce del menu (2/11/2026): l'ingresso degli
+      // eventi non distingue contanti e POS, li separa la chiusura.
+      const metodoSalvato = pren.metodoPagamento || '';
       document.getElementById('inputMetodoPagamento').value = metodoSalvato;
       document.getElementById('inputImportoDovuto').value = pren.importoDovuto || '';
       document.getElementById('inputImportoPagato').value = pren.importoPagato || '';
@@ -3110,31 +3112,44 @@
     }
 
     /** Pulsanti dell'accoglienza: solo per chi non è ancora arrivato. */
-    /** 'pagato', 'scontrino' o null: cosa si può segnare all'ingresso. */
+    /** 'pagato', 'scontrino', 'omaggio' o null: cosa si segna all'ingresso. */
     function azioneIngresso(pren) {
       if (!prenDaArrivare(pren)) return null;
-      if ((pren.statoPagamento || 'non_pagato') === 'non_pagato') return 'pagato';
+      const stato = pren.statoPagamento || 'non_pagato';
+      if (stato === 'non_pagato') return 'pagato';
+      if (stato === 'omaggio') return 'omaggio';
       if (pagataTelematica(pren) && Number(pren.importoPagato) > 0) return 'scontrino';
       return null;
     }
 
-    function azioniRapide(pren) {
+    /**
+     * Pulsanti dell'ingresso, uguali sulla card e nella lista. Dalla lista
+     * (`daLista`) non c'è la domanda di conferma: lì la conferma è il tocco
+     * sulla casella che li ha fatti comparire.
+     */
+    function pulsantiIngresso(pren, daLista) {
       const azione = azioneIngresso(pren);
+      if (!azione) return '';
       const id = escapeHtmlPren(pren.id);
+      const coda = daLista ? ', this, true' : ', this';
+      const bottone = (classe, tipo, testo) =>
+        `<button class="btn-rapido ${classe}" onclick="incassoRapido('${id}', '${tipo}', ''${coda})">${testo}</button>`;
 
       if (azione === 'pagato') {
         const importo = Number(pren.importoDovuto) ? ' ' + eurPren(pren.importoDovuto) : '';
-        return `<div class="azioni-rapide">
-          <button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'contanti', this)"><svg class="ico"><use href="#i-banknote"></use></svg> Pagato contanti${importo}</button>
-          <button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'pos', this)"><svg class="ico"><use href="#i-fa-credit-card"></use></svg> Pagato POS${importo}</button>
-        </div>`;
+        return bottone('btn-rapido-pagato', 'pagato', `<svg class="ico"><use href="#i-banknote"></use></svg> Pagato in cassa${importo}`) +
+               bottone('btn-rapido-omaggio', 'omaggio', '🎁 Omaggio');
       }
-      if (azione === 'scontrino') {
-        return `<div class="azioni-rapide">
-          <button class="btn-rapido btn-rapido-scontrino" onclick="incassoRapido('${id}', 'scontrino', '', this)"><svg class="ico"><use href="#i-fa-receipt"></use></svg> Emetti scontrino ${eurPren(pren.importoPagato)}</button>
-        </div>`;
+      if (azione === 'omaggio') {
+        return bottone('btn-rapido-omaggio', 'scontrino', '🎁 Arrivato (omaggio)');
       }
-      return '';
+      return bottone('btn-rapido-scontrino', 'scontrino',
+        `<svg class="ico"><use href="#i-fa-receipt"></use></svg> ${daLista ? 'Scontrino emesso' : 'Emetti scontrino'} ${eurPren(pren.importoPagato)}`);
+    }
+
+    function azioniRapide(pren) {
+      const pulsanti = pulsantiIngresso(pren, false);
+      return pulsanti ? `<div class="azioni-rapide">${pulsanti}</div>` : '';
     }
 
     function mostraPrenotazioniEvento(prenotazioniEvento, totale, conRicerca) {
@@ -3205,10 +3220,13 @@
       if (!pren) return;
 
       const chi = `${pren.cliente} (${parseInt(pren.persone) || 0} pers.)`;
-      const domanda = tipo === 'scontrino'
-        ? `${chi}\n\nScontrino emesso per ${eurPren(pren.importoPagato)}?`
-        : `${chi}\n\nPaga ${Number(pren.importoDovuto) ? eurPren(pren.importoDovuto) + ' ' : ''}` +
-          `${metodo === 'pos' ? 'con POS' : 'in contanti'} e lo scontrino è emesso?`;
+      const domanda = tipo === 'omaggio'
+        ? `${chi}\n\nIngresso in omaggio?`
+        : tipo === 'pagato'
+          ? `${chi}\n\nPaga ${Number(pren.importoDovuto) ? eurPren(pren.importoDovuto) + ' ' : ''}in cassa e lo scontrino è emesso?`
+          : pren.statoPagamento === 'omaggio'
+            ? `${chi}\n\nArrivato (omaggio)?`
+            : `${chi}\n\nScontrino emesso per ${eurPren(pren.importoPagato)}?`;
       if (!senzaConferma && !confirm(domanda)) return;
 
       const card = bottone && bottone.closest('.prenotazione-evento-card, tr');
@@ -3217,7 +3235,7 @@
 
       let r;
       try {
-        r = await chiediAlServer('incassoRapido', { id: id, tipo: tipo, metodo: metodo });
+        r = await chiediAlServer('incassoRapido', { id: id, tipo: tipo });
       } catch (e) {
         r = { errore: e.message };
       }
@@ -3294,12 +3312,7 @@
           : (prenArrivata(p) ? '☑' : '☐');
         let pulsanti = '';
         if (azione && rigaApertaLista === p.id) {
-          const importo = Number(p.importoDovuto) ? ' ' + eurPren(p.importoDovuto) : '';
-          pulsanti = `<tr class="riga-azioni"><td colspan="7"><div class="azioni-rapide">` +
-            (azione === 'pagato'
-              ? `<button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'contanti', this, true)"><svg class="ico"><use href="#i-banknote"></use></svg> Pagato contanti${importo}</button>
-                 <button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'pos', this, true)"><svg class="ico"><use href="#i-fa-credit-card"></use></svg> Pagato POS${importo}</button>`
-              : `<button class="btn-rapido btn-rapido-scontrino" onclick="incassoRapido('${id}', 'scontrino', '', this, true)"><svg class="ico"><use href="#i-fa-receipt"></use></svg> Scontrino emesso ${eurPren(p.importoPagato)}</button>`) +
+          pulsanti = `<tr class="riga-azioni"><td colspan="7"><div class="azioni-rapide">${pulsantiIngresso(p, true)}` +
             `<button class="btn-rapido btn-rapido-annulla" onclick="apriRigaLista(null)">Annulla</button></div></td></tr>`;
         }
         const nome = r.nc.cognome
@@ -3349,7 +3362,7 @@
 
     /**
      * Tocco sulla casella: si aprono, nella riga, i pulsanti che le spettano
-     * (scontrino per chi ha pagato online, contanti/POS per chi paga ora).
+     * (scontrino per chi ha pagato online, cassa od omaggio per chi non ha pagato).
      * Il secondo tocco registra: è quello la conferma.
      */
     function apriRigaLista(id) {
