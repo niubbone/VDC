@@ -1162,11 +1162,6 @@
       font-family: 'Pirata One', cursive; font-size: 1.05em; cursor: pointer;
     }
     .vista-btn.attiva { background: #d4a574; color: #2c1810; }
-    .btn-stampa-accoglienza {
-      background: rgba(244, 228, 193, 0.15); color: #f4e4c1; border: 2px solid #d4a574;
-      border-radius: 6px; padding: 7px 14px; cursor: pointer;
-      font-family: 'Pirata One', cursive; font-size: 1.05em;
-    }
     .prenotazione-evento-card.arrivata { opacity: 0.6; }
     .badge-arrivata {
       display: inline-block; padding: 2px 8px; border-radius: 5px; margin-left: 6px;
@@ -1766,7 +1761,7 @@
             <button id="vistaDaArrivare" class="vista-btn attiva" onclick="cambiaVistaEvento('da_arrivare')">In sospeso <span id="contaDaArrivare"></span></button>
             <button id="vistaTutte" class="vista-btn" onclick="cambiaVistaEvento('tutte')">Tutte <span id="contaTutte"></span></button>
           </div>
-          <button class="btn-stampa-accoglienza" onclick="stampaListaAccoglienza()"><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Lista accoglienza (stampa / PDF)</button>
+          <button class="btn-nuova" onclick="stampaListaAccoglienza()"><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Lista accoglienza</button>
         </div>
         
         <div id="prenotazioniEventoContainer">
@@ -2980,6 +2975,7 @@
     // ═══════════════════════════════════════════════════════════
     //
     // Chi ha lo scontrino (o ha pagato in cassa) è arrivato: la sua card esce da «In sospeso», così
+    // (i no-show invece restano, in fondo)
     // a colpo d'occhio resta solo chi deve ancora presentarsi. «Tutte» mostra
     // la lista intera. Pagamento e scontrino si segnano con un tocco dalla
     // card, senza aprire la modifica.
@@ -2999,8 +2995,10 @@
     // anche se la spunta «scontrino» non c'è.
     function prenArrivata(p) { return !!p.scontrinato || p.statoPagamento === 'pagato_cassa'; }
 
+    // I no-show restano in sospeso fino alla fine dell'evento, in fondo:
+    // servono a vedere chi non si è presentato.
     function prenDaArrivare(p) {
-      return !prenArrivata(p) && p.stato !== 'annullato' && p.stato !== 'no_show';
+      return !prenArrivata(p) && p.stato !== 'annullato';
     }
 
     function prenotazioniDellEvento() {
@@ -3038,7 +3036,8 @@
       // La ricerca guarda sempre tutta la lista: chi cerca un nome vuole
       // trovarlo anche se è già entrato.
       const cerca = normalizzaRicerca(document.getElementById('cercaPrenEvento').value.trim());
-      let lista = vistaEvento === 'tutte' || cerca ? tutte : daArrivare;
+      let lista = vistaEvento === 'tutte' || cerca ? tutte
+        : daArrivare.filter(p => p.stato !== 'no_show').concat(daArrivare.filter(p => p.stato === 'no_show'));
       if (cerca) {
         const cifre = cerca.replace(/\D/g, '');
         lista = lista.filter(p => {
