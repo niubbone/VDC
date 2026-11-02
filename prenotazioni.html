@@ -1763,7 +1763,7 @@
 
         <div class="barra-vista-evento">
           <div class="vista-toggle">
-            <button id="vistaDaArrivare" class="vista-btn attiva" onclick="cambiaVistaEvento('da_arrivare')">Da arrivare <span id="contaDaArrivare"></span></button>
+            <button id="vistaDaArrivare" class="vista-btn attiva" onclick="cambiaVistaEvento('da_arrivare')">In sospeso <span id="contaDaArrivare"></span></button>
             <button id="vistaTutte" class="vista-btn" onclick="cambiaVistaEvento('tutte')">Tutte <span id="contaTutte"></span></button>
           </div>
           <button class="btn-stampa-accoglienza" onclick="stampaListaAccoglienza()"><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Lista accoglienza (stampa / PDF)</button>
@@ -2917,7 +2917,7 @@
       document.getElementById('eventoGestioneDescrizione').style.display = eventoCorrente.descrizione ? 'block' : 'none';
       
       // Evento diverso da quello di prima: ricerca vuota e si riparte da
-      // «Da arrivare». Lo stesso evento riaperto dopo un salvataggio li tiene.
+      // «In sospeso». Lo stesso evento riaperto dopo un salvataggio li tiene.
       if (id !== idUltimoEventoAperto) {
         document.getElementById('cercaPrenEvento').value = '';
         vistaEvento = 'da_arrivare';
@@ -2979,7 +2979,7 @@
     // ACCOGLIENZA DELL'EVENTO (2/11/2026)
     // ═══════════════════════════════════════════════════════════
     //
-    // Chi ha lo scontrino (o ha pagato in cassa) è arrivato: la sua card esce da «Da arrivare», così
+    // Chi ha lo scontrino (o ha pagato in cassa) è arrivato: la sua card esce da «In sospeso», così
     // a colpo d'occhio resta solo chi deve ancora presentarsi. «Tutte» mostra
     // la lista intera. Pagamento e scontrino si segnano con un tocco dalla
     // card, senza aprire la modifica.
@@ -3078,7 +3078,7 @@
         if (totale) {
           container.innerHTML = `<div class="nessun-risultato">${conRicerca
             ? 'Nessuna prenotazione trovata con questa ricerca.'
-            : '<svg class="ico"><use href="#i-fa-circle-check"></use></svg> Sono arrivati tutti. «Tutte» mostra la lista completa.'}</div>`;
+            : '<svg class="ico"><use href="#i-fa-circle-check"></use></svg> Nessuna prenotazione in sospeso. «Tutte» mostra la lista completa.'}</div>`;
           return;
         }
         container.innerHTML = `
