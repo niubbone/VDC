@@ -2979,7 +2979,7 @@
     // ACCOGLIENZA DELL'EVENTO (2/11/2026)
     // ═══════════════════════════════════════════════════════════
     //
-    // Chi ha lo scontrino è arrivato: la sua card esce da «Da arrivare», così
+    // Chi ha lo scontrino (o ha pagato in cassa) è arrivato: la sua card esce da «Da arrivare», così
     // a colpo d'occhio resta solo chi deve ancora presentarsi. «Tutte» mostra
     // la lista intera. Pagamento e scontrino si segnano con un tocco dalla
     // card, senza aprire la modifica.
@@ -2995,7 +2995,9 @@
         ['online', 'satispay', 'bonifico'].includes(String(p.metodoPagamento).toLowerCase());
     }
 
-    function prenArrivata(p) { return !!p.scontrinato; }
+    // Pagato in cassa vuol dire scontrino emesso in quel momento: è arrivato
+    // anche se la spunta «scontrino» non c'è.
+    function prenArrivata(p) { return !!p.scontrinato || p.statoPagamento === 'pagato_cassa'; }
 
     function prenDaArrivare(p) {
       return !prenArrivata(p) && p.stato !== 'annullato' && p.stato !== 'no_show';
@@ -3061,7 +3063,7 @@
           <button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'pos', this)"><svg class="ico"><use href="#i-fa-credit-card"></use></svg> Pagato POS${importo}</button>
         </div>`;
       }
-      if ((pagataTelematica(pren) && Number(pren.importoPagato) > 0) || stato === 'pagato_cassa') {
+      if (pagataTelematica(pren) && Number(pren.importoPagato) > 0) {
         return `<div class="azioni-rapide">
           <button class="btn-rapido btn-rapido-scontrino" onclick="incassoRapido('${id}', 'scontrino', '', this)"><svg class="ico"><use href="#i-fa-receipt"></use></svg> Emetti scontrino ${eurPren(pren.importoPagato)}</button>
         </div>`;
