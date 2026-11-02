@@ -1199,6 +1199,13 @@
       font-family: 'Pirata One', cursive; font-size: 1.1em; cursor: pointer; white-space: nowrap;
     }
     .vista-btn.attiva { background: #8b4513; color: #fff; }
+    /* Switch, «Lista» e «Aggiungi» dell'evento: lo stesso carattere delle
+       card (Georgia in grassetto), più leggibile del Pirata One. */
+    .vista-btn,
+    .barra-vista-evento .btn-lista,
+    .prenotazioni-evento-header .btn-nuova {
+      font-family: 'Georgia', serif; font-weight: 700; font-size: 1em;
+    }
     /* Smartphone: switch a tutta larghezza, «Lista» sotto al centro. */
     @media (max-width: 600px) {
       .barra-vista-evento { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
