@@ -1152,9 +1152,46 @@
       background: rgba(244, 228, 193, 0.95); color: #2c1810;
       font-size: 1em;
     }
+    /* Viste a sinistra, «Lista» al centro, lontano da «Aggiungi». */
     .barra-vista-evento {
-      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
-      justify-content: space-between; margin: -8px 0 16px;
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center;
+      margin: -8px 0 16px;
+    }
+    .barra-vista-evento .vista-toggle { justify-self: start; }
+
+    .modal-lista {
+      display: none; position: fixed; inset: 0; z-index: 3500;
+      background: rgba(0, 0, 0, 0.7); padding: 16px; overflow-y: auto;
+    }
+    .modal-lista.active { display: block; }
+    .modal-lista-box {
+      max-width: 1000px; margin: 0 auto; background: #fffdf7; color: #1a1a1a;
+      border-radius: 10px; padding: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .modal-lista-comandi { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-bottom: 14px; }
+    .modal-lista-comandi button:disabled { opacity: 0.6; cursor: wait; }
+    .lista-acc { font-family: Georgia, 'Times New Roman', serif; }
+    .lista-acc h1 { font-size: 1.6em; margin: 0 0 4px; color: #2c1810; }
+    .lista-acc .sottotitolo { margin-bottom: 8px; }
+    .lista-acc .totali { margin-bottom: 12px; }
+    .lista-acc .tabella-scorre { overflow-x: auto; }
+    .lista-acc table { width: 100%; border-collapse: collapse; font-size: 1em; }
+    .lista-acc th {
+      text-align: left; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em;
+      border-bottom: 2px solid #2c1810; padding: 8px 6px;
+    }
+    .lista-acc td { padding: 9px 6px; border-bottom: 1px solid #ccc; vertical-align: top; }
+    .lista-acc tbody tr:nth-child(even) td { background: #f3eee2; }
+    .lista-acc tr.arrivato td { color: #777; }
+    .lista-acc .spunta { width: 26px; font-size: 1.3em; line-height: 1; }
+    .lista-acc .num { text-align: center; font-weight: bold; }
+    .lista-acc .da-pagare { font-weight: bold; color: #8a2b00; }
+    .lista-acc .note { font-size: 0.9em; }
+    .lista-acc .piede { margin-top: 10px; font-size: 0.85em; color: #555; }
+    @media (max-width: 600px) {
+      .modal-lista { padding: 8px; }
+      .modal-lista-box { padding: 12px; }
+      .lista-acc table { font-size: 0.9em; }
     }
     .vista-toggle { display: flex; border: 2px solid #d4a574; border-radius: 8px; overflow: hidden; }
     .vista-btn {
@@ -1761,7 +1798,7 @@
             <button id="vistaDaArrivare" class="vista-btn attiva" onclick="cambiaVistaEvento('da_arrivare')">In sospeso <span id="contaDaArrivare"></span></button>
             <button id="vistaTutte" class="vista-btn" onclick="cambiaVistaEvento('tutte')">Tutte <span id="contaTutte"></span></button>
           </div>
-          <button class="btn-nuova" onclick="stampaListaAccoglienza()"><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Lista accoglienza</button>
+          <button class="btn-chiudi-pannello btn-lista" onclick="apriListaAccoglienza()"><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Lista</button>
         </div>
         
         <div id="prenotazioniEventoContainer">
@@ -1771,6 +1808,18 @@
     </div>
   </div>
   
+  <!-- LISTA ACCOGLIENZA A SCHERMO -->
+  <div id="modalListaAccoglienza" class="modal-lista" onclick="if (event.target === this) chiudiListaAccoglienza()">
+    <div class="modal-lista-box">
+      <div class="modal-lista-comandi">
+        <button class="btn-chiudi-pannello" id="btnListaPdf" onclick="pdfListaAccoglienza()">Scarica PDF</button>
+        <button class="btn-chiudi-pannello" onclick="stampaListaAccoglienza()"><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Stampa</button>
+        <button class="btn-chiudi-pannello" onclick="chiudiListaAccoglienza()"><svg class="ico"><use href="#i-fa-xmark"></use></svg> Chiudi</button>
+      </div>
+      <div id="listaAccoglienzaContenuto" class="lista-acc"></div>
+    </div>
+  </div>
+
   <script>
     const API_URL = VDC_CONFIG.server.vdc;
     
@@ -3170,80 +3219,205 @@
 
     /**
      * Lista per l'accoglienza, in ordine di cognome, con quello che serve alla
-     * porta: quanti sono, se devono ancora pagare, le note. Si stampa o si
-     * salva in PDF dalla finestra di stampa del dispositivo.
+     * porta: quanti sono, se devono ancora pagare, le note. Si apre a schermo;
+     * da lì si scarica in PDF (sul tablet si condivide, ad esempio «Salva su
+     * File») o si stampa, dove la stampa c'è.
      */
-    function stampaListaAccoglienza() {
-      if (!eventoCorrente) return;
+    function datiListaAccoglienza() {
       const tutte = prenotazioniDellEvento();
-      const annullate = tutte.filter(p => p.stato === 'annullato').length;
       const righe = tutte
         .filter(p => p.stato !== 'annullato')
         .map(p => ({ p: p, nc: nomeCognomeDi(p) }))
         .sort((a, b) => (a.nc.cognome || a.nc.nome).localeCompare(b.nc.cognome || b.nc.nome, 'it', { sensitivity: 'base' }));
-
-      const persone = righe.reduce((s, r) => s + (parseInt(r.p.persone) || 0), 0);
-      const daIncassare = righe
-        .filter(r => (r.p.statoPagamento || 'non_pagato') === 'non_pagato')
-        .reduce((s, r) => s + (Number(r.p.importoDovuto) || 0), 0);
-
-      const pagamento = p => {
-        const stato = p.statoPagamento || 'non_pagato';
-        if (stato === 'non_pagato') {
-          return `<span class="da-pagare">DA PAGARE${Number(p.importoDovuto) ? ' ' + eurPren(p.importoDovuto) : ''}</span>`;
-        }
-        if (stato === 'omaggio') return 'Omaggio';
-        if (stato === 'parziale') {
-          return `<span class="da-pagare">Parziale: pagati ${eurPren(p.importoPagato)} su ${eurPren(p.importoDovuto)}</span>`;
-        }
-        if (stato === 'pagato_online') {
-          return `Pagato online ${eurPren(p.importoPagato)}` +
-            (p.scontrinato ? '' : '<br><span class="da-pagare">scontrino da emettere</span>');
-        }
-        if (stato === 'pagato_cassa') {
-          return `Pagato ${eurPren(p.importoPagato)}${p.metodoPagamento ? ' (' + escapeHtmlPren(p.metodoPagamento) + ')' : ''}`;
-        }
-        return (ETICHETTE_PAGAMENTO[stato] || stato).replace(/<[^>]*>/g, '').trim();
+      return {
+        righe: righe,
+        annullate: tutte.filter(p => p.stato === 'annullato').length,
+        persone: righe.reduce((s, r) => s + (parseInt(r.p.persone) || 0), 0),
+        daIncassare: righe
+          .filter(r => (r.p.statoPagamento || 'non_pagato') === 'non_pagato')
+          .reduce((s, r) => s + (Number(r.p.importoDovuto) || 0), 0),
+        dataEvento: new Date(eventoCorrente.data + 'T00:00:00')
+          .toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
       };
+    }
 
-      const dataEvento = new Date(eventoCorrente.data + 'T00:00:00')
-        .toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    /** Pagamento in parole: `forte` se alla porta c'è qualcosa da fare. */
+    function pagamentoLista(p) {
+      const stato = p.statoPagamento || 'non_pagato';
+      if (stato === 'non_pagato') {
+        return { testo: 'DA PAGARE' + (Number(p.importoDovuto) ? ' ' + eurPren(p.importoDovuto) : ''), forte: true };
+      }
+      if (stato === 'omaggio') return { testo: 'Omaggio' };
+      if (stato === 'parziale') {
+        return { testo: `Parziale: pagati ${eurPren(p.importoPagato)} su ${eurPren(p.importoDovuto)}`, forte: true };
+      }
+      if (stato === 'pagato_online') {
+        return p.scontrinato
+          ? { testo: `Pagato online ${eurPren(p.importoPagato)}` }
+          : { testo: `Pagato online ${eurPren(p.importoPagato)} - scontrino da emettere`, forte: true };
+      }
+      if (stato === 'pagato_cassa') {
+        return { testo: `Pagato ${eurPren(p.importoPagato)}${p.metodoPagamento ? ' (' + p.metodoPagamento + ')' : ''}` };
+      }
+      return { testo: (ETICHETTE_PAGAMENTO[stato] || stato).replace(/<[^>]*>/g, '').trim() };
+    }
 
-      const corpo = righe.map(r => {
+    function htmlListaAccoglienza(d) {
+      const corpo = d.righe.map(r => {
         const p = r.p;
+        const pag = pagamentoLista(p);
         const nome = r.nc.cognome
           ? `<strong>${escapeHtmlPren(r.nc.cognome.toUpperCase())}</strong> ${escapeHtmlPren(r.nc.nome)}`
           : `<strong>${escapeHtmlPren(r.nc.nome.toUpperCase())}</strong>`;
-        return `<tr>
+        return `<tr${prenArrivata(p) ? ' class="arrivato"' : ''}>
           <td class="spunta">${prenArrivata(p) ? '☑' : '☐'}</td>
           <td class="nome">${nome}${p.stato === 'no_show' ? ' <em>(no-show)</em>' : ''}</td>
           <td class="num">${parseInt(p.persone) || 0}</td>
           <td>${escapeHtmlPren(p.ora || '')}</td>
           <td>${escapeHtmlPren(p.telefono || '')}</td>
-          <td>${pagamento(p)}</td>
+          <td${pag.forte ? ' class="da-pagare"' : ''}>${escapeHtmlPren(pag.testo)}</td>
           <td class="note">${escapeHtmlPren(p.note || '')}</td>
         </tr>`;
       }).join('');
 
+      return `
+        <h1>${escapeHtmlPren(eventoCorrente.nome)}</h1>
+        <div class="sottotitolo">${d.dataEvento} · Lista accoglienza</div>
+        <div class="totali"><strong>${d.righe.length}</strong> prenotazioni · <strong>${d.persone}</strong> persone` +
+          (d.daIncassare ? ` · da incassare all'ingresso <strong>${eurPren(d.daIncassare)}</strong>` : '') + `</div>
+        <div class="tabella-scorre"><table>
+          <thead><tr><th></th><th>Cliente</th><th>Pers.</th><th>Ora</th><th>Telefono</th><th>Pagamento</th><th>Note</th></tr></thead>
+          <tbody>${corpo}</tbody>
+        </table></div>
+        <div class="piede">Aggiornata il ${new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}` +
+          (d.annullate ? ` · ${d.annullate} annullat${d.annullate === 1 ? 'a' : 'e'} non in elenco` : '') + `</div>`;
+    }
+
+    function apriListaAccoglienza() {
+      if (!eventoCorrente) return;
+      document.getElementById('listaAccoglienzaContenuto').innerHTML = htmlListaAccoglienza(datiListaAccoglienza());
+      const condividi = puoCondividerePdf();
+      document.getElementById('btnListaPdf').innerHTML = condividi
+        ? '<svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Condividi / salva PDF'
+        : '<svg class="ico"><use href="#i-save"></use></svg> Scarica PDF';
+      document.getElementById('modalListaAccoglienza').classList.add('active');
+      // Sul tablet la condivisione deve partire appena toccato il pulsante,
+      // o viene rifiutata: le librerie si scaricano già adesso.
+      if (condividi) caricaJsPdf().catch(() => {});
+    }
+
+    function chiudiListaAccoglienza() {
+      document.getElementById('modalListaAccoglienza').classList.remove('active');
+    }
+
+    function stampaListaAccoglienza() {
       let box = document.getElementById('stampaAccoglienza');
       if (!box) {
         box = document.createElement('div');
         box.id = 'stampaAccoglienza';
         document.body.appendChild(box);
       }
-      box.innerHTML = `
-        <h1>${escapeHtmlPren(eventoCorrente.nome)}</h1>
-        <div class="sottotitolo">${dataEvento} · Lista accoglienza</div>
-        <div class="totali"><strong>${righe.length}</strong> prenotazioni · <strong>${persone}</strong> persone` +
-          (daIncassare ? ` · da incassare all'ingresso <strong>${eurPren(daIncassare)}</strong>` : '') + `</div>
-        <table>
-          <thead><tr><th></th><th>Cliente</th><th>Pers.</th><th>Ora</th><th>Telefono</th><th>Pagamento</th><th>Note</th></tr></thead>
-          <tbody>${corpo}</tbody>
-        </table>
-        <div class="piede">Stampata il ${new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}` +
-          (annullate ? ` · ${annullate} annullat${annullate === 1 ? 'a' : 'e'} non in elenco` : '') + `</div>`;
-
+      box.innerHTML = htmlListaAccoglienza(datiListaAccoglienza());
       window.print();
+    }
+
+    // PDF diretto (jsPDF), come in ordini.html: le librerie si scaricano solo
+    // la prima volta che servono.
+    const LIB_PDF = ['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+                     'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'];
+    function caricaScript(src) {
+      return new Promise((ok, ko) => {
+        const s = document.createElement('script');
+        s.src = src; s.onload = ok; s.onerror = () => ko(new Error('libreria PDF non scaricata'));
+        document.head.appendChild(s);
+      });
+    }
+    let libPdf = null;
+    function caricaJsPdf() {
+      if (!libPdf) libPdf = (async () => {
+        if (!window.jspdf) await caricaScript(LIB_PDF[0]);
+        if (!window.jspdf.jsPDF.API.autoTable) await caricaScript(LIB_PDF[1]);
+      })().catch(e => { libPdf = null; throw e; });
+      return libPdf;
+    }
+
+    function puoCondividerePdf() {
+      try { return !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'l.pdf', { type: 'application/pdf' })] })); }
+      catch (e) { return false; }
+    }
+
+    async function pdfListaAccoglienza() {
+      const bottone = document.getElementById('btnListaPdf');
+      const etichetta = bottone.innerHTML;
+      bottone.disabled = true;
+      bottone.textContent = 'Preparo il PDF…';
+      try {
+        await caricaJsPdf();
+      } catch (e) {
+        alert('⚠️ Non riesco a preparare il PDF (' + e.message + '): controlla la connessione.');
+        bottone.disabled = false; bottone.innerHTML = etichetta;
+        return;
+      }
+
+      const d = datiListaAccoglienza();
+      const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(44, 24, 16);
+      doc.text(doc.splitTextToSize(String(eventoCorrente.nome), 182), 14, 18);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(70, 70, 70);
+      doc.text(d.dataEvento + ' - Lista accoglienza', 14, 25);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${d.righe.length} prenotazioni - ${d.persone} persone` +
+        (d.daIncassare ? ` - da incassare all'ingresso ${eurPren(d.daIncassare)}` : ''), 14, 31);
+
+      const forti = [];
+      const corpo = d.righe.map((r, i) => {
+        const pag = pagamentoLista(r.p);
+        if (pag.forte) forti.push(i);
+        const nome = r.nc.cognome ? r.nc.cognome.toUpperCase() + ' ' + r.nc.nome : r.nc.nome.toUpperCase();
+        return ['', nome + (r.p.stato === 'no_show' ? ' (no-show)' : ''), parseInt(r.p.persone) || 0,
+          r.p.ora || '', r.p.telefono || '', pag.testo, r.p.note || ''];
+      });
+
+      doc.autoTable({
+        startY: 35, theme: 'striped',
+        head: [['', 'Cliente', 'Pers.', 'Ora', 'Telefono', 'Pagamento', 'Note']],
+        body: corpo,
+        styles: { font: 'helvetica', fontSize: 9.5, cellPadding: 2.2, valign: 'middle' },
+        headStyles: { fillColor: [44, 24, 16], textColor: 255 },
+        columnStyles: {
+          0: { cellWidth: 8 }, 1: { cellWidth: 46, fontStyle: 'bold' }, 2: { cellWidth: 12, halign: 'center', fontStyle: 'bold' },
+          3: { cellWidth: 13 }, 4: { cellWidth: 25 }, 5: { cellWidth: 40 }, 6: { fontSize: 8.5 }
+        },
+        didParseCell: c => {
+          if (c.section === 'body' && c.column.index === 5 && forti.includes(c.row.index)) c.cell.styles.fontStyle = 'bold';
+        },
+        // La casella da spuntare all'ingresso, disegnata: Helvetica non ha ☐.
+        didDrawCell: c => {
+          if (c.section !== 'body' || c.column.index !== 0) return;
+          const x = c.cell.x + 2, y = c.cell.y + c.cell.height / 2 - 2;
+          doc.setDrawColor(0); doc.setLineWidth(0.3); doc.rect(x, y, 4, 4);
+          if (prenArrivata(d.righe[c.row.index].p)) {
+            doc.line(x + 0.8, y + 2.2, x + 1.7, y + 3.2); doc.line(x + 1.7, y + 3.2, x + 3.4, y + 0.8);
+          }
+        }
+      });
+      doc.setFontSize(8.5); doc.setTextColor(90, 90, 90);
+      doc.text('Aggiornata il ' + new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) +
+        (d.annullate ? ` - ${d.annullate} annullat${d.annullate === 1 ? 'a' : 'e'} non in elenco` : ''),
+        14, doc.lastAutoTable.finalY + 7);
+
+      bottone.disabled = false; bottone.innerHTML = etichetta;
+      const nomeFile = ('Lista ' + eventoCorrente.nome + ' ' + eventoCorrente.data)
+        .replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim() + '.pdf';
+
+      if (puoCondividerePdf()) {
+        const file = new File([doc.output('blob')], nomeFile, { type: 'application/pdf' });
+        try { await navigator.share({ files: [file], title: nomeFile.replace(/\.pdf$/, '') }); return; }
+        catch (e) {
+          if (e.name === 'AbortError') return;   // condivisione annullata
+        }
+      }
+      doc.save(nomeFile);
     }
 
     function chiudiPannelloEvento() {
