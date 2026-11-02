@@ -410,6 +410,16 @@
     }
     
     .pannello-header-comandi { display: flex; gap: 8px; }
+    /* X rossa come il «Chiudi» di chiusura.html, misura del «+» accanto. */
+    .btn-nuova.btn-chiudi-mobile {
+      background: linear-gradient(145deg, #c62828 0%, #8b0000 100%);
+      color: #fff; border-color: #6a0000; text-shadow: none;
+      box-shadow:
+        0 4px 0 #4a0000,
+        0 6px 8px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .btn-nuova.btn-chiudi-mobile:hover { background: linear-gradient(145deg, #d32f2f 0%, #9b0000 100%); }
     .pannello-header {
       display: flex;
       justify-content: space-between;
