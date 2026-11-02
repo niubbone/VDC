@@ -1184,6 +1184,13 @@
     .lista-acc tbody tr:nth-child(even) td { background: #f3eee2; }
     .lista-acc tr.arrivato td { color: #777; }
     .lista-acc .spunta { width: 26px; font-size: 1.3em; line-height: 1; }
+    .casella-lista {
+      font-size: 1.5em; line-height: 1; width: 40px; height: 40px; margin: -8px 0;
+      background: #fff; color: #2c1810; border: 2px solid #8b4513; border-radius: 6px; cursor: pointer;
+    }
+    .casella-lista.aperta { background: #f5b041; }
+    .lista-acc tr.riga-azioni td { background: #fdf0d5 !important; border-bottom: 2px solid #8b4513; }
+    .btn-rapido-annulla { flex: 0 0 auto; min-width: 0; background: #fff; color: #2c1810; border-color: #8b4513; }
     .lista-acc .num { text-align: center; font-weight: bold; }
     .lista-acc .da-pagare { font-weight: bold; color: #8a2b00; }
     .lista-acc .note { font-size: 0.9em; }
@@ -3063,6 +3070,10 @@
       document.getElementById('eventoContatoreNumero').textContent = totalePersone;
       mostraRiepilogoEconomico(lista);
       ridisegnaListaEvento();
+      if (document.getElementById('modalListaAccoglienza').classList.contains('active')) {
+        rigaApertaLista = null;
+        disegnaListaSchermo();
+      }
     }
 
     function cambiaVistaEvento(vista) {
@@ -3099,19 +3110,26 @@
     }
 
     /** Pulsanti dell'accoglienza: solo per chi non è ancora arrivato. */
+    /** 'pagato', 'scontrino' o null: cosa si può segnare all'ingresso. */
+    function azioneIngresso(pren) {
+      if (!prenDaArrivare(pren)) return null;
+      if ((pren.statoPagamento || 'non_pagato') === 'non_pagato') return 'pagato';
+      if (pagataTelematica(pren) && Number(pren.importoPagato) > 0) return 'scontrino';
+      return null;
+    }
+
     function azioniRapide(pren) {
-      if (!prenDaArrivare(pren)) return '';
-      const stato = pren.statoPagamento || 'non_pagato';
+      const azione = azioneIngresso(pren);
       const id = escapeHtmlPren(pren.id);
 
-      if (stato === 'non_pagato') {
+      if (azione === 'pagato') {
         const importo = Number(pren.importoDovuto) ? ' ' + eurPren(pren.importoDovuto) : '';
         return `<div class="azioni-rapide">
           <button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'contanti', this)"><svg class="ico"><use href="#i-banknote"></use></svg> Pagato contanti${importo}</button>
           <button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'pos', this)"><svg class="ico"><use href="#i-fa-credit-card"></use></svg> Pagato POS${importo}</button>
         </div>`;
       }
-      if (pagataTelematica(pren) && Number(pren.importoPagato) > 0) {
+      if (azione === 'scontrino') {
         return `<div class="azioni-rapide">
           <button class="btn-rapido btn-rapido-scontrino" onclick="incassoRapido('${id}', 'scontrino', '', this)"><svg class="ico"><use href="#i-fa-receipt"></use></svg> Emetti scontrino ${eurPren(pren.importoPagato)}</button>
         </div>`;
@@ -3182,7 +3200,7 @@
      * persona sbagliata non si annulla dall'app, perché lo scontrino emesso
      * resta segnato.
      */
-    async function incassoRapido(id, tipo, metodo, bottone) {
+    async function incassoRapido(id, tipo, metodo, bottone, senzaConferma) {
       const pren = prenotazioni.find(p => p.id === id);
       if (!pren) return;
 
@@ -3191,9 +3209,9 @@
         ? `${chi}\n\nScontrino emesso per ${eurPren(pren.importoPagato)}?`
         : `${chi}\n\nPaga ${Number(pren.importoDovuto) ? eurPren(pren.importoDovuto) + ' ' : ''}` +
           `${metodo === 'pos' ? 'con POS' : 'in contanti'} e lo scontrino è emesso?`;
-      if (!confirm(domanda)) return;
+      if (!senzaConferma && !confirm(domanda)) return;
 
-      const card = bottone && bottone.closest('.prenotazione-evento-card');
+      const card = bottone && bottone.closest('.prenotazione-evento-card, tr');
       if (card) card.querySelectorAll('button').forEach(b => { b.disabled = true; });
       if (bottone) bottone.textContent = 'Salvo…';
 
@@ -3262,22 +3280,40 @@
       return { testo: (ETICHETTE_PAGAMENTO[stato] || stato).replace(/<[^>]*>/g, '').trim() };
     }
 
-    function htmlListaAccoglienza(d) {
+    // Riga della lista a schermo con i pulsanti aperti (tocco sulla casella).
+    let rigaApertaLista = null;
+
+    function htmlListaAccoglienza(d, aSchermo) {
       const corpo = d.righe.map(r => {
         const p = r.p;
         const pag = pagamentoLista(p);
+        const azione = aSchermo ? azioneIngresso(p) : null;
+        const id = escapeHtmlPren(p.id);
+        const casella = azione
+          ? `<button class="casella-lista${rigaApertaLista === p.id ? ' aperta' : ''}" onclick="apriRigaLista('${id}')" title="Segna l'arrivo">☐</button>`
+          : (prenArrivata(p) ? '☑' : '☐');
+        let pulsanti = '';
+        if (azione && rigaApertaLista === p.id) {
+          const importo = Number(p.importoDovuto) ? ' ' + eurPren(p.importoDovuto) : '';
+          pulsanti = `<tr class="riga-azioni"><td colspan="7"><div class="azioni-rapide">` +
+            (azione === 'pagato'
+              ? `<button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'contanti', this, true)"><svg class="ico"><use href="#i-banknote"></use></svg> Pagato contanti${importo}</button>
+                 <button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'pos', this, true)"><svg class="ico"><use href="#i-fa-credit-card"></use></svg> Pagato POS${importo}</button>`
+              : `<button class="btn-rapido btn-rapido-scontrino" onclick="incassoRapido('${id}', 'scontrino', '', this, true)"><svg class="ico"><use href="#i-fa-receipt"></use></svg> Scontrino emesso ${eurPren(p.importoPagato)}</button>`) +
+            `<button class="btn-rapido btn-rapido-annulla" onclick="apriRigaLista(null)">Annulla</button></div></td></tr>`;
+        }
         const nome = r.nc.cognome
           ? `<strong>${escapeHtmlPren(r.nc.cognome.toUpperCase())}</strong> ${escapeHtmlPren(r.nc.nome)}`
           : `<strong>${escapeHtmlPren(r.nc.nome.toUpperCase())}</strong>`;
         return `<tr${prenArrivata(p) ? ' class="arrivato"' : ''}>
-          <td class="spunta">${prenArrivata(p) ? '☑' : '☐'}</td>
+          <td class="spunta">${casella}</td>
           <td class="nome">${nome}${p.stato === 'no_show' ? ' <em>(no-show)</em>' : ''}</td>
           <td class="num">${parseInt(p.persone) || 0}</td>
           <td>${escapeHtmlPren(p.ora || '')}</td>
           <td>${escapeHtmlPren(p.telefono || '')}</td>
           <td${pag.forte ? ' class="da-pagare"' : ''}>${escapeHtmlPren(pag.testo)}</td>
           <td class="note">${escapeHtmlPren(p.note || '')}</td>
-        </tr>`;
+        </tr>${pulsanti}`;
       }).join('');
 
       return `
@@ -3295,7 +3331,8 @@
 
     function apriListaAccoglienza() {
       if (!eventoCorrente) return;
-      document.getElementById('listaAccoglienzaContenuto').innerHTML = htmlListaAccoglienza(datiListaAccoglienza());
+      rigaApertaLista = null;
+      disegnaListaSchermo();
       const condividi = puoCondividerePdf();
       document.getElementById('btnListaPdf').innerHTML = condividi
         ? '<svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Condividi / salva PDF'
@@ -3304,6 +3341,20 @@
       // Sul tablet la condivisione deve partire appena toccato il pulsante,
       // o viene rifiutata: le librerie si scaricano già adesso.
       if (condividi) caricaJsPdf().catch(() => {});
+    }
+
+    function disegnaListaSchermo() {
+      document.getElementById('listaAccoglienzaContenuto').innerHTML = htmlListaAccoglienza(datiListaAccoglienza(), true);
+    }
+
+    /**
+     * Tocco sulla casella: si aprono, nella riga, i pulsanti che le spettano
+     * (scontrino per chi ha pagato online, contanti/POS per chi paga ora).
+     * Il secondo tocco registra: è quello la conferma.
+     */
+    function apriRigaLista(id) {
+      rigaApertaLista = rigaApertaLista === id ? null : id;
+      disegnaListaSchermo();
     }
 
     function chiudiListaAccoglienza() {
