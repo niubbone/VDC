@@ -1803,6 +1803,19 @@
       if (box) box.style.display = 'none';
     }
 
+    // Un'altra pagina (la dashboard, un'altra scheda) ha scritto e ha buttato
+    // la cache delle prenotazioni: quella in memoria qui è vecchia uguale.
+    // Le voci tolte sono più d'una, si ricarica una volta sola.
+    let ricaricaDaFuori = null;
+    window.addEventListener('storage', e => {
+      if (!e.key || !e.key.startsWith('vdc_cache_getPrenotazioni') || e.newValue !== null) return;
+      clearTimeout(ricaricaDaFuori);
+      ricaricaDaFuori = setTimeout(() => {
+        invalidaCacheMemoria();
+        caricaPrenotazioni();
+      }, 300);
+    });
+
     function ricaricaDopoErrore() {
       invalidaCacheMemoria();
       caricaPrenotazioni();

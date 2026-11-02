@@ -1093,9 +1093,23 @@
     // Il controllo vero è sul server (AZIONI_TITOLARI in API.js).
     if (!leggiGettone()) location.replace('index.html?pin=1');
 
+    // Le scritture sui pagamenti cambiano le prenotazioni che prenotazioni.html
+    // tiene in localStorage per 5 minuti: senza buttarle, dopo gli scontrini
+    // segnati in blocco la scheda mostrava ancora «da scontrinare» (1/11/2026).
+    // Togliere le voci avvisa anche una pagina Prenotazioni già aperta.
+    const AZIONI_SU_PRENOTAZIONI = ['segnaScontrinati', 'confermaRimborso', 'aggiornaPagamento'];
+
     async function callAPI(action, data = {}) {
       try {
-        return await chiediAlServer(action, data);
+        const result = await chiediAlServer(action, data);
+        if (AZIONI_SU_PRENOTAZIONI.indexOf(action) !== -1 && result && !result.errore) {
+          try {
+            Object.keys(localStorage)
+              .filter(k => k.startsWith('vdc_cache_'))
+              .forEach(k => localStorage.removeItem(k));
+          } catch (e) { /* localStorage non disponibile: pazienza */ }
+        }
+        return result;
       } catch (error) {
         console.error('Errore API:', error);
         throw error;
