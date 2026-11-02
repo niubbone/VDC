@@ -1145,6 +1145,72 @@
       margin-bottom: 20px;
     }
     
+    .prenotazioni-evento-header { flex-wrap: wrap; gap: 10px; }
+    .cerca-pren-evento {
+      flex: 1; min-width: 160px; padding: 9px 12px;
+      border: 2px solid #d4a574; border-radius: 6px;
+      background: rgba(244, 228, 193, 0.95); color: #2c1810;
+      font-size: 1em;
+    }
+    .barra-vista-evento {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+      justify-content: space-between; margin: -8px 0 16px;
+    }
+    .vista-toggle { display: flex; border: 2px solid #d4a574; border-radius: 8px; overflow: hidden; }
+    .vista-btn {
+      background: transparent; color: #f4e4c1; border: none; padding: 7px 14px;
+      font-family: 'Pirata One', cursive; font-size: 1.05em; cursor: pointer;
+    }
+    .vista-btn.attiva { background: #d4a574; color: #2c1810; }
+    .btn-stampa-accoglienza {
+      background: rgba(244, 228, 193, 0.15); color: #f4e4c1; border: 2px solid #d4a574;
+      border-radius: 6px; padding: 7px 14px; cursor: pointer;
+      font-family: 'Pirata One', cursive; font-size: 1.05em;
+    }
+    .prenotazione-evento-card.arrivata { opacity: 0.6; }
+    .badge-arrivata {
+      display: inline-block; padding: 2px 8px; border-radius: 5px; margin-left: 6px;
+      background: #1e8449; color: #fff; font-size: 0.75em; font-weight: 700;
+    }
+    .azioni-rapide { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .btn-rapido {
+      flex: 1; min-width: 140px; padding: 10px; border-radius: 6px; cursor: pointer;
+      font-family: 'Pirata One', cursive; font-size: 1.1em; border: 2px solid;
+    }
+    .btn-rapido:disabled { opacity: 0.5; cursor: wait; }
+    .btn-rapido-scontrino { background: #f5b041; color: #2c1810; border-color: #8a4300; }
+    .btn-rapido-pagato { background: #27ae60; color: #fff; border-color: #1e8449; }
+    .nessun-risultato { color: #f4e4c1; opacity: 0.8; text-align: center; padding: 20px; }
+
+    /* Lista accoglienza: a schermo non esiste, in stampa è l'unica cosa. */
+    #stampaAccoglienza { display: none; }
+    @media print {
+      @page { size: A4 portrait; margin: 12mm; }
+      html, body { background: #fff !important; }
+      body > *:not(#stampaAccoglienza) { display: none !important; }
+      #stampaAccoglienza {
+        display: block; color: #000; font-family: Georgia, 'Times New Roman', serif; font-size: 11pt;
+      }
+      #stampaAccoglienza h1 { font-size: 18pt; margin: 0 0 2mm; }
+      #stampaAccoglienza .sottotitolo { font-size: 11pt; margin-bottom: 4mm; }
+      #stampaAccoglienza .totali { font-size: 10.5pt; margin-bottom: 4mm; }
+      #stampaAccoglienza table { width: 100%; border-collapse: collapse; }
+      #stampaAccoglienza th {
+        text-align: left; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.04em;
+        border-bottom: 1.5pt solid #000; padding: 2mm 2mm;
+      }
+      #stampaAccoglienza td { padding: 2.4mm 2mm; border-bottom: 0.5pt solid #999; vertical-align: top; }
+      #stampaAccoglienza tr { page-break-inside: avoid; }
+      #stampaAccoglienza tbody tr:nth-child(even) td { background: #f2f2f2; }
+      #stampaAccoglienza .spunta { width: 7mm; font-size: 15pt; line-height: 1; }
+      #stampaAccoglienza .nome { font-size: 12pt; }
+      #stampaAccoglienza .num { text-align: center; font-size: 12pt; font-weight: bold; }
+      #stampaAccoglienza .da-pagare { font-weight: bold; }
+      #stampaAccoglienza .note { font-size: 9.5pt; }
+      #stampaAccoglienza .piede { margin-top: 4mm; font-size: 9pt; color: #444; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
     .prenotazioni-evento-header h3 {
       font-family: 'Pirata One';
       font-size: 1.5em;
@@ -1689,7 +1755,18 @@
 
         <div class="prenotazioni-evento-header">
           <h3>Prenotazioni Evento</h3>
+          <input type="search" id="cercaPrenEvento" class="cerca-pren-evento"
+                 placeholder="Cerca nome, telefono, note…" autocomplete="off"
+                 oninput="ridisegnaListaEvento()">
           <button class="btn-nuova" onclick="mostraModalPrenotazioneEvento()"><svg class="ico"><use href="#i-plus"></use></svg> Aggiungi</button>
+        </div>
+
+        <div class="barra-vista-evento">
+          <div class="vista-toggle">
+            <button id="vistaDaArrivare" class="vista-btn attiva" onclick="cambiaVistaEvento('da_arrivare')">Da arrivare <span id="contaDaArrivare"></span></button>
+            <button id="vistaTutte" class="vista-btn" onclick="cambiaVistaEvento('tutte')">Tutte <span id="contaTutte"></span></button>
+          </div>
+          <button class="btn-stampa-accoglienza" onclick="stampaListaAccoglienza()"><svg class="ico"><use href="#i-scroll-unfurled"></use></svg> Lista accoglienza (stampa / PDF)</button>
         </div>
         
         <div id="prenotazioniEventoContainer">
@@ -2212,6 +2289,7 @@
 
         if (nuovePren) prenotazioni = nuovePren;
         if (nuoviEventi) eventi = nuoviEventi;
+        if (nuovePren && resultPren.versione) versioneDati = resultPren.versione;
 
       } catch (error) {
         console.error('Errore caricamento:', error);
@@ -2220,6 +2298,14 @@
 
       disegnaCalendarioEGiorno();
       hideLoading();
+
+      // Pannello dell'evento aperto: si ridisegna coi dati nuovi, tenendo
+      // ricerca e vista. Solo se l'evento è del mese appena caricato.
+      if (eventoCorrente && document.getElementById('pannelloEventoGestione').classList.contains('active') &&
+          String(eventoCorrente.data).startsWith(chiaveMese(anno, mese))) {
+        eventoCorrente = eventi.find(e => e.id === eventoCorrente.id) || eventoCorrente;
+        ridisegnaPannelloEvento();
+      }
 
       // ── Tempo 3: il mese prima e quello dopo, in anticipo ─────────────
       preparaMesiVicini();
@@ -2752,7 +2838,7 @@
     }
 
     /** Badge del pagamento accanto a quello dello stato, nelle liste. */
-    function badgePagamento(pren) {
+    function badgePagamento(pren, senzaScontrino) {
       const stato = pren.statoPagamento;
       if (!stato || stato === 'non_pagato') return '';
 
@@ -2762,7 +2848,7 @@
 
       const daScontrinare = (stato === 'pagato_online' ||
         ['online', 'satispay', 'bonifico'].includes(String(pren.metodoPagamento).toLowerCase()));
-      if (daScontrinare && !pren.scontrinato && Number(pren.importoPagato) > 0) {
+      if (!senzaScontrino && daScontrinare && !pren.scontrinato && Number(pren.importoPagato) > 0) {
         html += `<span class="pag-scontrino-manca"><svg class="ico"><use href="#i-fa-receipt"></use></svg> da scontrinare</span>`;
       }
       return html;
@@ -2830,16 +2916,14 @@
       document.getElementById('eventoGestioneDescrizione').textContent = eventoCorrente.descrizione || '';
       document.getElementById('eventoGestioneDescrizione').style.display = eventoCorrente.descrizione ? 'block' : 'none';
       
-      // Carica prenotazioni evento
-      const prenotazioniEvento = prenotazioni.filter(p => p.evento_id === id);
-      const totalePersone = prenotazioniEvento
-        .filter(p => p.stato !== 'annullato' && p.stato !== 'no_show')
-        .reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
-      
-      document.getElementById('eventoContatoreNumero').textContent = totalePersone;
-
-      mostraPrenotazioniEvento(prenotazioniEvento);
-      mostraRiepilogoEconomico(prenotazioniEvento);
+      // Evento diverso da quello di prima: ricerca vuota e si riparte da
+      // «Da arrivare». Lo stesso evento riaperto dopo un salvataggio li tiene.
+      if (id !== idUltimoEventoAperto) {
+        document.getElementById('cercaPrenEvento').value = '';
+        vistaEvento = 'da_arrivare';
+        idUltimoEventoAperto = id;
+      }
+      ridisegnaPannelloEvento();
 
       // Mostra pannello
       document.getElementById('pannelloEventoGestione').classList.add('active');
@@ -2891,10 +2975,110 @@
       box.style.display = (r.dovuto || r.incassato || r.noShow) ? 'flex' : 'none';
     }
     
-    function mostraPrenotazioniEvento(prenotazioniEvento) {
+    // ═══════════════════════════════════════════════════════════
+    // ACCOGLIENZA DELL'EVENTO (2/11/2026)
+    // ═══════════════════════════════════════════════════════════
+    //
+    // Chi ha lo scontrino è arrivato: la sua card esce da «Da arrivare», così
+    // a colpo d'occhio resta solo chi deve ancora presentarsi. «Tutte» mostra
+    // la lista intera. Pagamento e scontrino si segnano con un tocco dalla
+    // card, senza aprire la modifica.
+    let vistaEvento = 'da_arrivare';
+    let idUltimoEventoAperto = null;
+
+    function eurPren(n) {
+      return (Number(n) || 0).toFixed(2).replace('.', ',') + ' €';
+    }
+
+    function pagataTelematica(p) {
+      return p.statoPagamento === 'pagato_online' ||
+        ['online', 'satispay', 'bonifico'].includes(String(p.metodoPagamento).toLowerCase());
+    }
+
+    function prenArrivata(p) { return !!p.scontrinato; }
+
+    function prenDaArrivare(p) {
+      return !prenArrivata(p) && p.stato !== 'annullato' && p.stato !== 'no_show';
+    }
+
+    function prenotazioniDellEvento() {
+      return eventoCorrente ? prenotazioni.filter(p => p.evento_id === eventoCorrente.id) : [];
+    }
+
+    /** Contatore, riepilogo e lista: tutto quello che dipende dai dati. */
+    function ridisegnaPannelloEvento() {
+      const lista = prenotazioniDellEvento();
+      const totalePersone = lista
+        .filter(p => p.stato !== 'annullato' && p.stato !== 'no_show')
+        .reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
+      document.getElementById('eventoContatoreNumero').textContent = totalePersone;
+      mostraRiepilogoEconomico(lista);
+      ridisegnaListaEvento();
+    }
+
+    function cambiaVistaEvento(vista) {
+      vistaEvento = vista;
+      ridisegnaListaEvento();
+    }
+
+    function normalizzaRicerca(t) {
+      return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    }
+
+    function ridisegnaListaEvento() {
+      const tutte = prenotazioniDellEvento();
+      const daArrivare = tutte.filter(prenDaArrivare);
+      document.getElementById('contaDaArrivare').textContent = `(${daArrivare.length})`;
+      document.getElementById('contaTutte').textContent = `(${tutte.length})`;
+      document.getElementById('vistaDaArrivare').classList.toggle('attiva', vistaEvento === 'da_arrivare');
+      document.getElementById('vistaTutte').classList.toggle('attiva', vistaEvento === 'tutte');
+
+      // La ricerca guarda sempre tutta la lista: chi cerca un nome vuole
+      // trovarlo anche se è già entrato.
+      const cerca = normalizzaRicerca(document.getElementById('cercaPrenEvento').value.trim());
+      let lista = vistaEvento === 'tutte' || cerca ? tutte : daArrivare;
+      if (cerca) {
+        const cifre = cerca.replace(/\D/g, '');
+        lista = lista.filter(p => {
+          const testo = normalizzaRicerca([p.cliente, p.nome, p.cognome, p.email, p.note].join(' '));
+          return testo.includes(cerca) ||
+            (cifre.length >= 3 && String(p.telefono || '').replace(/\D/g, '').includes(cifre));
+        });
+      }
+      mostraPrenotazioniEvento(lista, tutte.length, !!cerca);
+    }
+
+    /** Pulsanti dell'accoglienza: solo per chi non è ancora arrivato. */
+    function azioniRapide(pren) {
+      if (!prenDaArrivare(pren)) return '';
+      const stato = pren.statoPagamento || 'non_pagato';
+      const id = escapeHtmlPren(pren.id);
+
+      if (stato === 'non_pagato') {
+        const importo = Number(pren.importoDovuto) ? ' ' + eurPren(pren.importoDovuto) : '';
+        return `<div class="azioni-rapide">
+          <button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'contanti', this)"><svg class="ico"><use href="#i-banknote"></use></svg> Pagato contanti${importo}</button>
+          <button class="btn-rapido btn-rapido-pagato" onclick="incassoRapido('${id}', 'pagato', 'pos', this)"><svg class="ico"><use href="#i-fa-credit-card"></use></svg> Pagato POS${importo}</button>
+        </div>`;
+      }
+      if ((pagataTelematica(pren) && Number(pren.importoPagato) > 0) || stato === 'pagato_cassa') {
+        return `<div class="azioni-rapide">
+          <button class="btn-rapido btn-rapido-scontrino" onclick="incassoRapido('${id}', 'scontrino', '', this)"><svg class="ico"><use href="#i-fa-receipt"></use></svg> Emetti scontrino ${eurPren(pren.importoPagato)}</button>
+        </div>`;
+      }
+      return '';
+    }
+
+    function mostraPrenotazioniEvento(prenotazioniEvento, totale, conRicerca) {
       const container = document.getElementById('prenotazioniEventoContainer');
-      
+
       if (prenotazioniEvento.length === 0) {
+        if (totale) {
+          container.innerHTML = `<div class="nessun-risultato">${conRicerca
+            ? 'Nessuna prenotazione trovata con questa ricerca.'
+            : '<svg class="ico"><use href="#i-fa-circle-check"></use></svg> Sono arrivati tutti. «Tutte» mostra la lista completa.'}</div>`;
+          return;
+        }
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon"><svg class="ico ico-sola"><use href="#i-island"></use></svg></div>
@@ -2905,40 +3089,162 @@
         `;
         return;
       }
-      
-      container.innerHTML = '';
-      prenotazioniEvento.forEach(pren => {
+
+      container.innerHTML = prenotazioniEvento.map(pren => {
         const badgeClass = `badge-${pren.stato}`;
         const persone = parseInt(pren.persone) || 0;
-        
+        const azioni = azioniRapide(pren);
+
         let dettagliHtml = '<div class="prenotazione-evento-dettagli">';
         if (pren.ora) {
           dettagliHtml += `<span><svg class="ico"><use href="#i-fa-clock-contorno"></use></svg> ${pren.ora}</span>`;
         }
         if (pren.telefono) {
-          dettagliHtml += `<span><svg class="ico"><use href="#i-phone"></use></svg> ${pren.telefono}</span>`;
+          dettagliHtml += `<span><svg class="ico"><use href="#i-phone"></use></svg> ${escapeHtmlPren(pren.telefono)}</span>`;
         }
-        dettagliHtml += badgePagamento(pren);
+        dettagliHtml += badgePagamento(pren, !!azioni);
+        if (prenArrivata(pren)) {
+          dettagliHtml += `<span class="badge-arrivata"><svg class="ico"><use href="#i-check-mark"></use></svg> Arrivato</span>`;
+        }
         dettagliHtml += '</div>';
-        
-        container.innerHTML += `
-          <div class="prenotazione-evento-card">
+
+        return `
+          <div class="prenotazione-evento-card${prenArrivata(pren) ? ' arrivata' : ''}">
             <div class="prenotazione-evento-top">
-              <div class="prenotazione-evento-cliente"><svg class="ico"><use href="#i-person"></use></svg> ${pren.cliente}</div>
+              <div class="prenotazione-evento-cliente"><svg class="ico"><use href="#i-person"></use></svg> ${escapeHtmlPren(pren.cliente)}</div>
               <span class="prenotazione-badge ${badgeClass}">${etichettaStato(pren.stato)}</span>
               <div class="prenotazione-evento-persone">${persone} <svg class="ico ico-sola"><use href="#i-three-friends"></use></svg></div>
             </div>
             ${dettagliHtml}
-            ${pren.note ? `<div class="prenotazione-evento-note"><svg class="ico"><use href="#i-fa-receipt"></use></svg> ${pren.note}</div>` : ''}
+            ${pren.note ? `<div class="prenotazione-evento-note"><svg class="ico"><use href="#i-fa-receipt"></use></svg> ${escapeHtmlPren(pren.note)}</div>` : ''}
+            ${azioni}
             <div class="prenotazione-azioni" style="margin-top: 12px;">
-              <button class="btn-azione btn-modifica" onclick="modificaPrenotazioneEvento('${pren.id}')"><svg class="ico"><use href="#i-quill"></use></svg> Modifica</button>
-              <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${pren.id}')"><svg class="ico"><use href="#i-trash-can"></use></svg> Elimina</button>
+              <button class="btn-azione btn-modifica" onclick="modificaPrenotazioneEvento('${escapeHtmlPren(pren.id)}')"><svg class="ico"><use href="#i-quill"></use></svg> Modifica</button>
+              <button class="btn-azione btn-elimina" onclick="eliminaPrenotazione('${escapeHtmlPren(pren.id)}')"><svg class="ico"><use href="#i-trash-can"></use></svg> Elimina</button>
             </div>
           </div>
         `;
-      });
+      }).join('');
     }
-    
+
+    /**
+     * Un tocco all'ingresso. La conferma c'è apposta: un «pagato» sulla
+     * persona sbagliata non si annulla dall'app, perché lo scontrino emesso
+     * resta segnato.
+     */
+    async function incassoRapido(id, tipo, metodo, bottone) {
+      const pren = prenotazioni.find(p => p.id === id);
+      if (!pren) return;
+
+      const chi = `${pren.cliente} (${parseInt(pren.persone) || 0} pers.)`;
+      const domanda = tipo === 'scontrino'
+        ? `${chi}\n\nScontrino emesso per ${eurPren(pren.importoPagato)}?`
+        : `${chi}\n\nPaga ${Number(pren.importoDovuto) ? eurPren(pren.importoDovuto) + ' ' : ''}` +
+          `${metodo === 'pos' ? 'con POS' : 'in contanti'} e lo scontrino è emesso?`;
+      if (!confirm(domanda)) return;
+
+      const card = bottone && bottone.closest('.prenotazione-evento-card');
+      if (card) card.querySelectorAll('button').forEach(b => { b.disabled = true; });
+      if (bottone) bottone.textContent = 'Salvo…';
+
+      let r;
+      try {
+        r = await chiediAlServer('incassoRapido', { id: id, tipo: tipo, metodo: metodo });
+      } catch (e) {
+        r = { errore: e.message };
+      }
+
+      // Comunque sia andata, quello che c'è in cache non è più affidabile.
+      invalidateCache('vdc_cache_');
+      invalidaCacheMemoria();
+
+      if (!r || r.errore) {
+        alert('⚠️ ' + ((r && r.errore) || 'Risposta non valida dal server'));
+        await caricaPrenotazioni();
+        return;
+      }
+      Object.assign(pren, r.pagamento);
+      ridisegnaPannelloEvento();
+    }
+
+    /**
+     * Lista per l'accoglienza, in ordine di cognome, con quello che serve alla
+     * porta: quanti sono, se devono ancora pagare, le note. Si stampa o si
+     * salva in PDF dalla finestra di stampa del dispositivo.
+     */
+    function stampaListaAccoglienza() {
+      if (!eventoCorrente) return;
+      const tutte = prenotazioniDellEvento();
+      const annullate = tutte.filter(p => p.stato === 'annullato').length;
+      const righe = tutte
+        .filter(p => p.stato !== 'annullato')
+        .map(p => ({ p: p, nc: nomeCognomeDi(p) }))
+        .sort((a, b) => (a.nc.cognome || a.nc.nome).localeCompare(b.nc.cognome || b.nc.nome, 'it', { sensitivity: 'base' }));
+
+      const persone = righe.reduce((s, r) => s + (parseInt(r.p.persone) || 0), 0);
+      const daIncassare = righe
+        .filter(r => (r.p.statoPagamento || 'non_pagato') === 'non_pagato')
+        .reduce((s, r) => s + (Number(r.p.importoDovuto) || 0), 0);
+
+      const pagamento = p => {
+        const stato = p.statoPagamento || 'non_pagato';
+        if (stato === 'non_pagato') {
+          return `<span class="da-pagare">DA PAGARE${Number(p.importoDovuto) ? ' ' + eurPren(p.importoDovuto) : ''}</span>`;
+        }
+        if (stato === 'omaggio') return 'Omaggio';
+        if (stato === 'parziale') {
+          return `<span class="da-pagare">Parziale: pagati ${eurPren(p.importoPagato)} su ${eurPren(p.importoDovuto)}</span>`;
+        }
+        if (stato === 'pagato_online') {
+          return `Pagato online ${eurPren(p.importoPagato)}` +
+            (p.scontrinato ? '' : '<br><span class="da-pagare">scontrino da emettere</span>');
+        }
+        if (stato === 'pagato_cassa') {
+          return `Pagato ${eurPren(p.importoPagato)}${p.metodoPagamento ? ' (' + escapeHtmlPren(p.metodoPagamento) + ')' : ''}`;
+        }
+        return (ETICHETTE_PAGAMENTO[stato] || stato).replace(/<[^>]*>/g, '').trim();
+      };
+
+      const dataEvento = new Date(eventoCorrente.data + 'T00:00:00')
+        .toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+      const corpo = righe.map(r => {
+        const p = r.p;
+        const nome = r.nc.cognome
+          ? `<strong>${escapeHtmlPren(r.nc.cognome.toUpperCase())}</strong> ${escapeHtmlPren(r.nc.nome)}`
+          : `<strong>${escapeHtmlPren(r.nc.nome.toUpperCase())}</strong>`;
+        return `<tr>
+          <td class="spunta">${prenArrivata(p) ? '☑' : '☐'}</td>
+          <td class="nome">${nome}${p.stato === 'no_show' ? ' <em>(no-show)</em>' : ''}</td>
+          <td class="num">${parseInt(p.persone) || 0}</td>
+          <td>${escapeHtmlPren(p.ora || '')}</td>
+          <td>${escapeHtmlPren(p.telefono || '')}</td>
+          <td>${pagamento(p)}</td>
+          <td class="note">${escapeHtmlPren(p.note || '')}</td>
+        </tr>`;
+      }).join('');
+
+      let box = document.getElementById('stampaAccoglienza');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'stampaAccoglienza';
+        document.body.appendChild(box);
+      }
+      box.innerHTML = `
+        <h1>${escapeHtmlPren(eventoCorrente.nome)}</h1>
+        <div class="sottotitolo">${dataEvento} · Lista accoglienza</div>
+        <div class="totali"><strong>${righe.length}</strong> prenotazioni · <strong>${persone}</strong> persone` +
+          (daIncassare ? ` · da incassare all'ingresso <strong>${eurPren(daIncassare)}</strong>` : '') + `</div>
+        <table>
+          <thead><tr><th></th><th>Cliente</th><th>Pers.</th><th>Ora</th><th>Telefono</th><th>Pagamento</th><th>Note</th></tr></thead>
+          <tbody>${corpo}</tbody>
+        </table>
+        <div class="piede">Stampata il ${new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}` +
+          (annullate ? ` · ${annullate} annullat${annullate === 1 ? 'a' : 'e'} non in elenco` : '') + `</div>`;
+
+      window.print();
+    }
+
     function chiudiPannelloEvento() {
       document.getElementById('pannelloEventoGestione').classList.remove('active');
       eventoCorrente = null;
@@ -3244,14 +3550,43 @@
     }
     
     // ═══════════════════════════════════════════════════════════
-    // AUTO-REFRESH CACHE (ogni 2 minuti)
+    // MODIFICHE DAGLI ALTRI DISPOSITIVI (2/11/2026)
     // ═══════════════════════════════════════════════════════════
-    setInterval(async () => {
-      if (!document.hidden) {
-        console.log('🔄 Auto-refresh cache');
-        await caricaPrenotazioni();
+    //
+    // Prima c'era un ricaricamento ogni 2 minuti che però ripassava dalla
+    // cache di 5 minuti: una prenotazione inserita dal telefono compariva sul
+    // tablet solo aggiornando la pagina. Ora il server tiene una «versione»
+    // che cambia a ogni scrittura; qui la si chiede ogni 20 secondi (risposta
+    // minuscola) e, se è cambiata, si butta la cache e si ricarica davvero.
+    // Anche quando la pagina torna in primo piano.
+    let versioneDati = null;
+    let controlloInCorso = false;
+
+    async function controllaVersione() {
+      if (document.hidden || controlloInCorso) return;
+      controlloInCorso = true;
+      try {
+        const r = await chiediAlServer('getVersionePrenotazioni', {}, 1);
+        if (r && r.versione && r.versione !== versioneDati) {
+          console.log('🔄 Prenotazioni cambiate altrove: ricarico');
+          invalidateCache('vdc_cache_');
+          invalidaCacheMemoria();
+          await caricaPrenotazioni();
+          // Se la risposta non porta la versione (ricarica non riuscita) non
+          // si riprova a ogni giro: si aspetta la prossima scrittura.
+          if (versioneDati !== r.versione) versioneDati = r.versione;
+        }
+      } catch (e) {
+        console.log('Controllo versione non riuscito, riprovo al prossimo giro');
+      } finally {
+        controlloInCorso = false;
       }
-    }, 120000); // 120000 ms = 2 minuti
+    }
+
+    setInterval(controllaVersione, 20000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) controllaVersione();
+    });
     
     const RELOAD_KEY = 'sw_reloading';
     if ('serviceWorker' in navigator) {
