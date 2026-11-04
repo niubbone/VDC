@@ -251,6 +251,36 @@
 
     .vuoto { text-align: center; padding: 20px; color: #aaa; }
 
+    /* Evento collegato e partecipanti (letti dalle prenotazioni, mai salvati nell'archivio). */
+    .evento-box { margin-top: 16px; padding-top: 14px; border-top: 2px solid #e0e8f8; }
+    .proposta-evento {
+      background: #f0f4ff; border: 2px solid #c0cce8; border-radius: 10px; padding: 10px 14px; margin-top: 10px;
+      font-size: 0.88em; color: #1e3c72; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    }
+    .btn-piccolo { padding: 7px 12px; font-size: 0.78em; }
+    .partecipanti { margin-top: 12px; border: 2px solid #e0e8f8; border-radius: 10px; padding: 12px 14px; }
+    .partecipanti-testa { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; font-size: 0.9em; color: #1e3c72; font-weight: bold; }
+    .partecipante { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid #eef2fa; font-size: 0.9em; }
+    .partecipante small { color: #777; white-space: nowrap; }
+    .partecipante.assente { color: #999; }
+    .gruppo-partecipanti { font-size: 0.72em; font-weight: bold; color: #2a5298; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 12px; }
+
+    /* Consuntivo: calici venduti per vino e spese, per il totale con le aggiunte. */
+    .sotto-titolo { font-size: 0.75em; font-weight: bold; color: #2a5298; text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; }
+    .riga-calice { display: grid; grid-template-columns: minmax(0, 1fr) 90px 110px 90px; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid #eef2fa; font-size: 0.9em; }
+    .riga-calice.testa { font-size: 0.7em; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #e0e8f8; }
+    .riga-calice input { padding: 8px 10px; }
+    .riga-calice .nome-vino { color: #1e3c72; font-weight: bold; overflow-wrap: anywhere; }
+    .riga-calice .sub { text-align: right; font-weight: bold; color: #1e3c72; white-space: nowrap; }
+    .riga-spesa { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 10px; align-items: center; margin-bottom: 8px; }
+    .riga-spesa input { padding: 8px 10px; }
+    @media (max-width: 600px) {
+      .riga-calice { grid-template-columns: 1fr 1fr 1fr; }
+      .riga-calice .nome-vino { grid-column: 1 / -1; }
+      .riga-calice.testa { display: none; }
+      .riga-spesa { grid-template-columns: minmax(0, 1fr) 100px auto; }
+    }
+
     .velo {
       position: fixed; inset: 0; background: rgba(30,60,114,0.75); z-index: 9999;
       display: none; justify-content: center; align-items: center; flex-direction: column;
@@ -342,6 +372,20 @@
     </div>
     <div class="stato-elenco">Calici e bottiglie valgono per tutti i vini; sotto ogni vino puoi cambiarli solo per quello.</div>
 
+    <div class="evento-box">
+      <label for="eventoSel">Evento collegato</label>
+      <select id="eventoSel"><option value="">— nessun evento —</option></select>
+      <div class="stato-elenco" id="statoEventi"></div>
+      <div class="proposta-evento" id="propostaEvento" hidden>
+        <span id="propostaTesto"></span>
+        <button class="btn btn-secondario btn-piccolo" id="btnCollegaProposto">Collega</button>
+      </div>
+      <div class="azioni" id="azioniEvento" hidden style="margin-top:10px;">
+        <button class="btn btn-secondario btn-piccolo" id="btnPartecipanti">Chi ha partecipato</button>
+      </div>
+      <div class="partecipanti" id="partecipanti" hidden></div>
+    </div>
+
     <div class="riepilogo-tipi" id="riepilogoTipi"></div>
 
     <div class="azioni">
@@ -410,6 +454,25 @@
     <div class="conti" id="conti"></div>
 
     <div class="tabella-wrap" id="tabellaPersone"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Consuntivo: spese e calici venduti</div>
+    <div class="nota">
+      Il totale qui sotto parte dai conti sopra (persone × prezzo) e aggiunge le spese e i calici venduti durante l'evento.
+      I calici sono <strong>solo ricavo</strong>, perché le bottiglie sono già nel costo vini: se ne hai aperta una in più, alza le bottiglie di quel vino.
+      Se il numero di persone è cambiato, correggilo nei conti.
+    </div>
+
+    <div class="sotto-titolo">Calici venduti</div>
+    <div id="caliciVenduti"></div>
+
+    <div class="sotto-titolo">Altre spese</div>
+    <div class="stato-elenco" style="margin:0 0 8px;">Scrivi il costo che ti resta a carico: senza IVA se è detraibile, tutto il pagato se non lo è.</div>
+    <div id="speseExtra"></div>
+    <button class="btn btn-secondario btn-piccolo" id="btnSpesa"><svg class="ico"><use href="#i-plus"></use></svg> Aggiungi spesa</button>
+
+    <div class="conti" id="contiConsuntivo"></div>
 
     <div class="azioni">
       <button class="btn btn-primario" id="btnPdf">Scarica PDF</button>
@@ -454,11 +517,20 @@
   // Import (UE, senza IVA): costo = imponibile + spese logistiche.
   // Il costo IVA compresa si mostra solo come uscita di cassa.
   // Ogni persona beve un calice di ogni vino.
+  //
+  // Evento collegato (04/11/2026): nel JSON solo id e nome dell'evento. L'archivio
+  // non ha chiave, quindi i NOMI dei partecipanti non ci vanno mai: si leggono al
+  // momento dalle prenotazioni (backend VDC) e restano solo sullo schermo.
+  // Consuntivo: calici venduti per vino (venduti, prezzoCalice) e spese extra (spese):
+  // secondo totale = conti di sopra + calici senza IVA - spese.
 
+  // API_URL e' il server di chiediAlServer (comune.js): prenotazioni ed eventi
+  const API_URL = VDC_CONFIG.server.vdc;
   const API_VINI = VDC_CONFIG.server.vini;
   const API_DEG = VDC_CONFIG.server.degustazioni;
-  // _v2: dal 12/10/2026 la copia porta anche il tipo del vino (prima no)
-  const CACHE_VINI = 'vdc_vini_degustazione_v2';
+  // _v3: dal 04/11/2026 la copia porta anche il prezzo al calice (prima no)
+  const CACHE_VINI = 'vdc_vini_degustazione_v3';
+  const CACHE_EVENTI = 'vdc_eventi_degustazione';
   const DURATA_CACHE_VINI = 24 * 60 * 60 * 1000;
   const BOZZA = 'vdc_degustazione_bozza';
   const IVA_VENDITA = 1.10;
@@ -493,11 +565,14 @@
 
   let anagrafica = [];
   let elencoSalvate = [];
+  let eventi = [];
+  let eventiCaricati = false;
   let S = statoVuoto();
 
   function statoVuoto() {
     return { nome: '', data: '', caliciBott: CALICI_DEFAULT, bottVino: BOTT_DEFAULT, vini: [],
              persone: 0, prezzo: 0, ricX: 0, ricEur: 0, guida: 'prezzo',
+             eventoId: '', eventoNome: '', spese: [],
              idServer: null, salvataIl: '', firmaSalvata: '' };
   }
 
@@ -565,6 +640,25 @@
     };
   }
 
+  // Secondo totale: i conti di sopra + i calici venduti (IVA 10%, solo ricavo: le bottiglie
+  // sono gia' nel costo vini) - le spese extra (gia' al costo che resta a carico).
+  function consuntivo(s) {
+    const r = calcola(s);
+    const caliciLordo = inConto(s.vini).reduce((t, v) => t + (v.venduti || 0) * (v.prezzoCalice || 0), 0);
+    const caliciNetto = caliciLordo / IVA_VENDITA;
+    const spese = (s.spese || []).reduce((t, x) => t + (x.importo || 0), 0);
+    const ricavi = r.netto + caliciNetto;
+    const costi = r.costo + spese;
+    const guadagno = ricavi - costi;
+    return {
+      caliciLordo, caliciNetto, spese, ricavi, costi, guadagno,
+      previsto: r.ricEur,
+      ricX: costi > 0 && ricavi > 0 ? ricavi / costi : null,
+      margine: ricavi > 0 ? guadagno / ricavi : null,
+      aggiunte: caliciLordo > 0 || spese > 0
+    };
+  }
+
   // ── Bozza sul dispositivo ───────────────────────────────────────────
   function salvaBozza() {
     try { localStorage.setItem(BOZZA, JSON.stringify(S)); } catch (e) { /* niente spazio: si va avanti */ }
@@ -584,6 +678,7 @@
         anagrafica = c.vini;
         statoElenco(c.quando);
         completaTipi();
+        ridisegnaCaliciSeFermo();
         return;
       }
     } catch (e) { /* copia illeggibile: si richiede */ }
@@ -602,12 +697,14 @@
         codice: v.codice, tipo: v.sheet === 'IMPORT' ? 'IMPORT' : 'DIST',
         nome: v.vino, fornitore: v.fornitore || '',
         imp: num(v.imponibile), ss: v.sheet === 'IMPORT' ? num(v.ss) : 0,
-        cat: tipoDa(v.catCarta, v.catCosto)
+        cat: tipoDa(v.catCarta, v.catCosto),
+        calice: num(v.calice)
       }));
       const quando = Date.now();
       try { localStorage.setItem(CACHE_VINI, JSON.stringify({ quando, vini: anagrafica })); } catch (e) {}
       statoElenco(quando);
       completaTipi();
+      ridisegnaCaliciSeFermo();
     } catch (e) {
       $('statoElenco').innerHTML = 'Elenco vini non disponibile (' + esc(e.name === 'TimeoutError' ? 'il server non ha risposto' : e.message) +
         '). Puoi aggiungere i vini come temporanei, oppure <a href="#" id="riprova">riprovare</a>.';
@@ -854,11 +951,198 @@
   }
 
   function aggiorna(ridisegnaVini) {
-    if (ridisegnaVini) disegnaVini(); else aggiornaSottoVini();
+    if (ridisegnaVini) { disegnaVini(); disegnaCalici(); disegnaSpese(); } else aggiornaSottoVini();
     disegnaRiepilogo();
     disegnaConti();
+    disegnaConsuntivo();
     salvaBozza();
     mostraStatoSalva();
+  }
+
+  // ── Consuntivo: calici venduti e spese ──────────────────────────────
+  function prezzoCarta(v) {
+    if (v.codice == null) return 0;
+    const a = anagrafica.find(x => String(x.codice) === String(v.codice));
+    return a ? (a.calice || 0) : 0;
+  }
+
+  function disegnaCalici() {
+    const box = $('caliciVenduti');
+    const vini = inConto(S.vini);
+    if (!vini.length) { box.innerHTML = '<div class="stato-elenco">Nessun vino nel conto.</div>'; return; }
+    box.innerHTML = `<div class="riga-calice testa"><span>Vino</span><span>Calici</span><span>Prezzo € (IVA incl.)</span><span style="text-align:right">Totale</span></div>` +
+      vini.map(v => {
+        const carta = prezzoCarta(v);
+        return `<div class="riga-calice" data-id="${v.id}">
+          <span class="nome-vino">${esc(v.nome)}</span>
+          <input type="text" inputmode="numeric" data-campo="venduti" aria-label="Calici venduti" placeholder="Calici" value="${v.venduti || ''}">
+          <input type="text" inputmode="decimal" data-campo="prezzoCalice" aria-label="Prezzo al calice" placeholder="${carta ? dec(carta) : 'Prezzo'}" value="${v.prezzoCalice ? dec(v.prezzoCalice) : ''}">
+          <span class="sub" data-sub>${euro((v.venduti || 0) * (v.prezzoCalice || 0))}</span>
+        </div>`;
+      }).join('');
+  }
+
+  // L'anagrafica arriva dopo la pagina: serve per proporre i prezzi, ma senza
+  // ridisegnare sotto le dita di chi sta scrivendo.
+  function ridisegnaCaliciSeFermo() {
+    if (!$('caliciVenduti').contains(document.activeElement)) disegnaCalici();
+  }
+
+  function disegnaSpese() {
+    const spese = S.spese || [];
+    $('speseExtra').innerHTML = spese.map(x => `
+      <div class="riga-spesa" data-id="${x.id}">
+        <input type="text" data-campo="desc" aria-label="Descrizione della spesa" placeholder="Es. relatore, cibo, stampe" value="${esc(x.desc || '')}">
+        <input type="text" inputmode="decimal" data-campo="importo" aria-label="Importo" placeholder="0,00" value="${x.importo ? dec(x.importo) : ''}">
+        <button class="btn-mini" data-azione="togliSpesa" title="Togli"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
+      </div>`).join('');
+  }
+
+  function disegnaConsuntivo() {
+    const c = consuntivo(S);
+    const neg = c.ricavi > 0 && c.guadagno < 0;
+    const gruppi = [
+      ['Aggiunte', [
+        ['Calici venduti (IVA incl.)', euro(c.caliciLordo)],
+        ['Calici venduti (senza IVA)', euro(c.caliciNetto)],
+        ['Altre spese', euro(c.spese)]
+      ]],
+      ['Totale con spese e calici', [
+        ['Ricavi (senza IVA)', euro(c.ricavi)],
+        ['Costi con le spese', euro(c.costi)],
+        ['Ricarico', per(c.ricX), 'forte' + (neg ? ' neg' : '')],
+        ['Guadagno finale (senza IVA)', euro(c.ricavi > 0 ? c.guadagno : null), 'forte' + (neg ? ' neg' : '')],
+        ['Margine sui ricavi', c.margine == null ? '—' : Math.round(c.margine * 100) + '%', neg ? 'neg' : ''],
+        ['Guadagno senza aggiunte', euro(c.ricavi > 0 ? c.previsto : null)]
+      ]]
+    ];
+    $('contiConsuntivo').innerHTML = gruppi.map(g => `<div class="gruppo-conti"><div class="gruppo-t">${g[0]}</div><div class="gruppo-v">` +
+      g[1].map(v => `<div class="conto ${v[2] || ''}"><div class="l">${v[0]}</div><div class="v">${v[1]}</div></div>`).join('') + '</div></div>').join('');
+  }
+
+  // ── Evento collegato e partecipanti ─────────────────────────────────
+  function isoOggi() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function dataIt(iso) { return iso ? iso.split('-').reverse().join('/') : ''; }
+  function eventoCollegato() { return eventi.find(e => String(e.id) === String(S.eventoId)) || null; }
+  function dataEvento() { const e = eventoCollegato(); return e ? e.data : S.data; }
+  function eventoFatto() { const d = dataEvento(); return !!d && d <= isoOggi(); }
+
+  async function caricaEventi() {
+    try {
+      const c = JSON.parse(localStorage.getItem(CACHE_EVENTI) || 'null');
+      if (Array.isArray(c)) { eventi = c; eventiCaricati = true; disegnaEvento(); }
+    } catch (e) { /* copia illeggibile: si richiede */ }
+    try {
+      const d = await chiediAlServer('getEventi', {});
+      // L'errore per primo: getEventi puo' dare una lista vuota insieme all'errore (MANUALE §3.5)
+      if (d.errore) throw new Error(d.errore);
+      eventi = d.eventi || [];
+      eventiCaricati = true;
+      $('statoEventi').textContent = '';
+      try { localStorage.setItem(CACHE_EVENTI, JSON.stringify(eventi)); } catch (e) {}
+    } catch (e) {
+      $('statoEventi').textContent = 'Elenco eventi non aggiornato (' + (e.name === 'AbortError' ? 'il server non ha risposto' : e.message) + ').';
+    }
+    disegnaEvento();
+  }
+
+  function disegnaEvento() {
+    const sel = $('eventoSel');
+    const collegato = eventoCollegato();
+    let opzioni = '<option value="">— nessun evento —</option>';
+    // Collegato ma non in elenco: elenco non ancora arrivato, o evento eliminato
+    if (S.eventoId && !collegato) {
+      opzioni += `<option value="${esc(S.eventoId)}">${esc(S.eventoNome || 'Evento')}${eventiCaricati ? ' (non più fra gli eventi)' : ''}</option>`;
+    }
+    opzioni += eventi.map(e => `<option value="${esc(e.id)}">${esc(dataIt(e.data))} · ${esc(e.nome)}</option>`).join('');
+    sel.innerHTML = opzioni;
+    sel.value = S.eventoId || '';
+
+    const stessoGiorno = !S.eventoId && S.data ? eventi.filter(e => e.data === S.data) : [];
+    $('propostaEvento').hidden = stessoGiorno.length !== 1;
+    if (stessoGiorno.length === 1) {
+      $('propostaTesto').textContent = `Il ${dataIt(S.data)} c'è l'evento «${stessoGiorno[0].nome}».`;
+      $('btnCollegaProposto').dataset.id = stessoGiorno[0].id;
+    }
+
+    $('azioniEvento').hidden = !S.eventoId;
+    $('btnPartecipanti').textContent = eventoFatto() ? 'Chi ha partecipato' : 'Prenotati';
+  }
+
+  function collegaEvento(id) {
+    const e = eventi.find(x => String(x.id) === String(id));
+    S.eventoId = id || '';
+    S.eventoNome = e ? e.nome : '';
+    if (e && e.data) { S.data = e.data; $('data').value = e.data; }
+    chiudiPartecipanti();
+    disegnaEvento();
+    salvaBozza();
+    mostraStatoSalva();
+  }
+
+  function chiudiPartecipanti() {
+    $('partecipanti').hidden = true;
+    $('partecipanti').innerHTML = '';
+  }
+
+  // Stessa regola dell'accoglienza in prenotazioni.html (scontrino o pagato in cassa);
+  // un no-show segnato vale piu' dello scontrino gia' emesso per chi aveva pagato online.
+  function prenArrivata(p) {
+    return p.stato !== 'no_show' && (!!p.scontrinato || p.statoPagamento === 'pagato_cassa');
+  }
+
+  async function mostraPartecipanti() {
+    const box = $('partecipanti');
+    if (!box.hidden) { chiudiPartecipanti(); return; }
+    const id = S.eventoId, quando = dataEvento();
+    if (!id) return;
+    box.hidden = false;
+    if (!quando) { box.innerHTML = '<div class="stato-elenco">L\'evento non ha una data.</div>'; return; }
+    box.innerHTML = '<div class="vuoto">Leggo le prenotazioni...</div>';
+    const [anno, mese] = quando.split('-').map(Number);
+    try {
+      const d = await chiediAlServer('getPrenotazioni', { anno, mese });
+      if (d.errore) throw new Error(d.errore);
+      if (S.eventoId !== id || box.hidden) return;     // nel frattempo si e' cambiato evento
+      const righe = (d.prenotazioni || []).filter(p => String(p.evento_id) === String(id) && p.stato !== 'annullato');
+      disegnaPartecipanti(righe);
+    } catch (e) {
+      if (S.eventoId !== id || box.hidden) return;
+      box.innerHTML = '<div class="stato-elenco">Non riesco a leggere le prenotazioni (' +
+        esc(e.name === 'AbortError' ? 'il server non ha risposto' : e.message) + '): riprova fra poco.</div>';
+    }
+  }
+
+  function disegnaPartecipanti(righe) {
+    const box = $('partecipanti');
+    const persone = l => l.reduce((t, p) => t + (Number(p.persone) || 0), 0);
+    const parole = n => n + (n === 1 ? ' persona' : ' persone');
+    const riga = (p, assente) => `<div class="partecipante${assente ? ' assente' : ''}">
+      <span>${esc(p.cliente || 'Senza nome')}</span><small>${parole(Number(p.persone) || 0)}${p.stato === 'no_show' ? ' · no-show' : ''}</small></div>`;
+    righe = righe.slice().sort((a, b) => String(a.cliente).localeCompare(String(b.cliente), 'it'));
+    if (!righe.length) { box.innerHTML = '<div class="stato-elenco">Nessuna prenotazione per questo evento.</div>'; return; }
+
+    if (!eventoFatto()) {
+      box.innerHTML = `<div class="partecipanti-testa"><span>${parole(persone(righe))} prenotate (${righe.length} prenotazioni)</span></div>` +
+        righe.map(p => riga(p, false)).join('');
+      return;
+    }
+    const venute = righe.filter(prenArrivata), altre = righe.filter(p => !prenArrivata(p));
+    const n = persone(venute);
+    box.innerHTML = `<div class="partecipanti-testa"><span>${parole(n)} (${venute.length} prenotazioni)${S.persone !== n ? ` · nei conti ${S.persone}` : ''}</span>
+        ${S.persone !== n ? `<button class="btn btn-secondario btn-piccolo" id="btnUsaPersone" data-n="${n}">Usa ${n} nei conti</button>` : ''}</div>` +
+      venute.map(p => riga(p, false)).join('') +
+      (altre.length ? `<div class="gruppo-partecipanti">Non risultano arrivati</div>` + altre.map(p => riga(p, true)).join('') : '');
+    const usa = $('btnUsaPersone');
+    if (usa) usa.onclick = () => {
+      S.persone = Number(usa.dataset.n);
+      $('persone').value = S.persone || '';
+      aggiorna();
+      disegnaPartecipanti(righe);
+    };
   }
 
   // ── Archivio sull'hosting (vdc-degustazioni.php) ────────────────────
@@ -989,6 +1273,7 @@
   // ── PDF ─────────────────────────────────────────────────────────────
   function preparaStampa() {
     const r = calcola(S);
+    const c = consuntivo(S);
     const vini = inConto(S.vini);
     const data = S.data ? S.data.split('-').reverse().join('/') : '';
     $('stampa').innerHTML = `
@@ -1014,6 +1299,16 @@
         <tr><td>Margine sull'incasso</td><td>${r.margine == null ? '—' : Math.round(r.margine * 100) + '%'}</td></tr>
         <tr><td>Pareggio da</td><td>${r.pareggio == null ? '—' : r.pareggio + ' persone'}</td></tr>
       </tbody></table>
+      ${c.aggiunte ? `<h2>Consuntivo con spese e calici</h2>
+      <table><tbody>
+        ${vini.filter(v => v.venduti > 0).map(v => `<tr><td>Calici: ${esc(v.nome)} (${v.venduti} a ${euro(v.prezzoCalice || 0)}, IVA incl.)</td><td>${euro(v.venduti * (v.prezzoCalice || 0))}</td></tr>`).join('')}
+        ${(S.spese || []).filter(x => x.importo > 0).map(x => `<tr><td>Spesa: ${esc(x.desc || 'senza descrizione')}</td><td>${euro(x.importo)}</td></tr>`).join('')}
+        <tr><td>Ricavi (senza IVA)</td><td>${euro(c.ricavi)}</td></tr>
+        <tr><td>Costi con le spese</td><td>${euro(c.costi)}</td></tr>
+        <tr class="attuale"><td>Ricarico</td><td>${per(c.ricX)}</td></tr>
+        <tr class="attuale"><td>Guadagno finale (senza IVA)</td><td>${euro(c.guadagno)}</td></tr>
+        <tr><td>Margine sui ricavi</td><td>${c.margine == null ? '—' : Math.round(c.margine * 100) + '%'}</td></tr>
+      </tbody></table>` : ''}
       ${righePersone(r).length ? '<h2>Al variare delle persone</h2>' + tabellaPersone(r) : ''}
       <div class="nota-pdf">Costo e incasso confrontati senza IVA: incasso / 1,10; distributori = imponibile, import = imponibile + spese logistiche.</div>`;
   }
@@ -1038,6 +1333,8 @@
     if (S.guida === 'prezzo') $('prezzo').value = S.prezzo ? dec(S.prezzo) : '';
     if (S.guida === 'x') $('ricX').value = S.ricX ? dec(S.ricX) : '';
     if (S.guida === 'eur') $('ricEur').value = S.ricEur ? dec(S.ricEur) : '';
+    chiudiPartecipanti();
+    disegnaEvento();
   }
 
   function evidenziaCalici() {
@@ -1152,7 +1449,57 @@
       impostaCalici(Number(b.dataset.calici));
     });
     $('nome').oninput = () => { S.nome = $('nome').value; salvaBozza(); mostraStatoSalva(); };
-    $('data').onchange = () => { S.data = $('data').value; salvaBozza(); mostraStatoSalva(); };
+    $('data').onchange = () => { S.data = $('data').value; disegnaEvento(); salvaBozza(); mostraStatoSalva(); };
+    $('eventoSel').onchange = () => collegaEvento($('eventoSel').value);
+    $('btnCollegaProposto').onclick = () => collegaEvento($('btnCollegaProposto').dataset.id);
+    $('btnPartecipanti').onclick = mostraPartecipanti;
+
+    $('caliciVenduti').addEventListener('input', e => {
+      const riga = e.target.closest('.riga-calice');
+      const campo = e.target.dataset.campo;
+      if (!riga || !campo) return;
+      const v = S.vini.find(x => x.id === riga.dataset.id);
+      if (!v) return;
+      if (campo === 'venduti') {
+        v.venduti = Math.max(0, Math.floor(num(e.target.value)));
+        // Il prezzo di carta si fissa qui: un cambio di listino non tocca i conti di un evento passato
+        if (v.venduti > 0 && !v.prezzoCalice && prezzoCarta(v)) {
+          v.prezzoCalice = prezzoCarta(v);
+          riga.querySelector('[data-campo="prezzoCalice"]').value = dec(v.prezzoCalice);
+        }
+      } else {
+        v.prezzoCalice = Math.max(0, num(e.target.value));
+      }
+      riga.querySelector('[data-sub]').textContent = euro((v.venduti || 0) * (v.prezzoCalice || 0));
+      aggiorna();
+    });
+
+    $('btnSpesa').onclick = () => {
+      S.spese = S.spese || [];
+      S.spese.push({ id: 's' + Date.now(), desc: '', importo: 0 });
+      disegnaSpese();
+      aggiorna();
+      const righe = $('speseExtra').querySelectorAll('[data-campo="desc"]');
+      if (righe.length) righe[righe.length - 1].focus();
+    };
+    $('speseExtra').addEventListener('input', e => {
+      const riga = e.target.closest('.riga-spesa');
+      const campo = e.target.dataset.campo;
+      if (!riga || !campo) return;
+      const x = (S.spese || []).find(y => y.id === riga.dataset.id);
+      if (!x) return;
+      if (campo === 'desc') x.desc = e.target.value;
+      else x.importo = Math.max(0, num(e.target.value));
+      aggiorna();
+    });
+    $('speseExtra').addEventListener('click', e => {
+      const b = e.target.closest('[data-azione="togliSpesa"]');
+      if (!b) return;
+      const id = b.closest('.riga-spesa').dataset.id;
+      S.spese = (S.spese || []).filter(y => y.id !== id);
+      aggiorna(true);
+    });
+
     $('persone').oninput = () => { S.persone = Math.max(0, Math.floor(num($('persone').value))); aggiorna(); };
     $('prezzo').oninput = () => { S.guida = 'prezzo'; S.prezzo = num($('prezzo').value); aggiorna(); };
     $('ricX').oninput = () => { S.guida = 'x'; S.ricX = num($('ricX').value); aggiorna(); };
@@ -1178,7 +1525,7 @@
       if (!v) return;
       if (campo === 'nome' || campo === 'fornitore' || campo === 'note') {
         v[campo] = e.target.value;
-        if (campo === 'nome') riga.querySelector('[data-nome]').textContent = v.nome;
+        if (campo === 'nome') { riga.querySelector('[data-nome]').textContent = v.nome; disegnaCalici(); }
         salvaBozza(); mostraStatoSalva();
         return;
       }
@@ -1251,6 +1598,7 @@
   caricaAnagrafica(false);
   applicaAcquisiti();
   caricaElenco();
+  caricaEventi();
 </script>
 </body>
 </html>
