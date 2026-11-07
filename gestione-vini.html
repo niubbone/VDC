@@ -504,7 +504,7 @@
             <div class="calc-item"><div class="calc-label">Ricarico (x)</div><div class="calc-value" id="c-ric-x">—</div></div>
             <div class="calc-item"><div class="calc-label">Ricarico (€ imp)</div><div class="calc-value" id="c-ric-eur">—</div></div>
             <div class="calc-item"><div class="calc-label">Asporto -30%</div><div class="calc-value" id="c-asporto">—</div></div>
-            <div class="calc-item"><div class="calc-label">Bott. a pareggio</div><div class="calc-value accent" id="c-nbott">—</div></div>
+            <div class="calc-item"><div class="calc-label">Margine asporto (€ imp)</div><div class="calc-value accent" id="c-marg-asp">—</div></div>
           </div>
           <div class="margin-bar-wrap">
             <div class="margin-bar-label"><span>Margine sul listino</span><span id="c-margin-pct">—</span></div>
@@ -713,6 +713,7 @@
       return c<=15 ? c*3+5 : c*2.6+5;
     }
     function fmt(n) { return isNaN(n)||!n ? '—' : '€'+n.toFixed(2); }
+    function fmtMargine(n) { return isNaN(n) ? '—' : (n<0?'−€':'€')+Math.abs(n).toFixed(2); }
     function fmtX(n) { return isNaN(n)||!n ? '—' : n.toFixed(2)+'x'; }
 
     function ricalcola() {
@@ -728,14 +729,16 @@
       const imp=parseFloat(document.getElementById('f-imponibile').value)||0;
       const ss=parseFloat(document.getElementById('f-ss').value)||0;
       const listino=parseFloat(document.getElementById('f-tavolo-listino').value)||0;
-      if(!imp||!listino){['c-ric-x','c-ric-eur','c-asporto','c-nbott'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('c-margin-pct').textContent='—';document.getElementById('c-margin-bar').style.width='0%';return;}
+      if(!imp||!listino){['c-ric-x','c-ric-eur','c-asporto','c-marg-asp'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('c-margin-pct').textContent='—';document.getElementById('c-margin-bar').style.width='0%';return;}
       const costo=currentSheet==='DIST'?costoDist(imp):costoImport(imp,ss);
       const netto=costoNetto(imp,ss);
       const lImp=listino/1.1, ricX=lImp/netto, ricEur=lImp-netto, margin=(ricEur/lImp)*100;
       document.getElementById('c-ric-x').textContent=fmtX(ricX);
       document.getElementById('c-ric-eur').textContent=fmt(ricEur);
       document.getElementById('c-asporto').textContent=fmt(listino*0.7);
-      document.getElementById('c-nbott').textContent=(costo/(listino-costo)).toFixed(1)+' bott.';
+      // Margine sull'asporto (07/11/2026, al posto delle bottiglie a pareggio): prezzo d'asporto
+      // (listino -30%) senza IVA 10%, meno il costo senza IVA. Stessa regola del Top Wine.
+      document.getElementById('c-marg-asp').textContent=fmtMargine(listino*0.7/1.1-netto);
       document.getElementById('c-margin-pct').textContent=margin.toFixed(0)+'%';
       document.getElementById('c-margin-bar').style.width=Math.min(100,Math.max(0,margin))+'%';
     }
@@ -810,7 +813,7 @@
       document.getElementById('f-incarta').checked=false;
       document.getElementById('f-bestseller').checked=false;
       document.getElementById('f-topwine').checked=false;
-      ['c-ric-x','c-ric-eur','c-asporto','c-nbott','c-margin-pct','cc-ric-x','cc-ric-eur','cc-costo','cc-margine']
+      ['c-ric-x','c-ric-eur','c-asporto','c-marg-asp','c-margin-pct','cc-ric-x','cc-ric-eur','cc-costo','cc-margine']
         .forEach(id=>document.getElementById(id).textContent='—');
       document.getElementById('c-margin-bar').style.width='0%';
       if(caliceOn) toggleCalice();
