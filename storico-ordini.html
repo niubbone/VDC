@@ -419,6 +419,7 @@
         <div><b>${dataIt(o.inviato)}</b> · ${esc(o.fornitore)} · ${bottRighe(o.righe)} bott. · ${euro(totRighe(o.righe))} <small class="muto">imponibile</small></div>
         <div class="azioni">
           <button class="btn" data-az="vedi" type="button">Vedi</button>
+          <a class="btn" href="ordini.html?fornitore=${encodeURIComponent(o.fornitore)}&modifica=${encodeURIComponent(o.id)}" title="Vino finito o sostituito: correggi l'ordine già inviato">Modifica</a>
           <a class="btn" href="ordini.html?fornitore=${encodeURIComponent(o.fornitore)}&ripeti=${encodeURIComponent(o.id)}">Ripeti</a>
         </div>
       </div>

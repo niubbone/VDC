@@ -573,6 +573,14 @@
         try { ripetiRighe(((await chiama(API_ORD, 'getOrdine', { id: rip })).ordine.dati || {}).righe || []); }
         catch (e) { esito('<div class="avviso">Non riesco a ricopiare l\'ordine (' + esc(erroreRete(e)) + ').</div>'); }
       }
+      // Da storico-ordini.html?modifica=: apre la correzione dell'ordine nell'archivio.
+      const mod = new URLSearchParams(location.search).get('modifica');
+      if (mod && F) {
+        await caricaArchivio();
+        const box = $('archivio').querySelector('.ordine-arch[data-id="' + CSS.escape(mod) + '"]');
+        if (box) { await azioneArchivio(mod, 'modifica', box); box.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        else esito('<div class="avviso">Ordine da correggere non trovato fra gli inviati di ' + esc(F) + '.</div>');
+      }
     }
     if (location.search) history.replaceState(null, '', 'ordini.html');
   }
