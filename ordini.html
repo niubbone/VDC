@@ -1193,6 +1193,7 @@
       <div><b>${dataIt(o.inviato)}</b> · ${o.bottiglie} bottiglie · ${euro(o.totale)} <small>imponibile</small></div>
       <div class="azioni">
         <button class="btn btn-secondario btn-piccolo" data-arch="vedi" type="button">Vedi</button>
+        <button class="btn btn-secondario btn-piccolo" data-arch="modifica" type="button" title="Vino finito o sostituito: correggi l'ordine già inviato">Modifica</button>
         <button class="btn btn-secondario btn-piccolo" data-arch="ripeti" type="button">Ripeti</button>
         <button class="btn btn-secondario btn-piccolo" data-arch="pdf" type="button">PDF</button>
         <button class="btn-mini" data-arch="elimina" type="button" title="Elimina"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
@@ -1207,11 +1208,15 @@
     catch (e) { box.querySelector('.dettaglio').hidden = false; box.querySelector('.dettaglio').textContent = 'Non disponibile: ' + erroreRete(e); return; }
     const ro = o.dati.righe || [];
     if (azione === 'vedi') {
+      box._mod = null;
       const det = box.querySelector('.dettaglio');
       det.hidden = !det.hidden;
       det.innerHTML = `<div class="tabella-wrap"><table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Prezzo</th></tr></thead>
         <tbody>${ro.map(r => `<tr><td>${esc(nomeOrdine(r))}${r.test ? ' <small>(in prova)</small>' : ''}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td></tr>`).join('')}</tbody></table></div>
-        ${o.dati.note ? '<div class="vino-sotto">Note: ' + esc(o.dati.note) + '</div>' : ''}`;
+        ${o.dati.note ? '<div class="vino-sotto">Note: ' + esc(o.dati.note) + '</div>' : ''}
+        ${o.dati.modificato ? '<div class="vino-sotto">Corretto il ' + dataIt(o.dati.modificato) + '</div>' : ''}`;
+    } else if (azione === 'modifica') {
+      apriModifica(o, box);
     } else if (azione === 'ripeti') {
       ripetiRighe(ro);
     } else if (azione === 'pdf') {
@@ -1221,6 +1226,112 @@
       if (btn.dataset.conferma !== '1') { btn.dataset.conferma = '1'; btn.innerHTML = 'Sicuro?'; return; }
       try { await chiama(API_ORD, 'eliminaOrdine', { id }); caricaArchivio(); }
       catch (e) { btn.textContent = 'Errore'; }
+    }
+  }
+
+  // ── Correggere un ordine inviato (09/11/2026) ──────────────────────
+  // Capita spesso: un vino è finito o il fornitore lo sostituisce. Si cambiano
+  // bottiglie e prezzi, si toglie o si aggiunge un vino; data d'invio e prezzi
+  // delle altre righe restano quelli dell'ordine.
+  function apriModifica(o, box) {
+    const det = box.querySelector('.dettaglio');
+    const m = { id: o.id, righe: (o.dati.righe || []).map(r => Object.assign({}, r)), note: o.dati.note || '' };
+    box._mod = m;
+    det.hidden = false;
+    disegnaModifica(box);
+    if (!det.dataset.ascolta) {
+      det.dataset.ascolta = '1';
+      det.addEventListener('input', e => {
+        const mm = box._mod; if (!mm) return;
+        const i = +(e.target.dataset.riga ?? -1), f = e.target.dataset.mf;
+        if (f === 'note') { mm.note = e.target.value; return; }
+        if (i < 0 || !mm.righe[i]) return;
+        if (f === 'bott') mm.righe[i].bott = Math.max(0, Math.round(num(e.target.value)));
+        else if (f === 'netto') {
+          // Prezzo scritto a mano = prezzo netto concordato: diventa il listino della riga
+          // e lo sconto si azzera, cosi' il PDF completo non mostra listino e sconto vecchi.
+          const r = mm.righe[i];
+          if (!r._orig) r._orig = { listino: r.listino, sconto: r.sconto, netto: r.netto };
+          r.netto = cent(num(e.target.value));
+          if (r.netto === r._orig.netto) { r.listino = r._orig.listino; r.sconto = r._orig.sconto; }
+          else { r.listino = r.netto; r.sconto = ''; }
+        }
+        else if (f === 'nome') mm.righe[i].nome = e.target.value;
+        aggiornaTotModifica(box);
+      });
+      det.addEventListener('change', e => {
+        const mm = box._mod; if (!mm || e.target.dataset.mf !== 'aggiungi' || !e.target.value) return;
+        const r = righe().find(x => x.id === e.target.value);
+        if (r) mm.righe.push({ id: r.id, codice: r.codice || null, nome: r.nome, annata: r.annata || '', listino: num(r.listino),
+          sconto: scontoRiga(r), netto: netto(r), bott: 1, tipo: tipoDi(r), test: isTest(r) && provaSeparata() });
+        disegnaModifica(box);
+      });
+      det.addEventListener('click', e => {
+        const b = e.target.closest('[data-mod]'); const mm = box._mod;
+        if (!b || !mm) return;
+        if (b.dataset.mod === 'togli') { mm.righe.splice(+b.dataset.riga, 1); disegnaModifica(box); }
+        else if (b.dataset.mod === 'altro') {
+          mm.righe.push({ id: 'X-' + Date.now(), codice: null, nome: '', annata: '', listino: 0, sconto: '', netto: 0, bott: 1, tipo: '', test: false });
+          disegnaModifica(box);
+          const n = det.querySelectorAll('input[data-mf="nome"]'); if (n.length) n[n.length - 1].focus();
+        }
+        else if (b.dataset.mod === 'annulla') { box._mod = null; det.hidden = true; det.innerHTML = ''; }
+        else if (b.dataset.mod === 'salva') salvaModifica(box, b);
+      });
+    }
+  }
+
+  function disegnaModifica(box) {
+    const m = box._mod, det = box.querySelector('.dettaglio');
+    const gia = new Set(m.righe.map(r => r.id));
+    const scelta = righe().filter(r => !gia.has(r.id) && String(r.nome || '').trim())
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+    det.innerHTML = `<div class="nota" style="margin-top:10px">Correggi l'ordine come l'ha confermato il fornitore: bottiglie a 0 o ✕ per togliere un vino,
+        sotto si aggiunge quello sostitutivo. Data e prezzi delle altre righe restano quelli dell'ordine.</div>
+      <div class="tabella-wrap"><table class="tab-mod"><thead><tr><th>Vino</th><th>Bott.</th><th>Prezzo</th><th></th></tr></thead>
+      <tbody>${m.righe.map((r, i) => `<tr>
+        <td>${r.id.startsWith('X-') ? `<input type="text" data-mf="nome" data-riga="${i}" value="${esc(r.nome)}" placeholder="Nome del vino">` : esc(nomeOrdine(r))}</td>
+        <td><input type="number" min="0" step="1" inputmode="numeric" data-mf="bott" data-riga="${i}" value="${r.bott}" style="width:64px"></td>
+        <td><input type="text" inputmode="decimal" data-mf="netto" data-riga="${i}" value="${esc(dec(r.netto))}" style="width:76px"></td>
+        <td><button class="btn-mini" data-mod="togli" data-riga="${i}" type="button" title="Togli">✕</button></td></tr>`).join('')}</tbody></table></div>
+      <div class="azioni" style="align-items:center">
+        <select data-mf="aggiungi"><option value="">+ Aggiungi un vino del listino…</option>
+          ${scelta.map(r => `<option value="${esc(r.id)}">${esc(nomeOrdine(r))} — ${euro(netto(r))}</option>`).join('')}</select>
+        <button class="btn btn-secondario btn-piccolo" data-mod="altro" type="button">+ Vino fuori listino</button>
+      </div>
+      <label style="margin-top:10px;display:block">Note per il fornitore</label>
+      <textarea data-mf="note" rows="2">${esc(m.note)}</textarea>
+      <div class="vino-sotto" data-tot></div>
+      <div class="azioni">
+        <button class="btn btn-primario btn-piccolo" data-mod="salva" type="button">Salva modifiche</button>
+        <button class="btn btn-secondario btn-piccolo" data-mod="annulla" type="button">Annulla</button>
+      </div>
+      <div data-esito></div>`;
+    aggiornaTotModifica(box);
+  }
+
+  function aggiornaTotModifica(box) {
+    const m = box._mod;
+    const bott = m.righe.reduce((s, r) => s + (r.bott || 0), 0);
+    const tot = m.righe.reduce((s, r) => s + (r.bott || 0) * (r.netto || 0), 0);
+    box.querySelector('[data-tot]').textContent = bott + ' bottiglie · ' + euro(cent(tot)) + ' imponibile';
+  }
+
+  async function salvaModifica(box, btn) {
+    const m = box._mod, out = box.querySelector('[data-esito]');
+    const buone = m.righe.filter(r => r.bott > 0);
+    if (buone.some(r => !String(r.nome || '').trim())) { out.innerHTML = '<div class="avviso">Scrivi il nome del vino fuori listino.</div>'; return; }
+    if (!buone.length) { out.innerHTML = '<div class="avviso">L\'ordine resterebbe vuoto: se è saltato tutto usa il cestino.</div>'; return; }
+    btn.disabled = true;
+    try {
+      await chiama(API_ORD, 'modificaOrdine', { id: m.id, ordine: { righe: buone.map(r => { const x = Object.assign({}, r, { nome: r.nome.trim() }); delete x._orig; return x; }), note: m.note } });
+      box._mod = null;
+      await caricaArchivio();
+      const nuovo = $('archivio').querySelector('.ordine-arch[data-id="' + CSS.escape(m.id) + '"] .dettaglio');
+      if (nuovo) { nuovo.hidden = false; nuovo.innerHTML = '<div class="ok">Ordine corretto. Se serve rimandarlo al fornitore c\'è il PDF.</div>'; }
+    } catch (e) {
+      out.innerHTML = '<div class="avviso">Non salvato (' + esc(erroreRete(e)) + '): riprova.</div>';
+      btn.disabled = false;
     }
   }
 

@@ -276,7 +276,7 @@
           const o = elenco[i++];
           try {
             const d = (await chiama('getOrdine', { id: o.id })).ordine;
-            fuori.push({ id: o.id, fornitore: o.fornitore, inviato: o.inviato, righe: (d.dati && d.dati.righe) || [], note: (d.dati && d.dati.note) || '' });
+            fuori.push({ id: o.id, fornitore: o.fornitore, inviato: o.inviato, righe: (d.dati && d.dati.righe) || [], note: (d.dati && d.dati.note) || '', modificato: (d.dati && d.dati.modificato) || '' });
           } catch (e) { /* un ordine illeggibile non ferma gli altri */ }
         }
       }
@@ -434,7 +434,8 @@
     det.innerHTML = `<div class="tabella-wrap"><table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Netto</th><th>Totale</th></tr></thead>
       <tbody>${o.righe.map(r => `<tr><td>${esc(nomeVino(r))}${r.test ? ' <small class="muto">(in prova)</small>' : ''}</td><td>${r.bott}</td>
         <td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td><td>${euro(cent(r.bott * r.netto))}</td></tr>`).join('')}</tbody></table></div>
-      ${o.note ? '<div class="muto" style="margin-top:6px;font-size:0.85em;">Note: ' + esc(o.note) + '</div>' : ''}`;
+      ${o.note ? '<div class="muto" style="margin-top:6px;font-size:0.85em;">Note: ' + esc(o.note) + '</div>' : ''}
+      ${o.modificato ? '<div class="muto" style="margin-top:6px;font-size:0.85em;">Corretto il ' + dataIt(o.modificato) + '</div>' : ''}`;
   }
 
   // ── Esportazione in Excel (SheetJS, scaricato al primo clic) ────────
