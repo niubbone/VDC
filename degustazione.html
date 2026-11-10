@@ -78,7 +78,18 @@
       background: #fff; color: #222; transition: border-color 0.2s;
     }
     input:focus, select:focus { outline: none; border-color: #2a5298; }
-    input.guida { border-color: #2a5298; background: #f0f4ff; font-weight: bold; }
+
+    /* Colori per famiglia di campo: quantita' (azzurro), costi (arancio), omaggio
+       (viola), incasso (verde), note (giallo). Focus e campo guida restano blu. */
+    input.c-qta, select.c-qta         { background: #eef5ff; border-color: #a9c4ec; }
+    input.c-costo                     { background: #fff3e6; border-color: #f0bf86; }
+    input.c-omaggio                   { background: #f5eefb; border-color: #c8a6e2; }
+    input.c-incasso                   { background: #eaf7ee; border-color: #9fd2b2; }
+    .vino-note textarea.c-note        { background: #fffbe6; border-color: #ecd98a; }
+    input.c-qta:focus, input.c-costo:focus, input.c-omaggio:focus, input.c-incasso:focus,
+    .vino-note textarea.c-note:focus  { border-color: #2a5298; }
+    input.guida                       { border-color: #2a5298; background: #f0f4ff; font-weight: bold; }
+    .carta-calice { display: block; font-size: 0.75em; color: #888; font-weight: normal; }
 
     .griglia { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
     .azioni { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
@@ -272,6 +283,7 @@
     .riga-calice input { padding: 8px 10px; }
     .riga-calice .nome-vino { color: #1e3c72; font-weight: bold; overflow-wrap: anywhere; }
     .riga-calice .sub { text-align: right; font-weight: bold; color: #1e3c72; white-space: nowrap; }
+    .riga-spesa.testa { margin-bottom: 4px; font-size: 0.7em; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
     .riga-spesa { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 10px; align-items: center; margin-bottom: 8px; }
     .riga-spesa input { padding: 8px 10px; }
     @media (max-width: 600px) {
@@ -361,11 +373,11 @@
   <div class="section">
     <div class="section-title">La degustazione</div>
     <div class="griglia">
-      <div><label for="nome">Nome</label><input type="text" id="nome" placeholder="Es. Riesling a confronto"></div>
+      <div><label for="nome">Nome</label><input type="text" id="nome"></div>
       <div><label for="data">Data</label><input type="date" id="data"></div>
-      <div><label for="caliciBott">Calici per bottiglia</label><input type="text" id="caliciBott" inputmode="numeric"></div>
-      <div><label for="bottVino">Bottiglie per vino</label><input type="text" id="bottVino" inputmode="numeric"></div>
-      <div><label for="bottOmaggio">Di cui omaggio</label><input type="text" id="bottOmaggio" inputmode="numeric" placeholder="0"></div>
+      <div><label for="caliciBott">Calici per bottiglia</label><input type="text" id="caliciBott" inputmode="numeric" class="c-qta"></div>
+      <div><label for="bottVino">Bottiglie per vino</label><input type="text" id="bottVino" inputmode="numeric" class="c-qta"></div>
+      <div><label for="bottOmaggio">Di cui omaggio</label><input type="text" id="bottOmaggio" inputmode="numeric" class="c-omaggio"></div>
     </div>
     <div class="schede" style="margin:10px 0 0;">
       <button class="scheda" data-calici="6">Calice normale · 6</button>
@@ -411,7 +423,7 @@
 
     <div id="pannelloTemp" hidden>
       <div class="griglia">
-        <div><label for="tNome">Vino</label><input type="text" id="tNome" placeholder="Nome del vino"></div>
+        <div><label for="tNome">Vino</label><input type="text" id="tNome"></div>
         <div><label for="tCat">Tipo</label><select id="tCat"></select></div>
         <div><label for="tTipo">Acquisto</label>
           <select id="tTipo">
@@ -419,9 +431,9 @@
             <option value="IMPORT">Import (senza IVA)</option>
           </select>
         </div>
-        <div><label for="tForn">Fornitore</label><input type="text" id="tForn" placeholder="Facoltativo"></div>
-        <div><label for="tImp">Imponibile bottiglia €</label><input type="text" id="tImp" inputmode="decimal" placeholder="0,00"></div>
-        <div id="wrapSpese" hidden><label for="tSpese">Spese logistiche €</label><input type="text" id="tSpese" inputmode="decimal" value="1,00"></div>
+        <div><label for="tForn">Fornitore (facoltativo)</label><input type="text" id="tForn"></div>
+        <div><label for="tImp">Imponibile bottiglia €</label><input type="text" id="tImp" inputmode="decimal" class="c-costo"></div>
+        <div id="wrapSpese" hidden><label for="tSpese">Spese logistiche €</label><input type="text" id="tSpese" inputmode="decimal" class="c-costo" value="1,00"></div>
       </div>
       <div class="azioni">
         <button class="btn btn-primario" id="btnTemp"><svg class="ico"><use href="#i-plus"></use></svg> Aggiungi</button>
@@ -441,10 +453,10 @@
       gli altri due campi si ricalcolano.
     </div>
     <div class="griglia">
-      <div><label for="persone">Persone</label><input type="text" id="persone" inputmode="numeric" placeholder="0"></div>
-      <div><label for="prezzo">Prezzo a persona € (IVA incl.)</label><input type="text" id="prezzo" inputmode="decimal" placeholder="0,00"></div>
-      <div><label for="ricX">Ricarico ×</label><input type="text" id="ricX" inputmode="decimal" placeholder="0,00"></div>
-      <div><label for="ricEur">Ricarico € (guadagno)</label><input type="text" id="ricEur" inputmode="decimal" placeholder="0,00"></div>
+      <div><label for="persone">Persone</label><input type="text" id="persone" inputmode="numeric" class="c-qta"></div>
+      <div><label for="prezzo">Prezzo a persona € (IVA incl.)</label><input type="text" id="prezzo" inputmode="decimal" class="c-incasso"></div>
+      <div><label for="ricX">Ricarico ×</label><input type="text" id="ricX" inputmode="decimal"></div>
+      <div><label for="ricEur">Ricarico € (guadagno)</label><input type="text" id="ricEur" inputmode="decimal"></div>
     </div>
 
     <div class="avviso" id="avviso" hidden>
@@ -846,13 +858,13 @@
         </div>` : ''}
         <div class="vino-campi">
           <div><label>Tipo</label><select data-campo="cat" class="${v.cat ? '' : 'manca'}">${opzioniTipo(v.cat)}</select></div>
-          <div><label>Imponibile €</label><input type="text" inputmode="decimal" data-campo="imp" value="${dec(v.imp)}"></div>
-          <div ${v.tipo === 'IMPORT' ? '' : 'hidden'}><label>Spese €</label><input type="text" inputmode="decimal" data-campo="ss" value="${dec(v.ss)}"></div>
-          <div><label>Bottiglie</label><input type="text" inputmode="numeric" data-campo="bott" value="${v.bott}"></div>
-          <div><label>Di cui omaggio</label><input type="text" inputmode="numeric" data-campo="omaggio" value="${v.omaggio || 0}"></div>
-          <div><label>Calici da questa bott.</label><input type="text" inputmode="numeric" data-campo="calici" value="${v.calici}"></div>
+          <div><label>Imponibile €</label><input type="text" inputmode="decimal" data-campo="imp" class="c-costo" value="${dec(v.imp)}"></div>
+          <div ${v.tipo === 'IMPORT' ? '' : 'hidden'}><label>Spese €</label><input type="text" inputmode="decimal" data-campo="ss" class="c-costo" value="${dec(v.ss)}"></div>
+          <div><label>Bottiglie</label><input type="text" inputmode="numeric" data-campo="bott" class="c-qta" value="${v.bott}"></div>
+          <div><label>Di cui omaggio</label><input type="text" inputmode="numeric" data-campo="omaggio" class="c-omaggio" value="${v.omaggio || 0}"></div>
+          <div><label>Calici da questa bott.</label><input type="text" inputmode="numeric" data-campo="calici" class="c-qta" value="${v.calici}"></div>
         </div>
-        <div class="vino-note"><label>Note</label><textarea data-campo="note" rows="1" placeholder="Giudizi, prezzo di vendita possibile, annata...">${esc(v.note || '')}</textarea></div>
+        <div class="vino-note"><label>Note</label><textarea data-campo="note" rows="1" class="c-note">${esc(v.note || '')}</textarea></div>
         <div class="vino-sotto" data-sotto></div>
         ${v.temp ? `<div class="vino-acq"><button class="btn btn-secondario" data-azione="acquisisci">Acquisisci in WINE_COST</button>
           <span>apre il modulo Nuovo Vino già compilato; salvato, torna qui come vino dell'anagrafica</span></div>` : ''}
@@ -983,9 +995,9 @@
       vini.map(v => {
         const carta = prezzoCarta(v);
         return `<div class="riga-calice" data-id="${v.id}">
-          <span class="nome-vino">${esc(v.nome)}</span>
-          <input type="text" inputmode="numeric" data-campo="venduti" aria-label="Calici venduti" placeholder="Calici" value="${v.venduti || ''}">
-          <input type="text" inputmode="decimal" data-campo="prezzoCalice" aria-label="Prezzo al calice" placeholder="${carta ? dec(carta) : 'Prezzo'}" value="${v.prezzoCalice ? dec(v.prezzoCalice) : ''}">
+          <span class="nome-vino">${esc(v.nome)}${carta ? `<span class="carta-calice">in carta ${euro(carta)} al calice</span>` : ''}</span>
+          <input type="text" inputmode="numeric" data-campo="venduti" aria-label="Calici venduti" class="c-qta" value="${v.venduti || ''}">
+          <input type="text" inputmode="decimal" data-campo="prezzoCalice" aria-label="Prezzo al calice" class="c-incasso" value="${v.prezzoCalice ? dec(v.prezzoCalice) : ''}">
           <span class="sub" data-sub>${euro((v.venduti || 0) * (v.prezzoCalice || 0))}</span>
         </div>`;
       }).join('');
@@ -999,10 +1011,10 @@
 
   function disegnaSpese() {
     const spese = S.spese || [];
-    $('speseExtra').innerHTML = spese.map(x => `
+    $('speseExtra').innerHTML = (spese.length ? '<div class="riga-spesa testa"><span>Descrizione</span><span>Costo €</span><span></span></div>' : '') + spese.map(x => `
       <div class="riga-spesa" data-id="${x.id}">
-        <input type="text" data-campo="desc" aria-label="Descrizione della spesa" placeholder="Es. relatore, cibo, stampe" value="${esc(x.desc || '')}">
-        <input type="text" inputmode="decimal" data-campo="importo" aria-label="Importo" placeholder="0,00" value="${x.importo ? dec(x.importo) : ''}">
+        <input type="text" data-campo="desc" aria-label="Descrizione della spesa" value="${esc(x.desc || '')}">
+        <input type="text" inputmode="decimal" data-campo="importo" aria-label="Importo" class="c-costo" value="${x.importo ? dec(x.importo) : ''}">
         <button class="btn-mini" data-azione="togliSpesa" title="Togli"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>
       </div>`).join('');
   }
