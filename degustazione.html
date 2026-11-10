@@ -80,14 +80,15 @@
     input:focus, select:focus { outline: none; border-color: #2a5298; }
 
     /* Colori per famiglia di campo: quantita' (azzurro), costi (arancio), omaggio
-       (viola), incasso (verde), note (giallo). Focus e campo guida restano blu. */
+       (viola), incasso (verde), nome del vino (giallo). Focus e campo guida restano blu. */
     input.c-qta, select.c-qta         { background: #eef5ff; border-color: #a9c4ec; }
     input.c-costo                     { background: #fff3e6; border-color: #f0bf86; }
     input.c-omaggio                   { background: #f5eefb; border-color: #c8a6e2; }
     input.c-incasso                   { background: #eaf7ee; border-color: #9fd2b2; }
-    .vino-note textarea.c-note        { background: #fffbe6; border-color: #ecd98a; }
+    input.c-nome                      { background: #fffbe6; border-color: #ecd98a; }
+    .vino-nome [data-nome]            { background: #fff3c4; border-radius: 6px; padding: 1px 6px; }
     input.c-qta:focus, input.c-costo:focus, input.c-omaggio:focus, input.c-incasso:focus,
-    .vino-note textarea.c-note:focus  { border-color: #2a5298; }
+    input.c-nome:focus                { border-color: #2a5298; }
     input.guida                       { border-color: #2a5298; background: #f0f4ff; font-weight: bold; }
     .carta-calice { display: block; font-size: 0.75em; color: #888; font-weight: normal; }
 
@@ -423,7 +424,7 @@
 
     <div id="pannelloTemp" hidden>
       <div class="griglia">
-        <div><label for="tNome">Vino</label><input type="text" id="tNome"></div>
+        <div><label for="tNome">Vino</label><input type="text" id="tNome" class="c-nome"></div>
         <div><label for="tCat">Tipo</label><select id="tCat"></select></div>
         <div><label for="tTipo">Acquisto</label>
           <select id="tTipo">
@@ -850,7 +851,7 @@
           </div>
         </div>
         ${v.temp ? `<div class="vino-temp">
-          <div><label>Vino</label><input type="text" data-campo="nome" value="${esc(v.nome)}"></div>
+          <div><label>Vino</label><input type="text" data-campo="nome" class="c-nome" value="${esc(v.nome)}"></div>
           <div><label>Acquisto</label><select data-campo="tipo">
             <option value="DIST"${v.tipo === 'DIST' ? ' selected' : ''}>Distributore</option>
             <option value="IMPORT"${v.tipo === 'IMPORT' ? ' selected' : ''}>Import</option></select></div>
@@ -864,7 +865,7 @@
           <div><label>Di cui omaggio</label><input type="text" inputmode="numeric" data-campo="omaggio" class="c-omaggio" value="${v.omaggio || 0}"></div>
           <div><label>Calici da questa bott.</label><input type="text" inputmode="numeric" data-campo="calici" class="c-qta" value="${v.calici}"></div>
         </div>
-        <div class="vino-note"><label>Note</label><textarea data-campo="note" rows="1" class="c-note">${esc(v.note || '')}</textarea></div>
+        <div class="vino-note"><label>Note</label><textarea data-campo="note" rows="1">${esc(v.note || '')}</textarea></div>
         <div class="vino-sotto" data-sotto></div>
         ${v.temp ? `<div class="vino-acq"><button class="btn btn-secondario" data-azione="acquisisci">Acquisisci in WINE_COST</button>
           <span>apre il modulo Nuovo Vino già compilato; salvato, torna qui come vino dell'anagrafica</span></div>` : ''}
