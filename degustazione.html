@@ -365,12 +365,13 @@
       <div><label for="data">Data</label><input type="date" id="data"></div>
       <div><label for="caliciBott">Calici per bottiglia</label><input type="text" id="caliciBott" inputmode="numeric"></div>
       <div><label for="bottVino">Bottiglie per vino</label><input type="text" id="bottVino" inputmode="numeric"></div>
+      <div><label for="bottOmaggio">Di cui omaggio</label><input type="text" id="bottOmaggio" inputmode="numeric" placeholder="0"></div>
     </div>
     <div class="schede" style="margin:10px 0 0;">
       <button class="scheda" data-calici="6">Calice normale · 6</button>
       <button class="scheda" data-calici="25">Assaggio 2,5 cl · 25</button>
     </div>
-    <div class="stato-elenco">Calici e bottiglie valgono per tutti i vini; sotto ogni vino puoi cambiarli solo per quello.</div>
+    <div class="stato-elenco">Calici, bottiglie e omaggi valgono per tutti i vini; sotto ogni vino puoi cambiarli solo per quello. Le bottiglie omaggio (sponsor) non entrano nel costo.</div>
 
     <div class="evento-box">
       <label for="eventoSel">Evento collegato</label>
@@ -570,7 +571,7 @@
   let S = statoVuoto();
 
   function statoVuoto() {
-    return { nome: '', data: '', caliciBott: CALICI_DEFAULT, bottVino: BOTT_DEFAULT, vini: [],
+    return { nome: '', data: '', caliciBott: CALICI_DEFAULT, bottVino: BOTT_DEFAULT, omaggioVino: 0, vini: [],
              persone: 0, prezzo: 0, ricX: 0, ricEur: 0, guida: 'prezzo',
              eventoId: '', eventoNome: '', spese: [],
              idServer: null, salvataIl: '', firmaSalvata: '' };
@@ -614,17 +615,22 @@
   // ── Calcolo (funzioni pure) ─────────────────────────────────────────
   function costoNetto(v) { return v.tipo === 'DIST' ? v.imp : v.imp + (v.ss || 0); }
   function costoIvato(v) { return v.tipo === 'DIST' ? v.imp * IVA_ACQUISTO : v.imp + (v.ss || 0); }
+  // Bottiglie da pagare: le omaggio (sponsor) si servono ma non costano.
+  function omaggi(v) { return Math.min(v.bott, v.omaggio || 0); }
+  function pagate(v) { return v.bott - omaggi(v); }
 
   function calcola(s) {
     const vini = inConto(s.vini);
-    const costo = vini.reduce((t, v) => t + v.bott * costoNetto(v), 0);
-    const esborso = vini.reduce((t, v) => t + v.bott * costoIvato(v), 0);
+    const costo = vini.reduce((t, v) => t + pagate(v) * costoNetto(v), 0);
+    const esborso = vini.reduce((t, v) => t + pagate(v) * costoIvato(v), 0);
+    const nOmaggio = vini.reduce((t, v) => t + omaggi(v), 0);
+    const valOmaggio = vini.reduce((t, v) => t + omaggi(v) * costoNetto(v), 0);
     const capienza = vini.length ? Math.min.apply(null, vini.map(v => Math.floor(v.bott * v.calici))) : 0;
     const n = s.persone;
     let prezzo = s.prezzo;
     if (s.guida === 'x') prezzo = n > 0 ? costo * s.ricX * IVA_VENDITA / n : 0;
     if (s.guida === 'eur') prezzo = n > 0 ? (costo + s.ricEur) * IVA_VENDITA / n : 0;
-    return Object.assign({ costo, esborso, capienza, prezzo }, conto(costo, prezzo, n));
+    return Object.assign({ costo, esborso, capienza, prezzo, nOmaggio, valOmaggio }, conto(costo, prezzo, n));
   }
 
   function conto(costo, prezzo, n) {
@@ -750,7 +756,7 @@
     const v = anagrafica.find(x => String(x.codice) === String(codice));
     if (!v) return;
     S.vini.push({ id: 'v' + Date.now(), codice: v.codice, nome: v.nome, tipo: v.tipo, imp: v.imp, ss: v.ss,
-                  cat: v.cat || '', temp: false, bott: S.bottVino, calici: S.caliciBott });
+                  cat: v.cat || '', temp: false, bott: S.bottVino, omaggio: S.omaggioVino || 0, calici: S.caliciBott });
     $('cerca').value = '';
     cerca();
     aggiorna(true);
@@ -765,7 +771,7 @@
     $('erroreTemp').textContent = '';
     S.vini.push({ id: 'v' + Date.now(), codice: null, nome, tipo, imp, cat, fornitore: $('tForn').value.trim(),
                   ss: tipo === 'IMPORT' ? num($('tSpese').value) : 0,
-                  temp: true, bott: S.bottVino, calici: S.caliciBott });
+                  temp: true, bott: S.bottVino, omaggio: S.omaggioVino || 0, calici: S.caliciBott });
     $('tNome').value = ''; $('tImp').value = ''; $('tCat').value = ''; $('tForn').value = '';
     aggiorna(true);
   }
@@ -843,6 +849,7 @@
           <div><label>Imponibile €</label><input type="text" inputmode="decimal" data-campo="imp" value="${dec(v.imp)}"></div>
           <div ${v.tipo === 'IMPORT' ? '' : 'hidden'}><label>Spese €</label><input type="text" inputmode="decimal" data-campo="ss" value="${dec(v.ss)}"></div>
           <div><label>Bottiglie</label><input type="text" inputmode="numeric" data-campo="bott" value="${v.bott}"></div>
+          <div><label>Di cui omaggio</label><input type="text" inputmode="numeric" data-campo="omaggio" value="${v.omaggio || 0}"></div>
           <div><label>Calici da questa bott.</label><input type="text" inputmode="numeric" data-campo="calici" value="${v.calici}"></div>
         </div>
         <div class="vino-note"><label>Note</label><textarea data-campo="note" rows="1" placeholder="Giudizi, prezzo di vendita possibile, annata...">${esc(v.note || '')}</textarea></div>
@@ -859,7 +866,9 @@
       if (!el) return;
       el.innerHTML = `Costo bottiglia (senza IVA) <b>${euro(costoNetto(v))}</b>` +
         (v.tipo === 'DIST' ? ` (con IVA ${euro(costoIvato(v))})` : '') +
-        ` · ${Math.floor(v.bott * v.calici)} calici · totale <b>${euro(v.bott * costoNetto(v))}</b>`;
+        ` · ${Math.floor(v.bott * v.calici)} calici` +
+        (omaggi(v) ? ` · ${omaggi(v)} omaggio, ${pagate(v)} da pagare` : '') +
+        ` · totale <b>${euro(pagate(v) * costoNetto(v))}</b>`;
     });
   }
 
@@ -889,7 +898,7 @@
         ['Costo vini (senza IVA)', euro(r.costo)],
         ['Uscita di cassa (IVA incl.)', euro(r.esborso)],
         ['Costo per persona (senza IVA)', euro(r.costoPP)]
-      ]],
+      ].concat(r.nOmaggio ? [['Omaggio sponsor: ' + r.nOmaggio + (r.nOmaggio === 1 ? ' bottiglia' : ' bottiglie'), '− ' + euro(r.valOmaggio)]] : [])],
       ['Incasso', [
         ['Incasso (IVA incl.)', euro(r.lordo)],
         ['Incasso (senza IVA)', euro(r.netto)]
@@ -1281,15 +1290,16 @@
       <div class="sotto">${VDC_CONFIG.locale.nome}${data ? ' · ' + data : ''} · ${S.persone} persone · ${euro(r.prezzo)} a persona IVA incl.</div>
       <h2>Vini, in ordine di servizio</h2>
       <div class="sotto">${testoTipi(vini)}</div>
-      <table><thead><tr><th>Vino</th><th>Tipo</th><th>Acquisto</th><th>Bottiglie</th><th>Calici/bott.</th><th>Costo bott. (senza IVA)</th><th>Totale</th></tr></thead>
+      <table><thead><tr><th>Vino</th><th>Tipo</th><th>Acquisto</th><th>Bottiglie</th><th>Omaggio</th><th>Calici/bott.</th><th>Costo bott. (senza IVA)</th><th>Totale</th></tr></thead>
       <tbody>${vini.map((v, i) => `<tr><td>${i + 1}. ${esc(v.nome)}${v.temp ? ' (temporaneo)' : ''}</td><td>${v.cat ? nomeTipo(v.cat) : '—'}</td><td>${v.tipo === 'IMPORT' ? 'Import' : 'Distributore'}</td>
-        <td>${v.bott}</td><td>${v.calici}</td><td>${euro(costoNetto(v))}</td><td>${euro(v.bott * costoNetto(v))}</td></tr>`).join('')}</tbody></table>
+        <td>${v.bott}</td><td>${omaggi(v) || '—'}</td><td>${v.calici}</td><td>${euro(costoNetto(v))}</td><td>${euro(pagate(v) * costoNetto(v))}</td></tr>`).join('')}</tbody></table>
       <h2>Conti</h2>
       <table><tbody>
         <tr class="gruppo"><th colspan="2">Costi</th></tr>
         <tr><td>Costo vini (senza IVA)</td><td>${euro(r.costo)}</td></tr>
         <tr><td>Uscita di cassa (IVA incl.)</td><td>${euro(r.esborso)}</td></tr>
         <tr><td>Costo per persona (senza IVA)</td><td>${euro(r.costoPP)}</td></tr>
+        ${r.nOmaggio ? `<tr><td>Omaggio sponsor: ${r.nOmaggio} ${r.nOmaggio === 1 ? 'bottiglia' : 'bottiglie'} (non nel costo)</td><td>− ${euro(r.valOmaggio)}</td></tr>` : ''}
         <tr class="gruppo"><th colspan="2">Incasso</th></tr>
         <tr><td>Incasso (IVA incl.)</td><td>${euro(r.lordo)}</td></tr>
         <tr><td>Incasso (senza IVA)</td><td>${euro(r.netto)}</td></tr>
@@ -1328,6 +1338,7 @@
     $('persone').value = S.persone || '';
     $('caliciBott').value = S.caliciBott || '';
     $('bottVino').value = S.bottVino || '';
+    $('bottOmaggio').value = S.omaggioVino || '';
     evidenziaCalici();
     ['prezzo', 'ricX', 'ricEur'].forEach(id => { $(id).value = ''; });
     if (S.guida === 'prezzo') $('prezzo').value = S.prezzo ? dec(S.prezzo) : '';
@@ -1355,6 +1366,13 @@
   function impostaBottiglie(n) {
     S.bottVino = Math.max(0, Math.floor(n));
     S.vini.forEach(v => { v.bott = S.bottVino; });
+    aggiorna(true);
+  }
+
+  // Bottiglie omaggio per vino (sponsor): come le bottiglie, per tutti i vini e per i nuovi.
+  function impostaOmaggio(n) {
+    S.omaggioVino = Math.max(0, Math.floor(n));
+    S.vini.forEach(v => { v.omaggio = S.omaggioVino; });
     aggiorna(true);
   }
 
@@ -1428,6 +1446,7 @@
     $('tCat').innerHTML = opzioniTipo('');
     $('caliciBott').oninput = () => impostaCalici(num($('caliciBott').value));
     $('bottVino').oninput = () => impostaBottiglie(num($('bottVino').value));
+    $('bottOmaggio').oninput = () => impostaOmaggio(num($('bottOmaggio').value));
     $('btnSalva').onclick = () => salva(false);
     $('btnSalvaCopia').onclick = () => salva(true);
     $('btnArchivio').onclick = () => {
@@ -1543,7 +1562,7 @@
         return;
       }
       const n = num(e.target.value);
-      v[campo] = (campo === 'bott' || campo === 'calici') ? Math.max(0, Math.floor(n)) : Math.max(0, n);
+      v[campo] = (campo === 'bott' || campo === 'calici' || campo === 'omaggio') ? Math.max(0, Math.floor(n)) : Math.max(0, n);
       aggiorna();
     });
     $('elencoVini').addEventListener('pointerdown', iniziaTrascinamento);
