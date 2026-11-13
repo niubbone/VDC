@@ -15,10 +15,10 @@
        (seconda di copertina del menu). Scelte di Giuseppe del 13/11/2026:
        tutto centrato; logo tondo sopra il titolo; titolo «Degustazioni &
        Eventi» e basta; una frase sotto il QR; niente timbro, niente cornice
-       doppia, niente riga «nessuno spam». Resta un filetto rosso sottile come
-       cornice. Il QR è nero su bianco: è quello che legge ogni telefono. */
+       doppia, niente riga «nessuno spam». Cornice: un filetto blu sottile, del
+       blu del logo (il tratteggio grigio fuori è la linea di taglio). Il QR è nero su bianco: è quello che legge ogni telefono. */
     :root {
-      --ink: #1d2733; --ink-soft: #4b5867; --red: #c4585e; --carta: #ffffff;
+      --ink: #1d2733; --ink-soft: #4b5867; --red: #c4585e; --blu: #1f4f9c; --carta: #ffffff;
       --font-display: "Stardos Stencil", "Stencil", "Courier New", serif;
       --font-body: "Libre Franklin", "Segoe UI", system-ui, sans-serif;
       --font-mono: "IBM Plex Mono", ui-monospace, "Consolas", monospace;
@@ -45,14 +45,14 @@
       outline: 1px dashed #b8c2cf; /* linea di taglio */
     }
     .dentro {
-      height: 100%; border: 1.5px solid var(--red);
+      height: 100%; border: 1.5px solid var(--blu);
       padding: 22px 18px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
       text-align: center; gap: 12px;
     }
     .logo { width: 74px; height: 74px; display: block; mix-blend-mode: multiply; }
     .cartoncino h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.9em; line-height: 1.05; color: var(--ink); }
     .qr { width: 160px; height: 160px; display: block; margin-top: 4px; }
-    .invito { font-size: 0.95em; line-height: 1.45; color: var(--ink); max-width: 26ch; }
+    .invito { font-size: 0.95em; line-height: 1.45; color: var(--ink); max-width: 27ch; text-align: justify; text-align-last: center; hyphens: none; }
 
     @media (max-width: 560px) { .foglio-stampa { grid-template-columns: 1fr; } }
 
@@ -87,7 +87,7 @@
         <img class="logo" src="./assets/images/logo-locale.jpg" alt="">
         <h2>Degustazioni<br>&amp; Eventi</h2>
         <img class="qr" src="./assets/qr/iscrizione-qr-bn.svg" alt="QR code per iscriversi agli eventi della Vecchia Dogana">
-        <p class="invito">Inquadra il codice e lascia i tuoi contatti per essere avvisato dei nostri prossimi eventi in programma.</p>
+        <p class="invito">Inquadra il codice e lascia i tuoi contatti per ricevere informazioni sui nostri prossimi eventi via mail o WhatsApp.</p>
       </div>
     </div>
   </template>
