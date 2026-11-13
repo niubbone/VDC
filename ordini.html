@@ -185,7 +185,7 @@
       display: inline-block; font-size: 0.72em; padding: 1px 8px; border-radius: 10px;
       border: 1px solid var(--c, #2a5298); color: var(--c, #2a5298); margin-left: 6px; font-weight: normal; vertical-align: 1px;
     }
-    .vino-campi { display: grid; grid-template-columns: 70px 92px 112px 92px 80px 1fr; gap: 10px; align-items: start; }
+    .vino-campi { display: grid; grid-template-columns: 70px 92px 112px 92px 80px 80px 1fr; gap: 10px; align-items: start; }
     .vino-campi label { font-size: 0.7em; }
     .vino-campi input, .vino-campi textarea { padding: 8px 10px; }
     .vino-campi textarea { min-height: 38px; font-size: 0.88em; }
@@ -439,7 +439,7 @@
   let F = '';               // fornitore scelto
   const costiScelti = new Set();   // vini da aggiornare in WINE_COST
   let scheda = null;        // { email, ..., righe: [{ id, codice, nome, listino, sconto, nota }] }
-  let bozza = { id: '', note: '', q: {} };   // q: id riga → bottiglie
+  let bozza = { id: '', note: '', q: {}, om: {} };   // q: id riga → bottiglie
   let timerScheda = null, timerBozza = null;
 
   // ── Utilità ─────────────────────────────────────────────────────────
@@ -656,12 +656,12 @@
       const d = await chiama(API_ORD, 'getFornitore', { nome: F });
       scheda = Object.assign({ email: '', contatto: '', telefono: '', sconto: '', minimo: '', pagamento: '', note: '',
                                listinoData: '', listinoRichiesto: '', righe: [] }, d.fornitore || {});
-      bozza = { id: '', note: '', q: {} };
+      bozza = { id: '', note: '', q: {}, om: {} };
       if (d.bozza) {
         bozza.id = d.bozza.id;
         bozza.numero = etichettaNumero(d.bozza);
         bozza.note = d.bozza.dati.note || '';
-        (d.bozza.dati.righe || []).forEach(r => { if (r.bott > 0) bozza.q[r.id] = r.bott; });
+        (d.bozza.dati.righe || []).forEach(r => { if (r.bott > 0) bozza.q[r.id] = r.bott; if (r.omaggio > 0) bozza.om[r.id] = r.omaggio; });
       }
       $('statoScheda').textContent = d.aggiornato ? 'Scheda salvata il ' + dataIt(d.aggiornato) + ' ' + d.aggiornato.slice(11) : 'Scheda nuova';
       $('statoBozza').textContent = d.bozza ? 'Bozza del ' + dataIt(d.bozza.aggiornato) + ' ' + d.bozza.aggiornato.slice(11) : '';
@@ -775,11 +775,17 @@
 
   // ── Bozza dell'ordine ───────────────────────────────────────────────
   function righeOrdine() {
-    const ord = righe().filter(r => (bozza.q[r.id] || 0) > 0);
+    // Bottiglie omaggio (13/11/2026): oltre a quelle pagate, sullo stesso vino; non si pagano.
+    const ord = righe().filter(r => (bozza.q[r.id] || 0) > 0 || omaggioDi(r.id) > 0);
     return [...ord.filter(r => !isTest(r)), ...ord.filter(isTest)].map(r => ({
       id: r.id, codice: r.codice || null, nome: r.nome, annata: r.annata || '', listino: num(r.listino),
-      sconto: scontoRiga(r), netto: netto(r), bott: bozza.q[r.id], tipo: tipoDi(r), test: isTest(r) && provaSeparata()
+      sconto: scontoRiga(r), netto: netto(r), bott: bozza.q[r.id] || 0, omaggio: omaggioDi(r.id), tipo: tipoDi(r), test: isTest(r) && provaSeparata()
     }));
+  }
+  function omaggioDi(id) { return (bozza.om && bozza.om[id]) || 0; }
+  // «12 + 1 omaggio»
+  function bottTesto(b, om, breve) { return om ? b + ' + ' + om + (breve ? ' omg.' : ' omaggio') : String(b); }
+  function omaggiTot(ro) { return ro.reduce((a, r) => a + (r.omaggio || 0), 0);
   }
   function salvaBozzaTra() {
     $('statoBozza').className = 'stato sporca';
@@ -833,7 +839,7 @@
     const cerca = norm($('cerca').value);
     const soloOrd = $('soloOrdinati').checked;
     const vis = tutte.filter(r => {
-      const q = bozza.q[r.id] || 0;
+      const q = (bozza.q[r.id] || 0) + omaggioDi(r.id);
       if (soloOrd && !q) return false;
       if (cerca && !norm(r.nome + ' ' + (r.wc ? r.wc.vino : '')).includes(cerca)) return false;
       return true;
@@ -843,7 +849,7 @@
     } else {
       const per = { carta: [], rari: [], test: [], fuori: [] };
       vis.forEach(r => per[gruppoDi(r)].push(r));
-      const inOrdine = l => l.reduce((a, r) => a + (bozza.q[r.id] || 0), 0);
+      const inOrdine = l => l.reduce((a, r) => a + (bozza.q[r.id] || 0) + omaggioDi(r.id), 0);
       const conta = (l, nota) => { const b = inOrdine(l); return `<small>· ${l.length}${b ? ' · ' + b + ' bottiglie in ordine' : ''}${nota ? ' · ' + nota : ''}</small>`; };
       // Richiudibile: resta aperta se ha bottiglie in ordine, se la ricerca ci trova qualcosa o se la si e' aperta a mano.
       const chiudibile = (g, t, nota, extra) => {
@@ -868,12 +874,12 @@
   const gruppiAperti = new Set();
 
   function rigaHtml(r) {
-    const q = bozza.q[r.id] || 0;
+    const q = bozza.q[r.id] || 0, om = omaggioDi(r.id);
     const n = netto(r);
     const wc = r.wc;
     const s = leggiSconto(scontoRiga(r));
     const tipo = tipoDi(r);
-    const cls = ['vino', !r.codice ? 'temp' : '', wc && wc.abbandonato ? 'abb' : '', q ? 'ordinato' : ''].join(' ');
+    const cls = ['vino', !r.codice ? 'temp' : '', wc && wc.abbandonato ? 'abb' : '', q || om ? 'ordinato' : ''].join(' ');
     const colore = COLORE_TIPO[tipo] ? `style="--t:${COLORE_TIPO[tipo]}"` : '';
     const tipoHtml = r.codice
       ? (tipo ? `<span class="tipo">${esc(tipoBreve(tipo))}</span>` : '<span class="badge" style="--c:#999">tipologia da indicare in Gestione Vini</span>')
@@ -906,6 +912,7 @@
             <div class="spiega">${esc(spiegaSconto(r))}</div></div>
           <div><label>Netto</label><div class="valore">${euro(n)}</div></div>
           <div><label>Bottiglie</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${q ? 'pieno' : ''}" data-f="bott" value="${q || ''}"></div>
+          <div title="Bottiglie in più, gratis, sullo stesso vino"><label>Omaggio</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${om ? 'pieno' : ''}" data-f="omaggio" value="${om || ''}"></div>
           <div class="nota-vino"><label>Note sul vino</label><textarea data-f="nota" rows="1" placeholder="solo per te, non vanno nell'ordine">${esc(r.nota || '')}</textarea></div>
         </div>
         ${diff}
@@ -919,14 +926,15 @@
     const lordo = cent(ro.reduce((a, r) => a + r.bott * r.listino, 0));
     const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
     const iva = cent(imp * IVA);
+    const omg = omaggiTot(ro);
     $('conti').innerHTML = [
-      ['Vini', ro.length], ['Bottiglie', bott], ['A listino', euro(lordo)], ['Sconti', euro(cent(lordo - imp))],
+      ['Vini', ro.length], ['Bottiglie', bottTesto(bott, omg)], ['A listino', euro(lordo)], ['Sconti', euro(cent(lordo - imp))],
       ['Imponibile', euro(imp)], ['IVA 22%', euro(iva)], ['Totale', euro(cent(imp + iva)), true]
     ].map(([l, v, f]) => `<div class="conto ${f ? 'forte' : ''}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
     const min = parseInt(scheda.minimo, 10) || 0;
     $('avvisoMinimo').innerHTML = min && bott && bott < min
       ? `<div class="avviso">Mancano <b>${min - bott}</b> bottiglie all'ordine minimo di ${min}.</div>` : '';
-    $('barraTotale').innerHTML = `<span><b>${bott}</b> bott.</span><span>Imponibile <b>${euro(imp)}</b></span>` +
+    $('barraTotale').innerHTML = `<span><b>${bottTesto(bott, omg, true)}</b> bott.</span><span>Imponibile <b>${euro(imp)}</b></span>` +
       `<span>Con IVA <b>${euro(cent(imp + iva))}</b></span>` +
       (min && bott && bott < min ? `<span class="avviso-min">−${min - bott} al minimo</span>` : '');
     $('barraTotale').hidden = !F;
@@ -1010,7 +1018,7 @@
     return ro.map(r => {
       const sc = leggiSconto(r.sconto);
       const dett = !semplice && (sc.tipo === 'perc' || sc.tipo === 'omaggio') ? ` (listino ${euro(r.listino)}, sconto ${r.sconto})` : '';
-      return `${r.bott} × ${nomeOrdine(r)} — ${euro(r.netto)}${semplice ? ' cad.' : ''}${dett} = ${euro(cent(r.bott * r.netto))}`;
+      return `${bottTesto(r.bott, r.omaggio)} × ${nomeOrdine(r)} — ${euro(r.netto)}${semplice ? ' cad.' : ''}${dett} = ${euro(cent(r.bott * r.netto))}`;
     });
   }
   const semplificato = () => !!(scheda && scheda.semplice);
@@ -1028,7 +1036,7 @@
     const righe = rr => { const t = righeTesto(rr, semplice); return wa ? t.flatMap((x, i) => i ? ['', x] : [x]) : t; };
     const totali = semplice
       ? [g(`Imponibile: ${euro(imp)}`), g(`Totale con IVA: ${euro(cent(imp * (1 + IVA)))}`)]
-      : [`Bottiglie: ${bott}`, `Imponibile: ${euro(imp)}`, `IVA 22%: ${euro(cent(imp * IVA))}`, `Totale: ${euro(cent(imp * (1 + IVA)))}`];
+      : [`Bottiglie: ${bottTesto(bott, omaggiTot(ro))}`, `Imponibile: ${euro(imp)}`, `IVA 22%: ${euro(cent(imp * IVA))}`, `Totale: ${euro(cent(imp * (1 + IVA)))}`];
     return [...(wa ? ['Buongiorno, ecco il nostro ordine:'] : ['Buongiorno,', '', 'vi inviamo il nostro ordine:']), '',
             ...righe(ro.filter(r => !r.test)),
             ...(prova.length ? ['', 'Vini in prova:', ...righe(prova)] : []), '',
@@ -1161,8 +1169,9 @@
     doc.text('del ' + dataIt(quando), x, y + 7);
     const tot = r => euro(cent(r.bott * r.netto));
     // Semplificato: vino, bottiglie, prezzo unitario, totale; in fondo imponibile e con IVA.
-    const riga = semplice ? r => [nomeOrdine(r), r.bott, euro(r.netto), tot(r)]
-                          : r => [nomeOrdine(r), r.bott, euro(r.listino), r.sconto || '', euro(r.netto), tot(r)];
+    const bt = r => bottTesto(r.bott, r.omaggio, true);
+    const riga = semplice ? r => [nomeOrdine(r), bt(r), euro(r.netto), tot(r)]
+                          : r => [nomeOrdine(r), bt(r), euro(r.listino), r.sconto || '', euro(r.netto), tot(r)];
     const col = semplice ? 4 : 6;
     const vuote = n => Array(n).fill('');
     const prova = ro.filter(r => r.test);
@@ -1178,7 +1187,7 @@
       body: corpo,
       foot: semplice
         ? [[...vuote(2), 'Imponibile', euro(imp)], [...vuote(2), 'Totale con IVA', euro(cent(imp * (1 + IVA)))]]
-        : [['Bottiglie: ' + bott, ...vuote(3), 'Imponibile', euro(imp)],
+        : [['Bottiglie: ' + bottTesto(bott, omaggiTot(ro)), ...vuote(3), 'Imponibile', euro(imp)],
            [...vuote(4), 'IVA 22%', euro(cent(imp * IVA))],
            [...vuote(4), 'Totale', euro(cent(imp * (1 + IVA)))]],
       showFoot: 'lastPage',
@@ -1213,7 +1222,7 @@
     velo('Archivio l\'ordine...');
     try {
       await salvaBozza(true);
-      bozza = { id: '', note: '', q: {} };
+      bozza = { id: '', note: '', q: {}, om: {} };
       $('noteOrdine').value = '';
       disegna();
       esito('<div class="ok">Ordine archiviato fra gli inviati. La bozza è di nuovo vuota.</div>');
@@ -1226,8 +1235,8 @@
   }
 
   function svuota() {
-    if (!Object.keys(bozza.q).length) return;
-    bozza.q = {};
+    if (!Object.keys(bozza.q).length && !Object.keys(bozza.om || {}).length) return;
+    bozza.q = {}; bozza.om = {};
     disegna();
     salvaBozzaTra();
   }
@@ -1265,7 +1274,7 @@
       const det = box.querySelector('.dettaglio');
       det.hidden = !det.hidden;
       det.innerHTML = `<div class="tabella-wrap"><table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Prezzo</th></tr></thead>
-        <tbody>${ro.map(r => `<tr><td>${esc(nomeOrdine(r))}${r.test ? ' <small>(in prova)</small>' : ''}</td><td>${r.bott}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td></tr>`).join('')}</tbody></table></div>
+        <tbody>${ro.map(r => `<tr><td>${esc(nomeOrdine(r))}${r.test ? ' <small>(in prova)</small>' : ''}</td><td>${bottTesto(r.bott, r.omaggio)}</td><td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td></tr>`).join('')}</tbody></table></div>
         ${o.dati.note ? '<div class="vino-sotto">Note: ' + esc(o.dati.note) + '</div>' : ''}
         ${o.dati.modificato ? '<div class="vino-sotto">Corretto il ' + dataIt(o.dati.modificato) + '</div>' : ''}`;
     } else if (azione === 'modifica') {
@@ -1392,8 +1401,12 @@
   function ripetiRighe(ro) {
     const ids = new Set(righe().map(r => r.id));
     const persi = [];
-    bozza.q = {};
-    ro.forEach(r => { if (ids.has(r.id)) bozza.q[r.id] = r.bott; else persi.push(r.nome); });
+    bozza.q = {}; bozza.om = {};
+    ro.forEach(r => {
+      if (!ids.has(r.id)) { persi.push(r.nome); return; }
+      if (r.bott > 0) bozza.q[r.id] = r.bott;
+      if (r.omaggio > 0) bozza.om[r.id] = r.omaggio;
+    });
     disegna();
     salvaBozzaTra();
     esito(persi.length ? '<div class="avviso">Ricopiato, tranne: ' + esc(persi.join(', ')) + ' (non più nel listino).</div>'
@@ -1500,11 +1513,12 @@
     const box = e.target.closest('.vino'), f = e.target.dataset.f;
     if (!box || !f) return;
     const id = box.dataset.id;
-    if (f === 'bott') {
+    if (f === 'bott' || f === 'omaggio') {
       const n = Math.max(0, parseInt(e.target.value, 10) || 0);
-      if (n) bozza.q[id] = n; else delete bozza.q[id];
+      const m = f === 'bott' ? bozza.q : (bozza.om = bozza.om || {});
+      if (n) m[id] = n; else delete m[id];
       e.target.classList.toggle('pieno', !!n);
-      box.classList.toggle('ordinato', !!n);
+      box.classList.toggle('ordinato', !!((bozza.q[id] || 0) + omaggioDi(id)));
       disegnaConti();
       salvaBozzaTra();
       return;
@@ -1538,7 +1552,7 @@
       if (b.dataset.conferma !== '1') { b.dataset.conferma = '1'; b.textContent = 'Sicuro?'; return; }
       const lista = righe().filter(r => r.id !== id);
       materializza(lista);
-      delete bozza.q[id];
+      delete bozza.q[id]; if (bozza.om) delete bozza.om[id];
       salvaSchedaTra(); salvaBozzaTra();
       disegna();
     } else if (b.dataset.azione === 'acquisisci') acquisisci(id);
