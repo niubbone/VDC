@@ -659,6 +659,7 @@
       bozza = { id: '', note: '', q: {} };
       if (d.bozza) {
         bozza.id = d.bozza.id;
+        bozza.numero = d.bozza.numero || null;
         bozza.note = d.bozza.dati.note || '';
         (d.bozza.dati.righe || []).forEach(r => { if (r.bott > 0) bozza.q[r.id] = r.bott; });
       }
@@ -794,6 +795,7 @@
       const d = await chiama(API_ORD, 'salvaOrdine', corpo);
       if (corpo.fornitore !== F) return d;
       bozza.id = inviato ? '' : d.id;
+      if (!inviato && !bozza.numero && corpo.ordine.righe.length) numeraBozza();
       $('statoBozza').className = 'stato';
       $('statoBozza').textContent = inviato ? '' : 'Bozza salvata alle ' + d.aggiornato.slice(11);
       return d;
@@ -804,6 +806,18 @@
       return null;
     }
   }
+  // Numero progressivo dell'ordine (13/11/2026): lo assegna il server alla bozza la prima
+  // volta che ha delle bottiglie e resta all'ordine quando lo si segna inviato.
+  async function numeraBozza() {
+    const id = bozza.id, forn = F;
+    if (!id) return null;
+    try {
+      const d = await chiama(API_ORD, 'numeraOrdine', { id });
+      if (forn === F && bozza.id === id) bozza.numero = d.numero || null;
+      return d.numero || null;
+    } catch (e) { return null; }
+  }
+
   // Prima di cambiare fornitore o lasciare la pagina: niente modifiche perse.
   function salvaSubito() {
     if (timerScheda) salvaScheda();
@@ -1083,10 +1097,23 @@
     return libPdf;
   }
 
-  // «Ordine-Cavalli_10_2026.pdf»
-  function nomeFilePdf(quando) {
-    const forn = String(F).replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim();
-    return 'Ordine-' + forn + '_' + quando.slice(5, 7) + '_' + quando.slice(0, 4) + '.pdf';
+  // «Ordine n. 12 - CAVALLI» è il titolo del PDF; il file: «Ordine n. 12 - CAVALLI del 13-11-2026.pdf».
+  function titoloOrdine(numero) { return 'Ordine' + (numero ? ' n. ' + numero : '') + ' - ' + String(F).toUpperCase(); }
+  function nomeFilePdf(quando, numero) {
+    const t = titoloOrdine(numero).replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim();
+    return t + ' del ' + dataIt(quando).replace(/\//g, '-') + '.pdf';
+  }
+
+  // Logo del locale per l'intestazione (config.js); senza logo il PDF esce lo stesso.
+  let logoPdf = null;
+  function caricaLogo() {
+    if (!VDC_CONFIG.locale.logo) return Promise.resolve(null);
+    if (!logoPdf) logoPdf = fetch(VDC_CONFIG.locale.logo)
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then(b => new Promise((ok, ko) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = ko; fr.readAsDataURL(b); }))
+      .then(url => new Promise(ok => { const i = new Image(); i.onload = () => ok({ url, w: i.naturalWidth, h: i.naturalHeight }); i.onerror = () => ok(null); i.src = url; }))
+      .catch(() => { logoPdf = null; return null; });
+    return logoPdf;
   }
 
   // Condivisione di file (smartphone): il PDF va a WhatsApp o altro dal menu del telefono.
@@ -1096,31 +1123,39 @@
   }
 
   // modo: 'salva' scarica il file, 'condividi' apre il menu di condivisione del telefono.
-  async function scaricaPdf(ro, quando, note, modo) {
+  async function scaricaPdf(ro, quando, note, modo, numero) {
     velo('Preparo il PDF...');
-    try { await caricaJsPdf(); }
+    let logo = null;
+    try { [, logo] = await Promise.all([caricaJsPdf(), caricaLogo()]); }
     catch (e) { velo(''); esito('<div class="avviso">Non riesco a preparare il PDF (' + esc(e.message) + '): controlla la connessione.</div>'); return; }
-    const doc = creaPdf(ro, quando, note, semplificato());
+    const doc = creaPdf(ro, quando, note, semplificato(), numero, logo);
     velo('');
     if (modo === 'condividi') {
-      const file = new File([doc.output('blob')], nomeFilePdf(quando), { type: 'application/pdf' });
+      const file = new File([doc.output('blob')], nomeFilePdf(quando, numero), { type: 'application/pdf' });
       try { await navigator.share({ files: [file], title: file.name.replace(/\.pdf$/, '') }); return; }
       catch (e) {
         if (e.name === 'AbortError') return;          // condivisione annullata da te
         esito('<div class="avviso">Il telefono non ha aperto la condivisione: il PDF è stato scaricato, allegalo a mano.</div>');
       }
     }
-    doc.save(nomeFilePdf(quando));
+    doc.save(nomeFilePdf(quando, numero));
   }
 
-  function creaPdf(ro, quando, note, semplice) {
+  function creaPdf(ro, quando, note, semplice, numero, logo) {
     const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
     const bott = ro.reduce((a, r) => a + r.bott, 0);
     const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+    // Intestazione: logo a sinistra, accanto «Ordine n. 12 - CAVALLI» e sotto «del 13/11/2026».
+    let x = 14, y = 20, inizio = 33;
+    if (logo) {
+      const alto = 26, largo = alto * logo.w / logo.h;
+      doc.addImage(logo.url, 'JPEG', 14, 10, largo, alto);
+      x = 14 + largo + 6; y = 22; inizio = 42;
+    }
     doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(30, 60, 114);
-    doc.text('Ordine a ' + F, 14, 20);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90, 90, 90);
-    doc.text(VDC_CONFIG.locale.nome + ' · ' + dataIt(quando), 14, 27);
+    doc.text(titoloOrdine(numero), x, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(90, 90, 90);
+    doc.text('del ' + dataIt(quando), x, y + 7);
     const tot = r => euro(cent(r.bott * r.netto));
     // Semplificato: vino, bottiglie, prezzo unitario, totale; in fondo imponibile e con IVA.
     const riga = semplice ? r => [nomeOrdine(r), r.bott, euro(r.netto), tot(r)]
@@ -1135,7 +1170,7 @@
     }
     const dx = { halign: 'right' };
     doc.autoTable({
-      startY: 33, theme: 'striped',
+      startY: inizio, theme: 'striped',
       head: [semplice ? ['Vino', 'Bott.', 'Prezzo', 'Totale'] : ['Vino', 'Bott.', 'Listino', 'Sconto', 'Prezzo', 'Totale']],
       body: corpo,
       foot: semplice
@@ -1155,11 +1190,18 @@
     }
     return doc;
   }
-  function pdfOrdine(modo) {
+  async function pdfOrdine(modo) {
     const ro = righeOrdine();
     if (!ro.length) { esito('<div class="avviso">L\'ordine è vuoto.</div>'); return; }
     salvaSubito();
-    scaricaPdf(ro, oggi(), bozza.note, modo);
+    // Di solito il numero c'è già (chiesto al salvataggio della bozza); se manca lo chiede ora.
+    let numero = bozza.numero;
+    if (!numero) {
+      velo('Preparo il PDF...');
+      if (!bozza.id) await salvaBozza(false);
+      numero = await numeraBozza();
+    }
+    scaricaPdf(ro, oggi(), bozza.note, modo, numero);
   }
 
   async function segnaInviato() {
@@ -1198,7 +1240,7 @@
       return;
     }
     $('archivio').innerHTML = archivio.length ? archivio.map(o => `<div class="ordine-arch" data-id="${esc(o.id)}">
-      <div><b>${dataIt(o.inviato)}</b> · ${o.bottiglie} bottiglie · ${euro(o.totale)} <small>imponibile</small></div>
+      <div>${o.numero ? 'n. ' + o.numero + ' · ' : ''}<b>${dataIt(o.inviato)}</b> · ${o.bottiglie} bottiglie · ${euro(o.totale)} <small>imponibile</small></div>
       <div class="azioni">
         <button class="btn btn-secondario btn-piccolo" data-arch="vedi" type="button">Vedi</button>
         <button class="btn btn-secondario btn-piccolo" data-arch="modifica" type="button" title="Vino finito o sostituito: correggi l'ordine già inviato">Modifica</button>
@@ -1228,7 +1270,7 @@
     } else if (azione === 'ripeti') {
       ripetiRighe(ro);
     } else if (azione === 'pdf') {
-      scaricaPdf(ro, o.inviato, o.dati.note);
+      scaricaPdf(ro, o.inviato, o.dati.note, 'salva', o.numero);
     } else if (azione === 'elimina') {
       const btn = box.querySelector('[data-arch="elimina"]');
       if (btn.dataset.conferma !== '1') { btn.dataset.conferma = '1'; btn.innerHTML = 'Sicuro?'; return; }

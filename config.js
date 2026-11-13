@@ -6,7 +6,8 @@
 const VDC_CONFIG = {
   locale: {
     nome: 'Vecchia Dogana',
-    ragioneSociale: 'PEREIRA S.R.L.'
+    ragioneSociale: 'PEREIRA S.R.L.',
+    logo: 'assets/images/logo-locale.jpg'   // intestazione dei PDF (ordini)
   },
   server: {
     // Apps Script
