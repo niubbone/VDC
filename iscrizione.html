@@ -6,188 +6,194 @@
   <title>Vecchia Dogana — Iscriviti agli eventi</title>
 
   <meta name="description" content="Iscriviti per ricevere gli inviti alle degustazioni e agli eventi della Vecchia Dogana.">
-  <meta name="theme-color" content="#14283c">
+  <meta name="theme-color" content="#1d2733">
   <meta name="robots" content="noindex">
 
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
   <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
-  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@400;700&family=Libre+Franklin:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
+    /* 13/11/2026: stessa grafica del sito vecchiadoganabologna.it e del suo popup
+       «Ti avvisiamo noi» (carta chiara, filetto rosso, stencil per il titolo,
+       macchina da scrivere per le etichette). La pagina resta separata dal sito
+       apposta: chi arriva da qui si è iscritto dal QR del locale, chi arriva dal
+       sito ha origine «sito» nella rubrica.
+       Il carattere stencil va solo sul titolo: nel modulo serve un testo che
+       distingua bene 1 e l, 0 e O (un refuso nell'email è un contatto perso). */
+    :root {
+      --paper: #f5f7fa; --paper-2: #e9eef5; --ink: #1d2733; --ink-soft: #4b5867;
+      --rule: #c9d3e0; --red: #c4585e; --red-scuro: #a9464c; --blue: #4f7fc4; --band: #1d2733;
+      --font-display: "Stardos Stencil", "Stencil", "Courier New", serif;
+      --font-body: "Libre Franklin", "Segoe UI", system-ui, sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, "Consolas", monospace;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    /* Georgia per tutto ciò che si legge o si compila, Pirata One solo per il
-       titolo. I caratteri decorativi funzionano su poche parole grandi, non su
-       un modulo: nel campo email un gotico rende simili 1 e l, 0 e O, e lì un
-       refuso è un contatto irraggiungibile. Questa pagina la usano gli
-       avventori, non il personale — deve chiedersi il meno possibile.
-
-       Sfondo: la stessa cantina di index.html e prenotazioni.html, con la
-       velatura blu che tiene leggibile ciò che sta sopra. Il gradiente resta
-       sotto l'immagine come ultimo strato: se il PNG non carica la pagina non
-       resta su fondo bianco. */
+    /* Sotto, la vetrina del locale come nella prima schermata del sito, velata
+       di blu notte. Il colore pieno resta come ultimo strato: se la foto non
+       carica la pagina è comunque leggibile. */
     body {
-      font-family: 'Georgia', serif;
+      font-family: var(--font-body);
+      color: var(--ink);
       background:
-        linear-gradient(rgba(20, 40, 60, 0.55), rgba(20, 40, 60, 0.55)),
-        url('./assets/images/SfondoVD.png'),
-        linear-gradient(160deg, #2c1810 0%, #4a2c18 45%, #14283c 100%);
+        linear-gradient(rgba(13, 19, 26, 0.72), rgba(13, 19, 26, 0.80)),
+        url('https://vecchiadoganabologna.it/wp-content/uploads/2023/02/vecchiadogana_bologna_F01.jpg'),
+        var(--band);
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
       min-height: 100vh;
-      color: #f4e4c1;
-      padding: 24px 16px 48px;
+      padding: 28px 16px 48px;
       display: flex;
       justify-content: center;
       align-items: flex-start;
+      line-height: 1.5;
     }
 
     .foglio {
       width: 100%;
-      max-width: 520px;
-      background: linear-gradient(160deg, rgba(38, 21, 13, 0.97) 0%, rgba(26, 15, 10, 0.98) 100%);
-      border: 3px solid #6b4423;
-      border-radius: 14px;
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.75);
-      overflow: hidden;
+      max-width: 540px;
+      background: var(--paper);
+      border-top: 6px solid var(--red);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
     }
 
     .intestazione {
-      text-align: center;
-      padding: 30px 22px 22px;
-      background: linear-gradient(145deg, rgba(107, 68, 35, 0.55) 0%, rgba(60, 36, 20, 0.55) 100%);
-      border-bottom: 2px solid #6b4423;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 18px;
+      align-items: center;
+      padding: 26px 26px 20px;
+      border-bottom: 1px solid var(--rule);
+    }
+    .intestazione img { width: 84px; height: 84px; display: block; mix-blend-mode: multiply; }
+    .occhiello {
+      font-family: var(--font-mono);
+      font-size: 0.78em;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
     }
     .intestazione h1 {
-      font-family: 'Pirata One', cursive;
-      font-size: 2.5em;
-      color: #e8b873;
-      line-height: 1.05;
-      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 2.3em;
+      line-height: 1.02;
+      margin-top: 6px;
     }
-    .intestazione .sottotitolo {
-      margin-top: 10px;
-      font-size: 1em;
-      color: #d4a574;
-      line-height: 1.5;
+    .sottotitolo {
+      padding: 16px 26px 0;
+      color: var(--ink-soft);
+      font-size: 1.02em;
     }
 
-    form { padding: 24px 22px 28px; }
+    form { padding: 20px 26px 28px; }
 
-    .campo { margin-bottom: 18px; }
+    .campo { margin-bottom: 16px; display: grid; gap: 6px; min-width: 0; }
     .campo label {
-      display: block;
-      font-size: 0.92em;
-      color: #e8b873;
-      margin-bottom: 6px;
-      letter-spacing: 0.3px;
+      font-family: var(--font-mono);
+      font-size: 0.8em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
     }
     .campo input[type="text"],
     .campo input[type="email"],
     .campo input[type="tel"] {
       width: 100%;
       padding: 13px 14px;
-      border: 2px solid #6b4423;
-      border-radius: 8px;
-      background: #f4e4c1;
-      color: #2c1810;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      background: #ffffff;
+      color: var(--ink);
       font-size: 1.05em;
-      font-family: 'Georgia', serif;
+      font-family: var(--font-body);
     }
-    .campo input:focus {
-      outline: none;
-      border-color: #e8b873;
-      box-shadow: 0 0 0 3px rgba(232, 184, 115, 0.28);
-    }
-    .campo input:disabled { background: #d9cbb0; color: #6b5c48; }
+    .campo input:focus { outline: 2px solid var(--blue); outline-offset: 1px; border-color: var(--blue); }
+    .campo input:disabled { background: var(--paper-2); color: var(--ink-soft); }
 
-    .riga { display: flex; gap: 12px; }
-    .riga .campo { flex: 1; }
+    .riga { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
     .blocco-consensi {
-      background: rgba(244, 228, 193, 0.07);
-      border: 2px solid rgba(107, 68, 35, 0.85);
-      border-radius: 10px;
-      padding: 16px 16px 6px;
-      margin: 22px 0 18px;
+      border-top: 1px solid var(--rule);
+      padding-top: 16px;
+      margin: 8px 0 20px;
     }
     .blocco-consensi h2 {
-      font-size: 1em;
-      color: #e8b873;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      font-size: 0.8em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
       margin-bottom: 12px;
     }
 
     .consenso {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto 1fr;
       gap: 11px;
-      align-items: flex-start;
+      align-items: start;
       margin-bottom: 14px;
       cursor: pointer;
       line-height: 1.45;
-      font-size: 0.94em;
+      font-size: 0.97em;
     }
     .consenso input[type="checkbox"] {
-      width: 21px; height: 21px;
-      flex-shrink: 0;
+      width: 20px; height: 20px;
       margin-top: 1px;
-      accent-color: #c89858;
+      accent-color: var(--blue);
       cursor: pointer;
     }
-    .consenso .testo strong { color: #e8b873; }
-    .consenso .nota { display: block; font-size: 0.86em; color: #b89b78; margin-top: 3px; }
+    .consenso .testo strong { font-weight: 600; }
+    .consenso .nota { display: block; font-size: 0.9em; color: var(--ink-soft); margin-top: 2px; }
 
-    .privacy-box {
-      border-top: 1px solid rgba(107, 68, 35, 0.8);
-      padding-top: 14px;
-      margin-top: 4px;
-    }
-    .privacy-box a { color: #e8b873; text-decoration: underline; }
+    .privacy-box { border-top: 1px dashed var(--rule); padding-top: 14px; margin-top: 4px; }
+    .privacy-box a { color: var(--blue); }
 
     .btn-invia {
-      width: 100%;
-      padding: 16px;
+      padding: 15px 26px;
       border: none;
-      border-radius: 10px;
-      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%);
-      color: #2c1810;
-      /* I controlli di form NON ereditano il font dal body: hanno quello del
-         browser. Va dichiarato qui anche quando coincide col body, altrimenti
-         il bottone resta nel carattere di sistema. Vale per input, button,
-         select e textarea. */
-      font-family: 'Georgia', serif;
-      font-size: 1.15em;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      border-radius: 2px;
+      background: var(--red);
+      color: #ffffff;
+      /* I controlli di form non ereditano il carattere: va dichiarato. */
+      font-family: var(--font-mono);
+      font-weight: 500;
+      font-size: 1em;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
       cursor: pointer;
-      box-shadow: 0 5px 14px rgba(200, 152, 88, 0.4);
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: background 0.15s;
     }
-    .btn-invia:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(200, 152, 88, 0.55); }
-    .btn-invia:disabled { opacity: 0.55; cursor: wait; transform: none; }
+    .btn-invia:hover:not(:disabled) { background: var(--red-scuro); }
+    .btn-invia:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+    .btn-invia:disabled { opacity: 0.6; cursor: wait; }
 
     .messaggio {
-      padding: 14px 16px;
-      border-radius: 9px;
+      padding: 13px 15px;
       margin-bottom: 18px;
       line-height: 1.5;
-      font-size: 0.95em;
+      font-size: 0.97em;
       display: none;
     }
     .messaggio.attivo { display: block; }
-    .messaggio.errore { background: #ffdada; border: 2px solid #b71c1c; color: #7a1414; }
+    .messaggio.errore { background: #fbecec; border-left: 4px solid var(--red); color: #7a2a2e; }
 
     /* Schermata di conferma: sostituisce il form, non ci si torna per sbaglio */
-    .conferma { display: none; padding: 40px 26px 46px; text-align: center; }
+    .conferma { display: none; padding: 34px 26px 40px; text-align: center; }
     .conferma.attiva { display: block; }
-    .conferma .icona { font-size: 3.6em; margin-bottom: 14px; }
+    .conferma img { width: 96px; height: 96px; margin: 0 auto 16px; display: block; mix-blend-mode: multiply; }
     .conferma h2 {
-      font-family: 'Pirata One', cursive;
-      font-size: 2em;
-      color: #e8b873;
-      margin-bottom: 12px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 2.1em;
+      margin-bottom: 10px;
     }
-    .conferma p { line-height: 1.6; color: #d4a574; margin-bottom: 10px; }
+    .conferma p { line-height: 1.6; color: var(--ink-soft); margin-bottom: 10px; }
 
     /* Honeypot: invisibile a chi legge, compilato dai bot. Fuori dallo schermo
        e non "display:none", che alcuni bot riconoscono e saltano. */
@@ -199,18 +205,26 @@
     }
 
     .piede {
-      text-align: center;
-      padding: 16px 20px 22px;
-      font-size: 0.82em;
-      color: #8b7355;
-      border-top: 1px solid rgba(107, 68, 35, 0.6);
-      line-height: 1.5;
+      padding: 16px 26px 20px;
+      font-size: 0.84em;
+      color: var(--ink-soft);
+      border-top: 1px solid var(--rule);
+      background: var(--paper-2);
+      line-height: 1.55;
     }
-    .piede a { color: #b89b78; }
+    .piede a { color: var(--ink-soft); }
 
-    @media (max-width: 420px) {
-      .riga { flex-direction: column; gap: 0; }
-      .intestazione h1 { font-size: 2.1em; }
+    @media (max-width: 460px) {
+      body { padding: 0 0 32px; }
+      .foglio { box-shadow: none; }
+      .riga { grid-template-columns: 1fr; gap: 0; }
+      .intestazione { padding: 20px 18px 16px; gap: 14px; }
+      .intestazione img { width: 66px; height: 66px; }
+      .intestazione h1 { font-size: 1.9em; }
+      .sottotitolo { padding: 14px 18px 0; }
+      form { padding: 18px 18px 24px; }
+      .piede { padding: 14px 18px 18px; }
+      .btn-invia { width: 100%; }
     }
   </style>
   <script src="config.js"></script>
@@ -219,11 +233,15 @@
 <body>
   <div class="foglio">
     <div class="intestazione">
-      <h1 data-locale="nome">Vecchia Dogana</h1>
-      <div class="sottotitolo">
-        Degustazioni, eventi, serate e novità.<br>
-        Lasciaci i tuoi contatti, ti avvisiamo noi.
+      <img src="./assets/images/logo-locale.jpg" alt="">
+      <div>
+        <div class="occhiello">Degustazioni · serate · eventi</div>
+        <h1 data-locale="nome">Vecchia Dogana</h1>
       </div>
+    </div>
+    <div class="sottotitolo">
+      Degustazioni, eventi, serate e novità.
+      Lasciaci i tuoi contatti, ti avvisiamo noi.
     </div>
 
     <form id="formIscrizione" novalidate>
@@ -290,14 +308,14 @@
         </div>
       </div>
 
-      <button type="submit" class="btn-invia" id="btnInvia">🍷 Iscrivimi</button>
+      <button type="submit" class="btn-invia" id="btnInvia">Iscrivimi</button>
     </form>
 
     <div class="conferma" id="conferma">
-      <div class="icona">🍷</div>
+      <img src="./assets/images/logo-locale.jpg" alt="">
       <h2 id="confermaTitolo">Ci siamo!</h2>
       <p id="confermaTesto">Ti abbiamo aggiunto alla lista. Al prossimo evento ti scriviamo noi.</p>
-      <p style="font-size:0.88em; color:#8b7355;">Puoi chiudere questa pagina.</p>
+      <p style="font-size:0.9em;">Puoi chiudere questa pagina.</p>
     </div>
 
     <div class="piede">
@@ -344,7 +362,7 @@
 
     function mostraErrore(testo) {
       const box = $('messaggio');
-      box.textContent = '⚠️ ' + testo;
+      box.textContent = testo;
       box.classList.add('attivo');
       box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -354,9 +372,7 @@
     }
 
     // Il cellulare diventa obbligatorio solo se si sceglie WhatsApp, e lo dice
-    // con l'asterisco — la stessa convenzione degli altri campi. Prima c'era
-    // una riga di testo sotto il campo, che ripeteva a parole quello che
-    // l'assenza dell'asterisco già dichiara.
+    // con l'asterisco — la stessa convenzione degli altri campi.
     function aggiornaVincoloCellulare() {
       $('labelCellulare').textContent = $('whatsapp').checked ? 'Cellulare *' : 'Cellulare';
     }
@@ -380,13 +396,9 @@
 
       // Controlli lato client: stessi del server, qui solo per rispondere subito.
       // Nome E cognome: il cognome è ciò che distingue due persone della stessa
-      // famiglia, che spesso lasciano la stessa email o lo stesso numero. Senza,
-      // la seconda iscrizione finirebbe sulla scheda della prima.
+      // famiglia, che spesso lasciano la stessa email o lo stesso numero.
       if (!dati.nome) return mostraErrore('Scrivi il tuo nome.');
       if (!dati.cognome) return mostraErrore('Scrivi anche il tuo cognome.');
-      // Campo vuoto e campo sbagliato sono due errori diversi: "controlla
-      // l'indirizzo" a chi non l'ha proprio scritto lo manda a rileggere una
-      // riga vuota.
       if (!dati.email) return mostraErrore('Scrivi la tua email.');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(dati.email)) {
         return mostraErrore('Controlla l\'indirizzo email: non sembra valido.');
@@ -403,7 +415,7 @@
 
       const btn = $('btnInvia');
       btn.disabled = true;
-      btn.textContent = '⏳ Un attimo...';
+      btn.textContent = 'Un attimo…';
 
       try {
         const res = await fetchConRetry(API_URL, {
@@ -416,7 +428,7 @@
 
         if (esito.errore) {
           btn.disabled = false;
-          btn.textContent = '🍷 Iscrivimi';
+          btn.textContent = 'Iscrivimi';
           return mostraErrore(esito.errore);
         }
 
@@ -425,12 +437,13 @@
           $('confermaTesto').textContent = esito.messaggio;
         }
         $('formIscrizione').style.display = 'none';
+        document.querySelector('.sottotitolo').style.display = 'none';
         $('conferma').classList.add('attiva');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
       } catch (error) {
         btn.disabled = false;
-        btn.textContent = '🍷 Iscrivimi';
+        btn.textContent = 'Iscrivimi';
         mostraErrore('Non siamo riusciti a raggiungere il server. Controlla la connessione e riprova.');
       }
     });
