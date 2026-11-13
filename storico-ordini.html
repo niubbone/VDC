@@ -314,7 +314,11 @@
   }
 
   const totRighe = rr => cent(rr.reduce((a, r) => a + (r.bott || 0) * (r.netto || 0), 0));
-  const bottRighe = rr => rr.reduce((a, r) => a + (r.bott || 0), 0);
+  // Bottiglie = quelle arrivate in cantina, omaggi compresi (13/11/2026: contano per lo spazio).
+  const nb = r => (r.bott || 0) + (r.omaggio || 0);
+  const bottRighe = rr => rr.reduce((a, r) => a + nb(r), 0);
+  const omaggiRighe = rr => rr.reduce((a, r) => a + (r.omaggio || 0), 0);
+  const bottCella = r => (r.bott || 0) + (r.omaggio ? ' + ' + r.omaggio + ' <small class="muto">omg.</small>' : '');
 
   function disegna() {
     const sel = ordini.filter(nelPeriodo);
@@ -325,7 +329,7 @@
       : $('selPeriodo').selectedOptions[0].textContent + ' ' + anno + ($('selForn').value ? ' · ' + $('selForn').value : '');
 
     const imp = totRighe(righe), bott = bottRighe(righe);
-    $('conti').innerHTML = [['Ordini', sel.length], ['Bottiglie', bott], ['Vini diversi', new Set(righe.map(chiaveVino)).size],
+    $('conti').innerHTML = [['Ordini', sel.length], ['Bottiglie', bott + (omaggiRighe(righe) ? ` <small class="muto">(${omaggiRighe(righe)} omaggio)</small>` : '')], ['Vini diversi', new Set(righe.map(chiaveVino)).size],
       ['Imponibile', euro(imp)], ['Con IVA', euro(cent(imp * (1 + IVA))), true]]
       .map(([l, v, f]) => `<div class="conto ${f ? 'forte' : ''}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
 
@@ -353,7 +357,7 @@
     righe.forEach(r => {
       const t = r.tipo || '';
       const x = perTipo.get(t) || { bott: 0, imp: 0 };
-      x.bott += r.bott || 0; x.imp += (r.bott || 0) * (r.netto || 0);
+      x.bott += nb(r); x.imp += (r.bott || 0) * (r.netto || 0);
       perTipo.set(t, x);
     });
     const tipiOrd = [...perTipo].sort((a, b) => (ORDINE_TIPI.indexOf(a[0]) + 99 * !a[0]) - (ORDINE_TIPI.indexOf(b[0]) + 99 * !b[0]));
@@ -380,7 +384,7 @@
     righe.forEach(r => {
       const k = chiaveVino(r);
       const x = perVino.get(k) || { nome: r.nome, forn: new Set(), bott: 0, imp: 0, ultimo: null };
-      x.forn.add(r.fornitore); x.bott += r.bott || 0; x.imp += (r.bott || 0) * (r.netto || 0);
+      x.forn.add(r.fornitore); x.bott += nb(r); x.imp += (r.bott || 0) * (r.netto || 0);
       if (!x.ultimo || r.data >= x.ultimo.data) x.ultimo = r;
       perVino.set(k, x);
     });
@@ -408,7 +412,7 @@
           : `<span class="${d > 0 ? 'su' : 'giu'}">${d > 0 ? '▲ +' : '▼ '}${pct(d)}</span>`;
       }
       return `<tr><td class="sx">${dataIt(r.data)}</td><td class="sx">${esc(r.fornitore)}</td><td class="sx">${esc(r.annata || '')}</td>
-        <td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td><b>${euro(r.netto)}</b></td><td>${r.bott}</td><td>${v}</td></tr>`;
+        <td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td><b>${euro(r.netto)}</b></td><td>${bottCella(r)}</td><td>${v}</td></tr>`;
     }).join('');
     $('secPrezzo').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -433,7 +437,7 @@
     det.hidden = !det.hidden;
     if (det.hidden || !o) return;
     det.innerHTML = `<div class="tabella-wrap"><table><thead><tr><th>Vino</th><th>Bott.</th><th>Listino</th><th>Sconto</th><th>Netto</th><th>Totale</th></tr></thead>
-      <tbody>${o.righe.map(r => `<tr><td>${esc(nomeVino(r))}${r.test ? ' <small class="muto">(in prova)</small>' : ''}</td><td>${r.bott}</td>
+      <tbody>${o.righe.map(r => `<tr><td>${esc(nomeVino(r))}${r.test ? ' <small class="muto">(in prova)</small>' : ''}</td><td>${bottCella(r)}</td>
         <td>${euro(r.listino)}</td><td>${esc(r.sconto || '')}</td><td>${euro(r.netto)}</td><td>${euro(cent(r.bott * r.netto))}</td></tr>`).join('')}</tbody></table></div>
       ${o.note ? '<div class="muto" style="margin-top:6px;font-size:0.85em;">Note: ' + esc(o.note) + '</div>' : ''}
       ${o.modificato ? '<div class="muto" style="margin-top:6px;font-size:0.85em;">Corretto il ' + dataIt(o.modificato) + '</div>' : ''}`;
@@ -465,14 +469,14 @@
       const tot = cent((r.bott || 0) * (r.netto || 0));
       righe.push({ Data: dataXls(o.inviato), Fornitore: o.fornitore, Vino: r.nome, Annata: r.annata || '',
         Tipologia: r.tipo ? tipoBreve(r.tipo) : '', 'In prova': r.test ? 'sì' : '', 'Codice WINE_COST': r.codice || '',
-        Bottiglie: r.bott || 0, Listino: r.listino || 0, Sconto: r.sconto || '', Netto: r.netto || 0,
+        Bottiglie: r.bott || 0, Omaggio: r.omaggio || 0, Listino: r.listino || 0, Sconto: r.sconto || '', Netto: r.netto || 0,
         Imponibile: tot, 'Con IVA': cent(tot * (1 + IVA)) });
       const f = perForn.get(o.fornitore) || { b: 0, i: 0, o: new Set() };
-      f.b += r.bott || 0; f.i += tot; f.o.add(o.id); perForn.set(o.fornitore, f);
+      f.b += nb(r); f.i += tot; f.o.add(o.id); perForn.set(o.fornitore, f);
       const t = perTipo.get(r.tipo || '') || { b: 0, i: 0 };
-      t.b += r.bott || 0; t.i += tot; perTipo.set(r.tipo || '', t);
+      t.b += nb(r); t.i += tot; perTipo.set(r.tipo || '', t);
     }));
-    const impTot = righe.reduce((a, r) => a + r.Imponibile, 0), bottTot = righe.reduce((a, r) => a + r.Bottiglie, 0);
+    const impTot = righe.reduce((a, r) => a + r.Imponibile, 0), bottTot = righe.reduce((a, r) => a + r.Bottiglie + r.Omaggio, 0);
     const q = (x, tot) => tot ? Math.round(x / tot * 1000) / 10 : 0;
 
     const ordiniXls = ord.map(o => ({ Data: dataXls(o.inviato), Fornitore: o.fornitore, Bottiglie: bottRighe(o.righe),

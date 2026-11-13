@@ -299,7 +299,7 @@
           const nome = nomi[i++];
           try {
             const d = await chiama(API_ORD, 'getFornitore', { nome });
-            const rr = ((d.bozza && d.bozza.dati && d.bozza.dati.righe) || []).filter(r => r.bott > 0);
+            const rr = ((d.bozza && d.bozza.dati && d.bozza.dati.righe) || []).filter(r => r.bott > 0 || r.omaggio > 0);
             if (rr.length) trovate.push({ fornitore: nome, scheda: d.fornitore || {}, aggiornato: d.bozza.aggiornato, righe: rr });
           } catch (e) { /* un fornitore illeggibile non ferma gli altri */ }
         }
@@ -332,7 +332,12 @@
     $('selForn').innerHTML = '<option value="*">Tutti</option>' + bozze.map(b => `<option value="${esc(b.fornitore)}">${esc(b.fornitore)}</option>`).join('');
   }
 
-  const bott = rr => rr.reduce((a, r) => a + r.bott, 0);
+  // Bottiglie = quelle che arrivano in cantina, omaggi compresi (13/11/2026: contano per lo spazio);
+  // l'ordine minimo si confronta con le sole pagate.
+  const pagate = rr => rr.reduce((a, r) => a + (r.bott || 0), 0);
+  const omaggi = rr => rr.reduce((a, r) => a + (r.omaggio || 0), 0);
+  const bott = rr => pagate(rr) + omaggi(rr);
+  const bottHtml = rr => { const o = omaggi(rr); return bott(rr) + (o ? ` <small class="muto">(${o} omaggio)</small>` : ''); };
   const imp = rr => cent(rr.reduce((a, r) => a + r.totale, 0));
 
   function disegna() {
@@ -344,17 +349,17 @@
     }
     const totB = bott(righe), totI = imp(righe);
     const alCalice = righe.filter(r => r.calice);
-    $('conti').innerHTML = [['Fornitori', bozze.length], ['Vini', righe.length], ['Bottiglie', totB],
+    $('conti').innerHTML = [['Fornitori', bozze.length], ['Vini', righe.length], ['Bottiglie', bottHtml(righe)],
       ['Bott. al calice', bott(alCalice)], ['Imponibile', euro(totI)], ['Con IVA', euro(cent(totI * (1 + IVA))), true]]
       .map(([l, v, f]) => `<div class="conto ${f ? 'forte' : ''}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
 
     $('tabForn').innerHTML = bozze.map(b => {
-      const rr = righe.filter(r => r.fornitore === b.fornitore), n = bott(rr), min = parseInt(b.scheda.minimo, 10) || 0;
+      const rr = righe.filter(r => r.fornitore === b.fornitore), n = pagate(rr), min = parseInt(b.scheda.minimo, 10) || 0;
       const nomeF = isNazione(b.fornitore) ? b.fornitore + ' (import)' : b.fornitore;
       return `<tr class="cliccabile" data-forn="${esc(b.fornitore)}"><td><b>${esc(nomeF)}</b> <small class="muto">bozza del ${dataIt(b.aggiornato)}</small></td>
-        <td>${rr.length}</td><td>${n}</td><td>${euro(imp(rr))}</td><td>${euro(cent(imp(rr) * (1 + IVA)))}</td>
+        <td>${rr.length}</td><td>${bottHtml(rr)}</td><td>${euro(imp(rr))}</td><td>${euro(cent(imp(rr) * (1 + IVA)))}</td>
         <td class="sx">${min ? (n < min ? `<span class="su">mancano ${min - n} su ${min}</span>` : `<span class="giu">${min} ✓</span>`) : '<span class="muto">—</span>'}</td></tr>`;
-    }).join('') + `<tr><td><b>Totale</b></td><td>${righe.length}</td><td><b>${totB}</b></td><td><b>${euro(totI)}</b></td><td><b>${euro(cent(totI * (1 + IVA)))}</b></td><td></td></tr>`;
+    }).join('') + `<tr><td><b>Totale</b></td><td>${righe.length}</td><td><b>${bottHtml(righe)}</b></td><td><b>${euro(totI)}</b></td><td><b>${euro(cent(totI * (1 + IVA)))}</b></td><td></td></tr>`;
 
     // Tipologie: barra = quota delle bottiglie, accanto spesa e quota della spesa
     const tipiOrd = [...gruppi(righe, r => r.tipo)].sort((a, b) => ordineTipo(a[0]) - ordineTipo(b[0]));
@@ -398,11 +403,11 @@
     $('tabVini').innerHTML = sel.length ? sel.map(r => `<tr>
         <td>${esc(nomeVino(r))}${r.test ? ' <small class="muto">(in prova)</small>' : ''}${!r.codice ? ' <small class="muto">· non in WINE_COST</small>' : ''}</td>
         <td class="sx"><span class="tipo" style="--t:${COLORE_TIPO[r.tipo] || '#9aa5b8'}">${esc(tipoBreve(r.tipo))}</span></td>
-        <td class="sx">${esc(r.fornitore)}</td><td>${r.bott}</td><td>${euro(r.netto)}</td><td>${euro(r.totale)}</td>
+        <td class="sx">${esc(r.fornitore)}</td><td>${r.bott}${r.omaggio ? ' + ' + r.omaggio + ' <small class="muto">omg.</small>' : ''}</td><td>${euro(r.netto)}</td><td>${euro(r.totale)}</td>
         <td>${r.calice ? '<b>' + esc(caliceTesto(r.calice)) + '</b>' : '<span class="muto">—</span>'}</td></tr>`).join('')
       : '<tr><td colspan="7" class="vuoto">Nessun vino con questi filtri.</td></tr>';
     $('piedeVini').innerHTML = sel.length ? `<tr><td><b>${sel.length} ${sel.length === 1 ? 'vino' : 'vini'}</b></td><td></td><td></td>
-      <td><b>${bott(sel)}</b></td><td></td><td><b>${euro(imp(sel))}</b></td><td></td></tr>` : '';
+      <td><b>${bottHtml(sel)}</b></td><td></td><td><b>${euro(imp(sel))}</b></td><td></td></tr>` : '';
   }
 
   ['selTipo', 'selCalice', 'selForn'].forEach(id => $(id).addEventListener('input', disegnaVini));

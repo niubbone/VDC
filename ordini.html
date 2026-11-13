@@ -1309,6 +1309,7 @@
         if (f === 'note') { mm.note = e.target.value; return; }
         if (i < 0 || !mm.righe[i]) return;
         if (f === 'bott') mm.righe[i].bott = Math.max(0, Math.round(num(e.target.value)));
+        else if (f === 'omaggio') mm.righe[i].omaggio = Math.max(0, Math.round(num(e.target.value)));
         else if (f === 'netto') {
           // Prezzo scritto a mano = prezzo netto concordato: diventa il listino della riga
           // e lo sconto si azzera, cosi' il PDF completo non mostra listino e sconto vecchi.
@@ -1350,10 +1351,11 @@
       .sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
     det.innerHTML = `<div class="nota" style="margin-top:10px">Correggi l'ordine come l'ha confermato il fornitore: bottiglie a 0 o ✕ per togliere un vino,
         sotto si aggiunge quello sostitutivo. Data e prezzi delle altre righe restano quelli dell'ordine.</div>
-      <div class="tabella-wrap"><table class="tab-mod"><thead><tr><th>Vino</th><th>Bott.</th><th>Prezzo</th><th></th></tr></thead>
+      <div class="tabella-wrap"><table class="tab-mod"><thead><tr><th>Vino</th><th>Bott.</th><th>Omaggio</th><th>Prezzo</th><th></th></tr></thead>
       <tbody>${m.righe.map((r, i) => `<tr>
         <td>${r.id.startsWith('X-') ? `<input type="text" data-mf="nome" data-riga="${i}" value="${esc(r.nome)}" placeholder="Nome del vino">` : esc(nomeOrdine(r))}</td>
         <td><input type="number" min="0" step="1" inputmode="numeric" data-mf="bott" data-riga="${i}" value="${r.bott}" style="width:64px"></td>
+        <td><input type="number" min="0" step="1" inputmode="numeric" data-mf="omaggio" data-riga="${i}" value="${r.omaggio || ''}" style="width:64px"></td>
         <td><input type="text" inputmode="decimal" data-mf="netto" data-riga="${i}" value="${esc(dec(r.netto))}" style="width:76px"></td>
         <td><button class="btn-mini" data-mod="togli" data-riga="${i}" type="button" title="Togli">✕</button></td></tr>`).join('')}</tbody></table></div>
       <div class="azioni" style="align-items:center">
@@ -1376,12 +1378,12 @@
     const m = box._mod;
     const bott = m.righe.reduce((s, r) => s + (r.bott || 0), 0);
     const tot = m.righe.reduce((s, r) => s + (r.bott || 0) * (r.netto || 0), 0);
-    box.querySelector('[data-tot]').textContent = bott + ' bottiglie · ' + euro(cent(tot)) + ' imponibile';
+    box.querySelector('[data-tot]').textContent = bottTesto(bott, omaggiTot(m.righe)) + ' bottiglie · ' + euro(cent(tot)) + ' imponibile';
   }
 
   async function salvaModifica(box, btn) {
     const m = box._mod, out = box.querySelector('[data-esito]');
-    const buone = m.righe.filter(r => r.bott > 0);
+    const buone = m.righe.filter(r => r.bott > 0 || r.omaggio > 0);
     if (buone.some(r => !String(r.nome || '').trim())) { out.innerHTML = '<div class="avviso">Scrivi il nome del vino fuori listino.</div>'; return; }
     if (!buone.length) { out.innerHTML = '<div class="avviso">L\'ordine resterebbe vuoto: se è saltato tutto usa il cestino.</div>'; return; }
     btn.disabled = true;
