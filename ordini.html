@@ -659,7 +659,7 @@
       bozza = { id: '', note: '', q: {} };
       if (d.bozza) {
         bozza.id = d.bozza.id;
-        bozza.numero = d.bozza.numero || null;
+        bozza.numero = etichettaNumero(d.bozza);
         bozza.note = d.bozza.dati.note || '';
         (d.bozza.dati.righe || []).forEach(r => { if (r.bott > 0) bozza.q[r.id] = r.bott; });
       }
@@ -808,13 +808,16 @@
   }
   // Numero progressivo dell'ordine (13/11/2026): lo assegna il server alla bozza la prima
   // volta che ha delle bottiglie e resta all'ordine quando lo si segna inviato.
+  // «4/2026»: il numero riparte da 1 ogni anno.
+  function etichettaNumero(o) { return o && o.numero ? o.numero + (o.anno ? '/' + o.anno : '') : null; }
   async function numeraBozza() {
     const id = bozza.id, forn = F;
     if (!id) return null;
     try {
       const d = await chiama(API_ORD, 'numeraOrdine', { id });
-      if (forn === F && bozza.id === id) bozza.numero = d.numero || null;
-      return d.numero || null;
+      const n = etichettaNumero(d);
+      if (forn === F && bozza.id === id) bozza.numero = n;
+      return n;
     } catch (e) { return null; }
   }
 
@@ -1097,10 +1100,10 @@
     return libPdf;
   }
 
-  // «Ordine n. 12 - CAVALLI» è il titolo del PDF; il file: «Ordine n. 12 - CAVALLI del 13-11-2026.pdf».
+  // «Ordine n. 12/2026 - CAVALLI» è il titolo del PDF; il file: «Ordine n. 12-2026 - CAVALLI del 13-11-2026.pdf».
   function titoloOrdine(numero) { return 'Ordine' + (numero ? ' n. ' + numero : '') + ' - ' + String(F).toUpperCase(); }
   function nomeFilePdf(quando, numero) {
-    const t = titoloOrdine(numero).replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim();
+    const t = titoloOrdine(numero).replace(/\//g, '-').replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim();
     return t + ' del ' + dataIt(quando).replace(/\//g, '-') + '.pdf';
   }
 
@@ -1145,7 +1148,7 @@
     const imp = cent(ro.reduce((a, r) => a + r.bott * r.netto, 0));
     const bott = ro.reduce((a, r) => a + r.bott, 0);
     const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-    // Intestazione: logo a sinistra, accanto «Ordine n. 12 - CAVALLI» e sotto «del 13/11/2026».
+    // Intestazione: logo a sinistra, accanto «Ordine n. 12/2026 - CAVALLI» e sotto «del 13/11/2026».
     let x = 14, y = 20, inizio = 33;
     if (logo) {
       const alto = 26, largo = alto * logo.w / logo.h;
@@ -1240,7 +1243,7 @@
       return;
     }
     $('archivio').innerHTML = archivio.length ? archivio.map(o => `<div class="ordine-arch" data-id="${esc(o.id)}">
-      <div>${o.numero ? 'n. ' + o.numero + ' · ' : ''}<b>${dataIt(o.inviato)}</b> · ${o.bottiglie} bottiglie · ${euro(o.totale)} <small>imponibile</small></div>
+      <div>${o.numero ? 'n. ' + etichettaNumero(o) + ' · ' : ''}<b>${dataIt(o.inviato)}</b> · ${o.bottiglie} bottiglie · ${euro(o.totale)} <small>imponibile</small></div>
       <div class="azioni">
         <button class="btn btn-secondario btn-piccolo" data-arch="vedi" type="button">Vedi</button>
         <button class="btn btn-secondario btn-piccolo" data-arch="modifica" type="button" title="Vino finito o sostituito: correggi l'ordine già inviato">Modifica</button>
@@ -1270,7 +1273,7 @@
     } else if (azione === 'ripeti') {
       ripetiRighe(ro);
     } else if (azione === 'pdf') {
-      scaricaPdf(ro, o.inviato, o.dati.note, 'salva', o.numero);
+      scaricaPdf(ro, o.inviato, o.dati.note, 'salva', etichettaNumero(o));
     } else if (azione === 'elimina') {
       const btn = box.querySelector('[data-arch="elimina"]');
       if (btn.dataset.conferma !== '1') { btn.dataset.conferma = '1'; btn.innerHTML = 'Sicuro?'; return; }
