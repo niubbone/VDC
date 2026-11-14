@@ -318,7 +318,7 @@
   const nb = r => (r.bott || 0) + (r.omaggio || 0);
   const bottRighe = rr => rr.reduce((a, r) => a + nb(r), 0);
   const omaggiRighe = rr => rr.reduce((a, r) => a + (r.omaggio || 0), 0);
-  const bottCella = r => (r.bott || 0) + (r.omaggio ? ' + ' + r.omaggio + ' <small class="muto">omg.</small>' : '');
+  const bottCella = r => nb(r) + (r.omaggio ? ' <small class="muto">(' + r.omaggio + ' omg.)</small>' : '');
 
   function disegna() {
     const sel = ordini.filter(nelPeriodo);

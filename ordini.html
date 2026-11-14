@@ -783,8 +783,9 @@
     }));
   }
   function omaggioDi(id) { return (bozza.om && bozza.om[id]) || 0; }
-  // «12 + 1 omaggio»
-  function bottTesto(b, om, breve) { return om ? b + ' + ' + om + (breve ? ' omg.' : ' omaggio') : String(b); }
+  // 14/11/2026: le omaggio stanno DENTRO il totale. Si salva come prima (bott = pagate,
+  // omaggio = gratis), ma si scrive e si legge il totale: «36 (di cui 3 omaggio)» = se ne pagano 33.
+  function bottTesto(b, om, breve) { return om ? (b + om) + (breve ? ' (' + om + ' omg.)' : ' (di cui ' + om + ' omaggio)') : String(b); }
   function omaggiTot(ro) { return ro.reduce((a, r) => a + (r.omaggio || 0), 0);
   }
   function salvaBozzaTra() {
@@ -911,8 +912,8 @@
           <div><label>Sconto</label><input type="text" data-f="sconto" value="${esc(r.sconto || '')}" placeholder="${esc(scheda.sconto || '')}" class="${s.tipo === 'errato' ? 'errato' : ''}">
             <div class="spiega">${esc(spiegaSconto(r))}</div></div>
           <div><label>Netto</label><div class="valore">${euro(n)}</div></div>
-          <div><label>Bottiglie</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${q ? 'pieno' : ''}" data-f="bott" value="${q || ''}"></div>
-          <div title="Bottiglie in più, gratis, sullo stesso vino"><label>Omaggio</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${om ? 'pieno' : ''}" data-f="omaggio" value="${om || ''}"></div>
+          <div><label>Bottiglie</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${q + om ? 'pieno' : ''}" data-f="bott" value="${q + om || ''}"></div>
+          <div title="Quante delle bottiglie sono in omaggio (non si pagano)"><label>Omaggio</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${om ? 'pieno' : ''}" data-f="omaggio" value="${om || ''}"></div>
           <div class="nota-vino"><label>Note sul vino</label><textarea data-f="nota" rows="1" placeholder="solo per te, non vanno nell'ordine">${esc(r.nota || '')}</textarea></div>
         </div>
         ${diff}
@@ -1308,8 +1309,9 @@
         const i = +(e.target.dataset.riga ?? -1), f = e.target.dataset.mf;
         if (f === 'note') { mm.note = e.target.value; return; }
         if (i < 0 || !mm.righe[i]) return;
-        if (f === 'bott') mm.righe[i].bott = Math.max(0, Math.round(num(e.target.value)));
-        else if (f === 'omaggio') mm.righe[i].omaggio = Math.max(0, Math.round(num(e.target.value)));
+        // Bott. = totale con le omaggio; r.bott resta il numero delle pagate.
+        if (f === 'bott') { const r = mm.righe[i]; r.bott = Math.max(0, Math.round(num(e.target.value)) - (r.omaggio || 0)); }
+        else if (f === 'omaggio') { const r = mm.righe[i], tot = (r.bott || 0) + (r.omaggio || 0); r.omaggio = Math.max(0, Math.round(num(e.target.value))); r.bott = Math.max(0, tot - r.omaggio); }
         else if (f === 'netto') {
           // Prezzo scritto a mano = prezzo netto concordato: diventa il listino della riga
           // e lo sconto si azzera, cosi' il PDF completo non mostra listino e sconto vecchi.
@@ -1354,7 +1356,7 @@
       <div class="tabella-wrap"><table class="tab-mod"><thead><tr><th>Vino</th><th>Bott.</th><th>Omaggio</th><th>Prezzo</th><th></th></tr></thead>
       <tbody>${m.righe.map((r, i) => `<tr>
         <td>${r.id.startsWith('X-') ? `<input type="text" data-mf="nome" data-riga="${i}" value="${esc(r.nome)}" placeholder="Nome del vino">` : esc(nomeOrdine(r))}</td>
-        <td><input type="number" min="0" step="1" inputmode="numeric" data-mf="bott" data-riga="${i}" value="${r.bott}" style="width:64px"></td>
+        <td><input type="number" min="0" step="1" inputmode="numeric" data-mf="bott" data-riga="${i}" value="${(r.bott || 0) + (r.omaggio || 0)}" style="width:64px"></td>
         <td><input type="number" min="0" step="1" inputmode="numeric" data-mf="omaggio" data-riga="${i}" value="${r.omaggio || ''}" style="width:64px"></td>
         <td><input type="text" inputmode="decimal" data-mf="netto" data-riga="${i}" value="${esc(dec(r.netto))}" style="width:76px"></td>
         <td><button class="btn-mini" data-mod="togli" data-riga="${i}" type="button" title="Togli">✕</button></td></tr>`).join('')}</tbody></table></div>
@@ -1516,9 +1518,15 @@
     if (!box || !f) return;
     const id = box.dataset.id;
     if (f === 'bott' || f === 'omaggio') {
+      // «Bottiglie» è il totale, omaggio comprese; in bozza.q restano le sole pagate.
       const n = Math.max(0, parseInt(e.target.value, 10) || 0);
-      const m = f === 'bott' ? bozza.q : (bozza.om = bozza.om || {});
-      if (n) m[id] = n; else delete m[id];
+      bozza.om = bozza.om || {};
+      const tot = f === 'bott' ? n : (bozza.q[id] || 0) + omaggioDi(id);
+      const om = f === 'omaggio' ? n : omaggioDi(id);
+      const paga = Math.max(0, tot - om);
+      if (paga) bozza.q[id] = paga; else delete bozza.q[id];
+      if (om) bozza.om[id] = om; else delete bozza.om[id];
+      if (f === 'omaggio' && om > tot) { const b = box.querySelector('[data-f="bott"]'); b.value = om; b.classList.add('pieno'); }
       e.target.classList.toggle('pieno', !!n);
       box.classList.toggle('ordinato', !!((bozza.q[id] || 0) + omaggioDi(id)));
       disegnaConti();

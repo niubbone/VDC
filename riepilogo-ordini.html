@@ -403,7 +403,7 @@
     $('tabVini').innerHTML = sel.length ? sel.map(r => `<tr>
         <td>${esc(nomeVino(r))}${r.test ? ' <small class="muto">(in prova)</small>' : ''}${!r.codice ? ' <small class="muto">· non in WINE_COST</small>' : ''}</td>
         <td class="sx"><span class="tipo" style="--t:${COLORE_TIPO[r.tipo] || '#9aa5b8'}">${esc(tipoBreve(r.tipo))}</span></td>
-        <td class="sx">${esc(r.fornitore)}</td><td>${r.bott}${r.omaggio ? ' + ' + r.omaggio + ' <small class="muto">omg.</small>' : ''}</td><td>${euro(r.netto)}</td><td>${euro(r.totale)}</td>
+        <td class="sx">${esc(r.fornitore)}</td><td>${(r.bott || 0) + (r.omaggio || 0)}${r.omaggio ? ' <small class="muto">(' + r.omaggio + ' omg.)</small>' : ''}</td><td>${euro(r.netto)}</td><td>${euro(r.totale)}</td>
         <td>${r.calice ? '<b>' + esc(caliceTesto(r.calice)) + '</b>' : '<span class="muto">—</span>'}</td></tr>`).join('')
       : '<tr><td colspan="7" class="vuoto">Nessun vino con questi filtri.</td></tr>';
     $('piedeVini').innerHTML = sel.length ? `<tr><td><b>${sel.length} ${sel.length === 1 ? 'vino' : 'vini'}</b></td><td></td><td></td>
