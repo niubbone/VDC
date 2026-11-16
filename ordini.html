@@ -328,7 +328,7 @@
         <div><label for="fContatto">Agente / referente</label><input type="text" id="fContatto" data-campo="contatto"></div>
         <div><label for="fTelefono">Cellulare (WhatsApp)</label><input type="text" id="fTelefono" data-campo="telefono"></div>
         <div><label for="fSconto">Sconto abituale</label><input type="text" id="fSconto" data-campo="sconto" placeholder="es. 12,5%  ·  11+1"></div>
-        <div><label for="fMinimo">Ordine minimo (bottiglie)</label><input type="number" id="fMinimo" data-campo="minimo" min="0" step="1"></div>
+        <div><label for="fMinimo">Ordine minimo (bottiglie)</label><input type="text" inputmode="numeric" autocomplete="off" id="fMinimo" data-campo="minimo"></div>
         <div><label for="fPagamento">Pagamento</label><input type="text" id="fPagamento" data-campo="pagamento"></div>
         <div><label for="fListinoData">Listino del</label><input type="date" id="fListinoData" data-campo="listinoData"></div>
         <div class="largo"><label for="fNote">Note sul fornitore</label><textarea id="fNote" data-campo="note" rows="2"></textarea></div>
@@ -926,8 +926,8 @@
           <div><label>Sconto</label><input type="text" data-f="sconto" value="${esc(r.sconto || '')}" placeholder="${esc(scheda.sconto || '')}" class="${s.tipo === 'errato' ? 'errato' : ''}">
             <div class="spiega">${esc(spiegaSconto(r))}</div></div>
           <div><label>Netto</label><div class="valore">${euro(n)}</div></div>
-          <div><label>Bottiglie</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${q + om ? 'pieno' : ''}" data-f="bott" value="${q + om || ''}"></div>
-          <div title="Quante delle bottiglie sono in omaggio (non si pagano)"><label>Omaggio</label><input type="number" min="0" step="1" inputmode="numeric" class="bott ${om ? 'pieno' : ''}" data-f="omaggio" value="${om || ''}"></div>
+          <div><label>Bottiglie</label><input type="text" inputmode="numeric" autocomplete="off" class="bott ${q + om ? 'pieno' : ''}" data-f="bott" value="${q + om || ''}"></div>
+          <div title="Quante delle bottiglie sono in omaggio (non si pagano)"><label>Omaggio</label><input type="text" inputmode="numeric" autocomplete="off" class="bott ${om ? 'pieno' : ''}" data-f="omaggio" value="${om || ''}"></div>
           <div class="nota-vino"><label>Note sul vino</label><textarea data-f="nota" rows="1" placeholder="solo per te, non vanno nell'ordine">${esc(r.nota || '')}</textarea></div>
         </div>
         ${diff}
@@ -1370,8 +1370,8 @@
       <div class="tabella-wrap"><table class="tab-mod"><thead><tr><th>Vino</th><th>Bott.</th><th>Omaggio</th><th>Prezzo</th><th></th></tr></thead>
       <tbody>${m.righe.map((r, i) => `<tr>
         <td>${r.id.startsWith('X-') ? `<input type="text" data-mf="nome" data-riga="${i}" value="${esc(r.nome)}" placeholder="Nome del vino">` : esc(nomeOrdine(r))}</td>
-        <td><input type="number" min="0" step="1" inputmode="numeric" data-mf="bott" data-riga="${i}" value="${(r.bott || 0) + (r.omaggio || 0)}" style="width:64px"></td>
-        <td><input type="number" min="0" step="1" inputmode="numeric" data-mf="omaggio" data-riga="${i}" value="${r.omaggio || ''}" style="width:64px"></td>
+        <td><input type="text" inputmode="numeric" autocomplete="off" data-mf="bott" data-riga="${i}" value="${(r.bott || 0) + (r.omaggio || 0)}" style="width:64px"></td>
+        <td><input type="text" inputmode="numeric" autocomplete="off" data-mf="omaggio" data-riga="${i}" value="${r.omaggio || ''}" style="width:64px"></td>
         <td><input type="text" inputmode="decimal" data-mf="netto" data-riga="${i}" value="${esc(dec(r.netto))}" style="width:76px"></td>
         <td><button class="btn-mini" data-mod="togli" data-riga="${i}" type="button" title="Togli">✕</button></td></tr>`).join('')}</tbody></table></div>
       <div class="azioni" style="align-items:center">
