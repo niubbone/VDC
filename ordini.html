@@ -177,6 +177,9 @@
     }
     .chk-prova input { width: auto; margin: 0; }
     .gruppo-fuori { --gb: #7d7d7d; --gf: #ececec; }
+    .vino.tolto { opacity: 0.55; }
+    .tolti-nota { margin: 10px 4px 0; font-size: 0.82em; color: #777; }
+    .link-tolti { background: none; border: none; padding: 0; color: #1e3c72; text-decoration: underline; cursor: pointer; font: inherit; }
     .vino-nome { font-weight: bold; color: #1e3c72; overflow-wrap: anywhere; flex: 1; }
     .vino-nome input { font-weight: bold; color: #1e3c72; padding: 6px 8px; }
     .vino-sotto { font-size: 0.85em; color: #555; margin-top: 5px; font-weight: normal; line-height: 1.6; }
@@ -646,7 +649,7 @@
 
   async function scegliFornitore(nome) {
     salvaSubito();
-    F = nome; costiScelti.clear();
+    F = nome; costiScelti.clear(); mostraTolti = false;
     try { localStorage.setItem(ULTIMO_FORN, F); } catch (e) {}
     ['schedaForn', 'secSegn', 'secListino', 'secOrdine', 'secArchivio'].forEach(id => { $(id).hidden = !F; });
     aggiornaBtnNascondi();
@@ -696,6 +699,10 @@
     // Codici che non sono piu' di questo fornitore in WINE_COST: restano visibili
     perCodice.forEach(r => out.push(Object.assign({}, r, { wc: vinoWc(r.codice) || null, spostato: true })));
     scheda.righe.filter(r => !r.codice).forEach(r => out.push(Object.assign({}, r, { wc: null })));
+    // Vini tolti da «Non più in carta» (16/11/2026): restano nella scheda con i loro prezzi,
+    // ma non si vedono; se il vino torna in carta ricompare da solo.
+    const esclusi = new Set(scheda.esclusi || []);
+    out.forEach(r => { r.tolto = !!r.codice && esclusi.has(r.codice) && gruppoDi(r) === 'fuori'; });
     return out;
   }
   // Riporta nella scheda tutte le righe visibili (anche quelle ancora implicite).
@@ -839,14 +846,16 @@
     const tutte = righe();
     const cerca = norm($('cerca').value);
     const soloOrd = $('soloOrdinati').checked;
+    const tolti = tutte.filter(r => r.tolto);
     const vis = tutte.filter(r => {
+      if (r.tolto && !mostraTolti) return false;
       const q = (bozza.q[r.id] || 0) + omaggioDi(r.id);
       if (soloOrd && !q) return false;
       if (cerca && !norm(r.nome + ' ' + (r.wc ? r.wc.vino : '')).includes(cerca)) return false;
       return true;
     });
     if (!vis.length) {
-      $('righe').innerHTML = '<div class="vuoto">' + (tutte.length ? 'Nessun vino con questi filtri.' : 'Nessun vino di questo fornitore in WINE_COST: aggiungine uno qui sotto.') + '</div>';
+      $('righe').innerHTML = '<div class="vuoto">' + (tutte.length - tolti.length ? 'Nessun vino con questi filtri.' : 'Nessun vino di questo fornitore in WINE_COST: aggiungine uno qui sotto.') + '</div>';
     } else {
       const per = { carta: [], rari: [], test: [], fuori: [] };
       vis.forEach(r => per[gruppoDi(r)].push(r));
@@ -869,10 +878,13 @@
           (provaSeparata() ? 'escono a parte, come vini in prova' : 'in coda agli altri'), chkProva) +
         (per.fuori.length ? `<div class="gruppo-box gruppo-fuori"><div class="gruppo-testa">Non più in carta ${conta(per.fuori)}</div>${per.fuori.map(rigaHtml).join('')}</div>` : '');
     }
+    if (tolti.length) $('righe').insertAdjacentHTML('beforeend', `<div class="tolti-nota">${tolti.length === 1 ? '1 vino tolto' : tolti.length + ' vini tolti'} da «Non più in carta» ·
+      <button class="link-tolti" data-azione="mostraTolti" type="button">${mostraTolti ? 'nascondili' : 'mostrali per rimetterli'}</button></div>`);
     disegnaConti();
     disegnaCosti();
   }
   const gruppiAperti = new Set();
+  let mostraTolti = false;
 
   function rigaHtml(r) {
     const q = bozza.q[r.id] || 0, om = omaggioDi(r.id);
@@ -880,7 +892,7 @@
     const wc = r.wc;
     const s = leggiSconto(scontoRiga(r));
     const tipo = tipoDi(r);
-    const cls = ['vino', !r.codice ? 'temp' : '', wc && wc.abbandonato ? 'abb' : '', q || om ? 'ordinato' : ''].join(' ');
+    const cls = ['vino', r.tolto ? 'tolto' : '', !r.codice ? 'temp' : '', wc && wc.abbandonato ? 'abb' : '', q || om ? 'ordinato' : ''].join(' ');
     const colore = COLORE_TIPO[tipo] ? `style="--t:${COLORE_TIPO[tipo]}"` : '';
     const tipoHtml = r.codice
       ? (tipo ? `<span class="tipo">${esc(tipoBreve(tipo))}</span>` : '<span class="badge" style="--c:#999">tipologia da indicare in Gestione Vini</span>')
@@ -903,6 +915,8 @@
           ${r.codice ? `<label class="chk-test" title="Vino che si ordina di rado: va nel gruppo «Movimentati di rado»"><input type="checkbox" data-f="raro" ${isRaro(r) ? 'checked' : ''}> Di rado</label>` : ''}
           ${!r.codice ? `<button class="btn btn-secondario btn-piccolo" data-azione="acquisisci" type="button">In WINE_COST</button>
                          <button class="btn-mini" data-azione="togli" type="button" title="Togli dal listino"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>` : ''}
+          ${r.tolto ? `<button class="btn btn-secondario btn-piccolo" data-azione="rimetti" type="button">Rimetti</button>`
+            : r.codice && gruppoDi(r) === 'fuori' ? `<button class="btn-mini" data-azione="escludi" type="button" title="Togli da «Non più in carta»: non serve più"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>` : ''}
         </div>
       </div>
       <div class="vino-corpo">
@@ -946,7 +960,7 @@
   // (con bottiglie in magazzino al prezzo vecchio il costo si lascia com'e').
   // Di partenza nessuno e' spuntato (costiScelti, in cima).
   function differenze() {
-    return righe().filter(r => r.wc && !r.spostato && Math.abs(netto(r) - num(r.wc.imponibile)) >= 0.01);
+    return righe().filter(r => r.wc && !r.spostato && !r.tolto && Math.abs(netto(r) - num(r.wc.imponibile)) >= 0.01);
   }
   function disegnaCosti() {
     const d = differenze();
@@ -1557,7 +1571,23 @@
   $('righe').addEventListener('click', e => {
     const b = e.target.closest('[data-azione]');
     if (!b) return;
+    if (b.dataset.azione === 'mostraTolti') { mostraTolti = !mostraTolti; disegna(); return; }
     const id = b.closest('.vino').dataset.id;
+    if (b.dataset.azione === 'escludi' || b.dataset.azione === 'rimetti') {
+      const r = righe().find(x => x.id === id);
+      if (!r || !r.codice) return;
+      if (b.dataset.azione === 'escludi') {
+        if (b.dataset.conferma !== '1') { b.dataset.conferma = '1'; b.textContent = 'Sicuro?'; return; }
+        scheda.esclusi = (scheda.esclusi || []).filter(c => c !== r.codice).concat([r.codice]);
+        if (bozza.q[id] || omaggioDi(id)) { delete bozza.q[id]; if (bozza.om) delete bozza.om[id]; salvaBozzaTra(); }
+      } else {
+        scheda.esclusi = (scheda.esclusi || []).filter(c => c !== r.codice);
+        if (!righe().some(x => x.tolto)) mostraTolti = false;
+      }
+      salvaSchedaTra();
+      disegna();
+      return;
+    }
     if (b.dataset.azione === 'togli') {
       if (b.dataset.conferma !== '1') { b.dataset.conferma = '1'; b.textContent = 'Sicuro?'; return; }
       const lista = righe().filter(r => r.id !== id);
