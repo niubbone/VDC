@@ -398,7 +398,7 @@
   function chipInfo(inf, opz) {
     const ch = [];
     if (inf.inCantina) ch.push(`<span class="chip c-verde">in cantina · ordinato il ${dataBreve(inf.ultimoOrdine)}</span>`);
-    else if (inf.occupatoDal) ch.push(`<span class="chip c-arancio">${esc(inf.fornitore)}: ordine del ${dataBreve(inf.occupatoDal)}, libero dal ${dataBreve(inf.liberoDal)}</span>`);
+    else if (inf.occupatoDal) ch.push(`<span class="chip c-arancio">non ordinato · ${esc(inf.fornitore)} ha un altro ordine del ${dataBreve(inf.occupatoDal)}: libero dal ${dataBreve(inf.liberoDal)}</span>`);
     else if (!opz || !opz.senzaLibero) ch.push(`<span class="chip c-grigio">${esc(inf.fornitore || 'fornitore non indicato')} libero</span>`);
     if (inf.inPrec) ch.push('<span class="chip c-rosso">nella carta precedente</span>');
     else if (inf.ultimoUso) ch.push(`<span class="chip c-grigio">al calice dal ${dataBreve(inf.ultimoUso)}</span>`);
@@ -540,7 +540,7 @@
       html = trovati.length ? trovati.map(riga).join('') : '<div class="vuoto">Nessun vino trovato.</div>';
     } else {
       const adatti = tutte.filter(p => p.adatto), altri = tutte.filter(p => !p.adatto);
-      const NOMI = ['In cantina, ordinati da poco', 'Fornitore libero', 'Fornitore con un ordine negli ultimi ' + GIORNI_FORNITORE + ' giorni', 'Erano nella carta precedente'];
+      const NOMI = ['In cantina, ordinati da poco', 'Fornitore libero', 'Non ordinati, ma il fornitore ha un ordine negli ultimi ' + GIORNI_FORNITORE + ' giorni', 'Erano nella carta precedente'];
       html = [0, 1, 2, 3].map(f => { const l = adatti.filter(p => p.fascia === f); return l.length ? `<div class="fascia">${NOMI[f]} · ${l.length}</div>` + l.map(riga).join('') : ''; }).join('')
         || '<div class="vuoto">Nessun vino adatto: cercalo per nome qui sopra.</div>';
       if (altri.length) html += `<details class="altri"><summary>Altri ${altri.length} del gruppo (${g === 'bolle' ? 'altro ruolo' : 'altro prezzo'})</summary>${altri.map(riga).join('')}</details>`;
