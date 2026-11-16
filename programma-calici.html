@@ -495,8 +495,10 @@
 
   function casellaHtml(c, g, x, i, mod) {
     const v = x.codice ? vinoDi(x.codice) : null;
+    // Speciali inseriti prima che il prezzo si riempisse da solo: lo si prende ora da WINE_COST.
+    if (mod && g.id === 'speciali' && x.codice && x.p == null && v && v.calice) x.p = num(v.calice);
     const slot = g.id === 'bolle' && x.r ? NOME_RUOLO[x.r] + (x.facoltativa ? ' ·' : '')
-      : mod && x.p != null ? `<input type="text" inputmode="decimal" data-prezzo="${i}" data-g="${g.id}" value="${esc(String(x.p).replace('.', ','))}"> €`
+      : mod && (x.p != null || (g.id === 'speciali' && x.codice)) ? `<input type="text" inputmode="decimal" data-prezzo="${i}" data-g="${g.id}" value="${esc(x.p != null ? String(x.p).replace('.', ',') : '')}"> €`
       : x.p ? String(x.p).replace('.', ',') + ' €' : '—';
     let corpo;
     if (x.codice) {
@@ -683,6 +685,8 @@
       const x = c.dati.caselle[aperta.g][aperta.i];
       const inf = infoVino(v, c, ordiniFino(c));
       Object.assign(x, { codice: v.codice, nome: nomeVino(v), ce: inf.inCantina, bott: x.bott || BOTTIGLIE_STD });
+      // Casella senza prezzo (speciali): prende il prezzo del calice da WINE_COST, poi si cambia a mano.
+      if (aperta.g === 'speciali' && v.calice) x.p = num(v.calice);
       aperta = null; salvaTra(); disegnaCarta(); return;
     }
     const b = e.target.closest('[data-azione]'); if (!b) return;
