@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Pagina interna: fuori dai motori di ricerca. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Programma calici</title>
+  <meta name="theme-color" content="#1e3c72">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/icon-32x32.png">
+  <link rel="apple-touch-icon" href="./assets/icons/icon-152x152.png">
+  <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    /* Stile dell'area vini (fondo blu, contenitore bianco), come ordini.html. */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh; padding: 20px; color: #222;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .header {
+      max-width: 1000px; margin: 0 auto 20px;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .header h1 {
+      font-family: 'Pirata One', cursive; color: #fff; font-size: 2.2em;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.4); display: flex; align-items: center;
+    }
+    .btn-home {
+      background: rgba(255,255,255,0.15); color: #fff; padding: 9px 20px;
+      border: 2px solid rgba(255,255,255,0.4); border-radius: 8px;
+      font-weight: bold; font-size: 0.95em; text-decoration: none;
+      transition: all 0.2s; display: inline-flex; align-items: center;
+    }
+    .btn-home:hover { background: rgba(255,255,255,0.25); }
+    .ico { width: 1.3em; height: 1.3em; fill: currentColor; vertical-align: -0.28em; flex-shrink: 0; margin-right: 0.3em; }
+    .ico-sola { margin-right: 0; }
+    .header h1 .ico { width: 1em; height: 1em; vertical-align: -0.1em; }
+    .btn-home .ico { width: 1.75em; height: 1.75em; vertical-align: -0.44em; margin-right: 0.34em; stroke: currentColor; stroke-width: 12; paint-order: stroke fill; }
+
+    .section {
+      background: rgba(255,255,255,0.97); border-radius: 20px;
+      padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.35); margin-bottom: 20px;
+    }
+    .section-title {
+      font-weight: bold; color: #2a5298; font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #e0e8f8;
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .nota { background: #f8faff; border: 2px solid #dce6f8; border-radius: 10px; padding: 10px 14px; font-size: 0.85em; line-height: 1.5; color: #555; }
+    label.campo { display: block; font-weight: bold; font-size: 0.75em; color: #555; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 5px; }
+    input[type="text"], input[type="date"], select {
+      width: 100%; padding: 9px 11px; border: 2px solid #ddd; border-radius: 8px;
+      font-family: 'Arial', sans-serif; font-size: 0.95em; background: #fff; color: #222;
+    }
+    input:focus, select:focus { outline: none; border-color: #2a5298; }
+
+    .btn {
+      padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer;
+      font-weight: bold; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px;
+      display: inline-flex; align-items: center; text-decoration: none; font-family: 'Arial', sans-serif;
+    }
+    .btn-primario { background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%); color: #fff; }
+    .btn-verde { background: linear-gradient(135deg, #2e8b57 0%, #228b22 100%); color: #fff; }
+    .btn-secondario { background: #f0f4ff; color: #2a5298; border: 2px solid #c0cce8; }
+    .btn-pericolo { background: #fff0f0; color: #c0392b; border: 2px solid #f5c6cb; }
+    .btn-piccolo { padding: 6px 12px; font-size: 0.75em; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    .stato { font-size: 0.82em; color: #666; text-transform: none; letter-spacing: 0; font-weight: normal; }
+    .stato.sporca { color: #b36b00; font-weight: bold; }
+    .stato.errore { color: #c0392b; font-weight: bold; }
+
+    /* Fila delle carte */
+    .fila { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
+    .carta-chip {
+      border: 2px solid #c9d6ee; border-radius: 12px; padding: 9px 14px; cursor: pointer; background: #fff;
+      min-width: 140px; text-align: left; font-family: 'Arial', sans-serif; color: #1e3c72;
+    }
+    .carta-chip small { display: block; color: #777; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 3px; }
+    .carta-chip b { font-size: 0.95em; }
+    .carta-chip .av { display: block; font-size: 0.75em; color: #b36b00; margin-top: 3px; }
+    .carta-chip.passata { opacity: 0.75; border-style: dashed; }
+    .carta-chip.attuale { border-color: #228b22; background: #eefaf1; }
+    .carta-chip.sel { border-color: #1e3c72; box-shadow: 0 0 0 3px rgba(42,82,152,0.25); }
+    .carta-chip.nuova { border-style: dashed; color: #2a5298; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+    /* Carta scelta */
+    .testa-carta { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; }
+    .avvisi { background: #fff6e5; border: 2px solid #f0c36d; color: #7a5200; border-radius: 10px; padding: 10px 14px; margin-top: 14px; font-size: 0.88em; }
+    .avvisi ul { margin: 6px 0 0 18px; }
+    .tutto-ok { background: #eefaf1; border: 2px solid #a8d8bb; color: #1e6b3a; border-radius: 10px; padding: 10px 14px; margin-top: 14px; font-size: 0.88em; }
+
+    .gruppo { margin-top: 20px; border: 2px solid var(--g); border-radius: 12px; overflow: hidden; }
+    .gruppo-testa { background: var(--g); color: #fff; padding: 9px 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; font-size: 0.9em;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .gruppo-testa small { font-weight: normal; text-transform: none; letter-spacing: 0; opacity: 0.9; }
+    .g-bolle { --g: #1a6a9a; } .g-bianchi { --g: #9a7f00; } .g-rossi { --g: #cc0000; } .g-speciali { --g: #2a7a4a; }
+
+    .casella { padding: 10px 14px; border-top: 1px solid #eef2fa; }
+    .casella:first-of-type { border-top: none; }
+    .casella-riga { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .slot {
+      flex: none; min-width: 74px; text-align: center; font-weight: bold; color: #fff; background: var(--g);
+      border-radius: 8px; padding: 6px 8px; font-size: 0.85em;
+    }
+    .slot input { width: 52px; padding: 3px 5px; text-align: center; font-weight: bold; border: none; border-radius: 5px; }
+    .vino-scelto { flex: 1; min-width: 180px; }
+    .vino-scelto b { color: #1e3c72; }
+    .vino-scelto .sotto { font-size: 0.8em; color: #666; margin-top: 3px; line-height: 1.6; }
+    .vuota { color: #999; font-style: italic; }
+    .dx { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .dx select { width: auto; padding: 4px 6px; font-size: 0.85em; border-width: 1px; }
+    .dx label { display: inline-flex; gap: 4px; align-items: center; font-size: 0.8em; color: #1e3c72; cursor: pointer; }
+    .dx input.bott { width: 52px; padding: 4px 6px; text-align: center; border-width: 1px; }
+    .chip { display: inline-block; font-size: 0.78em; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--c, #2a5298); color: var(--c, #2a5298); margin: 0 4px 2px 0; }
+    .c-verde { --c: #1e7a3c; } .c-arancio { --c: #b36b00; } .c-rosso { --c: #c0392b; } .c-grigio { --c: #888; }
+
+    /* Scelta del vino per una casella */
+    .scelta { margin-top: 10px; background: #f8faff; border: 2px solid #dce6f8; border-radius: 10px; padding: 10px; }
+    .scelta input[type="text"] { margin-bottom: 8px; }
+    .scelta .fascia { font-size: 0.75em; font-weight: bold; color: #2a5298; text-transform: uppercase; letter-spacing: 0.3px; margin: 10px 0 4px; }
+    .cand {
+      display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 7px 9px;
+      background: #fff; border: 1px solid #e0e8f8; border-radius: 8px; margin-bottom: 5px; cursor: pointer;
+    }
+    .cand:hover { border-color: #2a5298; }
+    .cand.basso { opacity: 0.6; }
+    .cand .n { font-weight: bold; color: #1e3c72; font-size: 0.9em; }
+    .cand .s { font-size: 0.78em; color: #666; margin-top: 2px; }
+    .cand .p { font-weight: bold; color: #1e3c72; white-space: nowrap; }
+    .altri { margin-top: 8px; font-size: 0.85em; }
+    .altri summary { cursor: pointer; color: #2a5298; font-weight: bold; }
+
+    .tabella-wrap { overflow-x: auto; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+    th, td { padding: 6px 9px; text-align: left; border-bottom: 1px solid #eef2fa; }
+    th { color: #2a5298; font-size: 0.78em; text-transform: uppercase; }
+    td.num { text-align: right; white-space: nowrap; }
+
+    .vuoto { text-align: center; padding: 18px; color: #999; }
+    .velo { position: fixed; inset: 0; background: rgba(30,60,114,0.75); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+    .velo.attivo { display: flex; }
+    .velo-ancora { font-size: 2.5em; margin-bottom: 12px; animation: gira 1s linear infinite; }
+    @keyframes gira { to { transform: rotate(360deg); } }
+    .velo-testo { color: #fff; font-family: 'Pirata One', cursive; font-size: 1.3em; letter-spacing: 1px; }
+    .crediti-icone { text-align: center; color: rgba(255,255,255,0.6); font-size: 0.78em; margin: 18px auto 6px; }
+    .crediti-icone a { color: rgba(255,255,255,0.8); }
+
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .section { padding: 16px; border-radius: 14px; }
+      .header h1 { font-size: 1.6em; }
+      .testa-carta { grid-template-columns: 1fr 1fr; }
+      .testa-carta .azioni-carta { grid-column: 1 / -1; }
+      .carta-chip { min-width: 0; flex: 1 1 40%; }
+    }
+  </style>
+  <script src="config.js"></script>
+  <script src="comune.js"></script>
+</head>
+<body>
+
+<!-- Icone da game-icons.net (Lorc, Delapouite), CC BY 3.0. Inline: Safari non legge <use> su file esterni. -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-wine-glass" viewBox="0 0 512 512"><path fill="currentColor" d="M148.97 22.47l-6.25.093-2.564 6.156c-13.235 37.556-21.28 79-21.28 118.093 0 53.777 14.848 93.17 39.874 118.875 18.945 19.458 43.36 30.696 70.156 35 17.09 48.115 16.085 101.005-2.562 148.687-30.555 5.118-60.254 18.273-86.313 39.5h231.22c-26.066-21.23-55.75-34.384-86.313-39.5-18.667-47.734-19.62-100.686-2.468-148.844 26.58-4.382 50.84-15.552 69.75-34.842 25.184-25.692 40.186-65.08 40.186-118.875 0-39.093-8.045-80.537-21.28-118.094l-2.188-6.25h-219.97zm6.75 18.686h199.843c7.25 21.815 12.64 44.904 15.593 67.72h-231.03c2.953-22.816 8.344-45.905 15.593-67.72zm-17.47 86.406h234.78c.45 6.49.69 12.912.69 19.25 0 50.357-13.716 84.26-34.845 105.813-21.13 21.554-50.295 31.406-83.53 31.406-33.238 0-62.247-9.863-83.22-31.405s-34.563-55.437-34.563-105.813c0-6.338.24-12.76.688-19.25z"/></symbol>
+<symbol id="i-plus" viewBox="27 27 202 202"><path fill="currentColor" d="M119 64v55H64v18h55v55h18v-55h55v-18h-55V64h-18z"/></symbol>
+<symbol id="i-trash-can" viewBox="0 0 512 512"><path fill="currentColor" d="M199 103v50h-78v30h270v-30h-78v-50H199zm18 18h78v32h-78v-32zm-79.002 80l30.106 286h175.794l30.104-286H137.998zm62.338 13.38l.64 8.98 16 224 .643 8.976-17.956 1.283-.64-8.98-16-224-.643-8.976 17.956-1.283zm111.328 0l17.955 1.284-.643 8.977-16 224-.64 8.98-17.956-1.284.643-8.977 16-224 .64-8.98zM247 215h18v242h-18V215z"/></symbol>
+</svg>
+
+<div class="velo attivo" id="velo">
+  <div class="velo-ancora">⚓</div>
+  <div class="velo-testo" id="veloTesto">Carico...</div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1><svg class="ico"><use href="#i-wine-glass"></use></svg> Programma calici</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="carta-vini.html" class="btn-home">Carta calici</a>
+      <a href="ordini.html" class="btn-home">Ordini</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span>Carte</span><span class="stato" id="statoGenerale"></span></div>
+    <div class="fila" id="fila"></div>
+    <div class="nota" style="margin-top:12px;">
+      L'<b>attuale</b> è l'ultima generata da Carta calici, le <b>passate</b> si archiviano da sole quando ne generi una nuova.
+      Le <b>prossime</b> le prepari qui. Arrivato il giorno, la carta si compone come sempre in Carta calici.
+    </div>
+  </div>
+
+  <div class="section" id="secCarta" hidden>
+    <div class="section-title"><span id="titoloCarta"></span><span class="stato" id="statoCarta"></span></div>
+    <div class="testa-carta">
+      <div><label class="campo" for="cInizio">Dal</label><input type="date" id="cInizio"></div>
+      <div><label class="campo" for="cFine">Al</label><input type="date" id="cFine"></div>
+      <div class="azioni-carta"><button class="btn btn-pericolo btn-piccolo" id="btnElimina" type="button">Elimina carta</button></div>
+    </div>
+    <div id="confronto"></div>
+    <div id="avvisi"></div>
+    <div id="gruppi"></div>
+  </div>
+
+  <div class="section" id="secOrdine" hidden>
+    <div class="section-title"><span>Da ordinare per questa carta</span></div>
+    <div id="daOrdinare"></div>
+  </div>
+</div>
+
+<div class="crediti-icone">Icone: <a href="https://game-icons.net/" target="_blank" rel="noopener">game-icons.net</a>
+  (Lorc, Delapouite) &mdash; <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>.</div>
+
+<script>
+(() => {
+  const API_CAL = VDC_CONFIG.server.calici;
+  const API_VINI = VDC_CONFIG.server.vini;
+  const API_QR = VDC_CONFIG.server.cartaQR;
+  const $ = id => document.getElementById(id);
+
+  // ── Regole (16/11/2026, dal titolare) ───────────────────────────────
+  // Bianchi e rossi: un calice da 7, uno da 8 e uno da 9, possibilmente da tre paesi diversi;
+  // nei bianchi un aromatico e un secco, nei rossi (rosati compresi) un leggero e un corposo.
+  // Bolle: tutto l'anno un Cava e un Crémant, più un terzo calice facoltativo. Speciali liberi.
+  const GIORNI_FORNITORE = 60;     // termine di pagamento: dopo un ordine, il fornitore e' «occupato»
+  const GIORNI_CANTINA = 60;       // vino ordinato da meno di cosi' e non ancora usato = in cantina
+  const BOTTIGLIE_STD = 24;        // di solito per un vino al calice se ne prendono almeno 24
+  const DURATA = 30;
+  const GRUPPI = [
+    { id: 'bolle', nome: 'Bolle', ruoli: ['cava', 'cremant', 'altra'] },
+    { id: 'bianchi', nome: 'Bianchi', ruoli: ['aromatico', 'secco'] },
+    { id: 'rossi', nome: 'Rossi e rosati', ruoli: ['leggero', 'corposo'] },
+    { id: 'speciali', nome: 'Speciali', ruoli: [] }
+  ];
+  const NOME_RUOLO = { aromatico: 'aromatico', secco: 'secco', leggero: 'leggero', corposo: 'corposo', cava: 'Cava', cremant: 'Crémant', altra: 'altra bolla' };
+  function caselleBase() {
+    return {
+      bolle: [{ r: 'cava' }, { r: 'cremant' }, { r: 'altra', facoltativa: true }],
+      bianchi: [{ p: 7 }, { p: 8 }, { p: 9 }],
+      rossi: [{ p: 7 }, { p: 8 }, { p: 9 }],
+      speciali: []
+    };
+  }
+
+  // ── Stato ───────────────────────────────────────────────────────────
+  let vini = [];            // getVini di WINE_COST
+  let ruoli = {};           // codice → ruolo
+  let carte = [];           // dal server, ordinate per inizio
+  let ordini = [];          // ordini inviati: { fornitore, inviato, righe: [{ codice, bott }] }
+  let sceltaId = '';
+  let aperta = null;        // { g, i } casella con la scelta del vino aperta
+  let timer = null;
+  let mostraPassate = false;
+
+  // ── Utilità ─────────────────────────────────────────────────────────
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function norm(s) { return String(s || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' '); }
+  function num(v) { const n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isFinite(n) ? n : 0; }
+  function dataIt(s) { return s ? s.slice(0, 10).split('-').reverse().join('/') : ''; }
+  function dataBreve(s) { return s ? dataIt(s).slice(0, 5) : ''; }
+  function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function piuGiorni(s, n) { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return iso(d); }
+  function giorniTra(a, b) { return Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5); }
+  const oggi = () => iso(new Date());
+  function velo(t) { $('veloTesto').textContent = t || ''; $('velo').classList.toggle('attivo', !!t); }
+  function erroreRete(e) { return e.name === 'TimeoutError' ? 'il server non ha risposto' : e.message; }
+  async function chiama(url, action, corpo, secondi) {
+    const r = await fetch(url, {
+      method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ action }, corpo || {})), signal: AbortSignal.timeout((secondi || 20) * 1000)
+    });
+    const d = JSON.parse(await r.text());
+    if (d.errore) throw new Error(d.errore);
+    if (d.ok === false) throw new Error(d.error || 'risposta non valida');
+    return d;
+  }
+
+  // ── Vini ────────────────────────────────────────────────────────────
+  function gruppoVino(v) {
+    const c = String(v.catCarta || '');
+    if (c === 'I Bianchi') return 'bianchi';
+    if (c === 'I Rossi' || c === 'I Rosati') return 'rossi';
+    if (c === 'Le Bolle') return 'bolle';
+    if (c === 'I Vini Speciali') return 'speciali';
+    const k = String(v.catCosto || '').toUpperCase();
+    if (k === 'BOLLICINE' || k === 'CHAMPAGNE') return 'bolle';
+    if (k === 'SPECIALI') return 'speciali';
+    return '';
+  }
+  const nomeVino = v => v.nomeCarta || v.vino;
+  const vinoDi = codice => vini.find(v => v.codice === codice);
+  // Come in Ordini: i vini IMPORT senza fornitore stanno nella lista della loro nazione (FRANCIA...),
+  // il Portogallo e' «Phulia». Le liste contano come fornitori.
+  const LISTE_PRODUTTORE = { PORTOGALLO: 'Phulia' };
+  function fornitoreDi(v) {
+    if (!v) return '';
+    if (v.sheet === 'IMPORT' && !String(v.fornitore || '').trim()) {
+      const n = String(v.nazione || '').trim().toUpperCase();
+      return LISTE_PRODUTTORE[n] || n;
+    }
+    return String(v.fornitore || '').trim();
+  }
+  const COPIA_VINI = 'vdc_vini_calici_v1';
+  async function caricaVini() {
+    try {
+      const d = await chiama(API_VINI, 'getVini', {}, 60);
+      vini = d.vini || [];
+      try { localStorage.setItem(COPIA_VINI, JSON.stringify({ quando: Date.now(), vini })); } catch (e) {}
+    } catch (e) {
+      let c = null;
+      try { c = JSON.parse(localStorage.getItem(COPIA_VINI) || 'null'); } catch (x) {}
+      if (!c) throw e;
+      vini = c.vini || [];
+      $('statoGenerale').innerHTML = '<span class="stato errore">WINE_COST non risponde: uso la copia del ' + new Date(c.quando).toLocaleDateString('it-IT') + '</span>';
+    }
+  }
+
+  // ── Carte: date e ordine ────────────────────────────────────────────
+  const realiste = () => carte.filter(c => c.stato !== 'realizzata');   // le realizzate doppiano una generata
+  function ordina() { carte.sort((a, b) => a.inizio.localeCompare(b.inizio) || a.creato.localeCompare(b.creato)); }
+  function attuale() { const g = carte.filter(c => c.stato === 'generata'); return g[g.length - 1] || null; }
+  function fineDi(c) {
+    if (c.fine) return c.fine;
+    const dopo = realiste().filter(x => x.inizio > c.inizio);
+    return dopo.length ? piuGiorni(dopo[0].inizio, -1) : piuGiorni(c.inizio, DURATA - 1);
+  }
+  // La carta che viene subito prima (per la rotazione e per gli ordini impliciti).
+  function precedente(c) {
+    const prima = realiste().filter(x => x.id !== c.id && x.inizio < c.inizio);
+    return prima[prima.length - 1] || null;
+  }
+  const viniCarta = c => GRUPPI.flatMap(g => ((c.dati.caselle || {})[g.id] || []).filter(x => x.codice).map(x => Object.assign({ g: g.id }, x)));
+
+  // ── Storia di un vino e del suo fornitore, vista dall'inizio della carta c ──
+  // Ordini: quelli inviati e quelli impliciti delle carte programmate prima di c
+  // (un vino da ordinare in una carta che inizia il 15/12 = un ordine verso il 15/12).
+  function ordiniFino(c) {
+    const out = ordini.map(o => ({ fornitore: o.fornitore, data: o.inviato, codici: o.righe.map(r => r.codice).filter(Boolean), implicito: false }));
+    carte.filter(x => x.stato === 'programmata' && x.id !== c.id && x.inizio < c.inizio).forEach(x => {
+      viniCarta(x).filter(v => !v.ce).forEach(v => out.push({ fornitore: fornitoreDi(vinoDi(v.codice)) || v.fornitore || '', data: x.inizio, codici: [v.codice], implicito: true }));
+    });
+    return out.filter(o => o.data <= c.inizio);
+  }
+  function usiPrima(codice, c) {
+    return realiste().filter(x => x.id !== c.id && x.inizio < c.inizio && viniCarta(x).some(v => v.codice === codice)).map(x => x.inizio);
+  }
+  function infoVino(v, c, ords) {
+    const prec = precedente(c);
+    const inPrec = !!prec && viniCarta(prec).some(x => x.codice === v.codice);
+    const usi = usiPrima(v.codice, c);
+    const ultimoUso = usi[usi.length - 1] || '';
+    const ordVino = ords.filter(o => o.codici.includes(v.codice)).map(o => o.data).sort();
+    const ultimoOrdine = ordVino[ordVino.length - 1] || '';
+    // In cantina: ordinato da poco e non ancora passato in una carta dopo l'ordine.
+    const inCantina = !!ultimoOrdine && giorniTra(ultimoOrdine, c.inizio) <= GIORNI_CANTINA && !(ultimoUso && ultimoUso >= ultimoOrdine);
+    const f = fornitoreDi(v);
+    const ordForn = ords.filter(o => norm(o.fornitore) === norm(f) && giorniTra(o.data, c.inizio) < GIORNI_FORNITORE).map(o => o.data).sort();
+    const occupatoDal = ordForn[ordForn.length - 1] || '';
+    return { inPrec, ultimoUso, usi: usi.length, ultimoOrdine, inCantina, fornitore: f,
+             occupatoDal, liberoDal: occupatoDal ? piuGiorni(occupatoDal, GIORNI_FORNITORE) : '' };
+  }
+
+  // ── Proposte per una casella ────────────────────────────────────────
+  // Fasce: 0 in cantina, 1 fornitore libero, 2 fornitore occupato, 3 era nella carta precedente
+  // (per le bolle no: Cava e Crémant possono restare tutto l'anno). Dentro la fascia: paese non
+  // ancora nel gruppo, ruolo che manca, non usato di recente.
+  function proposte(c, g, i) {
+    const cas = c.dati.caselle[g][i];
+    const gia = new Set(viniCarta(c).map(v => v.codice));
+    const altri = c.dati.caselle[g].filter((x, j) => j !== i && x.codice);
+    const paesi = new Set(altri.map(x => norm((vinoDi(x.codice) || {}).nazione)));
+    const ruoliPresenti = new Set(altri.map(x => ruoli[x.codice]).filter(Boolean));
+    const gr = GRUPPI.find(x => x.id === g);
+    const mancanti = gr.ruoli.filter(r => r !== 'altra' && !ruoliPresenti.has(r));
+    const ords = ordiniFino(c);
+    const out = vini.filter(v => v.incarta && !gia.has(v.codice) && gruppoVino(v) === g).map(v => {
+      const inf = infoVino(v, c, ords);
+      const r = ruoli[v.codice] || '';
+      let fascia = inf.inCantina ? 0 : inf.occupatoDal ? 2 : 1;
+      if (inf.inPrec && g !== 'bolle') fascia = 3;
+      let punti = 0;
+      if (!paesi.has(norm(v.nazione))) punti += 2;
+      if (r && mancanti.includes(r)) punti += 2;
+      if (!inf.ultimoUso || giorniTra(inf.ultimoUso, c.inizio) > 90) punti += 1;
+      // La casella delle bolle chiede un ruolo: chi ce l'ha diverso va fra gli «altri».
+      const adatto = g === 'bolle' && cas.r ? (cas.r === 'altra' ? !['cava', 'cremant'].includes(r) : (!r || r === cas.r))
+                   : cas.p ? num(v.calice) === num(cas.p) : true;
+      return { v, inf, r, fascia, punti, adatto };
+    });
+    out.sort((a, b) => a.fascia - b.fascia || (g === 'bolle' && cas.r ? (b.r === cas.r) - (a.r === cas.r) : 0) || b.punti - a.punti || nomeVino(a.v).localeCompare(nomeVino(b.v), 'it'));
+    return out;
+  }
+
+  function chipInfo(inf, opz) {
+    const ch = [];
+    if (inf.inCantina) ch.push(`<span class="chip c-verde">in cantina · ordinato il ${dataBreve(inf.ultimoOrdine)}</span>`);
+    else if (inf.occupatoDal) ch.push(`<span class="chip c-arancio">${esc(inf.fornitore)}: ordine del ${dataBreve(inf.occupatoDal)}, libero dal ${dataBreve(inf.liberoDal)}</span>`);
+    else if (!opz || !opz.senzaLibero) ch.push(`<span class="chip c-grigio">${esc(inf.fornitore || 'fornitore non indicato')} libero</span>`);
+    if (inf.inPrec) ch.push('<span class="chip c-rosso">nella carta precedente</span>');
+    else if (inf.ultimoUso) ch.push(`<span class="chip c-grigio">al calice dal ${dataBreve(inf.ultimoUso)}</span>`);
+    return ch.join('');
+  }
+
+  // ── Avvisi della carta ──────────────────────────────────────────────
+  function avvisi(c) {
+    const a = [];
+    const ords = ordiniFino(c);
+    GRUPPI.forEach(g => {
+      const cs = (c.dati.caselle || {})[g.id] || [];
+      const piene = cs.filter(x => x.codice);
+      cs.forEach(x => { if (!x.codice && !x.facoltativa) a.push(`${g.nome}: casella ${x.p ? x.p + ' €' : NOME_RUOLO[x.r] || ''} vuota`); });
+      if (g.id === 'bianchi' || g.id === 'rossi') {
+        const conta = {};
+        piene.forEach(x => { const n = (vinoDi(x.codice) || {}).nazione || '?'; conta[n] = (conta[n] || 0) + 1; });
+        Object.keys(conta).filter(n => conta[n] > 1).forEach(n => a.push(`${g.nome}: ${conta[n]} vini da ${esc(n)}`));
+      }
+      const presenti = new Set(piene.map(x => ruoli[x.codice]).filter(Boolean));
+      g.ruoli.filter(r => r !== 'altra' && !presenti.has(r)).forEach(r => { if (piene.length) a.push(`${g.nome}: manca un ${NOME_RUOLO[r]}`); });
+      piene.filter(x => g.ruoli.length && !ruoli[x.codice]).forEach(x => a.push(`${esc(x.nome)}: ruolo da indicare`));
+      if (c.stato === 'programmata') piene.forEach(x => {
+        const v = vinoDi(x.codice); if (!v) return;
+        const inf = infoVino(v, c, ords);
+        if (!x.ce && inf.occupatoDal) a.push(`${esc(x.nome)}: ${esc(inf.fornitore)} ha un ordine del ${dataIt(inf.occupatoDal)}, libero dal ${dataIt(inf.liberoDal)}`);
+        if (inf.inPrec && g.id !== 'bolle') a.push(`${esc(x.nome)}: era già nella carta precedente`);
+      });
+    });
+    return a;
+  }
+
+  // ── Fila delle carte ────────────────────────────────────────────────
+  function etichetta(c) {
+    const att = attuale();
+    if (c === att) return 'attuale';
+    if (c.stato === 'programmata') return c.inizio <= oggi() ? 'da generare' : 'prossima';
+    if (c.stato === 'realizzata') return 'programmata, poi generata';
+    return 'passata';
+  }
+  function disegnaFila() {
+    const att = attuale();
+    const passate = carte.filter(c => c !== att && c.stato !== 'programmata').reverse();
+    const future = carte.filter(c => c.stato === 'programmata');
+    const chip = c => {
+      const tipo = c === att ? 'attuale' : c.stato === 'programmata' ? '' : 'passata';
+      const n = c.stato === 'programmata' ? avvisi(c).length : 0;
+      return `<button class="carta-chip ${tipo} ${c.id === sceltaId ? 'sel' : ''}" data-carta="${esc(c.id)}" type="button">
+        <small>${etichetta(c)}</small><b>${dataBreve(c.inizio)} → ${dataBreve(fineDi(c))}</b>
+        ${n ? `<span class="av">${n} avvis${n === 1 ? 'o' : 'i'}</span>` : ''}</button>`;
+    };
+    $('fila').innerHTML =
+      (passate.length ? `<button class="carta-chip nuova" data-azione="passate" type="button">${mostraPassate ? '‹ nascondi passate' : '‹ passate (' + passate.length + ')'}</button>` : '') +
+      (mostraPassate ? passate.slice().reverse().map(chip).join('') : '') +
+      (att ? chip(att) : '') + future.map(chip).join('') +
+      `<button class="carta-chip nuova" data-azione="nuova" type="button"><svg class="ico"><use href="#i-plus"></use></svg> nuova carta</button>`;
+  }
+
+  // ── Carta scelta ────────────────────────────────────────────────────
+  const cartaScelta = () => carte.find(c => c.id === sceltaId) || null;
+  function disegnaCarta() {
+    const c = cartaScelta();
+    $('secCarta').hidden = !c;
+    $('secOrdine').hidden = !c || c.stato !== 'programmata';
+    disegnaFila();
+    if (!c) return;
+    const modificabile = c.stato === 'programmata';
+    $('titoloCarta').textContent = 'Carta ' + etichetta(c) + ' · dal ' + dataIt(c.inizio);
+    $('cInizio').value = c.inizio; $('cFine').value = c.fine || '';
+    $('cFine').placeholder = fineDi(c);
+    $('cInizio').disabled = $('cFine').disabled = !modificabile;
+    $('btnElimina').hidden = !modificabile;
+    $('btnElimina').dataset.conferma = ''; $('btnElimina').textContent = 'Elimina carta';
+    $('confronto').innerHTML = confronto(c);
+    const av = avvisi(c);
+    $('avvisi').innerHTML = !viniCarta(c).length ? '' : av.length
+      ? `<div class="avvisi"><b>${av.length} avvis${av.length === 1 ? 'o' : 'i'}</b><ul>${av.map(x => '<li>' + x + '</li>').join('')}</ul></div>`
+      : '<div class="tutto-ok">Regole rispettate.</div>';
+    $('gruppi').innerHTML = GRUPPI.map(g => gruppoHtml(c, g, modificabile)).join('');
+    if (aperta) {
+      const box = document.querySelector(`[data-scelta="${aperta.g}-${aperta.i}"] input[type="text"]`);
+      if (box && document.activeElement !== box) box.focus({ preventScroll: true });
+    }
+    disegnaOrdine(c);
+  }
+
+  function gruppoHtml(c, g, mod) {
+    const cs = (c.dati.caselle || {})[g.id] || [];
+    if (!mod && !cs.length) return '';
+    return `<div class="gruppo g-${g.id}"><div class="gruppo-testa"><span>${g.nome} <small>· ${cs.filter(x => x.codice).length}</small></span>
+      ${mod ? `<button class="btn btn-secondario btn-piccolo" data-azione="aggiungi" data-g="${g.id}" type="button"><svg class="ico"><use href="#i-plus"></use></svg> calice</button>` : ''}</div>
+      ${cs.map((x, i) => casellaHtml(c, g, x, i, mod)).join('') || '<div class="casella vuota">nessun calice</div>'}</div>`;
+  }
+
+  function casellaHtml(c, g, x, i, mod) {
+    const v = x.codice ? vinoDi(x.codice) : null;
+    const slot = g.id === 'bolle' && x.r ? NOME_RUOLO[x.r] + (x.facoltativa ? ' ·' : '')
+      : mod && x.p != null ? `<input type="text" inputmode="decimal" data-prezzo="${i}" data-g="${g.id}" value="${esc(String(x.p).replace('.', ','))}"> €`
+      : x.p ? String(x.p).replace('.', ',') + ' €' : '—';
+    let corpo;
+    if (x.codice) {
+      const inf = v && mod ? infoVino(v, c, ordiniFino(c)) : null;
+      const r = ruoli[x.codice] || '';
+      const selRuolo = g.ruoli.length ? `<select data-ruolo="${esc(x.codice)}" title="Ruolo nella carta (vale per il vino, in tutte le carte)">
+          <option value="">ruolo…</option>${g.ruoli.map(k => `<option value="${k}" ${k === r ? 'selected' : ''}>${NOME_RUOLO[k]}</option>`).join('')}</select>` : '';
+      corpo = `<div class="vino-scelto"><b>${esc(x.nome)}</b>
+          <div class="sotto">${esc(v ? v.nazione : x.nazione || '')}${v ? ' · ' + esc(fornitoreDi(v) || 'fornitore non indicato') : ' · non più in WINE_COST'}${v && v.calice && x.p && num(v.calice) !== num(x.p) ? ` · <span class="chip c-arancio">in carta a ${String(v.calice).replace('.', ',')} €</span>` : ''}
+          ${inf ? '<br>' + chipInfo(inf, { senzaLibero: true }) : ''}</div></div>
+        <div class="dx">${selRuolo}
+          ${mod ? `<label title="Bottiglie già in cantina: non serve ordinarlo"><input type="checkbox" data-ce="${i}" data-g="${g.id}" ${x.ce ? 'checked' : ''}> ce l'ho già</label>
+            ${x.ce ? '' : `<input type="text" class="bott" inputmode="numeric" data-bott="${i}" data-g="${g.id}" value="${x.bott || BOTTIGLIE_STD}" title="Bottiglie da ordinare"> bt`}
+            <button class="btn btn-secondario btn-piccolo" data-azione="scegli" data-g="${g.id}" data-i="${i}" type="button">Cambia</button>
+            <button class="btn btn-pericolo btn-piccolo" data-azione="svuota" data-g="${g.id}" data-i="${i}" type="button" title="Togli il vino"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>` : ''}</div>`;
+    } else {
+      corpo = `<div class="vino-scelto vuota">${x.facoltativa ? 'facoltativo' : 'da scegliere'}</div>
+        ${mod ? `<div class="dx"><button class="btn btn-primario btn-piccolo" data-azione="scegli" data-g="${g.id}" data-i="${i}" type="button">Scegli</button>
+          ${x.facoltativa || cs(c, g).length > (g.id === 'speciali' ? 0 : 3) ? `<button class="btn btn-pericolo btn-piccolo" data-azione="togliCasella" data-g="${g.id}" data-i="${i}" type="button" title="Togli la casella"><svg class="ico ico-sola"><use href="#i-trash-can"></use></svg></button>` : ''}</div>` : ''}`;
+    }
+    const scelta = mod && aperta && aperta.g === g.id && aperta.i === i ? sceltaHtml(c, g.id, i) : '';
+    return `<div class="casella"><div class="casella-riga"><div class="slot">${slot}</div>${corpo}</div>${scelta}</div>`;
+  }
+  const cs = (c, g) => (c.dati.caselle || {})[g.id] || [];
+
+  function sceltaHtml(c, g, i) {
+    const cerca = norm(aperta.cerca || '');
+    const tutte = proposte(c, g, i);
+    const riga = p => `<div class="cand ${p.fascia >= 2 ? 'basso' : ''}" data-metti="${esc(p.v.codice)}">
+        <div><div class="n">${esc(nomeVino(p.v))}</div><div class="s">${esc(p.v.nazione)}${p.r ? ' · ' + NOME_RUOLO[p.r] : ''} · ${chipInfo(p.inf)}</div></div>
+        <div class="p">${p.v.calice ? String(p.v.calice).replace('.', ',') + ' €' : '—'}</div></div>`;
+    let html;
+    if (cerca) {
+      // Ricerca: tutti i vini di WINE_COST, anche di altri gruppi o fuori carta (si forza qualunque vino).
+      const gia = new Set(viniCarta(c).map(v => v.codice));
+      const ords = ordiniFino(c);
+      const trovati = vini.filter(v => !gia.has(v.codice) && norm(nomeVino(v) + ' ' + v.vino + ' ' + v.nazione + ' ' + fornitoreDi(v)).includes(cerca)).slice(0, 40)
+        .map(v => ({ v, inf: infoVino(v, c, ords), r: ruoli[v.codice] || '', fascia: 1 }));
+      html = trovati.length ? trovati.map(riga).join('') : '<div class="vuoto">Nessun vino trovato.</div>';
+    } else {
+      const adatti = tutte.filter(p => p.adatto), altri = tutte.filter(p => !p.adatto);
+      const NOMI = ['In cantina, ordinati da poco', 'Fornitore libero', 'Fornitore con un ordine negli ultimi ' + GIORNI_FORNITORE + ' giorni', 'Erano nella carta precedente'];
+      html = [0, 1, 2, 3].map(f => { const l = adatti.filter(p => p.fascia === f); return l.length ? `<div class="fascia">${NOMI[f]} · ${l.length}</div>` + l.map(riga).join('') : ''; }).join('')
+        || '<div class="vuoto">Nessun vino adatto: cercalo per nome qui sopra.</div>';
+      if (altri.length) html += `<details class="altri"><summary>Altri ${altri.length} del gruppo (${g === 'bolle' ? 'altro ruolo' : 'altro prezzo'})</summary>${altri.map(riga).join('')}</details>`;
+    }
+    return `<div class="scelta" data-scelta="${g}-${i}">
+      <input type="text" data-cerca="1" value="${esc(aperta.cerca || '')}" placeholder="Cerca un vino qualunque (nome, paese, fornitore)">
+      ${html}
+      <div style="margin-top:8px;"><button class="btn btn-secondario btn-piccolo" data-azione="chiudi" type="button">Chiudi</button></div></div>`;
+  }
+
+  // Carta programmata e poi generata: quanto la generata le somiglia.
+  function confronto(c) {
+    let a = null, b = null;
+    if (c.stato === 'realizzata') { a = c; b = carte.find(x => x.id === c.dati.generata); }
+    else if (c.stato === 'generata') { a = carte.find(x => x.stato === 'realizzata' && x.dati.generata === c.id); b = c; }
+    if (!a || !b) return '';
+    const p = viniCarta(a).map(v => v.codice), g = new Set(viniCarta(b).map(v => v.codice));
+    const uguali = p.filter(x => g.has(x)).length;
+    return `<div class="nota" style="margin-top:12px;">Programmata e generata il ${dataIt(b.dati.timestamp || b.inizio)}: <b>${uguali} vini su ${p.length}</b> come in programma.
+      <a href="#" data-carta-link="${esc(c === a ? b.id : a.id)}">${c === a ? 'Vedi la generata' : 'Vedi la programmata'}</a></div>`;
+  }
+
+  function disegnaOrdine(c) {
+    if (c.stato !== 'programmata') return;
+    const per = new Map();
+    viniCarta(c).filter(x => !x.ce).forEach(x => {
+      const v = vinoDi(x.codice);
+      const f = fornitoreDi(v) || 'fornitore non indicato';
+      if (!per.has(f)) per.set(f, []);
+      per.get(f).push({ nome: x.nome, bott: num(x.bott) || BOTTIGLIE_STD, costo: v ? num(v.costoBottiglia || v.imponibile) : 0 });
+    });
+    if (!per.size) { $('daOrdinare').innerHTML = '<div class="vuoto">Niente da ordinare: i vini ci sono già tutti.</div>'; return; }
+    let tot = 0, bt = 0;
+    const righe = [...per.entries()].sort((a, b) => a[0].localeCompare(b[0], 'it')).map(([f, l]) =>
+      l.map((x, k) => { tot += x.bott * x.costo; bt += x.bott;
+        return `<tr><td>${k ? '' : '<b>' + esc(f) + '</b>'}</td><td>${esc(x.nome)}</td><td class="num">${x.bott}</td><td class="num">${x.costo ? '€ ' + (x.bott * x.costo).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}</td></tr>`; }).join('')).join('');
+    $('daOrdinare').innerHTML = `<div class="tabella-wrap"><table><thead><tr><th>Fornitore</th><th>Vino</th><th class="num">Bott.</th><th class="num">Costo netto</th></tr></thead>
+      <tbody>${righe}<tr><td><b>Totale</b></td><td></td><td class="num"><b>${bt}</b></td><td class="num"><b>€ ${tot.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></td></tr></tbody></table></div>
+      <div class="nota" style="margin-top:10px;">Costo al netto da WINE_COST, IVA esclusa. In Ordini questi vini hanno l'etichetta «calice dal ${dataBreve(c.inizio)}».</div>`;
+  }
+
+  // ── Salvataggi ──────────────────────────────────────────────────────
+  function salvaTra() {
+    $('statoCarta').className = 'stato sporca'; $('statoCarta').textContent = 'Da salvare...';
+    clearTimeout(timer); timer = setTimeout(salva, 1000);
+  }
+  async function salva() {
+    clearTimeout(timer); timer = null;
+    const c = cartaScelta(); if (!c) return;
+    try {
+      const d = await chiama(API_CAL, 'salvaCarta', { carta: { id: c.id, stato: c.stato, inizio: c.inizio, fine: c.fine, dati: c.dati } });
+      if (!c.id || c.id !== d.id) { if (sceltaId === c.id) sceltaId = d.id; c.id = d.id; }
+      $('statoCarta').className = 'stato'; $('statoCarta').textContent = 'Salvata alle ' + d.aggiornato.slice(11);
+    } catch (e) {
+      $('statoCarta').className = 'stato errore'; $('statoCarta').textContent = 'NON salvata (' + erroreRete(e) + '): riprovo alla prossima modifica';
+    }
+  }
+  async function nuovaCarta() {
+    const ultima = realiste()[realiste().length - 1];
+    const inizio = ultima ? piuGiorni(fineDi(ultima), 1) : oggi();
+    const caselle = caselleBase();
+    // Le bolle di base restano tutto l'anno: si riprendono Cava e Crémant della carta prima.
+    if (ultima) {
+      const b = (ultima.dati.caselle || {}).bolle || [];
+      ['cava', 'cremant'].forEach((r, k) => {
+        const x = b.find(y => y.codice && (y.r === r || ruoli[y.codice] === r));
+        if (x) Object.assign(caselle.bolle[k], { codice: x.codice, nome: x.nome, ce: true });
+      });
+    }
+    velo('Creo la carta...');
+    try {
+      const d = await chiama(API_CAL, 'salvaCarta', { carta: { stato: 'programmata', inizio, fine: '', dati: { caselle } } });
+      carte.push({ id: d.id, stato: 'programmata', inizio, fine: '', creato: d.aggiornato, aggiornato: d.aggiornato, dati: { caselle } });
+      ordina(); sceltaId = d.id; aperta = null;
+    } catch (e) { $('statoGenerale').innerHTML = '<span class="stato errore">Carta non creata: ' + esc(erroreRete(e)) + '</span>'; }
+    velo('');
+    disegnaCarta();
+  }
+  async function salvaRuolo(codice, ruolo) {
+    const prima = ruoli[codice];
+    if (ruolo) ruoli[codice] = ruolo; else delete ruoli[codice];
+    disegnaCarta();
+    try { await chiama(API_CAL, 'salvaRuolo', { codice, ruolo }); }
+    catch (e) {
+      if (prima) ruoli[codice] = prima; else delete ruoli[codice];
+      disegnaCarta();
+      $('statoCarta').className = 'stato errore'; $('statoCarta').textContent = 'Ruolo NON salvato (' + erroreRete(e) + ')';
+    }
+  }
+
+  // ── Carta generata dal modulo Calici → archivio ─────────────────────
+  // Il modulo Calici non cambia: qui si legge la sua ultima carta e la si copia nello storico
+  // la prima volta che la si vede. Se c'era una programmata vicina (±12 giorni) diventa «realizzata».
+  async function archiviaUltima() {
+    let config = null;
+    try {
+      const r = await fetch(API_QR + '?action=getUltimaCartaCalice', { signal: AbortSignal.timeout(30000) });
+      const d = await r.json();
+      config = d && d.config;
+    } catch (e) { return; }
+    if (!config || !config.timestamp || !config.viniSelezionati) return;
+    if (carte.some(c => c.stato === 'generata' && c.dati.timestamp === config.timestamp)) return;
+    const inizio = iso(new Date(config.timestamp));
+    const caselle = {};
+    GRUPPI.forEach(g => {
+      caselle[g.id] = (config.viniSelezionati[g.id] || []).map(x => {
+        const v = vini.find(w => norm(w.nomeCarta) === norm(x.nome) && norm(w.nazione) === norm(x.nazione)) || vini.find(w => norm(w.nomeCarta) === norm(x.nome));
+        const c = { p: num(x.prezzo) || null, nome: x.nome, nazione: x.nazione, codice: v ? v.codice : null };
+        if (g.id === 'bolle' && v && ruoli[v.codice]) c.r = ruoli[v.codice];
+        return c;
+      });
+    });
+    const dati = { timestamp: config.timestamp, docUrl: config.docUrl || '', caselle };
+    try {
+      const d = await chiama(API_CAL, 'archiviaGenerata', { carta: { inizio, fine: '', dati } });
+      if (d.gia) return;
+      carte.push({ id: d.id, stato: 'generata', inizio, fine: '', creato: d.aggiornato, aggiornato: d.aggiornato, dati });
+      const vicina = carte.filter(c => c.stato === 'programmata' && Math.abs(giorniTra(c.inizio, inizio)) <= 12)
+        .sort((a, b) => Math.abs(giorniTra(a.inizio, inizio)) - Math.abs(giorniTra(b.inizio, inizio)))[0];
+      if (vicina) {
+        vicina.stato = 'realizzata'; vicina.dati.generata = d.id;
+        await chiama(API_CAL, 'salvaCarta', { carta: vicina });
+      }
+      ordina();
+    } catch (e) { console.warn('Archivio della carta generata non riuscito', e); }
+  }
+
+  // ── Eventi ──────────────────────────────────────────────────────────
+  $('fila').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.azione === 'nuova') { salvaSubito(); nuovaCarta(); return; }
+    if (b.dataset.azione === 'passate') { mostraPassate = !mostraPassate; disegnaFila(); return; }
+    if (b.dataset.carta) { salvaSubito(); sceltaId = b.dataset.carta; aperta = null; disegnaCarta(); }
+  });
+  $('secCarta').addEventListener('click', e => {
+    const link = e.target.closest('[data-carta-link]');
+    if (link) { e.preventDefault(); sceltaId = link.dataset.cartaLink; aperta = null; disegnaCarta(); return; }
+    const c = cartaScelta(); if (!c) return;
+    const m = e.target.closest('[data-metti]');
+    if (m && aperta) {
+      const v = vinoDi(m.dataset.metti);
+      const x = c.dati.caselle[aperta.g][aperta.i];
+      const inf = infoVino(v, c, ordiniFino(c));
+      Object.assign(x, { codice: v.codice, nome: nomeVino(v), ce: inf.inCantina, bott: x.bott || BOTTIGLIE_STD });
+      aperta = null; salvaTra(); disegnaCarta(); return;
+    }
+    const b = e.target.closest('[data-azione]'); if (!b) return;
+    const g = b.dataset.g, i = +b.dataset.i;
+    if (b.dataset.azione === 'scegli') aperta = aperta && aperta.g === g && aperta.i === i ? null : { g, i, cerca: '' };
+    else if (b.dataset.azione === 'chiudi') aperta = null;
+    else if (b.dataset.azione === 'svuota') { const x = c.dati.caselle[g][i]; delete x.codice; delete x.nome; delete x.ce; salvaTra(); }
+    else if (b.dataset.azione === 'togliCasella') { c.dati.caselle[g].splice(i, 1); aperta = null; salvaTra(); }
+    else if (b.dataset.azione === 'aggiungi') {
+      c.dati.caselle[g].push(g === 'bolle' ? { r: 'altra', facoltativa: true } : g === 'speciali' ? {} : { p: 9, facoltativa: true });
+      aperta = { g, i: c.dati.caselle[g].length - 1, cerca: '' }; salvaTra();
+    } else return;
+    disegnaCarta();
+  });
+  $('secCarta').addEventListener('input', e => {
+    const c = cartaScelta(); if (!c) return;
+    const t = e.target;
+    if (t.dataset.cerca && aperta) {
+      aperta.cerca = t.value;
+      const pos = t.selectionStart;
+      disegnaCarta();
+      const nuovo = document.querySelector('[data-cerca]');
+      if (nuovo) { nuovo.focus(); try { nuovo.setSelectionRange(pos, pos); } catch (x) {} }
+      return;
+    }
+    if (t.id === 'cInizio' || t.id === 'cFine') {
+      if (t.id === 'cInizio' && !t.value) return;
+      c[t.id === 'cInizio' ? 'inizio' : 'fine'] = t.value;
+      ordina(); salvaTra(); disegnaFila(); return;
+    }
+    if (t.dataset.prezzo != null) { c.dati.caselle[t.dataset.g][+t.dataset.prezzo].p = num(t.value) || null; salvaTra(); return; }
+    if (t.dataset.bott != null) { c.dati.caselle[t.dataset.g][+t.dataset.bott].bott = Math.max(0, parseInt(t.value, 10) || 0); salvaTra(); disegnaOrdine(c); return; }
+  });
+  $('secCarta').addEventListener('change', e => {
+    const c = cartaScelta(); if (!c) return;
+    const t = e.target;
+    if (t.dataset.ruolo) { salvaRuolo(t.dataset.ruolo, t.value); return; }
+    if (t.dataset.ce != null) { c.dati.caselle[t.dataset.g][+t.dataset.ce].ce = t.checked; salvaTra(); disegnaCarta(); return; }
+    if (t.dataset.prezzo != null || t.id === 'cInizio' || t.id === 'cFine') disegnaCarta();
+  });
+  $('btnElimina').addEventListener('click', async () => {
+    const b = $('btnElimina'), c = cartaScelta(); if (!c) return;
+    if (b.dataset.conferma !== '1') { b.dataset.conferma = '1'; b.textContent = 'Sicuro? Elimina'; return; }
+    clearTimeout(timer); timer = null;
+    velo('Elimino...');
+    try { await chiama(API_CAL, 'eliminaCarta', { id: c.id }); carte = carte.filter(x => x !== c); sceltaId = ''; }
+    catch (e) { $('statoCarta').className = 'stato errore'; $('statoCarta').textContent = 'Non eliminata (' + erroreRete(e) + ')'; }
+    velo('');
+    scegliIniziale(); disegnaCarta();
+  });
+  function salvaSubito() { if (timer) salva(); }
+  window.addEventListener('pagehide', salvaSubito);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') salvaSubito(); });
+
+  function scegliIniziale() {
+    const future = carte.filter(c => c.stato === 'programmata');
+    sceltaId = (future[0] || attuale() || {}).id || '';
+  }
+
+  // ── Avvio ───────────────────────────────────────────────────────────
+  (async () => {
+    velo('Carico vini e carte...');
+    try {
+      const [d] = await Promise.all([chiama(API_CAL, 'tutto', {}, 25), caricaVini()]);
+      ruoli = d.ruoli || {}; carte = d.carte || []; ordini = d.ordini || [];
+      if (d.erroreOrdini) $('statoGenerale').innerHTML = '<span class="stato errore">Ordini non letti: le proposte non sanno cosa è in cantina</span>';
+      ordina();
+      velo('Controllo l\'ultima carta generata...');
+      await archiviaUltima();
+    } catch (e) {
+      velo('');
+      $('fila').innerHTML = '<div class="stato errore">Non riesco a caricare (' + esc(erroreRete(e)) + '): ricarica la pagina.</div>';
+      return;
+    }
+    velo('');
+    scegliIniziale();
+    disegnaCarta();
+  })();
+})();
+</script>
+</body>
+</html>

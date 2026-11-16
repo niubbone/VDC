@@ -18,6 +18,7 @@ const VDC_CONFIG = {
     pin:          'https://www.studio-smart.it/api/vdc-pin.php',
     segnalazioni: 'https://www.studio-smart.it/api/vdc-segnalazioni.php',
     degustazioni: 'https://www.studio-smart.it/api/vdc-degustazioni.php',
-    ordini:       'https://www.studio-smart.it/api/vdc-ordini.php'
+    ordini:       'https://www.studio-smart.it/api/vdc-ordini.php',
+    calici:       'https://www.studio-smart.it/api/vdc-calici.php'   // programma della carta dei calici
   }
 };

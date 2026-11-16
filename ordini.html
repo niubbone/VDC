@@ -552,13 +552,29 @@
     } catch (e) { segnalazioni = []; }
   }
 
+  // Vini delle carte dei calici in programma (programma-calici.html, 16/11/2026):
+  // codice → data d'inizio della prima carta che lo vuole e non ce l'ha gia' in cantina.
+  let calici = new Map();
+  async function caricaCalici() {
+    try {
+      const d = await chiama(VDC_CONFIG.server.calici, 'tutto');
+      calici = new Map();
+      (d.carte || []).filter(c => c.stato === 'programmata').forEach(c => {
+        Object.values((c.dati && c.dati.caselle) || {}).forEach(l => (l || []).forEach(x => {
+          if (x.codice && !x.ce && (!calici.has(x.codice) || c.inizio < calici.get(x.codice))) calici.set(x.codice, c.inizio);
+        }));
+      });
+    } catch (e) { calici = new Map(); }   // senza programma la pagina funziona come prima
+  }
+
   async function avvio() {
     velo('Carico vini e fornitori...');
     const esiti = await Promise.allSettled([
       caricaVini(),
       chiama(API_ORD, 'elencoFornitori').then(d => { fornitoriHost = d.fornitori || []; }),
       caricaNascosti(),
-      caricaSegnalazioni()
+      caricaSegnalazioni(),
+      caricaCalici()
     ]);
     velo('');
     const errori = esiti.filter(e => e.status === 'rejected').map(e => erroreRete(e.reason));
@@ -899,7 +915,8 @@
       : `<select data-f="tipo" aria-label="Tipologia"><option value="">tipologia…</option>${TIPI.map(t => `<option value="${esc(t)}" ${t === r.tipo ? 'selected' : ''}>${esc(tipoBreve(t))}</option>`).join('')}</select>`;
     const badge = tipoHtml + (!r.codice ? ' <span class="badge" style="--c:#b36b00">non in WINE_COST</span>'
       : wc && wc.abbandonato ? ' <span class="badge" style="--c:#999">abbandonato</span>'
-      : wc && !wc.incarta ? ' <span class="badge" style="--c:#999">fuori carta</span>' : '');
+      : wc && !wc.incarta ? ' <span class="badge" style="--c:#999">fuori carta</span>' : '') +
+      (r.codice && calici.has(r.codice) ? ` <span class="badge" style="--c:#7b2d8b" title="In una carta dei calici in programma">calice dal ${dataIt(calici.get(r.codice)).slice(0, 5)}</span>` : '');
     const sotto = [r.codice ? r.codice : '', wc && wc.vitigni ? '<span class="vitigni">' + esc(wc.vitigni) + '</span>' : '', wc && norm(wc.vino) !== norm(r.nome) ? 'WINE_COST: ' + esc(wc.vino) : '',
                    r.spostato ? (wc ? 'ora fornitore «' + esc(wc.fornitore) + '» in WINE_COST' : 'codice non più in WINE_COST') : '']
       .filter(Boolean).join(' · ');
