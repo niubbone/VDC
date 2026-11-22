@@ -599,6 +599,36 @@
     }
     .riep-voce.allarme { background: #fff3cd; border-color: #e0a800; color: #6b5000; }
 
+    /* Pagamento online con Stripe (22/11/2026) */
+    .box-stripe {
+      background: rgba(244, 228, 193, 0.9); border: 2px solid #6b4423; border-radius: 12px;
+      padding: 14px 16px; margin: 0 0 20px 0; color: #2c1810; font-family: 'Georgia', serif;
+    }
+    .box-stripe h4 { margin: 0 0 8px 0; font-family: 'Pirata One', cursive; font-size: 1.3em; font-weight: normal; }
+    .box-stripe .stripe-riga { margin: 6px 0; font-size: 0.95em; }
+    .box-stripe .stripe-stato {
+      display: inline-block; border-radius: 14px; padding: 2px 10px; font-size: 0.85em;
+      font-weight: bold; margin-left: 6px; border: 1px solid;
+    }
+    .stripe-stato.attivo { background: #d4edda; color: #155724; border-color: #155724; }
+    .stripe-stato.esaurito { background: #fff3cd; color: #6b5000; border-color: #e0a800; }
+    .stripe-stato.disattivato, .stripe-stato.chiuso { background: #eee; color: #555; border-color: #999; }
+    .box-stripe input.stripe-url {
+      width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #8b4513; border-radius: 6px;
+      font-family: 'Georgia', serif; font-size: 0.9em; background: #fffaf0; margin: 6px 0;
+    }
+    .box-stripe .stripe-pulsanti { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .box-stripe .stripe-pulsanti button {
+      background: linear-gradient(145deg, #e8b873 0%, #c89858 100%); color: #2c1810;
+      border: 2px solid #8b4513; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+      font-family: 'Georgia', serif; font-weight: bold; font-size: 0.95em;
+    }
+    .box-stripe .stripe-pulsanti button.principale {
+      background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); color: #fff; border-color: #1e5e3a;
+    }
+    .box-stripe .stripe-avviso { color: #8b2500; font-size: 0.88em; margin-top: 6px; }
+    @media (max-width: 600px) { .box-stripe .stripe-pulsanti button { flex: 1 1 45%; } }
+
     .cliente-collegato {
       background: #d4edda; border: 1px solid #155724; color: #155724;
       border-radius: 6px; padding: 6px 10px; margin-top: 6px;
@@ -1590,6 +1620,14 @@
             Se valorizzato, il dovuto delle prenotazioni si calcola da solo.
           </div>
         </div>
+
+        <div class="form-group">
+          <label>Posti massimi</label>
+          <input type="number" id="inputPostiMax" step="1" min="0" placeholder="vuoto = senza limite">
+          <div style="font-size:0.86em; color:#6b4423; margin-top:4px;">
+            Contano tutte le prenotazioni dell'evento. Finiti i posti, il pagamento online si chiude da solo.
+          </div>
+        </div>
       </div>
       
       <!-- CAMPI PRENOTAZIONE (visibili di default) -->
@@ -1802,6 +1840,8 @@
         </div>
 
         <div class="riepilogo-economico" id="riepilogoEconomico" style="display:none;"></div>
+
+        <div class="box-stripe" id="boxStripe" style="display:none;"></div>
 
         <div class="prenotazioni-evento-header">
           <h3>Prenotazioni Evento</h3>
@@ -2333,6 +2373,7 @@
         // chiesto, anche se nel frattempo l'utente ne guarda un altro.
         if (nuovePren) salvaMeseInMemoria(anno, mese, nuovePren);
         if (nuoviEventi) salvaEventiInMemoria(nuoviEventi);
+        if (!errEventi && resultEventi.stripe) salvaInfoStripe(resultEventi.stripe);
 
         if (errPren || errEventi) {
           console.error('Errore API:', { prenotazioni: errPren, eventi: errEventi });
@@ -2602,6 +2643,7 @@
       document.getElementById('inputNomeEvento').value = '';
       document.getElementById('inputDescrizioneEvento').value = '';
       document.getElementById('inputPrezzoQuota').value = '';
+      document.getElementById('inputPostiMax').value = '';
 
       // Mostra prenotazione, nascondi evento
       document.getElementById('campiEvento').style.display = 'none';
@@ -3068,6 +3110,161 @@
       return !prenArrivata(p) && p.stato !== 'annullato';
     }
 
+
+    // ═══════════════════════════════════════════════════════════
+    // PAGAMENTO ONLINE CON STRIPE (22/11/2026)
+    // ═══════════════════════════════════════════════════════════
+    //
+    // VDC crea il link di pagamento dell'evento (quota + supplemento a
+    // persona). Il server controlla i pagamenti ogni 5 minuti e crea da solo
+    // le prenotazioni pagate; finiti i posti il link si chiude. Qui si crea il
+    // link, lo si copia o manda, lo si chiude o riapre, e si può chiedere un
+    // controllo subito invece di aspettare i 5 minuti.
+    let infoStripe = null;
+    try { infoStripe = JSON.parse(localStorage.getItem('vdc_stripe_info') || 'null'); } catch (e) {}
+
+    function salvaInfoStripe(info) {
+      infoStripe = info;
+      try { localStorage.setItem('vdc_stripe_info', JSON.stringify(info)); } catch (e) {}
+    }
+
+    const ETICHETTE_LINK = {
+      attivo: 'Aperto', esaurito: 'Posti esauriti', disattivato: 'Chiuso a mano', chiuso: 'Evento concluso'
+    };
+
+    function escHtml(t) {
+      return String(t == null ? '' : t).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function mostraBoxStripe(lista) {
+      const box = document.getElementById('boxStripe');
+      const ev = eventoCorrente;
+      if (!box || !ev || !Number(ev.prezzoQuota)) { if (box) box.style.display = 'none'; return; }
+
+      const oggi = new Date().toISOString().slice(0, 10);
+      const passato = ev.data < oggi;
+      const occupati = (lista || []).filter(p => p.stato !== 'annullato')
+        .reduce((s, p) => s + (parseInt(p.persone) || 0), 0);
+      const online = (lista || []).filter(p => p.online && p.stato !== 'annullato')
+        .reduce((s, p) => s + (parseInt(p.persone) || 0), 0);
+      const supp = infoStripe && infoStripe.supplemento !== null && infoStripe.supplemento !== undefined
+        ? Number(infoStripe.supplemento) : null;
+      const prezzoNuovo = supp !== null ? Number(ev.prezzoQuota) + supp : null;
+
+      const righe = ['<h4><svg class="ico"><use href="#i-fa-credit-card"></use></svg> Pagamento online' +
+        (ev.stripeStato ? `<span class="stripe-stato ${escHtml(ev.stripeStato)}">${ETICHETTE_LINK[ev.stripeStato] || escHtml(ev.stripeStato)}</span>` : '') +
+        '</h4>'];
+
+      const posti = ev.postiMax
+        ? `Posti: <strong>${occupati}</strong> occupati su ${ev.postiMax} · liberi <strong>${Math.max(ev.postiMax - occupati, 0)}</strong>`
+        : 'Posti: senza limite';
+      righe.push(`<div class="stripe-riga">${posti}${online ? ` · pagati online ${online}` : ''}</div>`);
+
+      const pulsanti = [];
+      if (!ev.stripeUrl) {
+        if (passato) {
+          righe.push('<div class="stripe-riga">L\'evento è passato: niente link di pagamento.</div>');
+        } else {
+          righe.push(`<div class="stripe-riga">Il cliente paga <strong>${prezzoNuovo !== null ? eurPren(prezzoNuovo) : 'la quota più il supplemento'}</strong> a persona` +
+            `${supp ? ` (${eurPren(ev.prezzoQuota)} + ${eurPren(supp)} di supplemento)` : ''}. La prenotazione compare qui da sola, già pagata.</div>`);
+          if (infoStripe && !infoStripe.configurato) {
+            righe.push('<div class="stripe-avviso">Stripe non è ancora collegato al gestionale.</div>');
+          }
+          pulsanti.push('<button class="principale" onclick="creaLinkPagamento()">Crea link di pagamento</button>');
+        }
+      } else {
+        righe.push(`<div class="stripe-riga">Prezzo del link: <strong>${eurPren(ev.stripePrezzo)}</strong> a persona</div>`);
+        righe.push(`<input class="stripe-url" id="stripeUrl" readonly value="${escHtml(ev.stripeUrl)}" onclick="this.select()">`);
+        if (prezzoNuovo !== null && Math.abs(prezzoNuovo - Number(ev.stripePrezzo)) > 0.004 && ev.stripeStato !== 'chiuso') {
+          righe.push(`<div class="stripe-avviso">Il prezzo dell'evento è cambiato (ora ${eurPren(prezzoNuovo)}): chiudi questo link e creane uno nuovo.</div>`);
+        }
+        if (ev.stripeStato !== 'chiuso') {
+          pulsanti.push('<button onclick="copiaLinkPagamento()">Copia</button>');
+          pulsanti.push('<button onclick="inviaLinkPagamento()">Invia</button>');
+        }
+        if (ev.stripeStato === 'attivo' || ev.stripeStato === 'esaurito') {
+          pulsanti.push('<button onclick="cambiaLinkPagamento(false)">Chiudi il link</button>');
+        }
+        if (ev.stripeStato === 'disattivato' && !passato) {
+          pulsanti.push('<button class="principale" onclick="cambiaLinkPagamento(true)">Riapri</button>');
+          pulsanti.push('<button onclick="creaLinkPagamento()">Crea un link nuovo</button>');
+        }
+        pulsanti.push('<button onclick="controllaPagamentiOra()">Controlla pagamenti</button>');
+      }
+      if (pulsanti.length) righe.push(`<div class="stripe-pulsanti">${pulsanti.join('')}</div>`);
+
+      box.innerHTML = righe.join('');
+      box.style.display = 'block';
+    }
+
+    async function dopoAzioneStripe(messaggio) {
+      const id = eventoCorrente && eventoCorrente.id;
+      invalidaCacheMemoria();
+      await caricaPrenotazioni();
+      if (id) await apriGestioneEvento(id);
+      if (messaggio) alert(messaggio);
+    }
+
+    async function creaLinkPagamento() {
+      if (!eventoCorrente) return;
+      showLoading('Creazione del link su Stripe...');
+      const r = await callAPI('creaLinkStripe', { eventoId: eventoCorrente.id });
+      hideLoading();
+      if (r.errore) { alert('Errore: ' + r.errore); return; }
+      await dopoAzioneStripe('✅ Link di pagamento pronto: copialo o invialo ai clienti.');
+    }
+
+    async function cambiaLinkPagamento(attivo) {
+      if (!eventoCorrente) return;
+      if (!attivo && !confirm('Chiudere il link? Nessuno potrà più pagare online finché non lo riapri.')) return;
+      showLoading(attivo ? 'Riapertura...' : 'Chiusura...');
+      const r = await callAPI('attivaLinkStripe', { eventoId: eventoCorrente.id, attivo: attivo });
+      hideLoading();
+      if (r.errore) { alert('Errore: ' + r.errore); return; }
+      await dopoAzioneStripe(attivo ? '✅ Link riaperto' : '✅ Link chiuso');
+    }
+
+    async function controllaPagamentiOra() {
+      showLoading('Controllo dei pagamenti su Stripe...');
+      const r = await callAPI('controllaStripe', {});
+      hideLoading();
+      if (r.errore) { alert('Errore: ' + r.errore); return; }
+      const parti = [];
+      parti.push(r.nuove ? `${r.nuove} prenotazion${r.nuove === 1 ? 'e nuova' : 'i nuove'}` : 'Nessun pagamento nuovo');
+      if (r.rimborsi) parti.push(`${r.rimborsi} rimbors${r.rimborsi === 1 ? 'o registrato' : 'i registrati'}`);
+      if (r.nota) parti.push(r.nota);
+      if (r.errori && r.errori.length) parti.push('⚠️ ' + r.errori.join('\n⚠️ '));
+      await dopoAzioneStripe(parti.join('\n'));
+    }
+
+    function testoInvitoPagamento() {
+      const ev = eventoCorrente;
+      const d = new Date(ev.data + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+      return `${ev.nome} — ${d}, Vecchia Dogana. Prenota e paga il tuo posto qui: ${ev.stripeUrl}`;
+    }
+
+    async function copiaLinkPagamento() {
+      const url = eventoCorrente && eventoCorrente.stripeUrl;
+      if (!url) return;
+      try {
+        await navigator.clipboard.writeText(url);
+        alert('✅ Link copiato');
+      } catch (e) {
+        const campo = document.getElementById('stripeUrl');
+        if (campo) { campo.select(); document.execCommand('copy'); alert('✅ Link copiato'); }
+      }
+    }
+
+    async function inviaLinkPagamento() {
+      if (!eventoCorrente || !eventoCorrente.stripeUrl) return;
+      const testo = testoInvitoPagamento();
+      if (navigator.share) {
+        try { await navigator.share({ text: testo }); return; } catch (e) { if (e.name === 'AbortError') return; }
+      }
+      window.open('https://wa.me/?text=' + encodeURIComponent(testo), '_blank');
+    }
+
     function prenotazioniDellEvento() {
       return eventoCorrente ? prenotazioni.filter(p => p.evento_id === eventoCorrente.id) : [];
     }
@@ -3080,6 +3277,7 @@
         .reduce((sum, p) => sum + (parseInt(p.persone) || 0), 0);
       document.getElementById('eventoContatoreNumero').textContent = totalePersone;
       mostraRiepilogoEconomico(lista);
+      mostraBoxStripe(lista);
       ridisegnaListaEvento();
       if (document.getElementById('modalListaAccoglienza').classList.contains('active')) {
         rigaApertaLista = null;
@@ -3590,7 +3788,8 @@
             nome: nome,
             data: data,
             descrizione: descrizione,
-            prezzoQuota: document.getElementById('inputPrezzoQuota').value
+            prezzoQuota: document.getElementById('inputPrezzoQuota').value,
+            postiMax: document.getElementById('inputPostiMax').value
           });
           
           hideLoading();
@@ -3692,6 +3891,7 @@
       document.getElementById('inputData').value = eventoCorrente.data;
       document.getElementById('inputDescrizioneEvento').value = eventoCorrente.descrizione || '';
       document.getElementById('inputPrezzoQuota').value = eventoCorrente.prezzoQuota || '';
+      document.getElementById('inputPostiMax').value = eventoCorrente.postiMax || '';
       
       // Mostra campi evento
       document.getElementById('campiEvento').style.display = 'block';
@@ -3735,7 +3935,8 @@
         nome: nome,
         data: data,
         descrizione: descrizione,
-        prezzoQuota: document.getElementById('inputPrezzoQuota').value
+        prezzoQuota: document.getElementById('inputPrezzoQuota').value,
+        postiMax: document.getElementById('inputPostiMax').value
       });
       
       hideLoading();
