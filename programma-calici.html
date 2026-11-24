@@ -199,7 +199,7 @@
     <div class="testa-carta">
       <div><label class="campo" for="cInizio">Dal</label><input type="date" id="cInizio"></div>
       <div><label class="campo" for="cFine">Al</label><input type="date" id="cFine"></div>
-      <div class="azioni-carta"><button class="btn btn-pericolo btn-piccolo" id="btnElimina" type="button">Elimina carta</button></div>
+      <div class="azioni-carta"><button class="btn btn-secondario btn-piccolo" id="btnPdf" type="button">Scarica PDF</button> <button class="btn btn-pericolo btn-piccolo" id="btnElimina" type="button">Elimina carta</button></div>
     </div>
     <div id="confronto"></div>
     <div id="avvisi"></div>
@@ -474,7 +474,9 @@
     $('cInizio').value = c.inizio; $('cFine').value = c.fine || '';
     $('cFine').placeholder = fineDi(c);
     $('cInizio').disabled = $('cFine').disabled = !modificabile;
-    $('btnElimina').hidden = !modificabile;
+    // Si eliminano le programmate e, dal 24/11/2026, anche le passate; l'attuale no (la pagina la
+    // riarchivierebbe subito: è l'ultima generata in Carta calici).
+    $('btnElimina').hidden = c === attuale();
     $('btnElimina').dataset.conferma = ''; $('btnElimina').textContent = 'Elimina carta';
     $('confronto').innerHTML = confronto(c);
     const av = avvisi(c);
@@ -736,11 +738,87 @@
     if (b.dataset.conferma !== '1') { b.dataset.conferma = '1'; b.textContent = 'Sicuro? Elimina'; return; }
     clearTimeout(timer); timer = null;
     velo('Elimino...');
-    try { await chiama(API_CAL, 'eliminaCarta', { id: c.id }); carte = carte.filter(x => x !== c); sceltaId = ''; }
+    // una generata si porta via anche la sua «programmata, poi generata»
+    const via = [c, ...carte.filter(x => c.stato === 'generata' && x.stato === 'realizzata' && x.dati.generata === c.id)];
+    try {
+      for (const x of via) { await chiama(API_CAL, 'eliminaCarta', { id: x.id }); carte = carte.filter(y => y !== x); }
+      sceltaId = '';
+    }
     catch (e) { $('statoCarta').className = 'stato errore'; $('statoCarta').textContent = 'Non eliminata (' + erroreRete(e) + ')'; }
     velo('');
     scegliIniziale(); disegnaCarta();
   });
+  // ── PDF della carta (24/11/2026): jsPDF come in Ordini, librerie scaricate al primo uso ──
+  const LIB_PDF = ['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+                   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'];
+  function caricaScript(src) {
+    return new Promise((ok, ko) => {
+      const s = document.createElement('script');
+      s.src = src; s.onload = ok; s.onerror = () => ko(new Error('libreria PDF non scaricata'));
+      document.head.appendChild(s);
+    });
+  }
+  async function caricaJsPdf() {
+    if (!window.jspdf) await caricaScript(LIB_PDF[0]);
+    if (!window.jspdf.jsPDF.API.autoTable) await caricaScript(LIB_PDF[1]);
+  }
+  async function caricaLogo() {
+    if (!VDC_CONFIG.locale || !VDC_CONFIG.locale.logo) return null;
+    try {
+      const b = await (await fetch(VDC_CONFIG.locale.logo)).blob();
+      const url = await new Promise((ok, ko) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = ko; fr.readAsDataURL(b); });
+      return await new Promise(ok => { const i = new Image(); i.onload = () => ok({ url, w: i.naturalWidth, h: i.naturalHeight }); i.onerror = () => ok(null); i.src = url; });
+    } catch (e) { return null; }
+  }
+  const prezzoTesto = p => p ? String(p).replace('.', ',') + ' €' : '';
+  function creaPdfCarta(c, logo) {
+    const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+    const prog = c.stato === 'programmata';
+    let x = 14, y = 20, inizio = 34;
+    if (logo) {
+      const alto = 24, largo = alto * logo.w / logo.h;
+      doc.addImage(logo.url, 'JPEG', 14, 10, largo, alto);
+      x = 14 + largo + 6; y = 21; inizio = 42;
+    }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(30, 60, 114);
+    doc.text('Carta dei calici', x, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(90, 90, 90);
+    doc.text('dal ' + dataIt(c.inizio) + ' al ' + dataIt(fineDi(c)) + ' · ' + etichetta(c), x, y + 7);
+    const testa = prog ? ['Calice', 'Vino', 'Paese', 'Ruolo', 'Fornitore', 'Ordine'] : ['Calice', 'Vino', 'Paese', 'Ruolo'];
+    const corpo = [];
+    GRUPPI.forEach(g => {
+      const cs = ((c.dati.caselle || {})[g.id] || []).filter(x => x.codice);
+      if (!cs.length) return;
+      corpo.push([{ content: g.nome.toUpperCase(), colSpan: testa.length, styles: { fontStyle: 'bold', fillColor: [234, 239, 247], textColor: [30, 60, 114] } }]);
+      cs.forEach(x => {
+        const v = vinoDi(x.codice);
+        const ruolo = NOME_RUOLO[ruoli[x.codice] || (g.id === 'bolle' ? x.r : '')] || '';
+        const riga = [prezzoTesto(x.p || (v && v.calice)),
+                      v ? nomeVino(v) : (x.nome || x.codice), (v && v.nazione) || x.nazione || '', ruolo];
+        if (prog) riga.push(fornitoreDi(v) || '', x.ce ? 'in cantina' : (x.bott || BOTTIGLIE_STD) + ' bott.');
+        corpo.push(riga);
+      });
+    });
+    doc.autoTable({
+      startY: inizio, theme: 'striped', head: [testa], body: corpo.length ? corpo : [[{ content: 'Carta vuota', colSpan: testa.length }]],
+      styles: { font: 'helvetica', fontSize: 10, cellPadding: 2.2 },
+      headStyles: { fillColor: [30, 60, 114], textColor: 255 },
+      columnStyles: { 0: { halign: 'right', cellWidth: 18 }, 1: { fontStyle: 'bold' } }
+    });
+    return doc;
+  }
+  $('btnPdf').addEventListener('click', async () => {
+    const c = cartaScelta(); if (!c) return;
+    salvaSubito();
+    velo('Preparo il PDF...');
+    let logo = null;
+    try { [, logo] = await Promise.all([caricaJsPdf(), caricaLogo()]); }
+    catch (e) { velo(''); $('statoCarta').className = 'stato errore'; $('statoCarta').textContent = 'PDF non preparato (' + e.message + '): controlla la connessione'; return; }
+    const doc = creaPdfCarta(c, logo);
+    velo('');
+    doc.save('Carta calici dal ' + dataIt(c.inizio).replace(/\//g, '-') + ' al ' + dataIt(fineDi(c)).replace(/\//g, '-') + '.pdf');
+  });
+
   function salvaSubito() { if (timer) salva(); }
   window.addEventListener('pagehide', salvaSubito);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') salvaSubito(); });
