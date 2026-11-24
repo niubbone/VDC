@@ -232,11 +232,13 @@
   const DURATA = 30;
   const GRUPPI = [
     { id: 'bolle', nome: 'Bolle', ruoli: ['cava', 'cremant', 'altra'] },
-    { id: 'bianchi', nome: 'Bianchi', ruoli: ['aromatico', 'secco'] },
+    { id: 'bianchi', nome: 'Bianchi', ruoli: ['aromatico', 'secco', 'orange'] },
     { id: 'rossi', nome: 'Rossi e rosati', ruoli: ['leggero', 'corposo'] },
     { id: 'speciali', nome: 'Speciali', ruoli: [] }
   ];
-  const NOME_RUOLO = { aromatico: 'aromatico', secco: 'secco', leggero: 'leggero', corposo: 'corposo', cava: 'Cava', cremant: 'Crémant', altra: 'altra bolla' };
+  // Ruoli che si possono dare ma che la carta non chiede (niente «manca un …»): altra bolla, orange (24/11/2026).
+  const RUOLI_FACOLTATIVI = ['altra', 'orange'];
+  const NOME_RUOLO = { aromatico: 'aromatico', secco: 'secco', orange: 'orange', leggero: 'leggero', corposo: 'corposo', cava: 'Cava', cremant: 'Crémant', altra: 'altra bolla' };
   function caselleBase() {
     return {
       bolle: [{ r: 'cava' }, { r: 'cremant' }, { r: 'altra', facoltativa: true }],
@@ -355,8 +357,10 @@
     const ultimoUso = usi[usi.length - 1] || '';
     const ordVino = ords.filter(o => o.codici.includes(v.codice)).map(o => o.data).sort();
     const ultimoOrdine = ordVino[ordVino.length - 1] || '';
-    // In cantina: ordinato da poco e non ancora passato in una carta dopo l'ordine.
-    const inCantina = !!ultimoOrdine && giorniTra(ultimoOrdine, c.inizio) <= GIORNI_CANTINA && !(ultimoUso && ultimoUso >= ultimoOrdine);
+    // In cantina: ordinato negli ultimi GIORNI_CANTINA giorni. Anche se nel frattempo è già andato
+    // al calice: un ordine è di almeno 24 bottiglie e una carta non le finisce (24/11/2026, Erasmo
+    // ordinato il 10/11, al calice dal 16/11, risultava «non ordinato» per la carta del 07/12).
+    const inCantina = !!ultimoOrdine && giorniTra(ultimoOrdine, c.inizio) <= GIORNI_CANTINA;
     const f = fornitoreDi(v);
     const ordForn = ords.filter(o => norm(o.fornitore) === norm(f) && giorniTra(o.data, c.inizio) < GIORNI_FORNITORE).map(o => o.data).sort();
     const occupatoDal = ordForn[ordForn.length - 1] || '';
@@ -375,7 +379,7 @@
     const paesi = new Set(altri.map(x => norm((vinoDi(x.codice) || {}).nazione)));
     const ruoliPresenti = new Set(altri.map(x => ruoli[x.codice]).filter(Boolean));
     const gr = GRUPPI.find(x => x.id === g);
-    const mancanti = gr.ruoli.filter(r => r !== 'altra' && !ruoliPresenti.has(r));
+    const mancanti = gr.ruoli.filter(r => !RUOLI_FACOLTATIVI.includes(r) && !ruoliPresenti.has(r));
     const ords = ordiniFino(c);
     const out = vini.filter(v => v.incarta && !gia.has(v.codice) && gruppoVino(v) === g).map(v => {
       const inf = infoVino(v, c, ords);
@@ -419,7 +423,7 @@
         Object.keys(conta).filter(n => conta[n] > 1).forEach(n => a.push(`${g.nome}: ${conta[n]} vini da ${esc(n)}`));
       }
       const presenti = new Set(piene.map(x => ruoli[x.codice]).filter(Boolean));
-      g.ruoli.filter(r => r !== 'altra' && !presenti.has(r)).forEach(r => { if (piene.length) a.push(`${g.nome}: manca un ${NOME_RUOLO[r]}`); });
+      g.ruoli.filter(r => !RUOLI_FACOLTATIVI.includes(r) && !presenti.has(r)).forEach(r => { if (piene.length) a.push(`${g.nome}: manca un ${NOME_RUOLO[r]}`); });
       piene.filter(x => g.ruoli.length && !ruoli[x.codice]).forEach(x => a.push(`${esc(x.nome)}: ruolo da indicare`));
       if (c.stato === 'programmata') piene.forEach(x => {
         const v = vinoDi(x.codice); if (!v) return;
