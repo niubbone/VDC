@@ -789,7 +789,7 @@
     GRUPPI.forEach(g => {
       const cs = ((c.dati.caselle || {})[g.id] || []).filter(x => x.codice);
       if (!cs.length) return;
-      corpo.push([{ content: g.nome.toUpperCase(), colSpan: testa.length, styles: { fontStyle: 'bold', fillColor: [234, 239, 247], textColor: [30, 60, 114] } }]);
+      corpo.push([{ content: g.nome.toUpperCase(), colSpan: testa.length, styles: { fontStyle: 'bold', halign: 'left', fillColor: [234, 239, 247], textColor: [30, 60, 114] } }]);
       cs.forEach(x => {
         const v = vinoDi(x.codice);
         const ruolo = NOME_RUOLO[ruoli[x.codice] || (g.id === 'bolle' ? x.r : '')] || '';
@@ -803,7 +803,7 @@
       startY: inizio, theme: 'striped', head: [testa], body: corpo.length ? corpo : [[{ content: 'Carta vuota', colSpan: testa.length }]],
       styles: { font: 'helvetica', fontSize: 10, cellPadding: 2.2 },
       headStyles: { fillColor: [30, 60, 114], textColor: 255 },
-      columnStyles: { 0: { halign: 'right', cellWidth: 18 }, 1: { fontStyle: 'bold' } }
+      columnStyles: { 0: { halign: 'right', cellWidth: 16 }, 1: { fontStyle: 'bold' }, 3: { cellWidth: 23 }, 5: { cellWidth: 24 } }
     });
     return doc;
   }
