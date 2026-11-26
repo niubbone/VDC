@@ -3137,35 +3137,11 @@
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
-    function mostraBoxStripe(lista) {
+    // Dal 26/11/2026 il pagamento online si gestisce solo dalla dashboard dei titolari
+    // (Eventi online): nel pannello dell'evento, che vede il personale, non compare.
+    function mostraBoxStripe() {
       const box = document.getElementById('boxStripe');
-      const ev = eventoCorrente;
-      if (!box || !ev || !Number(ev.prezzoQuota)) { if (box) box.style.display = 'none'; return; }
-
-      const oggi = new Date().toISOString().slice(0, 10);
-      const passato = ev.data < oggi;
-      const occupati = (lista || []).filter(p => p.stato !== 'annullato')
-        .reduce((s, p) => s + (parseInt(p.persone) || 0), 0);
-      const online = (lista || []).filter(p => p.online && p.stato !== 'annullato')
-        .reduce((s, p) => s + (parseInt(p.persone) || 0), 0);
-      const supp = infoStripe && infoStripe.supplemento !== null && infoStripe.supplemento !== undefined
-        ? Number(infoStripe.supplemento) : null;
-      const prezzoNuovo = supp !== null ? Number(ev.prezzoQuota) + supp : null;
-
-      const righe = ['<h4><svg class="ico"><use href="#i-fa-credit-card"></use></svg> Pagamento online' +
-        (ev.stripeStato ? `<span class="stripe-stato ${escHtml(ev.stripeStato)}">${ETICHETTE_LINK[ev.stripeStato] || escHtml(ev.stripeStato)}</span>` : '') +
-        '</h4>'];
-
-      const posti = ev.postiMax
-        ? `Posti: <strong>${occupati}</strong> occupati su ${ev.postiMax} · liberi <strong>${Math.max(ev.postiMax - occupati, 0)}</strong>`
-        : 'Posti: senza limite';
-      righe.push(`<div class="stripe-riga">${posti}${online ? ` · pagati online ${online}` : ''}</div>`);
-
-      // Dal 26/11/2026 il link di pagamento si gestisce SOLO dalla dashboard dei titolari
-      // (Porto › Eventi online): qui lo vede anche il personale, quindi solo posti e stato.
-      if (ev.stripeStato) righe.push('<div class="stripe-riga">Il link di pagamento si gestisce dalla dashboard dei titolari.</div>');
-      box.innerHTML = righe.join('');
-      box.style.display = 'block';
+      if (box) box.style.display = 'none';
     }
 
     function prenotazioniDellEvento() {
