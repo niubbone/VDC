@@ -3137,11 +3137,6 @@
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
-const RIGA_ORARI_STRIPE = '<div class="stripe-riga">Orario di arrivo, ogni 30 minuti: dalle ' +
-      '<input type="time" id="stripeDalle" value="19:00" step="1800"> alle ' +
-      '<input type="time" id="stripeAlle" value="21:00" step="1800">' +
-      ' <small>(svuota per non chiederlo)</small></div>';
-
     function mostraBoxStripe(lista) {
       const box = document.getElementById('boxStripe');
       const ev = eventoCorrente;
@@ -3166,112 +3161,11 @@ const RIGA_ORARI_STRIPE = '<div class="stripe-riga">Orario di arrivo, ogni 30 mi
         : 'Posti: senza limite';
       righe.push(`<div class="stripe-riga">${posti}${online ? ` · pagati online ${online}` : ''}</div>`);
 
-      const pulsanti = [];
-      if (!ev.stripeUrl) {
-        if (passato) {
-          righe.push('<div class="stripe-riga">L\'evento è passato: niente link di pagamento.</div>');
-        } else {
-          righe.push(`<div class="stripe-riga">Il cliente paga <strong>${prezzoNuovo !== null ? eurPren(prezzoNuovo) : 'la quota più il supplemento'}</strong> a persona` +
-            `${supp ? ` (${eurPren(ev.prezzoQuota)} + ${eurPren(supp)} di supplemento)` : ''}. La prenotazione compare qui da sola, già pagata.</div>`);
-          if (infoStripe && !infoStripe.configurato) {
-            righe.push('<div class="stripe-avviso">Stripe non è ancora collegato al gestionale.</div>');
-          }
-          righe.push(RIGA_ORARI_STRIPE);
-          pulsanti.push('<button class="principale" onclick="creaLinkPagamento()">Crea link di pagamento</button>');
-        }
-      } else {
-        righe.push(`<div class="stripe-riga">Prezzo del link: <strong>${eurPren(ev.stripePrezzo)}</strong> a persona</div>`);
-        righe.push(`<input class="stripe-url" id="stripeUrl" readonly value="${escHtml(ev.stripeUrl)}" onclick="this.select()">`);
-        if (prezzoNuovo !== null && Math.abs(prezzoNuovo - Number(ev.stripePrezzo)) > 0.004 && ev.stripeStato !== 'chiuso') {
-          righe.push(`<div class="stripe-avviso">Il prezzo dell'evento è cambiato (ora ${eurPren(prezzoNuovo)}): chiudi questo link e creane uno nuovo.</div>`);
-        }
-        if (ev.stripeStato !== 'chiuso') {
-          pulsanti.push('<button onclick="copiaLinkPagamento()">Copia</button>');
-          pulsanti.push('<button onclick="inviaLinkPagamento()">Invia</button>');
-        }
-        if (ev.stripeStato === 'attivo' || ev.stripeStato === 'esaurito') {
-          pulsanti.push('<button onclick="cambiaLinkPagamento(false)">Chiudi il link</button>');
-        }
-        if (ev.stripeStato === 'disattivato' && !passato) {
-          pulsanti.push('<button class="principale" onclick="cambiaLinkPagamento(true)">Riapri</button>');
-          righe.push(RIGA_ORARI_STRIPE);
-          pulsanti.push('<button onclick="creaLinkPagamento()">Crea un link nuovo</button>');
-        }
-        pulsanti.push('<button onclick="controllaPagamentiOra()">Controlla pagamenti</button>');
-      }
-      if (pulsanti.length) righe.push(`<div class="stripe-pulsanti">${pulsanti.join('')}</div>`);
-
+      // Dal 26/11/2026 il link di pagamento si gestisce SOLO dalla dashboard dei titolari
+      // (Porto › Eventi online): qui lo vede anche il personale, quindi solo posti e stato.
+      if (ev.stripeStato) righe.push('<div class="stripe-riga">Il link di pagamento si gestisce dalla dashboard dei titolari.</div>');
       box.innerHTML = righe.join('');
       box.style.display = 'block';
-    }
-
-    async function dopoAzioneStripe(messaggio) {
-      const id = eventoCorrente && eventoCorrente.id;
-      invalidaCacheMemoria();
-      await caricaPrenotazioni();
-      if (id) await apriGestioneEvento(id);
-      if (messaggio) alert(messaggio);
-    }
-
-    async function creaLinkPagamento() {
-      if (!eventoCorrente) return;
-      showLoading('Creazione del link su Stripe...');
-      const val = id => ((document.getElementById(id) || {}).value || '').trim();
-      const orari = val('stripeDalle') && val('stripeAlle') ? { dalle: val('stripeDalle'), alle: val('stripeAlle') } : null;
-      const r = await callAPI('creaLinkStripe', { eventoId: eventoCorrente.id, orari: orari });
-      hideLoading();
-      if (r.errore) { alert('Errore: ' + r.errore); return; }
-      await dopoAzioneStripe('✅ Link di pagamento pronto: copialo o invialo ai clienti.');
-    }
-
-    async function cambiaLinkPagamento(attivo) {
-      if (!eventoCorrente) return;
-      if (!attivo && !confirm('Chiudere il link? Nessuno potrà più pagare online finché non lo riapri.')) return;
-      showLoading(attivo ? 'Riapertura...' : 'Chiusura...');
-      const r = await callAPI('attivaLinkStripe', { eventoId: eventoCorrente.id, attivo: attivo });
-      hideLoading();
-      if (r.errore) { alert('Errore: ' + r.errore); return; }
-      await dopoAzioneStripe(attivo ? '✅ Link riaperto' : '✅ Link chiuso');
-    }
-
-    async function controllaPagamentiOra() {
-      showLoading('Controllo dei pagamenti su Stripe...');
-      const r = await callAPI('controllaStripe', {});
-      hideLoading();
-      if (r.errore) { alert('Errore: ' + r.errore); return; }
-      const parti = [];
-      parti.push(r.nuove ? `${r.nuove} prenotazion${r.nuove === 1 ? 'e nuova' : 'i nuove'}` : 'Nessun pagamento nuovo');
-      if (r.rimborsi) parti.push(`${r.rimborsi} rimbors${r.rimborsi === 1 ? 'o registrato' : 'i registrati'}`);
-      if (r.nota) parti.push(r.nota);
-      if (r.errori && r.errori.length) parti.push('⚠️ ' + r.errori.join('\n⚠️ '));
-      await dopoAzioneStripe(parti.join('\n'));
-    }
-
-    function testoInvitoPagamento() {
-      const ev = eventoCorrente;
-      const d = new Date(ev.data + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
-      return `${ev.nome} — ${d}, Vecchia Dogana. Prenota e paga il tuo posto qui: ${ev.stripeUrl}`;
-    }
-
-    async function copiaLinkPagamento() {
-      const url = eventoCorrente && eventoCorrente.stripeUrl;
-      if (!url) return;
-      try {
-        await navigator.clipboard.writeText(url);
-        alert('✅ Link copiato');
-      } catch (e) {
-        const campo = document.getElementById('stripeUrl');
-        if (campo) { campo.select(); document.execCommand('copy'); alert('✅ Link copiato'); }
-      }
-    }
-
-    async function inviaLinkPagamento() {
-      if (!eventoCorrente || !eventoCorrente.stripeUrl) return;
-      const testo = testoInvitoPagamento();
-      if (navigator.share) {
-        try { await navigator.share({ text: testo }); return; } catch (e) { if (e.name === 'AbortError') return; }
-      }
-      window.open('https://wa.me/?text=' + encodeURIComponent(testo), '_blank');
     }
 
     function prenotazioniDellEvento() {

@@ -226,6 +226,8 @@
       .piede { padding: 14px 18px 18px; }
       .btn-invia { width: 100%; }
     }
+    .btn-no { display: block; width: 100%; margin-top: 10px; background: none; border: none;
+      color: #6b4423; text-decoration: underline; font-size: 1em; cursor: pointer; padding: 8px; }
   </style>
   <script src="config.js"></script>
   <script src="comune.js"></script>
@@ -309,6 +311,7 @@
       </div>
 
       <button type="submit" class="btn-invia" id="btnInvia">Iscrivimi</button>
+      <button type="button" class="btn-no" id="btnNo" style="display:none;">No, grazie</button>
     </form>
 
     <div class="conferma" id="conferma">
@@ -378,6 +381,49 @@
     }
     $('whatsapp').addEventListener('change', aggiornaVincoloCellulare);
 
+    // Dopo il pagamento di un evento (26/11/2026): Stripe rimanda qui con
+    // ?s=<sessione>. La pagina ringrazia, precompila i dati del pagamento e
+    // chiede se si vuole essere avvisati dei prossimi eventi; «No, grazie» chiude.
+    const SESSIONE = new URLSearchParams(location.search).get('s') || '';
+    const DOPO_PAGAMENTO = /^cs_(live|test)_/.test(SESSIONE);
+    const TESTO_BOTTONE = DOPO_PAGAMENTO ? 'Sì, avvisatemi' : 'Iscrivimi';
+
+    function chiudiConGrazie(titolo, testo) {
+      $('confermaTitolo').textContent = titolo;
+      $('confermaTesto').textContent = testo;
+      $('formIscrizione').style.display = 'none';
+      document.querySelector('.sottotitolo').style.display = 'none';
+      $('conferma').classList.add('attiva');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    if (DOPO_PAGAMENTO) {
+      const sotto = document.querySelector('.sottotitolo');
+      sotto.innerHTML = '<strong>Grazie, il tuo posto è confermato!</strong><br>Vuoi essere avvisato dei nostri prossimi eventi?';
+      $('btnInvia').textContent = TESTO_BOTTONE;
+      $('btnNo').style.display = 'block';
+      $('btnNo').addEventListener('click', () =>
+        chiudiConGrazie('A presto!', 'Il tuo posto è confermato. Ti aspettiamo alla Vecchia Dogana.'));
+      fetchConRetry(API_URL, {
+        method: 'POST', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'datiDopoPagamento', sessione: SESSIONE })
+      }).then(r => r.text()).then(t => {
+        const d = JSON.parse(t);
+        if (!d || !d.successo) return;
+        const giorno = new Date(d.data + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+        sotto.innerHTML = '<strong>Grazie' + (d.nome ? ', ' + escTesto(d.nome) : '') + '! Il tuo posto per «' +
+          escTesto(d.evento) + '» di ' + escTesto(giorno) + ' è confermato.</strong><br>Vuoi essere avvisato dei nostri prossimi eventi?';
+        [['nome', d.nome], ['cognome', d.cognome], ['email', d.email], ['cellulare', d.cellulare]]
+          .forEach(([id, v]) => { if (v && !$(id).value) $(id).value = v; });
+      }).catch(() => { /* senza dati si compila a mano */ });
+    }
+
+    function escTesto(t) {
+      return String(t == null ? '' : t).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
     $('formIscrizione').addEventListener('submit', async (e) => {
       e.preventDefault();
       nascondiErrore();
@@ -391,7 +437,8 @@
         whatsapp: $('whatsapp').checked,
         privacy: $('privacy').checked,
         trappola: $('sito').value,
-        testoConsenso: TESTO_CONSENSO
+        testoConsenso: TESTO_CONSENSO,
+        origine: DOPO_PAGAMENTO ? 'pagamento' : undefined
       };
 
       // Controlli lato client: stessi del server, qui solo per rispondere subito.
@@ -428,7 +475,7 @@
 
         if (esito.errore) {
           btn.disabled = false;
-          btn.textContent = 'Iscrivimi';
+          btn.textContent = TESTO_BOTTONE;
           return mostraErrore(esito.errore);
         }
 
@@ -443,7 +490,7 @@
 
       } catch (error) {
         btn.disabled = false;
-        btn.textContent = 'Iscrivimi';
+        btn.textContent = TESTO_BOTTONE;
         mostraErrore('Non siamo riusciti a raggiungere il server. Controlla la connessione e riprova.');
       }
     });

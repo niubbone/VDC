@@ -288,6 +288,22 @@
     }
     .btn-mini { transition: all 0.2s; }
 
+
+    /* Eventi online (link di pagamento Stripe) */
+    .eo-card { background: rgba(244,228,193,0.9); border: 2px solid #6b4423; border-radius: 12px;
+      padding: 12px 14px; margin: 0 0 14px 0; color: #2c1810; }
+    .eo-card h4 { margin: 0 0 6px 0; font-size: 1.1em; }
+    .eo-riga { margin: 5px 0; font-size: 0.95em; }
+    .eo-stato { display: inline-block; border-radius: 14px; padding: 2px 10px; font-size: 0.85em;
+      font-weight: bold; margin-left: 6px; border: 1px solid; }
+    .eo-stato.attivo { background: #d4edda; color: #155724; border-color: #155724; }
+    .eo-stato.esaurito { background: #fff3cd; color: #6b5000; border-color: #e0a800; }
+    .eo-stato.disattivato, .eo-stato.chiuso { background: #eee; color: #555; border-color: #999; }
+    .eo-url { width: 100%; box-sizing: border-box; padding: 7px; border: 1px solid #8b4513; border-radius: 6px;
+      font-size: 0.85em; background: #fffaf0; margin: 4px 0; }
+    .eo-pulsanti { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .eo-avviso { color: #8b2500; font-size: 0.88em; margin-top: 4px; }
+    .eo-card input[type=time] { padding: 4px; }
     .btn-primary { background: linear-gradient(145deg, #2e8b57 0%, #228b22 100%); color: white; }
     .btn-secondary { background: linear-gradient(145deg, #4682b4 0%, #1e5a8a 100%); color: white; }
     .dettaglio-box {
@@ -752,6 +768,9 @@
       <div class="tab" onclick="mostraTab('rubrica')">
         <span class="tab-icona"><svg class="ico ico-sola"><use href="#i-three-friends"></use></svg></span><span class="tab-testo">Rubrica</span>
       </div>
+      <div class="tab" onclick="mostraTab('eventiOnline')">
+        <span class="tab-icona"><svg class="ico ico-sola"><use href="#i-fa-credit-card"></use></svg></span><span class="tab-testo">Eventi online</span>
+      </div>
       <div class="tab" onclick="mostraTab('incassi')">
         <span class="tab-icona"><svg class="ico ico-sola"><use href="#i-fa-receipt"></use></svg></span><span class="tab-testo">Incassi</span>
       </div>
@@ -941,6 +960,23 @@
       <div id="rubVerifiche"></div>
       <div id="rubCrescita"></div>
       <div id="risultatoRubrica"></div>
+    </div>
+
+    <!-- ===== EVENTI ONLINE (link di pagamento Stripe, 26/11/2026) ===== -->
+    <div id="eventiOnline" class="tab-content">
+      <div class="section">
+        <div class="section-title">Link di pagamento degli eventi</div>
+        <div class="diag-nota">
+          Qui, e solo qui, si creano, si chiudono e si riaprono i link di pagamento Stripe.
+          Nel pannello dell'evento il personale vede soltanto i posti.
+          Gli eventi compaiono quando hanno un <strong>prezzo per persona</strong>; i posti massimi
+          si impostano nel form dell'evento. Dopo il pagamento il cliente arriva sulla pagina
+          d'iscrizione già compilata e può scegliere se essere avvisato dei prossimi eventi.
+        </div>
+        <div style="margin:10px 0;"><button class="btn btn-primary" onclick="caricaEventiOnline()">Aggiorna</button>
+          <button class="btn" onclick="controllaPagamentiOnline()">Controlla pagamenti</button></div>
+        <div id="eventiOnlineLista"><div class="diag-nota">Caricamento…</div></div>
+      </div>
     </div>
 
     <!-- ===== PARTITE APERTE ===== -->
@@ -1150,6 +1186,126 @@
       document.getElementById('diagA').valueAsDate = oggi;
     });
     
+    // ===== EVENTI ONLINE: link di pagamento Stripe (26/11/2026) =====
+    // Spostati qui dal pannello dell'evento, che vede anche il personale.
+    let eventiOnline = [];
+    let infoStripeDash = null;
+    const ETICHETTE_LINK_DASH = { attivo: 'Aperto', esaurito: 'Posti esauriti', disattivato: 'Chiuso a mano', chiuso: 'Evento concluso' };
+    const eurEO = n => (Number(n) || 0).toFixed(2).replace('.', ',') + ' €';
+
+    async function caricaEventiOnline() {
+      const box = document.getElementById('eventiOnlineLista');
+      box.innerHTML = '<div class="diag-nota">Caricamento…</div>';
+      const r = await callAPI('getEventiStripe', {});
+      if (r.errore) { box.innerHTML = '<div class="eo-avviso">Errore: ' + esc(r.errore) + '</div>'; return; }
+      eventiOnline = r.eventi || [];
+      infoStripeDash = r.stripe || null;
+      disegnaEventiOnline();
+    }
+
+    function disegnaEventiOnline() {
+      const box = document.getElementById('eventiOnlineLista');
+      if (!eventiOnline.length) {
+        box.innerHTML = '<div class="diag-nota">Nessun evento futuro con un prezzo per persona.</div>';
+        return;
+      }
+      const oggi = new Date().toISOString().slice(0, 10);
+      const supp = infoStripeDash && infoStripeDash.supplemento !== null && infoStripeDash.supplemento !== undefined
+        ? Number(infoStripeDash.supplemento) : null;
+      box.innerHTML = eventiOnline.map(ev => {
+        const d = new Date(ev.data + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+        const passato = ev.data < oggi;
+        const prezzoNuovo = supp !== null ? Number(ev.prezzoQuota) + supp : null;
+        const righe = [];
+        righe.push(`<h4>${esc(ev.nome)} · ${esc(d)}` +
+          (ev.stripeStato ? `<span class="eo-stato ${esc(ev.stripeStato)}">${ETICHETTE_LINK_DASH[ev.stripeStato] || esc(ev.stripeStato)}</span>` : '') + '</h4>');
+        righe.push('<div class="eo-riga">' + (ev.postiMax
+          ? `Posti: <strong>${ev.occupati}</strong> occupati su ${ev.postiMax} · liberi <strong>${Math.max(ev.postiMax - ev.occupati, 0)}</strong>`
+          : `Posti: ${ev.occupati} occupati, senza limite`) + (ev.online ? ` · pagati online ${ev.online}` : '') + '</div>');
+        const pulsanti = [];
+        const orari = `<div class="eo-riga">Orario di arrivo, ogni 30 minuti: dalle
+            <input type="time" id="eoDalle_${esc(ev.id)}" value="19:00" step="1800"> alle
+            <input type="time" id="eoAlle_${esc(ev.id)}" value="21:00" step="1800">
+            <small>(svuota per non chiederlo)</small></div>`;
+        if (!ev.stripeUrl) {
+          if (passato) {
+            righe.push('<div class="eo-riga">L\'evento è passato: niente link di pagamento.</div>');
+          } else {
+            righe.push(`<div class="eo-riga">Il cliente paga <strong>${prezzoNuovo !== null ? eurEO(prezzoNuovo) : 'la quota più il supplemento'}</strong> a persona` +
+              (supp ? ` (${eurEO(ev.prezzoQuota)} + ${eurEO(supp)} di supplemento)` : '') + '.</div>');
+            if (infoStripeDash && !infoStripeDash.configurato) righe.push('<div class="eo-avviso">Stripe non è ancora collegato al gestionale.</div>');
+            righe.push(orari);
+            pulsanti.push(`<button class="btn btn-primary" onclick="creaLinkEO('${esc(ev.id)}')">Crea link di pagamento</button>`);
+          }
+        } else {
+          righe.push(`<div class="eo-riga">Prezzo del link: <strong>${eurEO(ev.stripePrezzo)}</strong> a persona</div>`);
+          righe.push(`<input class="eo-url" id="eoUrl_${esc(ev.id)}" readonly value="${esc(ev.stripeUrl)}" onclick="this.select()">`);
+          if (prezzoNuovo !== null && Math.abs(prezzoNuovo - Number(ev.stripePrezzo)) > 0.004 && ev.stripeStato !== 'chiuso') {
+            righe.push(`<div class="eo-avviso">Il prezzo dell'evento è cambiato (ora ${eurEO(prezzoNuovo)}): chiudi questo link e creane uno nuovo.</div>`);
+          }
+          if (ev.stripeStato !== 'chiuso') {
+            pulsanti.push(`<button class="btn" onclick="copiaLinkEO('${esc(ev.id)}')">Copia</button>`);
+            pulsanti.push(`<button class="btn" onclick="inviaLinkEO('${esc(ev.id)}')">Invia</button>`);
+          }
+          if (ev.stripeStato === 'attivo' || ev.stripeStato === 'esaurito') {
+            pulsanti.push(`<button class="btn" onclick="cambiaLinkEO('${esc(ev.id)}', false)">Chiudi il link</button>`);
+          }
+          if (ev.stripeStato === 'disattivato' && !passato) {
+            righe.push(orari);
+            pulsanti.push(`<button class="btn btn-primary" onclick="cambiaLinkEO('${esc(ev.id)}', true)">Riapri</button>`);
+            pulsanti.push(`<button class="btn" onclick="creaLinkEO('${esc(ev.id)}')">Crea un link nuovo</button>`);
+          }
+        }
+        if (pulsanti.length) righe.push('<div class="eo-pulsanti">' + pulsanti.join('') + '</div>');
+        return '<div class="eo-card">' + righe.join('') + '</div>';
+      }).join('');
+    }
+
+    const eventoEO = id => eventiOnline.find(e => e.id === id);
+
+    async function creaLinkEO(id) {
+      const val = k => ((document.getElementById(k + id) || {}).value || '').trim();
+      const orari = val('eoDalle_') && val('eoAlle_') ? { dalle: val('eoDalle_'), alle: val('eoAlle_') } : null;
+      const r = await callAPI('creaLinkStripe', { eventoId: id, orari: orari });
+      if (r.errore) { alert('Errore: ' + r.errore); return; }
+      await caricaEventiOnline();
+      alert('✅ Link di pagamento pronto: copialo o invialo ai clienti.');
+    }
+
+    async function cambiaLinkEO(id, attivo) {
+      if (!attivo && !confirm('Chiudere il link? Nessuno potrà più pagare online finché non lo riapri.')) return;
+      const r = await callAPI('attivaLinkStripe', { eventoId: id, attivo: attivo });
+      if (r.errore) { alert('Errore: ' + r.errore); return; }
+      await caricaEventiOnline();
+    }
+
+    async function controllaPagamentiOnline() {
+      const r = await callAPI('controllaStripe', {});
+      if (r.errore) { alert('Errore: ' + r.errore); return; }
+      const parti = [r.nuove ? `${r.nuove} prenotazion${r.nuove === 1 ? 'e nuova' : 'i nuove'}` : 'Nessun pagamento nuovo'];
+      if (r.rimborsi) parti.push(`${r.rimborsi} rimbors${r.rimborsi === 1 ? 'o registrato' : 'i registrati'}`);
+      if (r.nota) parti.push(r.nota);
+      if (r.errori && r.errori.length) parti.push('⚠️ ' + r.errori.join('\n⚠️ '));
+      await caricaEventiOnline();
+      alert(parti.join('\n'));
+    }
+
+    async function copiaLinkEO(id) {
+      const ev = eventoEO(id);
+      if (!ev || !ev.stripeUrl) return;
+      try { await navigator.clipboard.writeText(ev.stripeUrl); alert('✅ Link copiato'); }
+      catch (e) { const c = document.getElementById('eoUrl_' + id); if (c) { c.select(); document.execCommand('copy'); alert('✅ Link copiato'); } }
+    }
+
+    async function inviaLinkEO(id) {
+      const ev = eventoEO(id);
+      if (!ev || !ev.stripeUrl) return;
+      const d = new Date(ev.data + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+      const testo = `${ev.nome} — ${d}, Vecchia Dogana. Prenota il tuo posto qui: ${ev.stripeUrl}`;
+      if (navigator.share) { try { await navigator.share({ text: testo }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+      window.open('https://wa.me/?text=' + encodeURIComponent(testo), '_blank');
+    }
+
     function mostraTab(tabName) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -1165,6 +1321,7 @@
       // 25/10/2026): partivano su tutto lo storico senza che si fosse scelto il
       // periodo; ora si cerca solo premendo Cerca.
       if (tabName === 'rubrica' && !rubricaCache.length) caricaRubrica();
+      if (tabName === 'eventiOnline') caricaEventiOnline();
     }
 
     /**
