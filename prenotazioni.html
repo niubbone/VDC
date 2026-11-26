@@ -2952,7 +2952,7 @@
 
       const daScontrinare = (stato === 'pagato_online' ||
         ['online', 'satispay', 'bonifico'].includes(String(pren.metodoPagamento).toLowerCase()));
-      if (!senzaScontrino && daScontrinare && !pren.scontrinato && Number(pren.importoPagato) > 0) {
+      if (!senzaScontrino && daScontrinare && !pren.scontrinato && Number(pren.importoPagato) > 0 && stato !== 'rimborsato') {
         html += `<span class="pag-scontrino-manca"><svg class="ico"><use href="#i-fa-receipt"></use></svg> da scontrinare</span>`;
       }
       return html;
@@ -3054,7 +3054,7 @@
 
         const telematico = stato === 'pagato_online' ||
           ['online', 'satispay', 'bonifico'].includes(String(p.metodoPagamento).toLowerCase());
-        if (telematico && !p.scontrinato && Number(p.importoPagato) > 0) {
+        if (telematico && !p.scontrinato && Number(p.importoPagato) > 0 && stato !== 'rimborsato') {
           r.daScontrinare += Number(p.importoPagato) || 0;
         }
       });
