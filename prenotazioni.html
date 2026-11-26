@@ -3137,6 +3137,11 @@
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
+const RIGA_ORARI_STRIPE = '<div class="stripe-riga">Orario di arrivo, ogni 30 minuti: dalle ' +
+      '<input type="time" id="stripeDalle" value="19:00" step="1800"> alle ' +
+      '<input type="time" id="stripeAlle" value="21:00" step="1800">' +
+      ' <small>(svuota per non chiederlo)</small></div>';
+
     function mostraBoxStripe(lista) {
       const box = document.getElementById('boxStripe');
       const ev = eventoCorrente;
@@ -3171,6 +3176,7 @@
           if (infoStripe && !infoStripe.configurato) {
             righe.push('<div class="stripe-avviso">Stripe non è ancora collegato al gestionale.</div>');
           }
+          righe.push(RIGA_ORARI_STRIPE);
           pulsanti.push('<button class="principale" onclick="creaLinkPagamento()">Crea link di pagamento</button>');
         }
       } else {
@@ -3188,6 +3194,7 @@
         }
         if (ev.stripeStato === 'disattivato' && !passato) {
           pulsanti.push('<button class="principale" onclick="cambiaLinkPagamento(true)">Riapri</button>');
+          righe.push(RIGA_ORARI_STRIPE);
           pulsanti.push('<button onclick="creaLinkPagamento()">Crea un link nuovo</button>');
         }
         pulsanti.push('<button onclick="controllaPagamentiOra()">Controlla pagamenti</button>');
@@ -3209,7 +3216,9 @@
     async function creaLinkPagamento() {
       if (!eventoCorrente) return;
       showLoading('Creazione del link su Stripe...');
-      const r = await callAPI('creaLinkStripe', { eventoId: eventoCorrente.id });
+      const val = id => ((document.getElementById(id) || {}).value || '').trim();
+      const orari = val('stripeDalle') && val('stripeAlle') ? { dalle: val('stripeDalle'), alle: val('stripeAlle') } : null;
+      const r = await callAPI('creaLinkStripe', { eventoId: eventoCorrente.id, orari: orari });
       hideLoading();
       if (r.errore) { alert('Errore: ' + r.errore); return; }
       await dopoAzioneStripe('✅ Link di pagamento pronto: copialo o invialo ai clienti.');
