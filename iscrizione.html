@@ -382,9 +382,11 @@
     $('whatsapp').addEventListener('change', aggiornaVincoloCellulare);
 
     // Dopo il pagamento di un evento (26/11/2026): Stripe rimanda qui con
-    // ?s=<sessione>. La pagina ringrazia, precompila i dati del pagamento e
+    // ?pagamento=<sessione>. La pagina ringrazia, precompila i dati del pagamento e
     // chiede se si vuole essere avvisati dei prossimi eventi; «No, grazie» chiude.
-    const SESSIONE = new URLSearchParams(location.search).get('s') || '';
+    // «pagamento» sul sito (in WordPress «?s=» è la ricerca); «s» per i primi link verso GitHub
+    const PARAMETRI = new URLSearchParams(location.search);
+    const SESSIONE = PARAMETRI.get('pagamento') || PARAMETRI.get('s') || '';
     const DOPO_PAGAMENTO = /^cs_(live|test)_/.test(SESSIONE);
     const TESTO_BOTTONE = DOPO_PAGAMENTO ? 'Sì, avvisatemi' : 'Iscrivimi';
 
